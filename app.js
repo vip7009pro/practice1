@@ -63,7 +63,7 @@ app.post('/api', function (req, res) {
     var qr = req.body;
 
     if (req.coloiko == 'kocoloi' || qr['command'] == 'login') {
-        api_module.process_api(req, res);        
+        api_module.process_api(req, res);
     }
     else {
         res.send({ tk_status: 'ng' });
