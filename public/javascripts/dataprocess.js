@@ -937,11 +937,14 @@ $(document).ready(function () {
                             alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
                             window.location.href = "/";
                         }
+                        else  if (Jresult.tk_status == 'ERROR') {
+                            alert("Có lỗi");                           
+                        }
+                        else  if (Jresult.tk_status == 'NO_LEADER') {
+                            alert("Bạn không phải leader, mời phắn");                           
+                        }
                         else {
                             $tds2.html("<b><p style='color:LightGreen;'>Đã duyệt</p> </b>");
-
-
-
                         }
 
                     }
