@@ -449,14 +449,14 @@ exports.process_api = function (req, res) {
                 checkkq = await asyncQuery2(setpdQuery);
                 if (checkkq != "OK") {
                     checkkq = "NG";
-                    res.send("Có lỗi khi đăng ký, xem lại thông tin đã nhập đã đúng định dạng chưa");
+                    res.send({tk_status: "ERROR", message: "Có lỗi khi đăng ký, xem lại thông tin đã nhập đã đúng định dạng chưa"});
                 }
                 else {
-                    res.send("OK");
+                    res.send({tk_status: "OK"});
                 }
             }
             else {
-                res.send('NO_LEADER');
+                res.send({tk_status:'NO_LEADER'});
             }
 
 
