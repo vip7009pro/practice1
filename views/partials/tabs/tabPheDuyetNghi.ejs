@@ -1,0 +1,18 @@
+<div id="approve" class="container tab-pane fade"><br>
+    <h3>Leader phê duyệt nghỉ</h3>
+    <p>Chỉ leader truy cập được nội dung này</p>
+    <form action="process_data.php" method="post">
+        <div class="form-group">
+            <label for="date"><b>Từ ngày </b></label> <br>
+            <input type="date" id="tra_from_date" name="ngaybatdau" />
+            <br>
+            <label for="date"><b>Tới ngày </b></label><br>
+            <input type="date" id="tra_to_date" name="ngayketthuc" />
+        </div>        
+    </form>
+    <button type="button" class="btn btn-primary" id="trapheduyet">Tra cứu nghỉ</button>
+    <button type="button" id="changeview_duyet" class="btn btn-info"> Mở rộng/ Thu hẹp </button>
+    <div  class= "rendered_table" id="off_approve">
+        Lich su nghi
+    </div>
+</div>

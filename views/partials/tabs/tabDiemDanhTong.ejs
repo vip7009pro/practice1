@@ -1,0 +1,78 @@
+<div id="total_att_panel" class="container tab-pane fade"><br>
+    <form id="total_att_form" method="post">
+        
+        <div class="form-group">
+            <label for="team_name"><b>Chọn team</b></label>
+            <select class="form-control" id="team_name_total" name="team_name_total">
+                <option>Tất cả</option>
+                <option>TEAM 1 + Hành chính</option>
+                <option>TEAM 2+ Hành chính</option>
+                <option>TEAM 1</option>
+                <option>TEAM 2</option>
+                <option>Hành chính</option>
+            </select>
+        </div>
+
+
+        
+        <div class="form-group">
+            <label for="main_deparment_name"><b>Chọn bộ phận chính </b></label>
+            <select class="form-control" id="main_deparment_name" name="main_deparment_name">
+                <option>Toàn bộ</option>
+                <option>QC</option>
+                <option>INSPECTION</option>
+            </select>
+        </div>
+
+
+        <div class="form-group">
+            <label for="deparment_name"><b>Chọn bộ phận phụ </b></label>
+            <select class="form-control" id="deparment_name" name="deparment_name">
+                <option>Toàn bộ</option>
+                <option>QC</option>
+                <option>PD</option>
+                <option>IQC</option>
+                <option>PQC1</option>
+                <option>PQC3</option>
+                <option>KT1</option>
+                <option>KT3</option>
+                <option>OQC</option>
+                <option>CS</option>
+                <option>ĐỘ TIN CẬY</option>
+                <option>ISO</option>
+                <option>DATA</option>
+                <option>MISS CLEAN</option>
+
+            </select>
+        </div>
+
+
+
+        <div class="form-group">
+            <label for="date"><b>Từ ngày </b></label> <br>
+            <input type="date" id="from_date_total" name="from_date_total" />
+            <br>
+            <label for="date"><b>Tới ngày </b></label> <br>
+            <input type="date" id="to_date_total" name="to_date_total" />
+        </div>
+
+        <!--		  
+<div class="form-group">
+<label for="text"><b>Lý do cụ thể:</b></label>
+<input type="text" class="form-control" placeholder="Lý do sự việc nghỉ cụ thể" id="remark" name="remark_content">
+</div>  			  
+-->
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="nghisinhcheckbox">
+            <label class="form-check-label" for="checkbox"><b>Tính cả nghỉ sinh</b></label>
+        </div>
+        <br>
+       
+    </form>
+    <button type="button" class="btn btn-primary" id="total_att_button">Tra cứu</button>
+
+    <button type="button" id="changeview_diemdanh_total" class="btn btn-info"> Mở rộng/ Thu hẹp </button>
+    
+    <div  class= "rendered_table" id="total_att_table"></div>
+
+</div>

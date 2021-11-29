@@ -1,0 +1,39 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+</head>
+<body class="container">
+
+    <header>
+        <%- include('../partials/header') %>
+    </header>
+
+    <main>       
+        <%- include('../partials/chat') %>
+        <%- include('../partials/notification') %>
+        <div class="container" id="web-body">
+        <% if(1==1) {  %>
+        <%- include('../partials/body') %>
+
+        <%} else if(1==0)
+        {  %>  sai roi <% } %>
+        <div id="table"></div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="container" id="footer">
+            <%- include('../partials/footer') %>
+        </div>
+    </footer>
+
+    
+
+   
+</body>
+
+</html>

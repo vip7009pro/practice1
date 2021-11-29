@@ -1,0 +1,64 @@
+<div  id="header_content">
+    <div class="container p-3 my-3" id="basic_info">
+        <marquee direction="left" class="text-white ">
+            <h3>Hệ thống quản lý nhân sự QC - Kiểm Tra </h3>
+        </marquee>
+         
+         <button id="logout_bt" class="btn btn-primary"> Logout</button>
+    </div>
+
+
+
+    <div>  
+        <button id="hide_show_button" class="btn btn-primary">-</button>
+        <div class="container p-3 my-3 bg-dark text-white " id="empl_info">        
+        <!--  <h3>Thông tin nhân viên: </h3> <br><b>Tên: NGUYỄN VĂN HÙNG3</b><br>Mã nhân sự: <b> CMS1179 </b><br>Mã ERP: <b> NHU1903 </b><br>Ngày tháng năm sinh: 1993-10-18<br>Quê quán: Phụ Thọ - Đông Xuân - Sóc Sơn - Hà Nội<br>Giới tính: Nam<br>Địa chỉ cư trú: Thôn Phú Thọ-Đông Xuân-Sóc Sơn-Hà Nội<br>Bộ phận chính: QC<br>Bộ phận phụ: PD<br>Vị trí làm việc: PD<br>Nhóm điểm danh: 1<br>Chức vụ: Dept Staff<br><br><a href='logout.php'> Đăng Xuất </a>	-->
+            
+        <div id="dong1">
+            <div id="cot1"> 
+                <h5>
+                    <h5>Thông tin nhân viên:</h5>
+                    <ul>                  
+                        <!--
+                            <% for (field in login_data) { %>
+                            <li><%=field %> : <%=login_data[field] %></li>
+                            <%
+                            } %>
+                            <%= login_data['EMPL_NO'] %> 
+                        -->
+                        <li> Họ và tên: <%=login_data['MIDLAST_NAME'] %> <%=login_data['FIRST_NAME'] %></li>
+                        <li> Mã nhân sự: <%=login_data['CMS_ID'] %></li>
+                        <li> Mã ERP: <%=login_data['EMPL_NO'] %></li>
+                        <li> Ngày tháng năm sinh: <%=login_data['DOB'].slice(0, 10); %></li>
+                        <li> Quê quán: <%=login_data['HOMETOWN'] %></li>
+                        <li> Địa chỉ: <%=login_data['ADD_VILLAGE'] %>-<%=login_data['ADD_COMMUNE'] %>-<%=login_data['ADD_DISTRICT'] %>-<%=login_data['ADD_PROVINCE'] %></li>
+                        <li> Bộ phận chính: <%=login_data['MAINDEPTNAME'] %></li>
+                        <li> Bộ phận phụ: <%=login_data['SUBDEPTNAME'] %></li>
+                        <li> Vị trí làm việc: <%=login_data['WORK_POSITION_NAME'] %></li>
+                        <li> Nhóm điểm danh: <%=login_data['ATT_GROUP_CODE'] %></li>
+                        <li> Chức vụ: <%=login_data['JOB_NAME'] %></li>                
+                    </ul>
+                </h5> 
+            </div>
+            <div id="cot2">
+                <h5>
+                    <div id="att_refresh" align="center"> </div>
+                    <div id="check_chua_pd"> </div>
+                    
+                </h5>
+            </div>
+
+
+        </div>
+        
+
+
+        <br> 	
+            <marquee direction="left">Chúc anh chị em ngày mới tốt lành !</marquee> 
+        </div>
+        
+    </div>
+
+</div>
+
+    

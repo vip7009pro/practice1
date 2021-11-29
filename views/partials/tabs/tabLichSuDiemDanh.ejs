@@ -1,0 +1,19 @@
+<div id="tradiemdanh" class="container tab-pane fade"><br>
+    <h3>Tra cứu lịch sử đi làm</h3>
+    <p>Tra lịch sử điểm danh tại đây</p>
+    <form method="post">
+        <div class="form-group">
+            <label for="date"><b>Từ ngày </b></label> <br>
+            <input type="date" id="dd_from_date" name="start_date" />
+            <br>
+            <label for="date"><b>Tới ngày </b></label><br>
+            <input type="date" id="dd_to_date" name="end_date" />
+        </div>
+        <button type="button" class="btn btn-primary" id="getdiemdanh">Tra điểm danh</button>
+    </form>
+
+    <button type="button" id="changeview_diemdanh" class="btn btn-info"> Mở rộng/ Thu hẹp </button>
+    <div  class= "rendered_table" id="attendance_history">
+        Lich su diem danh
+    </div>
+</div>
