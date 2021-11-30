@@ -3,6 +3,9 @@ const app = express();
 var jwt = require('jsonwebtoken');
 var cookieParser = require('cookie-parser');
 var api_module = require('./api');
+require('dotenv').config();
+
+console.log("usser  =" + process.env.DB_USER);
 
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {

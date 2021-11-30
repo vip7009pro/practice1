@@ -1,11 +1,12 @@
 var sql = require("mssql");
 var jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const config = {
-    user: 'sa',
-    password: 'Cms6886',
-    server: '14.160.33.198',
-    database: 'CMS_VINA',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME,
     port: 1433,
     trustServerCertificate: true,
     requestTimeout: 300000
