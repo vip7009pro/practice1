@@ -2,10 +2,8 @@
 $(document).ready(function () {
 
     $("#myTopnav").fadeIn(250);
-
     var chat_bt = 1;
     var menu_value =0;
-
     function IsJsonString(str) {
         try {
             JSON.parse(str);
@@ -17,8 +15,7 @@ $(document).ready(function () {
 
     $("#notification_bar").hide();
 
-    $("#chat_panel").hide();
-    // $("#hide_show_button2").text('+');
+    $("#chat_panel").hide();    
 
     function isValid(date, h1, m1, h2, m2) {
         return true;
@@ -44,9 +41,6 @@ $(document).ready(function () {
         let expires = "expires=" + d.toUTCString();
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
     }
-
-
-
 
     var socket = io.connect('14.160.33.94:3005');
 
@@ -876,20 +870,26 @@ $(document).ready(function () {
             },
             async: true,
             timeout: 10000,
-            success: function (result) {
+            success: function (result) {               
+
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
                     alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
                     window.location.href = "/";
                 }
+                else if (Jresult.tk_status == 'NO_LEADER') {
+                    alert("Bạn không phải learder, mời phắn");                    
+                }
                 else {
-                    alert("Có " + JSON.parse(result).length + " người nha");
-                    var res = getHTMLTABLE2_diemdanhtong(JSON.parse(result), 'empl_tb_total');
+                    console.log(Jresult.data);
+                    alert("Có " + JSON.parse(Jresult.data).length + " người nha");
+                    var res = getHTMLTABLE2_diemdanhtong(JSON.parse(Jresult.data), 'empl_tb_total');
                     $("#total_att_table").empty().append(res);
                     $('#empl_tb_total').DataTable({
                         "lengthMenu": [[-1, 10, 25, 50, 100], ["All", 10, 25, 50, 100]]
                     });
                     $('.dataTables_length').addClass('bs-select');
+
 
 
                 }
