@@ -25,9 +25,7 @@ io.on('connection', client => {
     });
     client.on('notification', data => {
         io.sockets.emit('notification', data);
-
         console.log(data);
-
     });
 
     client.on('disconnect', () => {
@@ -78,8 +76,6 @@ app.post('/api', function (req, res) {
 app.get('/', function (req, res) {
     res.redirect('/nhansu');
 });
-
-
 
 app.get('/nhansu', function (req, res) {
     if (req.coloiko == 'kocoloi') {
