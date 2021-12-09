@@ -1,5 +1,4 @@
 $(document).ready(function(){
-    
     $('#eye').click(function(){
         $(this).toggleClass('open');
         $(this).children('i').toggleClass('fa-eye-slash fa-eye');
@@ -9,7 +8,6 @@ $(document).ready(function(){
             $(this).prev().attr('type', 'password');
         }
     });
-
     $("#login_bt").click(function(event) {   
         event.preventDefault();         
         $.ajax({
@@ -27,7 +25,6 @@ $(document).ready(function(){
                 //alert(result);
                 //console.log(result);   
                 var Jresult = JSON.parse(result);
-                      
                 //console.log(Jresult.tk_status);
                 //console.log(Jresult.token_content);
                 if(Jresult.tk_status == 'ok') 
@@ -40,12 +37,7 @@ $(document).ready(function(){
                 {
                     alert("Tên đăng nhập hoặc mật khẩu sai");
                 }
-                                  
             }
         });
-
-
-        
     });
-
 });
