@@ -3,6 +3,7 @@ const app = express();
 var jwt = require('jsonwebtoken');
 var cookieParser = require('cookie-parser');
 var api_module = require('./api');
+var cors = require('cors')
 require('dotenv').config();
 
 console.log("usser  =" + process.env.DB_USER);
@@ -13,7 +14,6 @@ const io = require('socket.io')(server, {
         origin: '*',
     }
 });
-
 server.listen(3005);
 
 io.on('connection', client => {
@@ -37,6 +37,9 @@ io.on('connection', client => {
 
 const port = 80;
 
+app.use(cors());
+app.options('*', cors())
+
 app.use(cookieParser());
 app.use(express.static(__dirname + '/public'));
 
@@ -47,6 +50,7 @@ var bodyParser = require('body-parser');
 const { Socket } = require("socket.io");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 
 app.use('/', function (req, res, next) {
     api_module.checklogin_index(req, res, next);
@@ -59,19 +63,17 @@ app.use('/login2', function (req, res, next) {
     api_module.checklogin_login(req, res, next);
 });
 
+      
 app.post('/api', function (req, res) {
     //api_module.process_api(req,res);   
     var qr = req.body;
-
     if (req.coloiko == 'kocoloi' || qr['command'] == 'login') {
         api_module.process_api(req, res);
     }
     else {
         res.send({ tk_status: 'ng' });
     }
-
 });
-
 
 app.get('/', function (req, res) {
     res.redirect('/nhansu');
@@ -91,9 +93,6 @@ app.get('/nhansu', function (req, res) {
     }
 });
 
-
-
-
 app.get('/about', function (req, res) {
 
     if (req.coloiko == 'kocoloi') {
@@ -102,7 +101,6 @@ app.get('/about', function (req, res) {
                 variable: 'Đây là nội dung của biến được truyền vào', selection: 'result_table', rootPath: __dirname, login_data: req.payload_data
             }
         );
-
     }
     else {
         res.redirect('/login2');
@@ -120,7 +118,7 @@ app.get('/login2', function (req, res) {
 });
 
 app.listen(port, function () {
-    console.log("App dang nghe port 3000");
+    console.log("App dang nghe port 100");
 });
 
 

@@ -23,6 +23,7 @@ function getHTMLTABLE22(data, table_id)
     return table_data;
 }
 
+
 function getHTMLTABLE2_lichsunghi(data, table_id)
 {
     /* console.log(Object.keys(data[0]));
@@ -654,6 +655,66 @@ function getHTMLTABLE2_dieuchuyenteam(data, table_id)
         tr.push('</tr>');            
     }
     var table_data = "<table id='" + table_id + "' class='table table-responsive table-dark table-striped table table-bordered table-sm ' cellspaceing='0' width='100%'><thead><tr>" + header_string + "</tr></thead> <tbody>"+tr.join('') + " <tbody><table>";
+    //console.log(table_data);
+    return table_data;
+}
+
+
+function getHTMLTABLE2_SummaryTB(data, table_id)
+{
+  
+    var header_array = ['STT','MAINDEPTNAME','SUBDEPTNAME','TOTAL_ALL','TOTAL_ON','TOTAL_OFF','TOTAL_CDD','TOTAL_NM1','TOTAL_NM2','ON_NM1','ON_NM2','OFF_NM1','OFF_NM2','CDD_NM1','CDD_NM2'
+];
+
+    var header_th = header_array.map((element)=>{
+        return "<th>"+ element + "</th>";
+    });
+
+    var header_string = header_th.join(' ');
+
+    //console.log(header_string);
+
+    var tr=[];
+    let t1=t2=t3=t4=t5=t6=t7=t8=t9=t10=t11=t12=0;
+
+    for (var i = 0; i < data.length; i++) {
+        tr.push('<tr>');
+        tr.push("<td>" + (i + 1) + "</td>");
+        tr.push("<td style='align:center;'>" + data[i]['MAINDEPTNAME'] + "</td>");
+        tr.push("<td>" + data[i]['SUBDEPTNAME'] + "</td>");  
+        tr.push("<td style='align:center; color:blue;'>" + data[i]['TOTAL_ALL'] + "</td>"); t1 += data[i]['TOTAL_ALL'];
+        tr.push("<td style='align:center; color:#FF8C11;'>" + data[i]['TOTAL_ON'] + "</td>"); t2 += data[i]['TOTAL_ON'];
+        tr.push("<td style='align:center; color:#23FF55;'>" + data[i]['TOTAL_OFF'] + "</td>"); t3+= data[i]['TOTAL_OFF'];
+        tr.push("<td style='align:center; color:#B8FA09;'>" + data[i]['TOTAL_CDD'] + "</td>"); t4+= data[i]['TOTAL_CDD'];
+        tr.push("<td>" + data[i]['TOTAL_NM1'] + "</td>"); t5+= data[i]['TOTAL_NM1'];
+        tr.push("<td>" + data[i]['TOTAL_NM2'] + "</td>"); t6+= data[i]['TOTAL_NM2'];
+        tr.push("<td>" + data[i]['ON_NM1'] + "</td>"); t7+= data[i]['ON_NM1'];
+        tr.push("<td>" + data[i]['ON_NM2'] + "</td>"); t8+= data[i]['ON_NM2'];
+        tr.push("<td>" + data[i]['OFF_NM1'] + "</td>"); t9+= data[i]['OFF_NM1'];
+        tr.push("<td>" + data[i]['OFF_NM2'] + "</td>"); t10+= data[i]['OFF_NM2'];
+        tr.push("<td>" + data[i]['CDD_NM1'] + "</td>"); t11+= data[i]['CDD_NM1'];
+        tr.push("<td>" + data[i]['CDD_NM2'] + "</td>"); t12+= data[i]['CDD_NM2'];
+        tr.push('</tr>');            
+    }
+    tr.push('<tr>');
+    tr.push("<td></td>");
+    tr.push("<td>Grand</td>");
+    tr.push("<td>Total</td>");
+    tr.push("<td style='align:center; color:black;'>" +t1+ "</td>");
+    tr.push("<td style='align:center; color:black;'>" +t2+ "</td>");
+    tr.push("<td style='align:center; color:black;'>" +t3+ "</td>");
+    tr.push("<td style='align:center; color:black;'>" +t4+ "</td>");
+    tr.push("<td>" +t5+ "</td>");
+    tr.push("<td>" +t6+ "</td>");
+    tr.push("<td>" +t7+ "</td>");
+    tr.push("<td>" +t8+ "</td>");
+    tr.push("<td>" +t9+ "</td>");
+    tr.push("<td>" +t10+ "</td>");
+    tr.push("<td>" +t11+ "</td>");
+    tr.push("<td>" +t12+ "</td>");
+    tr.push('</tr>');
+
+    var table_data = "<table id='" + table_id + "' class='table table-responsive table-striped table table-bordered table-sm ' cellspaceing='0' width='100%'><thead><tr>" + header_string + "</tr></thead> <tbody>"+tr.join('') + " <tbody><table>";
     //console.log(table_data);
     return table_data;
 }

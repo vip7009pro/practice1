@@ -11,21 +11,13 @@
 
     <div>  
         <button id="hide_show_button" class="btn btn-primary">-</button>
-        <div class="container p-3 my-3 bg-dark text-white " id="empl_info">        
-        <!--  <h3>Thông tin nhân viên: </h3> <br><b>Tên: NGUYỄN VĂN HÙNG3</b><br>Mã nhân sự: <b> CMS1179 </b><br>Mã ERP: <b> NHU1903 </b><br>Ngày tháng năm sinh: 1993-10-18<br>Quê quán: Phụ Thọ - Đông Xuân - Sóc Sơn - Hà Nội<br>Giới tính: Nam<br>Địa chỉ cư trú: Thôn Phú Thọ-Đông Xuân-Sóc Sơn-Hà Nội<br>Bộ phận chính: QC<br>Bộ phận phụ: PD<br>Vị trí làm việc: PD<br>Nhóm điểm danh: 1<br>Chức vụ: Dept Staff<br><br><a href='logout.php'> Đăng Xuất </a>	-->
-            
+        <div class="container p-3 my-3 bg-dark text-white " id="empl_info">
         <div id="dong1">
             <div id="cot1"> 
                 <h5>
                     <h5>Thông tin nhân viên:</h5>
                     <ul>                  
-                        <!--
-                            <% for (field in login_data) { %>
-                            <li><%=field %> : <%=login_data[field] %></li>
-                            <%
-                            } %>
-                            <%= login_data['EMPL_NO'] %> 
-                        -->
+                      
                         <li> Họ và tên: <%=login_data['MIDLAST_NAME'] %> <%=login_data['FIRST_NAME'] %></li>
                         <li> Mã nhân sự: <%=login_data['CMS_ID'] %></li>
                         <li> Mã ERP: <%=login_data['EMPL_NO'] %></li>
@@ -49,6 +41,10 @@
             </div>
 
 
+        </div>
+        <div id="dong2">
+            <div id="summary">                
+            </div>
         </div>
         
 

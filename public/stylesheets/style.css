@@ -486,3 +486,14 @@ body
     overflow-x: auto;
     overflow-y: hidden;   
   }
+
+
+  #dong2 {      
+      font-weight: bold;
+      
+  }
+
+  
+  td {
+      align-items: center;
+  }
