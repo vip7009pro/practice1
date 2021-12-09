@@ -1,4 +1,6 @@
 $(document).ready(function () {
+    //swal('okema');
+
     $("#myTopnav").fadeIn(250);
     var chat_bt = 1;
     var menu_value = 1;
@@ -23,7 +25,7 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","error");
                     window.location.href = "/";
                 }
                 else if (Jresult.tk_status == 'NO_LEADER') {
@@ -108,8 +110,8 @@ $(document).ready(function () {
         var message = $('#chat_message').val();
         var chattime = new Date();
         var ct = chattime.getFullYear() + "-" + (chattime.getMonth() + 1) + "-" + chattime.getDate() + "  " + chattime.getHours() + ":" + chattime.getMinutes() + ":" + chattime.getSeconds();
-        if (username == '' || message == '') {
-            alert('Please enter name and message!!');
+        if (username == '' || message == '') {           
+            swal("Thông báo","Nhập tin nhắn vào không được để trống","error");
         } else {
             //Gửi dữ liệu cho socket
             socket.emit('send', { username: username, message: message, chattime: ct });
@@ -123,7 +125,7 @@ $(document).ready(function () {
             var chattime = new Date();
             var ct = chattime.getFullYear() + "-" + (chattime.getMonth() + 1) + "-" + chattime.getDate() + "  " + chattime.getHours() + ":" + chattime.getMinutes() + ":" + chattime.getSeconds();
             if (username == '' || message == '') {
-                alert('Please enter name and message!!');
+                swal("Thông báo","Nhập tin nhắn vào không được để trống","error");
             } else {
                 //Gửi dữ liệu cho socket
                 socket.emit('send', { username: username, message: message, chattime: ct });
@@ -224,11 +226,14 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    //swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 if (Jresult.tk_status == 'NO') {
-                    alert("Chưa từng làm đơn nghỉ nào !");
+                    //alert("Chưa từng làm đơn nghỉ nào !");
+                    swal("Thông báo","Chưa từng làm đơn nghỉ nào !","info");
+                    
                 }
                 else {
                     var res = getHTMLTABLE2_lichsunghi(JSON.parse(Jresult.data), 'off_his_table')
@@ -256,13 +261,17 @@ $(document).ready(function () {
             timeout: 10000,
             success: function (result) {
                 if (result == 'NO_LEADER') {
-                    alert("Bạn ko fai leader,mời phắn");
+                    //alert("Bạn ko fai leader,mời phắn");
+                    swal("Thông báo","Bạn ko fai leader,mời phắn","error");
+                    
                 }
                 else if (result == 'NO_DATA') {
-                    alert("Không có data");
+                    //alert("Không có data");
+                    swal("Thông báo","Không có data","info");
                 }
                 else {
-                    alert("Có " + JSON.parse(result).length + " người nha");
+                    //alert("Có " + JSON.parse(result).length + " người nha");
+                    swal("Thông báo","Có " + JSON.parse(result).length + " người nha","success");
                     var res = getHTMLTABLE2_diemdanhnhom(JSON.parse(result), 'empl_tb');
                     $("#empl_list").empty().append(res);
                     $('#empl_tb').DataTable({
@@ -290,10 +299,13 @@ $(document).ready(function () {
             timeout: 10000,
             success: function (result) {
                 if (result == 'OK') {
-                    alert("Đăng ký nghỉ thành công");
+                    //alert("Đăng ký nghỉ thành công");
+                    swal("Thông báo","Đăng ký nghỉ thành công","success");
+                    
                 }
                 else {
-                    alert("Lỗi: đã đăng ký vào ngày đó rồi, ko đky trùng đc nữa");
+                    //alert("Lỗi: đã đăng ký vào ngày đó rồi, ko đky trùng đc nữa");
+                    swal("Thông báo","Lỗi: đã đăng ký vào ngày đó rồi, ko đky trùng đc nữa","error");
                 }
                 // alert(result);
             }
@@ -313,7 +325,7 @@ $(document).ready(function () {
             async: true,
             timeout: 10000,
             success: function (result) {
-                alert(result);
+                swal("Thông báo",result,"success");
             }
         });
     });
@@ -413,14 +425,15 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    //swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info")
                     window.location.href = "/";
                 }
                 else if (Jresult.tk_status == 'error') {
-                    alert("Có lỗi");
+                    swal("Thông báo","Có lỗi","error");
                 }
                 else if (Jresult.tk_status == 'NO_LEADER') {
-                    alert("Bạn không phải leader, mời phắn");
+                    swal("Thông báo","Bạn không phải leader, mời phắn","info");
                 }
                 else {
                     var res = getHTMLTABLE2_pheduyet(JSON.parse(Jresult.data), 'approve_table');
@@ -471,7 +484,7 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else {
@@ -497,15 +510,15 @@ $(document).ready(function () {
             timeout: 10000,
             success: function (result) {
                 if (result == 'NO_LEADER') {
-                    alert("Bạn ko fai leader,mời phắn");
+                    swal("Thông báo","Bạn ko fai leader,mời phắn","info");
                 }
                 else if (result == 'NO_DATA') {
-                    alert("Không có data");
+                    swal("Thông báo","Không có data","info");
                 }
                 else {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -538,14 +551,14 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else if (Jresult.tk_status == 'error') {
-                    alert("Có lỗi");
+                    swal("Thông báo","Có lỗi","error");
                 }
                 else if (Jresult.tk_status == 'NO_LEADER') {
-                    alert("Bạn không phải leader, mời phắn");
+                    swal("Thông báo","Bạn không phải leader, mời phắn","info");
                 }
                 else {
                     var res = getHTMLTABLE2_pheduyet(JSON.parse(Jresult.data), 'approve_table');
@@ -576,7 +589,7 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else {
@@ -641,15 +654,15 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else if (Jresult.tk_status == 'NO_LEADER') {
-                    alert("Bạn không phải learder, mời phắn");
+                    swal("Thông báo","Bạn không phải learder, mời phắn","info");
                 }
                 else {
                     console.log(Jresult.data);
-                    alert("Có " + JSON.parse(Jresult.data).length + " người nha");
+                    swal("Thông báo","Có " + JSON.parse(Jresult.data).length + " người nha","success");
                     var res = getHTMLTABLE2_diemdanhtong(JSON.parse(Jresult.data), 'empl_tb_total');
                     $("#total_att_table").empty().append(res);
                     $('#empl_tb_total').DataTable({
@@ -680,19 +693,19 @@ $(document).ready(function () {
             timeout: 10000,
             success: function (result) {
                 if (result == 'NO_LEADER') {
-                    alert("Bạn ko fai leader,mời phắn");
+                    swal("Thông báo","Bạn ko fai leader,mời phắn","info");
                 }
                 else if (result == 'NO_DATA') {
-                    alert("Không có data");
+                    swal("Thông báo","Không có data","info");
                 }
                 else {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
-                        alert("Có " + JSON.parse(result).length + " người nha");
+                        swal("Thông báo","Có " + JSON.parse(result).length + " người nha","success");
                         var res = getHTMLTABLE2_diemdanhnhom(JSON.parse(result), 'empl_tb');
                         $("#empl_list").empty().append(res);
                         $('#empl_tb').DataTable({
@@ -735,7 +748,8 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else if (Jresult.tk_status == 'NO_LEADER') {
@@ -789,14 +803,14 @@ $(document).ready(function () {
                         //$("#off_approve").empty().append(result);
                         var Jresult = JSON.parse(result);
                         if (Jresult.tk_status == 'ng') {
-                            alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                            swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                             window.location.href = "/";
                         }
                         else if (Jresult.tk_status == 'ERROR') {
-                            alert("Có lỗi");
+                            swal("Thông báo","Có lỗi","error");
                         }
                         else if (Jresult.tk_status == 'NO_LEADER') {
-                            alert("Bạn không phải leader, mời phắn");
+                            swal("Thông báo","Bạn không phải leader, mời phắn","info");
                         }
                         else {
                             $tds2.html("<b><p style='color:LightGreen;'>Đã duyệt</p> </b>");
@@ -806,7 +820,7 @@ $(document).ready(function () {
             });
         }
         else {
-            alert("Không phê duyệt được khi đã điểm danh đi làm !, điểm danh nghỉ rồi mới phê duyệt được");
+            swal("Thông báo","Không phê duyệt được khi đã điểm danh đi làm !, điểm danh nghỉ rồi mới phê duyệt được","error");
         }
     });
     $(document).on('click', '.deny_button', function () {
@@ -831,7 +845,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -853,7 +867,7 @@ $(document).ready(function () {
         var $nuaphep = "";
         $.each($tds_donnghi, function () {
             $don_nghi = $(this).text();
-            //alert($don_nghi);
+            //($don_nghi);
         });
         $.each($tds_nuaphep, function () {
             $nuaphep = $(this).text();
@@ -863,7 +877,7 @@ $(document).ready(function () {
         var $daduyet = 'Đã duyệt';
         var $np = 'Nửa phép';
         if ($don_nghi == $daduyet && $nuaphep != $np) {
-            alert("Người này đã được duyệt đơn nghỉ hôm nay, Chỉ có thể đánh nghỉ, hủy duyệt mới điểm danh được");
+            swal("Thông báo","Người này đã được duyệt đơn nghỉ hôm nay, Chỉ có thể đánh nghỉ, hủy duyệt mới điểm danh được","error");
         } else {
             //alert('vao day ok');
             $.each($tds, function () {
@@ -885,7 +899,7 @@ $(document).ready(function () {
                     success: function (result) {
                         var Jresult = JSON.parse(result);
                         if (Jresult.tk_status == 'ng') {
-                            alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                            swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                             window.location.href = "/";
                         }
                         else {
@@ -931,7 +945,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1003,7 +1017,7 @@ $(document).ready(function () {
                     success: function (result) {
                         var Jresult = JSON.parse(result);
                         if (Jresult.tk_status == 'ng') {
-                            alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                            swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                             window.location.href = "/";
                         }
                         else {
@@ -1017,7 +1031,7 @@ $(document).ready(function () {
             //console.log('Thing was saved to the database.');
         } else {
             // Do nothing!
-            alert('Giữ nguyên trạng thái phê duyệt !');
+            swal('Giữ nguyên trạng thái phê duyệt !',"info");
             console.log('Giữ nguyên trạng thái phê duyệt !');
         }
     });
@@ -1034,7 +1048,7 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else {
@@ -1067,7 +1081,7 @@ $(document).ready(function () {
                 console.log(result);
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else {
@@ -1091,13 +1105,13 @@ $(document).ready(function () {
             success: function (result) {
                 var Jresult = JSON.parse(result);
                 if (Jresult.tk_status == 'ng') {
-                    alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                    swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                     window.location.href = "/";
                 }
                 else {
                     console.log(result);
                     if (result != 0) {
-                        alert("Có " + result + " đơn nghỉ chưa được phê duyệt, của bộ phận nào vào check ngay  ~!");
+                        swal("Thông báo","Có " + result + " đơn nghỉ chưa được phê duyệt, của bộ phận nào vào check ngay  ~!","info");
                     }
                 }
             }
@@ -1128,7 +1142,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1136,7 +1150,7 @@ $(document).ready(function () {
                             $tds2.html("<b><p style='color:#d6f789;'>TC</p> </b> <button type='button' class='RESET_TC_button btn btn-warning'> RESET </button>");
                         }
                         else {
-                            alert("Lỗi rồi !");
+                            swal("Thông báo","Lỗi rồi !","info");
                         }
                     }
                 }
@@ -1166,7 +1180,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1175,7 +1189,7 @@ $(document).ready(function () {
                             $tds2.html("<b><p style='color:#d6f789;'>TC</p> </b> <button type='button' class='RESET_TC_button btn btn-warning'> RESET </button>");
                         }
                         else {
-                            alert("Lỗi rồi !");
+                            swal("Thông báo","Lỗi rồi !","info");
                         }
                     }
                 }
@@ -1205,7 +1219,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1214,7 +1228,7 @@ $(document).ready(function () {
                             $tds2.html("<b><p style='color:#d6f789;'>TC</p> </b> <button type='button' class='RESET_TC_button btn btn-warning'> RESET </button>");
                         }
                         else {
-                            alert("Lỗi rồi !");
+                            swal("Thông báo","Lỗi rồi !","info");
                         }
                     }
                 }
@@ -1245,7 +1259,7 @@ $(document).ready(function () {
                     console.log(result);
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1253,7 +1267,7 @@ $(document).ready(function () {
                             $tds2.html("<b><p style='color:#d6f789;'>TC</p> </b> <button type='button' class='RESET_TC_button btn btn-warning'> RESET </button>");
                         }
                         else {
-                            alert("Lỗi rồi !");
+                            swal("Thông báo","Lỗi rồi !","info");
                         }
                     }
                 }
@@ -1283,7 +1297,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1291,7 +1305,7 @@ $(document).ready(function () {
                             $tds2.html("<b><p style='color:#d6f789;'>TC</p> </b> <button type='button' class='RESET_TC_button btn btn-warning'> RESET </button>");
                         }
                         else {
-                            alert("Lỗi rồi !");
+                            swal("Thông báo","Lỗi rồi !","info");
                         }
                     }
                 }
@@ -1321,7 +1335,7 @@ $(document).ready(function () {
                 success: function (result) {
                     var Jresult = JSON.parse(result);
                     if (Jresult.tk_status == 'ng') {
-                        alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                        swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                         window.location.href = "/";
                     }
                     else {
@@ -1329,7 +1343,7 @@ $(document).ready(function () {
                             $tds2.html("<b><p style='color:#d6f789;'>TC</p> </b> <button type='button' class='RESET_TC_button btn btn-warning'> RESET </button>");
                         }
                         else {
-                            alert("Lỗi rồi !");
+                            swal("Thông báo","Lỗi rồi !","info");
                         }
                     }
                 }
@@ -1359,7 +1373,7 @@ $(document).ready(function () {
                     success: function (result) {
                         var Jresult = JSON.parse(result);
                         if (Jresult.tk_status == 'ng') {
-                            alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                            swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                             window.location.href = "/";
                         }
                         else {
@@ -1396,7 +1410,7 @@ $(document).ready(function () {
                         //alert(result);			
                         var Jresult = JSON.parse(result);
                         if (Jresult.tk_status == 'ng') {
-                            alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                            swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                             window.location.href = "/";
                         }
                         else {
@@ -1432,7 +1446,7 @@ $(document).ready(function () {
                         //alert(result);				
                         var Jresult = JSON.parse(result);
                         if (Jresult.tk_status == 'ng') {
-                            alert("Phiên đăng nhập hết hạn, đăng nhập lại nhé");
+                            swal("Thông báo","Phiên đăng nhập hết hạn, đăng nhập lại nhé","info");
                             window.location.href = "/";
                         }
                         else {
