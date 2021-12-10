@@ -384,6 +384,5 @@ body
       align-items: center;
   }
   #btdiv{
-      align-content: flex-end;
-      
+      align-content: flex-end;      
   }

@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-var jwt = require('jsonwebtoken');
 var cookieParser = require('cookie-parser');
 var api_module = require('./api');
 var cors = require('cors')
@@ -30,16 +29,12 @@ io.on('connection', client => {
     });
 });
 const port = 80;
-
 var corsOptions = {
     origin: 'http://14.160.33.94:3000',
     optionsSuccessStatus: 200,
-    credentials: true // some legacy browsers (IE11, various SmartTVs) choke on 204
+    credentials: true
 }
-
-
 app.use(cors(corsOptions));
-
 app.use(cookieParser());
 app.use(express.static(__dirname + '/public'));
 app.set('views', './views');
