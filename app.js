@@ -30,8 +30,16 @@ io.on('connection', client => {
     });
 });
 const port = 80;
-app.use(cors());
-app.options('*', cors())
+
+var corsOptions = {
+    origin: 'http://14.160.33.94:3000',
+    optionsSuccessStatus: 200,
+    credentials: true // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
+
+app.use(cors(corsOptions));
+
 app.use(cookieParser());
 app.use(express.static(__dirname + '/public'));
 app.set('views', './views');
@@ -40,7 +48,7 @@ var bodyParser = require('body-parser');
 const { Socket } = require("socket.io");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/', function (req, res, next) {
+app.use('/', function (req, res, next) {    
     api_module.checklogin_index(req, res, next);
 });
 app.use('/login', function (req, res, next) {
@@ -59,7 +67,7 @@ app.post('/api', function (req, res) {
         res.send({ tk_status: 'ng' });
     }
 });
-app.get('/', function (req, res) {
+app.get('/', function (req, res) {    
     res.redirect('/nhansu');
 });
 app.get('/nhansu', function (req, res) {

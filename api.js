@@ -740,6 +740,7 @@ exports.process_api = function (req, res) {
         })()
     }
     else {
+        console.log(qr['command']);
         let EMPL_NO = req.payload_data['EMPL_NO'];
         res.send('ket qua tra ve' + EMPL_NO);
     }

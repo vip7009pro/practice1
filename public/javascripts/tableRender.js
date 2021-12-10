@@ -568,9 +568,9 @@ function getHTMLTABLE2_SummaryTB(data, table_id)
         tr.push("<td style='align:center;'>" + data[i]['MAINDEPTNAME'] + "</td>");
         tr.push("<td>" + data[i]['SUBDEPTNAME'] + "</td>");  
         tr.push("<td style='align:center; color:blue;'>" + data[i]['TOTAL_ALL'] + "</td>"); t1 += data[i]['TOTAL_ALL'];
-        tr.push("<td style='align:center; color:#FF8C11;'>" + data[i]['TOTAL_ON'] + "</td>"); t2 += data[i]['TOTAL_ON'];
-        tr.push("<td style='align:center; color:#23FF55;'>" + data[i]['TOTAL_OFF'] + "</td>"); t3+= data[i]['TOTAL_OFF'];
-        tr.push("<td style='align:center; color:#B8FA09;'>" + data[i]['TOTAL_CDD'] + "</td>"); t4+= data[i]['TOTAL_CDD'];
+        tr.push("<td style='align:center; color:#23FF55;'>" + data[i]['TOTAL_ON'] + "</td>"); t2 += data[i]['TOTAL_ON'];
+        tr.push("<td style='align:center; color:#FF8C11;'>" + data[i]['TOTAL_OFF'] + "</td>"); t3+= data[i]['TOTAL_OFF'];
+        tr.push("<td style='align:center; color:yellow;'>" + data[i]['TOTAL_CDD'] + "</td>"); t4+= data[i]['TOTAL_CDD'];
         tr.push("<td>" + data[i]['TOTAL_NM1'] + "</td>"); t5+= data[i]['TOTAL_NM1'];
         tr.push("<td>" + data[i]['TOTAL_NM2'] + "</td>"); t6+= data[i]['TOTAL_NM2'];
         tr.push("<td>" + data[i]['ON_NM1'] + "</td>"); t7+= data[i]['ON_NM1'];
