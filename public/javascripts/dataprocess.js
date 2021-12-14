@@ -302,10 +302,14 @@ $(document).ready(function () {
                     //alert("Đăng ký nghỉ thành công");
                     swal("Thông báo","Đăng ký nghỉ thành công","success");
                     
+                } if (result == 'NG')
+                {
+                    swal("Thông báo","Lỗi: đã đăng ký ngày này rồi","error");
                 }
                 else {
                     //alert("Lỗi: đã đăng ký vào ngày đó rồi, ko đky trùng đc nữa");
-                    swal("Thông báo","Lỗi: đã đăng ký vào ngày đó rồi, ko đky trùng đc nữa","error");
+                    //swal("Thông báo","Lỗi: đã đăng ký vào ngày đó rồi, ko đky trùng đc nữa","error");
+                    swal("Thông báo","Lỗi: " + result,"error");
                 }
                 // alert(result);
             }
