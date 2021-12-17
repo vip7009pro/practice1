@@ -1,6 +1,14 @@
 var sql = require("mssql");
 var jwt = require('jsonwebtoken');
 require('dotenv').config();
+function returnDateFormat(today) {
+    let year = today.getFullYear();
+    let month = today.getMonth();
+    let date = today.getDate();
+    if (month + 1 < 10) month = '0' + (month);
+    if (date < 10) date = '0' + date;
+    return year + "-" + (month + 1) + "-" + date;
+}
 const config = {
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
@@ -101,14 +109,7 @@ exports.checklogin_login = function (req, res, next) {
         next();
     }
 }
-function returnDateFormat(today) {
-    let year = today.getFullYear();
-    let month = today.getMonth();
-    let date = today.getDate();
-    if (month + 1 < 10) month = '0' + (month);
-    if (date < 10) date = '0' + date;
-    return year + "-" + (month + 1) + "-" + date;
-}
+ 
 exports.process_api = function (req, res) {
     var qr = req.body;
     let rightnow= new Date();
@@ -123,7 +124,7 @@ exports.process_api = function (req, res) {
             let chuapdqty = JSON.parse(kqua)[0]['CPD'];
             console.log(chuapdqty);
             res.send(chuapdqty + '');
-            sql.close();
+            
         })()
     }
     else if (qr['command'] == 'login') {
@@ -157,6 +158,7 @@ exports.process_api = function (req, res) {
         catch (err) {
             console.log("Loi day neh: " + err + ' ');
         }
+        
     }
     else if (qr['command'] == 'logout') {
         res.cookie('token', 'reset');
@@ -217,7 +219,7 @@ exports.process_api = function (req, res) {
                         </ul>
                     `;
                     res.send({ tk_status: 'ok', htmldata: htmlcontent });
-                    sql.close();
+                    
                 }).catch((err) => {
                     console.log("loi promise roi " + err + ' ');
                 });
@@ -227,6 +229,7 @@ exports.process_api = function (req, res) {
             console.log(err + '');
             res.send("loi roi");
         }
+        
     }
     else if (qr['command'] == 'dangkynghi') {
         console.log(qr);
@@ -269,6 +272,7 @@ exports.process_api = function (req, res) {
                     res.send(checkkq);
                 }
             }
+            
         })()
         //res.send('ket qua tra ve' + req.cookies.token);
     }
@@ -306,6 +310,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send('Lỗi, Nhập sai định dạng');
             }
+            
         })()
     }
     else if (qr['command'] == 'tralichsu') {
@@ -323,6 +328,7 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status: "OK", data: kqua});
             }
+            
         })()
     }
     else if (qr['command'] == 'mydiemdanh') {
@@ -334,7 +340,7 @@ exports.process_api = function (req, res) {
             let query = "DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE; SET @empl='" + EMPL_NO + "'; SET @startdate='" + START_DATE + "' SET @enddate='" + END_DATE + "' SELECT ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBATTENDANCETB.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME FROM ZTBATTENDANCETB LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTBATTENDANCETB.EMPL_NO) LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ZTBOFFREGISTRATIONTB ON (ZTBOFFREGISTRATIONTB.EMPL_NO = ZTBATTENDANCETB.EMPL_NO AND ZTBOFFREGISTRATIONTB.APPLY_DATE = ZTBATTENDANCETB.APPLY_DATE) LEFT JOIN ZTBREASON ON ( ZTBOFFREGISTRATIONTB.REASON_CODE = ZTBREASON.REASON_CODE) WHERE ZTBATTENDANCETB.EMPL_NO=@empl AND ZTBATTENDANCETB.APPLY_DATE BETWEEN @startdate AND @enddate";
             kqua = await asyncQuery(query);
             console.log('diem danh: ' + kqua);
-            res.send(kqua);
+            res.send({tk_status:"ok", data: kqua});            
         })()
     }
     else if (qr['command'] == 'pheduyet') {
@@ -359,6 +365,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NO_LEADER"});
             }
+            
         })()
     }
     else if (qr['command'] == 'setpheduyet') {
@@ -388,6 +395,7 @@ exports.process_api = function (req, res) {
                 res.send({tk_status:'NO_LEADER'});
             }
         })()
+        
     }
     else if (qr['command'] == 'diemdanh') {
         console.log(qr);
@@ -440,6 +448,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
+            
         })()
     }
     else if (qr['command'] == 'setdiemdanh') {
@@ -484,6 +493,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
+            
         })()
     }
     else if (qr['command'] == 'dangkytangca2') {
@@ -516,6 +526,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "ng"});
             }
+            
         })()
     }
     else if (qr['command'] == 'diemdanh_total') {
@@ -581,6 +592,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "NO_LEADER"});
             }
+            
         })()
     }
     else if (qr['command'] == 'setteamtab') {
@@ -610,6 +622,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
+            
         })()
     }
     else if (qr['command'] == 'setteambt') {
@@ -635,6 +648,7 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "NO_LEADER"});
             }
+            
         })()
     }
     else if (qr['command'] == 'confirmtangca') {
@@ -717,7 +731,7 @@ exports.process_api = function (req, res) {
             let query = "SELECT TOP 10000 * FROM ZTBDelivery";
             kqua = await asyncQuery(query);
             res.send({tk_status: "OK", data: kqua});
-            sql.close();
+            
         })()
     }
     else if (qr['command'] == 'diemdanhsummary')
@@ -737,10 +751,16 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NO_LEADER"});
             }
+            
         })()
+    }
+    else if (qr['command'] == 'checklogin')
+    {
+        console.log(qr['command']);        
+        res.send({tk_status:"ok",data:req.payload_data});
     }
     else {
         console.log(qr['command']);        
-        res.send({tk_status:"ok"});
+        res.send({tk_status:"ok",data:req.payload_data});
     }
 }
