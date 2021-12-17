@@ -302,7 +302,7 @@ $(document).ready(function () {
                     //alert("Đăng ký nghỉ thành công");
                     swal("Thông báo","Đăng ký nghỉ thành công","success");
                     
-                } if (result == 'NG')
+                } else if (result == 'NG')
                 {
                     swal("Thông báo","Lỗi: đã đăng ký ngày này rồi","error");
                 }
@@ -492,7 +492,8 @@ $(document).ready(function () {
                     window.location.href = "/";
                 }
                 else {
-                    var res = getHTMLTABLE2_mydiemdanh(JSON.parse(result), 'mydiemdanh_tb');
+                    console.log(Jresult.data);
+                    var res = getHTMLTABLE2_mydiemdanh(JSON.parse(Jresult.data), 'mydiemdanh_tb');
                     $("#attendance_history").empty().append(res);
                     $('#mydiemdanh_tb').DataTable({
                         "lengthMenu": [[-1, 10, 25, 50, 100], ["All", 10, 25, 50, 100]]
@@ -597,7 +598,7 @@ $(document).ready(function () {
                     window.location.href = "/";
                 }
                 else {
-                    var res = getHTMLTABLE2_mydiemdanh(JSON.parse(result), 'mydiemdanh_tb');
+                    var res = getHTMLTABLE2_mydiemdanh(JSON.parse(Jresult.data), 'mydiemdanh_tb');
                     $("#attendance_history").empty().append(res);
                     $('#mydiemdanh_tb').DataTable({
                         "lengthMenu": [[-1, 10, 25, 50, 100], ["All", 10, 25, 50, 100]]
