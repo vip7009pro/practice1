@@ -30,7 +30,7 @@ io.on('connection', client => {
 });
 const port = 80;
 var corsOptions = {
-    origin: 'http://14.160.33.94:3000',
+    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010'],
     optionsSuccessStatus: 200,
     credentials: true
 }
