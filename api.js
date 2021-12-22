@@ -112,7 +112,7 @@ exports.checklogin_login = function (req, res, next) {
  
 exports.process_api = function (req, res) {
     var qr = req.body;
-    let rightnow= new Date();
+    let rightnow= new Date().toLocaleString();
     console.log(rightnow + ":" + qr['command']);
     if (qr['command'] == 'check_chua_pd') {
         (async () => {
@@ -758,6 +758,24 @@ exports.process_api = function (req, res) {
     {
         console.log(qr['command']);        
         res.send({tk_status:"ok",data:req.payload_data});
+    }
+    else if (qr['command'] == 'pqc1_output_data')
+    {
+        (async () => {
+            let EMPL_NO = req.payload_data['EMPL_NO'];
+            let JOB_NAME = req.payload_data['JOB_NAME'];
+            let $vitrilamviec = req.payload_data['ATT_GROUP_CODE'];
+            let $subdeptname = req.payload_data['SUBDEPTNAME'];
+            if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
+                let kqua;                             
+                let query = "SELECT TOP 100 * FROM ZTBPQC1TABLE ORDER BY PQC1_ID DESC";
+                kqua = await asyncQuery(query);                
+                res.send({tk_status:"OK", data:kqua});
+            }
+            else {
+                res.send({tk_status:"NO_LEADER"});
+            }            
+        })()
     }
     else {
         console.log(qr['command']);        

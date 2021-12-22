@@ -118,7 +118,7 @@ $(document).ready(function () {
             $('#chat_message').val('');
         }
     });
-    $('#chat_message').on('keydown', function (e) {
+    $('#chat_message').on('keydown', function (e) { 
         if (e.which == 13) {
             var username = $('#chat_name').text();
             var message = $('#chat_message').val();
@@ -910,7 +910,7 @@ $(document).ready(function () {
                         else {
                             var chattime = new Date();
                             var ct = chattime.getFullYear() + "-" + (chattime.getMonth() + 1) + "-" + chattime.getDate() + "  " + chattime.getHours() + ":" + chattime.getMinutes() + ":" + chattime.getSeconds();
-                            notification_data = {
+                            let notification_data = {
                                 type: 'diemdanh',
                                 empl_no: EMPL_NO1,
                                 on_off: '1',
@@ -956,7 +956,7 @@ $(document).ready(function () {
                     else {
                         var chattime = new Date();
                         var ct = chattime.getFullYear() + "-" + (chattime.getMonth() + 1) + "-" + chattime.getDate() + "  " + chattime.getHours() + ":" + chattime.getMinutes() + ":" + chattime.getSeconds();
-                        notification_data = {
+                        let notification_data = {
                             type: 'diemdanh',
                             empl_no: EMPL_NO1,
                             on_off: '0',
