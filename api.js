@@ -1,5 +1,6 @@
 var sql = require("mssql");
 var jwt = require('jsonwebtoken');
+const moment = require("moment");
 require('dotenv').config();
 function returnDateFormat(today) {
     let year = today.getFullYear();
@@ -775,6 +776,59 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NO_LEADER"});
             }            
+        })()
+    }
+    else if (qr['command'] == 'pqc2_output_data')
+    {
+        (async () => {
+            let EMPL_NO = req.payload_data['EMPL_NO'];
+            let JOB_NAME = req.payload_data['JOB_NAME'];
+            let $vitrilamviec = req.payload_data['ATT_GROUP_CODE'];
+            let $subdeptname = req.payload_data['SUBDEPTNAME'];
+            if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
+                let kqua;                             
+                let query = "SELECT TOP 20 PQC2_ID,PROCESS_LOT_NO,LINEQC_PIC,TIME1,TIME2,TIME3,CHECK1,CHECK2,CHECK3,REMARK,INS_DATE,UPD_DATE,PQC1_ID FROM ZTBPQC2TABLE";
+                kqua = await asyncQuery(query);                
+                res.send({tk_status:"OK", data:kqua});
+            }
+            else {
+                res.send({tk_status:"NO_LEADER"});
+            }            
+        })()
+    }
+    else if (qr['command'] == 'insertchat') {
+        
+        (async () => {            
+            let EMPL_NO = qr['EMPL_NO']; 
+            let CHATTIME = moment().format('YYYY-MM-DD HH:mm:ss');
+            //console.log(CHATTIME);
+            let MESSAGE = qr['MESSAGE'];  
+            let checkkq = "OK";
+            let setpdQuery = "INSERT INTO ZCHATTB (CTR_CD,EMPL_NO,CHATTIME,MESSAGE) VALUES ('002','" + EMPL_NO + "','" + CHATTIME + "',N'" + MESSAGE + "')";
+            checkkq = await asyncQuery2(setpdQuery);
+            if (checkkq != "OK") {                
+                res.send({tk_status:"NG",message:"Có lỗi khi lưu tin nhắn lên hệ thống"});
+            }
+            else {
+                res.send({tk_status: "OK"});
+            }   
+            
+        })()
+    }
+    else if (qr['command'] == 'getchat') {
+        (async () => {           
+            let kqua;
+            let query = "SELECT TOP 1000 ZCHATTB.EMPL_NO, CHATTIME, ZCHATTB.MESSAGE, ZTBEMPLINFO.MIDLAST_NAME, ZTBEMPLINFO.FIRST_NAME FROM ZCHATTB JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZCHATTB.EMPL_NO) ORDER BY CHATTIME ASC";
+            kqua = await asyncQuery(query);           
+            if(kqua == 0)
+            {
+                res.send({tk_status: "NG", data: kqua});
+            }
+            else
+            {
+                res.send({tk_status: "OK", data: kqua});
+            }
+            
         })()
     }
     else {
