@@ -63,10 +63,13 @@ app.post('/api', function (req, res) {
     }
 });
 app.get('/', function (req, res) {    
-    res.redirect('/nhansu');
+    //res.redirect('/nhansu');
+    res.redirect('http://14.160.33.94:3010');
+    //res.redirect("14.160.33.94:3010");
 });
 app.get('/nhansu', function (req, res) {
-    if (req.coloiko == 'kocoloi') {
+    res.redirect('http://14.160.33.94:3010');
+    /* if (req.coloiko == 'kocoloi') {
         res.render('pages/index.ejs',
             {
                 variable: 'Đây là nội dung của biến được truyền vào', selection: 'result_table', rootPath: __dirname, login_data: req.payload_data
@@ -75,7 +78,7 @@ app.get('/nhansu', function (req, res) {
     }
     else {
         res.redirect('/login2');
-    }
+    } */
 });
 app.get('/about', function (req, res) {
     if (req.coloiko == 'kocoloi') {

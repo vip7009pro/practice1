@@ -33,8 +33,11 @@ function asyncQuery2(queryString) {
                     return reject(err + ' ');
                 }
                 return resolve('OK');
+                
             });
         });
+        
+        
     }).catch((err) => {
         console.log("Loi dc catch 2: " + err + ' ');
     });
@@ -829,6 +832,70 @@ exports.process_api = function (req, res) {
                 res.send({tk_status: "OK", data: kqua});
             }
             
+        })()
+    }
+    else if (qr['command'] == 'temp_info') {
+       
+        (async () => {           
+            let PARAM = qr['param'];
+            let OPTION = qr['option'];
+            let query ="";
+            switch (OPTION) {
+              case "empl_name":
+                query ="SELECT EMPL_NAME FROM M010 WHERE EMPL_NO='" + PARAM + "'";              
+                break;
+              case "gname":
+                query ="SELECT TOP 1 G_NAME FROM P501 JOIN P500 ON (P501.PROCESS_IN_DATE =P500.PROCESS_IN_DATE AND P501.PROCESS_IN_NO =P500.PROCESS_IN_NO AND P501.PROCESS_IN_SEQ =P500.PROCESS_IN_SEQ) JOIN M100 ON (M100.G_CODE = P500.G_CODE) WHERE PROCESS_LOT_NO='"+ PARAM+"'";              
+                break;
+              default:
+
+            }            
+            kqua = await asyncQuery(query);           
+            if(kqua == 0)
+            {
+                res.send({tk_status: "NG", data: kqua});
+            }
+            else
+            {
+                res.send({tk_status: "OK", data: kqua});
+            }
+            
+        })()
+        
+
+    }
+    else if (qr['command'] == 'insert_pqc1') 
+    {
+        (async () => {            
+            let DATA = qr['data']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = "  INSERT INTO [dbo].[ZTBPQC1TABLE]([CTR_CD],[PROCESS_LOT_NO],[LINEQC_PIC],[PROD_PIC],[PROD_LEADER],[LINE_NO],[STEPS],[CAVITY],[SETTING_OK_TIME],[FACTORY],[REMARK],[INS_DATE],[UPD_DATE]) VALUES ('002','"+DATA.PROCESS_LOT_NO+"','"+DATA.LINEQC_PIC+"','"+DATA.PROD_PIC+"','"+DATA.PROD_LEADER+"','"+DATA.LINE_NO+"','"+DATA.STEPS+"','"+DATA.CAVITY+"','"+DATA.SETTING_OK_TIME+"','"+DATA.FACTORY+"','"+DATA.REMARK+"','"+currenttime+"','"+currenttime+"')";
+            
+            checkkq = await asyncQuery2(setpdQuery);
+            if (checkkq != "OK") {                
+                res.send({tk_status:"NG",message:"Có lỗi khi nhập data lên hệ thống"});
+            }
+            else {
+                res.send({tk_status: "OK"});
+            } 
+        })()
+    }
+    else if (qr['command'] == 'insert_sample_qty_pqc1') 
+    {
+        (async () => {            
+            let DATA = qr['data'];             
+            let checkkq = "OK";
+            let setpdQuery = "UPDATE ZTBPQC1TABLE SET INSPECT_SAMPLE_QTY="+ DATA.INSPECT_SAMPLE_QTY+ " WHERE PQC1_ID="+ DATA.PQC1_ID;            
+            checkkq = await asyncQuery2(setpdQuery);
+            if (checkkq != "OK") {                
+                res.send({tk_status:"NG",message:"Có lỗi khi nhập data lên hệ thống"});
+            }
+            else {
+                res.send({tk_status: "OK"});
+            }       
+            sql.close();      
         })()
     }
     else {
