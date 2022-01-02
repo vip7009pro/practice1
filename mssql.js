@@ -49,7 +49,7 @@ const selectQuery = async (query) => {
     let kq=''; 
     try {
         await sql.connect(config);
-        const result = await sql.query(query);  
+        const result = await sql.query(query);          
         if(result.rowsAffected[0]>0)      
         {
             if(result.recordset)
@@ -66,12 +66,14 @@ const selectQuery = async (query) => {
         {
             kq = {status:"NG", message: "Không có dòng dữ liệu nào"};
         }
-        console.log(result);
+       
     }
     catch (err) {
         //console.log(err);
         kq = {status:"NG", message: err+' '};
+        
     }    
+    
     return kq;
 }
 
@@ -86,15 +88,16 @@ const kkk =  async ()=>{
 
 //kkk();
 
-for(var i=0;i<10;i++)
+for(var i=0;i<1;i++)
 {
     (async ()=>{
         let qry1 = `UPDATE CODE_PRICE_TEST SET PROD_PRICE=1111 WHERE G_CODE='7C04198A'`;
         let qry2 = `SELECT TOP 1 * FROM  ZTBEMPLINFO`;
         let ketqua1 = await selectQuery(qry1);
         let ketqua2 = await selectQuery(qry2);
-        console.log("___________________________");
+        
         console.log(ketqua1);
+        console.log("___________________________");
         console.log(ketqua2);
     })()
 }
