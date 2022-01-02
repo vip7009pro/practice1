@@ -1,6 +1,7 @@
 var sql = require("mssql");
 var jwt = require('jsonwebtoken');
 const moment = require("moment");
+
 require('dotenv').config();
 function returnDateFormat(today) {
     let year = today.getFullYear();
@@ -74,6 +75,44 @@ function asyncQuery(queryString) {
         console.log("Loi dc catch: " + err + ' ');
     });
 }
+
+
+const queryDB = async (query) => {
+    let kq=''; 
+    try {
+        await sql.connect(config);
+        const result = await sql.query(query);          
+        if(result.rowsAffected[0]>0)      
+        {
+            if(result.recordset)
+            {
+                kq = {tk_status:"OK", data: result.recordset};
+            }
+            else
+            {
+                kq = {tk_status:"OK", message: "Modify data thanh cong"};
+            }
+            
+        }
+        else
+        {
+            kq = {status:"NG", message: "Không có dòng dữ liệu nào"};
+        }
+       
+    }
+    catch (err) {
+        //console.log(err);
+        kq = {status:"NG", message: err+' '};
+        
+    }    
+    
+    return kq;
+}
+
+const bulkQueryDB = async ()=>{
+
+}
+
 exports.checklogin_index = function (req, res, next) {
     //console.log("bam login ma cung loi?");
     try {
@@ -117,7 +156,8 @@ exports.checklogin_login = function (req, res, next) {
 exports.process_api = function (req, res) {
     var qr = req.body;
     let rightnow= new Date().toLocaleString();
-    console.log(rightnow + ":" + qr['command']);
+    console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr['command']);
+    
     if (qr['command'] == 'check_chua_pd') {
         (async () => {
             var today = new Date();
@@ -887,17 +927,29 @@ exports.process_api = function (req, res) {
     else if (qr['command'] == 'insert_sample_qty_pqc1') 
     {
         (async () => {            
-            let DATA = qr['data'];             
-            let checkkq = "OK";
-            let setpdQuery = "UPDATE ZTBPQC1TABLE SET INSPECT_SAMPLE_QTY="+ DATA.INSPECT_SAMPLE_QTY+ " WHERE PQC1_ID="+ DATA.PQC1_ID;            
-            checkkq = await asyncQuery2(setpdQuery);
-            if (checkkq != "OK") {                
-                res.send({tk_status:"NG",message:"Có lỗi khi nhập data lên hệ thống"});
+            let DATA = qr['data'];  
+            let checkkq = ""; 
+            let  errflag = "OK";
+            for(let i=0;i<DATA.length;i++)
+            {                
+                let setpdQuery = "UPDATE ZTBPQC1TABLE SET INSPECT_SAMPLE_QTY=" + DATA[i].INSPECT_SAMPLE_QTY + " WHERE PQC1_ID=" + DATA[i].PQC1_ID;
+                console.log(setpdQuery);
+                checkkq = await queryDB(setpdQuery); 
+                if(checkkq.tk_status == "NG")
+                {
+                    errflag = "NG";
+
+                }
+            }          
+            console.log(errflag);
+            if(errflag == "NG")
+            {
+                res.send({tk_status:errflag,message:"Có lỗi gì đó trong quá trình update"});
             }
-            else {
-                res.send({tk_status: "OK"});
-            }       
-            sql.close();      
+            else
+            {
+                res.send({tk_status:"OK",message:"Update data thành công !"});
+            }                       
         })()
     }
     else {
