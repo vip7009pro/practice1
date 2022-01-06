@@ -1,8 +1,80 @@
 var sql = require("mssql");
 var jwt = require('jsonwebtoken');
 const moment = require("moment");
-
 require('dotenv').config();
+
+
+function generate_condition_pqc1($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $ycsx_no, $process_lot_no, $inspec_ID, $inspect_factory) {
+    $condition = "WHERE 1=1 ";
+    if ($inspect_time_checkvalue == false) {
+        $inspect_time_checkvalue = " AND SETTING_OK_TIME BETWEEN '"+$start_date+" 00:00:00' AND  '"+$end_date+" 23:59:59' ";
+    }
+    else {
+        $inspect_time_checkvalue = "";
+    }
+    if ($input_cust_name != '') {
+        $input_cust_name = " AND M110.CUST_NAME_KD LIKE '%"+$input_cust_name+"%'";
+    }
+    if ($input_code_cms != '') {
+        $input_code_cms = " AND M100.G_CODE = '"+$input_code_cms+"'";
+    }
+    if ($input_code_KD != '') {
+        $input_code_KD = " AND M100.G_NAME LIKE  '%"+$input_code_KD+"%'";
+    }
+    if ($ycsx_no != '') {
+        $ycsx_no = " AND P400.PROD_REQUEST_NO = '"+$ycsx_no+"'";
+    }
+    if ($process_lot_no != '') {
+        $process_lot_no = " AND P501_A.PROCESS_LOT_NO = '"+$process_lot_no+"'";
+    }
+    if ($inspec_ID != '') {
+        $inspec_ID = " AND ZTBPQC1TABLE.PQC1_ID = '"+$inspec_ID+"'";
+    }
+    if ($inspect_factory != 'All') {
+        $inspect_factory = " AND ZTBPQC1TABLE.FACTORY = '"+$inspect_factory+"'";
+    }
+    else {
+        $inspect_factory = "";
+    }
+    $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$ycsx_no+$process_lot_no+$inspec_ID+$inspect_factory;
+    return $condition;
+}
+
+function generate_condition_pqc3($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $ycsx_no, $process_lot_no, $inspec_ID, $inspect_factory) {
+    $condition = "WHERE 1=1 ";
+    if ($inspect_time_checkvalue == false) {
+        $inspect_time_checkvalue = " AND OCCURR_TIME BETWEEN '" + $start_date + " 00:00:00' AND  '" + $end_date + " 23:59:59' ";
+    }
+    else {
+        $inspect_time_checkvalue = "";
+    }
+    if ($input_cust_name != '') {
+        $input_cust_name = " AND M110.CUST_NAME_KD LIKE '%" + $input_cust_name + "%'";
+    }
+    if ($input_code_cms != '') {
+        $input_code_cms = " AND M100.G_CODE = '" + $input_code_cms + "'";
+    }
+    if ($input_code_KD != '') {
+        $input_code_KD = " AND M100.G_NAME LIKE  '%" + $input_code_KD + "%'";
+    }
+    if ($ycsx_no != '') {
+        $ycsx_no = " AND P500_A.PROD_REQUEST_NO = '" + $ycsx_no + "'";
+    }
+    if ($process_lot_no != '') {
+        $process_lot_no = " AND P501_A.PROCESS_LOT_NO = '" + $process_lot_no + "'";
+    }
+    if ($inspec_ID != '') {
+        $inspec_ID = " AND ZTBPQC3TABLE.PQC3_ID = '" + $inspec_ID + "'";
+    }
+    if ($inspect_factory != 'All') {
+        $inspect_factory = " AND ZTBPQC1TABLE_B.FACTORY = '" + $inspect_factory + "'";
+    }
+    else {
+        $inspect_factory = "";
+    }
+    $condition = $condition + $inspect_time_checkvalue + $input_cust_name + $input_code_cms + $input_code_KD + $ycsx_no + $process_lot_no + $inspec_ID + $inspect_factory;
+    return $condition;
+}
 function returnDateFormat(today) {
     let year = today.getFullYear();
     let month = today.getMonth();
@@ -91,14 +163,12 @@ const queryDB = async (query) => {
             else
             {
                 kq = {tk_status:"OK", message: "Modify data thanh cong"};
-            }
-            
+            }            
         }
         else
         {
             kq = {status:"NG", message: "Không có dòng dữ liệu nào"};
-        }
-       
+        }       
     }
     catch (err) {
         //console.log(err);
@@ -832,7 +902,7 @@ exports.process_api = function (req, res) {
             let $subdeptname = req.payload_data['SUBDEPTNAME'];
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
                 let kqua;                             
-                let query = "SELECT TOP 20 PQC2_ID,PROCESS_LOT_NO,LINEQC_PIC,TIME1,TIME2,TIME3,CHECK1,CHECK2,CHECK3,REMARK,INS_DATE,UPD_DATE,PQC1_ID FROM ZTBPQC2TABLE";
+                let query = "SELECT TOP 100 PQC2_ID,PROCESS_LOT_NO,LINEQC_PIC,TIME1,TIME2,TIME3,CHECK1,CHECK2,CHECK3,REMARK,INS_DATE,UPD_DATE,PQC1_ID FROM ZTBPQC2TABLE";
                 kqua = await asyncQuery(query);                
                 res.send({tk_status:"OK", data:kqua});
             }
@@ -841,8 +911,22 @@ exports.process_api = function (req, res) {
             }            
         })()
     }
-    else if (qr['command'] == 'insertchat') {
-        
+    else if (qr['command'] == 'pqc3_output_data')
+    {
+        (async () => {            
+            let JOB_NAME = req.payload_data['JOB_NAME'];            
+            if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
+                let kqua;                             
+                let query = `SELECT TOP 100 [PQC3_ID],[PROCESS_LOT_NO],[LINEQC_PIC],[OCCURR_TIME],[INSPECT_QTY],[DEFECT_QTY],[DEFECT_PHENOMENON],[DEFECT_IMAGE_LINK],[REMARK],[INS_DATE],[UPD_DATE],[PQC1_ID]   FROM [dbo].[ZTBPQC3TABLE] ORDER BY PQC3_ID DESC`;
+                kqua = await queryDB(query);                
+                res.send(kqua);
+            }
+            else {
+                res.send({tk_status:"NO_LEADER"});
+            }            
+        })()
+    }
+    else if (qr['command'] == 'insertchat') {        
         (async () => {            
             let EMPL_NO = qr['EMPL_NO']; 
             let CHATTIME = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -891,7 +975,8 @@ exports.process_api = function (req, res) {
                 break;
               default:
 
-            }            
+            }     
+            //console.log(query);
             kqua = await asyncQuery(query);           
             if(kqua == 0)
             {
@@ -950,6 +1035,87 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status:"OK",message:"Update data thành công !"});
             }                       
+        })()
+    }
+    else if (qr['command'] == 'getpqc1id')
+    {
+        (async () => {
+            let EMPL_NO = qr['EMPL_NO'];
+            let PROCESS_LOT_NO = qr['PROCESS_LOT_NO'];
+            let kqua;                             
+            let query = `SELECT PQC1_ID FROM ZTBPQC1TABLE WHERE LINEQC_PIC='${EMPL_NO}' AND PROCESS_LOT_NO='${PROCESS_LOT_NO}'`;
+            //console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);
+                  
+        })()
+    }
+    else if (qr['command'] == 'insert_pqc2') 
+    {
+        (async () => {            
+            let DATA = qr['data']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTBPQC2TABLE (CTR_CD, PROCESS_LOT_NO, LINEQC_PIC, TIME1, TIME2, TIME3, CHECK1, CHECK2, CHECK3, REMARK, INS_DATE, UPD_DATE, PQC1_ID) VALUES ('002','${DATA.PROCESS_LOT_NO}','${DATA.LINEQC_PIC}','${DATA.CHECKSHEET.TIME1}','${DATA.CHECKSHEET.TIME2}','${DATA.CHECKSHEET.TIME3}','${DATA.CHECKSHEET.CHECK1}','${DATA.CHECKSHEET.CHECK2}','${DATA.CHECKSHEET.CHECK3}','${DATA.REMARK}','${currenttime}','${currenttime}',${DATA.PQC1_ID})`;     
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);            
+        })()
+    }
+    else if (qr['command'] == 'insert_pqc3') 
+    {
+        (async () => {            
+            let DATA = qr['data']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTBPQC3TABLE (CTR_CD, PROCESS_LOT_NO, LINEQC_PIC, OCCURR_TIME, INSPECT_QTY, DEFECT_QTY, DEFECT_PHENOMENON, DEFECT_IMAGE_LINK, REMARK, INS_DATE, UPD_DATE, PQC1_ID) VALUES('002','${DATA.PROCESS_LOT_NO}','${DATA.LINEQC_PIC}','${DATA.OCCURR_TIME}',${DATA.INSPECT_QTY},${DATA.DEFECT_QTY},N'${DATA.DEFECT_PHENOMENON}','${DATA.DEFECT_IMAGE_LINK}',N'${DATA.REMARK}','${currenttime}','${currenttime}',${DATA.PQC1_ID})`;     
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);            
+        })()
+    }
+    else if (qr['command'] == 'getpqcdata')
+    {
+        (async () => {
+            let DATA = qr['DATA'];    
+            console.log(DATA);       
+            let kqua;   
+            let query = ``;
+            switch (DATA.SELECTION) {
+                case 1:
+                    console.log("case 1");
+                    query = `SELECT ZTBPQC1TABLE.PQC1_ID, M110.CUST_NAME_KD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, P400.PROD_REQUEST_DATE, ZTBPQC1TABLE.PROCESS_LOT_NO, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, M010.EMPL_NAME AS LINEQC_PIC, M010_A.EMPL_NAME AS PROD_PIC, M010_B.EMPL_NAME AS PROD_LEADER, ZTBPQC1TABLE.LINE_NO, ZTBPQC1TABLE.STEPS, ZTBPQC1TABLE.CAVITY,ZTBPQC1TABLE.SETTING_OK_TIME, ZTBPQC1TABLE.FACTORY, ZTBPQC1TABLE.INSPECT_SAMPLE_QTY, ZTBPOTable_A.PROD_PRICE , (ZTBPOTable_A.PROD_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT ,ZTBPQC1TABLE.REMARK, ZTBPQC1TABLE.INS_DATE, ZTBPQC1TABLE.UPD_DATE FROM ZTBPQC1TABLE LEFT JOIN (SELECT * FROM P501 WHERE INS_DATE > '2021-06-01 00:00:00') AS P501_A ON (P501_A.PROCESS_LOT_NO = ZTBPQC1TABLE.PROCESS_LOT_NO) LEFT JOIN (SELECT DISTINCT PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ, PROD_REQUEST_NO FROM P500 WHERE INS_DATE > '2021-06-01 00:00:00' ) AS P500_A ON (P501_A.PROCESS_IN_DATE = P500_A.PROCESS_IN_DATE  AND P501_A.PROCESS_IN_NO = P500_A.PROCESS_IN_NO  AND P501_A.PROCESS_IN_SEQ = P500_A.PROCESS_IN_SEQ) LEFT JOIN P400 ON (P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = ZTBPQC1TABLE.LINEQC_PIC) LEFT JOIN (SELECT EMPL_NAME, EMPL_NO FROM M010) AS M010_A ON (M010_A.EMPL_NO = ZTBPQC1TABLE.PROD_PIC) LEFT JOIN (SELECT EMPL_NAME, EMPL_NO FROM M010) AS M010_B ON (M010_B.EMPL_NO = ZTBPQC1TABLE.PROD_LEADER) LEFT JOIN (SELECT DISTINCT G_CODE, MIN(PROD_PRICE) AS PROD_PRICE FROM ZTBPOTable GROUP BY G_CODE) AS ZTBPOTable_A ON (ZTBPOTable_A.G_CODE = M100.G_CODE) JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) ${generate_condition_pqc1(DATA.ALLTIME,DATA.FROMDATE, DATA.TODATE,DATA.CUST_NAME,DATA.G_CODE, DATA.G_NAME_KD,DATA.PROD_REQUEST_NO, DATA.PROCESS_LOT_NO,DATA.PQC_ID,DATA.FACTORY)} ORDER BY PQC1_ID DESC`;
+                    break;
+                case 2:
+                    console.log("case 2");
+                    query = `SELECT TOP 100 ZTBPQC1_A_TABLE .FACTORY,ZTBPQC1_A_TABLE.PROCESS_LOT_NO,ZTBPQC1_A_TABLE.G_NAME,ZTBPQC1_A_TABLE.G_NAME_KD,ZTBPQC1_A_TABLE.LINEQC_PIC,ZTBPQC1_A_TABLE.PROD_PIC,ZTBPQC1_A_TABLE.PROD_LEADER,ZTBPQC1_A_TABLE.LINE_NO,ZTBPQC1_A_TABLE.STEPS,ZTBPQC1_A_TABLE.CAVITY,ZTBPQC1_A_TABLE.SETTING_OK_TIME,  ZTBPQC1_A_TABLE.INSPECT_SAMPLE_QTY,ZTBPQC1_A_TABLE.PROD_PRICE,ZTBPQC1_A_TABLE.SAMPLE_AMOUNT,ZTBPQC1_A_TABLE.REMARK,  ZTBPQC2TABLE.PQC1_ID,ZTBPQC2TABLE.PQC2_ID,ZTBPQC2TABLE.TIME1,ZTBPQC2TABLE.TIME2,ZTBPQC2TABLE.TIME3,ZTBPQC2TABLE.CHECK1,ZTBPQC2TABLE.CHECK2,ZTBPQC2TABLE.CHECK3,ZTBPQC2TABLE.REMARK,ZTBPQC2TABLE.INS_DATE,ZTBPQC2TABLE.UPD_DATE FROM ZTBPQC2TABLE LEFT JOIN   (SELECT ZTBPQC1TABLE.PQC1_ID,   ZTBPQC1TABLE.PROCESS_LOT_NO,   M100.G_NAME,   M100.G_NAME_KD,   M010.EMPL_NAME AS LINEQC_PIC,   M010_A.EMPL_NAME AS PROD_PIC,   M010_B.EMPL_NAME AS PROD_LEADER,   ZTBPQC1TABLE.LINE_NO,   ZTBPQC1TABLE.STEPS,   ZTBPQC1TABLE.CAVITY,   ZTBPQC1TABLE.SETTING_OK_TIME,   ZTBPQC1TABLE.FACTORY,   ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,   ZTBPOTable_A.PROD_PRICE,   (ZTBPOTable_A.PROD_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT,   ZTBPQC1TABLE.REMARK,   ZTBPQC1TABLE.INS_DATE,   ZTBPQC1TABLE.UPD_DATE    FROM ZTBPQC1TABLE    LEFT JOIN      (SELECT *       FROM P501       WHERE INS_DATE > '2021-06-01 00:00:00') AS P501_A ON (P501_A.PROCESS_LOT_NO = ZTBPQC1TABLE.PROCESS_LOT_NO)    LEFT JOIN      (SELECT DISTINCT PROCESS_IN_DATE,   PROCESS_IN_NO,   PROCESS_IN_SEQ,   PROD_REQUEST_NO       FROM P500       WHERE INS_DATE > '2021-06-01 00:00:00' ) AS P500_A ON (P501_A.PROCESS_IN_DATE = P500_A.PROCESS_IN_DATE  AND P501_A.PROCESS_IN_NO = P500_A.PROCESS_IN_NO  AND P501_A.PROCESS_IN_SEQ = P500_A.PROCESS_IN_SEQ)    LEFT JOIN P400 ON (P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)    LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)    LEFT JOIN M010 ON (M010.EMPL_NO = ZTBPQC1TABLE.LINEQC_PIC)    LEFT JOIN      (SELECT EMPL_NAME,  EMPL_NO       FROM M010) AS M010_A ON (M010_A.EMPL_NO = ZTBPQC1TABLE.PROD_PIC)    LEFT JOIN      (SELECT EMPL_NAME,  EMPL_NO       FROM M010) AS M010_B ON (M010_B.EMPL_NO = ZTBPQC1TABLE.PROD_LEADER)    LEFT JOIN      (SELECT DISTINCT G_CODE,   MIN(PROD_PRICE) AS PROD_PRICE       FROM ZTBPOTable       GROUP BY G_CODE) AS ZTBPOTable_A ON (ZTBPOTable_A.G_CODE = M100.G_CODE)) AS ZTBPQC1_A_TABLE ON (ZTBPQC2TABLE.PQC1_ID = ZTBPQC1_A_TABLE.PQC1_ID)  ORDER BY PQC2_ID DESC`;
+                    break;
+                case 3:
+                    console.log("case 3");
+                    query = `SELECT ZTBPQC3TABLE.PQC3_ID, ZTBPQC1TABLE_B.FACTORY, M110.CUST_NAME_KD, P500_A.PROD_REQUEST_NO,  P500_A.PROD_REQUEST_DATE, ZTBPQC3TABLE.PROCESS_LOT_NO,  M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTBPOTable_A.PROD_PRICE, M010.EMPL_NAME AS LINEQC_PIC_NAME, ZTBPQC1TABLE_B.PROD_PIC, ZTBPQC1TABLE_B.PROD_LEADER, ZTBPQC1TABLE_B.LINE_NO, ZTBPQC3TABLE.LINEQC_PIC,ZTBPQC3TABLE.OCCURR_TIME,ZTBPQC3TABLE.INSPECT_QTY,ZTBPQC3TABLE.DEFECT_QTY, ZTBPQC3TABLE.DEFECT_PHENOMENON,ZTBPQC3TABLE.DEFECT_IMAGE_LINK,ZTBPQC3TABLE.REMARK FROM ZTBPQC3TABLE LEFT JOIN (SELECT * FROM P501 WHERE INS_DATE > '2021-06-01 00:00:00') AS P501_A ON (P501_A.PROCESS_LOT_NO = ZTBPQC3TABLE.PROCESS_LOT_NO) LEFT JOIN (SELECT DISTINCT PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ, PROD_REQUEST_NO,G_CODE, PROD_REQUEST_DATE FROM P500 WHERE INS_DATE > '2021-06-01 00:00:00' ) AS P500_A ON (P501_A.PROCESS_IN_DATE = P500_A.PROCESS_IN_DATE  AND P501_A.PROCESS_IN_NO = P500_A.PROCESS_IN_NO  AND P501_A.PROCESS_IN_SEQ = P500_A.PROCESS_IN_SEQ) LEFT JOIN M100 ON (M100.G_CODE = P500_A.G_CODE) LEFT JOIN (SELECT DISTINCT G_CODE, MIN(PROD_PRICE) AS PROD_PRICE FROM ZTBPOTable GROUP BY G_CODE) AS ZTBPOTable_A ON (ZTBPOTable_A.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = ZTBPQC3TABLE.LINEQC_PIC) LEFT JOIN (SELECT ZTBPQC1TABLE.CTR_CD,ZTBPQC1TABLE.PQC1_ID,ZTBPQC1TABLE.PROCESS_LOT_NO,ZTBPQC1TABLE.LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.FACTORY,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE  FROM ZTBPQC1TABLE JOIN ZTBPQC3TABLE ON ZTBPQC1TABLE.PQC1_ID = ZTBPQC3TABLE.PQC1_ID) AS ZTBPQC1TABLE_B ON (ZTBPQC1TABLE_B.PQC1_ID = ZTBPQC3TABLE.PQC1_ID) JOIN P400 ON (P400.PROD_REQUEST_NO = P500_A.PROD_REQUEST_NO) JOIN M110 ON ( M110.CUST_CD= P400.CUST_CD) ${generate_condition_pqc3(DATA.ALLTIME,DATA.FROMDATE, DATA.TODATE, DATA.CUST_NAME, DATA.G_CODE, DATA.G_NAME_KD, DATA.PROD_REQUEST_NO, DATA.PROCESS_LOT_NO, DATA.PQC_ID, DATA.FACTORY)} ORDER BY PQC3_ID DESC`;
+                    break;
+                default:
+                    console.log("invalid case selected");
+                    break;
+            }
+                       
+            console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);                  
+        })()
+    }
+    else if (qr['command'] == 'checkktdtc')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let kqua;                             
+            let query = `SELECT * FROM (SELECT  P500.M_CODE, SUBSTRING(P501.M_LOT_NO,0,7) AS LOT_TO, M090.WIDTH_CD FROM P501 JOIN P500 ON (P501.PROCESS_IN_DATE =P500.PROCESS_IN_DATE AND P501.PROCESS_IN_NO =P500.PROCESS_IN_NO AND P501.PROCESS_IN_SEQ =P500.PROCESS_IN_SEQ) JOIN M090 ON  (M090.M_CODE = P500.M_CODE) WHERE P501.PROCESS_LOT_NO='${DATA.PROCESS_LOT_NO}') AS AA JOIN (SELECT TRANGTHAI, M_CODE, SIZE, LOTCMS FROM NHAP_NVL) AS BB ON (AA.LOT_TO = BB.LOTCMS AND AA.M_CODE =  BB.M_CODE AND AA.WIDTH_CD = BB.SIZE)`;
+            console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);
+                  
         })()
     }
     else {
