@@ -242,6 +242,37 @@ exports.process_api = function (req, res) {
             
         })()
     }
+    else if (qr['command'] == 'login2') {  
+        let DATA = qr['DATA'];
+        let username = DATA.user;
+        let password = DATA.pass;
+        var loginResult = false;
+        try {
+            (async () => {
+                let kqua;
+                let query = "SELECT ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) WHERE ZTBEMPLINFO.EMPL_NO = '" + username + "' AND PASSWORD = '" + password + "'";
+                kqua = await asyncQuery(query);
+                //console.log(kqua); 
+                loginResult = kqua;
+                console.log("KET QUA LOGIN = " + loginResult);
+                if (loginResult != 0) {
+                    var token = jwt.sign({ payload: loginResult }, 'nguyenvanhung', { expiresIn: 3600 * 24 });
+                    res.cookie('token', token);
+                    //console.log(token);                       
+                    res.send({ tk_status: "ok", token_content: token, user_data: loginResult });
+                    console.log('login thanh cong');
+                }
+                else {
+                    res.send({ tk_status: "ng", token_content: token });
+                    console.log('login that bai');
+                }
+            })()
+        }
+        catch (err) {
+            console.log("Loi day neh: " + err + ' ');
+        }
+        
+    }
     else if (qr['command'] == 'login') {
         console.log("post request from login page !");
         console.log('USER = ' + qr['user']);
@@ -1196,6 +1227,45 @@ exports.process_api = function (req, res) {
             let kqua;                             
             let query = `INSERT INTO Z_SPECIAL_M_LOT (CTR_CD,CNDB_NO,CNDB_ENCODE,M_LOT_NO,SPECIAL_START,SPECIAL_END,UPDATE_HISTORY,REG_EMPL_NO,APPROVE_STATUS,INS_DATE,REMARK) VALUES ('002','${DATA.CNDB_NO}','${DATA.CNDB_ENCODE}','${DATA.M_LOT_NO}','${DATA.SPECIAL_START}','${DATA.SPECIAL_END}','${EMPL_NO} | ${currenttime}','${EMPL_NO}','W','${currenttime}',N'${DATA.REMARK}')`;
             console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);                  
+        })()
+    }
+    else if (qr['command'] == 'workdaycheck')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let EMPL_NO = req.payload_data['EMPL_NO'];
+            let startOfYear = moment().startOf('year').format('YYYY-MM-DD');
+            let kqua;                             
+            let query = `SELECT COUNT(EMPL_NO) AS WORK_DAY FROM ZTBATTENDANCETB WHERE EMPL_NO='${EMPL_NO}' AND ON_OFF=1 AND APPLY_DATE >='${startOfYear}' `;
+            //console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);                  
+        })()
+    }
+    else if (qr['command'] == 'tangcadaycheck')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let EMPL_NO = req.payload_data['EMPL_NO'];
+            let startOfYear = moment().startOf('year').format('YYYY-MM-DD');
+            let kqua;                             
+            let query = `SELECT COUNT(EMPL_NO) AS TANGCA_DAY FROM ZTBATTENDANCETB WHERE EMPL_NO='${EMPL_NO}' AND ON_OFF=1 AND APPLY_DATE >='${startOfYear}' AND OVERTIME=1`;
+            //console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);                 
+        })()
+    }
+    else if (qr['command'] == 'nghidaycheck')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let EMPL_NO = req.payload_data['EMPL_NO'];
+            let startOfYear = moment().startOf('year').format('YYYY-MM-DD');
+            let kqua;                             
+            let query = `SELECT COUNT(EMPL_NO) AS NGHI_DAY FROM ZTBOFFREGISTRATIONTB WHERE EMPL_NO = '${EMPL_NO}' AND APPLY_DATE >= '${startOfYear}' AND REASON_CODE <>2`;
+            //console.log(query);
             kqua = await queryDB(query);                
             res.send(kqua);                  
         })()

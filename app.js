@@ -30,7 +30,7 @@ io.on('connection', client => {
 });
 const port = 80;
 var corsOptions = {
-    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010'],
+    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://localhost'],
     optionsSuccessStatus: 200,
     credentials: true
 }
@@ -55,7 +55,7 @@ app.use('/login2', function (req, res, next) {
 app.post('/api', function (req, res) {
     //api_module.process_api(req,res);   
     var qr = req.body;
-    if (req.coloiko == 'kocoloi' || qr['command'] == 'login') {
+    if (req.coloiko == 'kocoloi' || qr['command'] == 'login' || qr['command'] == 'login2') {
         api_module.process_api(req, res);
     }
     else {
