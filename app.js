@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser');
 var api_module = require('./api');
 var cors = require('cors')
 require('dotenv').config();
+
 console.log("usser  =" + process.env.DB_USER);
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
@@ -30,7 +31,7 @@ io.on('connection', client => {
 });
 const port = 80;
 var corsOptions = {
-    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://localhost'],
+    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost'],
     optionsSuccessStatus: 200,
     credentials: true
 }
@@ -101,5 +102,5 @@ app.get('/login2', function (req, res) {
     console.log(req.cookies);
 });
 app.listen(port, function () {
-    console.log("App dang nghe port 100");
+    console.log("App dang nghe port " + port);
 });
