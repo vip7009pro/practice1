@@ -6,6 +6,7 @@ var cors = require('cors')
 require('dotenv').config();
 
 console.log("usser  =" + process.env.DB_USER);
+console.log("server  =" + process.env.DB_SERVER);
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
     cors: {
@@ -31,7 +32,7 @@ io.on('connection', client => {
 });
 const port = 80;
 var corsOptions = {
-    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost'],
+    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost','https://script.google.com/'],
     optionsSuccessStatus: 200,
     credentials: true
 }
@@ -56,6 +57,7 @@ app.use('/login2', function (req, res, next) {
 app.post('/api', function (req, res) {
     //api_module.process_api(req,res);   
     var qr = req.body;
+    
     if (req.coloiko == 'kocoloi' || qr['command'] == 'login' || qr['command'] == 'login2') {
         api_module.process_api(req, res);
     }
@@ -63,6 +65,11 @@ app.post('/api', function (req, res) {
         res.send({ tk_status: 'ng' });
     }
 });
+app.post('/api2', function (req, res) {
+    api_module.process_api(req,res);   
+    var qr = req.body;  
+});
+
 app.get('/', function (req, res) {    
     //res.redirect('/nhansu');
     res.redirect('http://14.160.33.94:3010');
