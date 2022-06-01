@@ -241,7 +241,7 @@ const config = {
     database: process.env.DB_NAME,
     port: 3021,
     trustServerCertificate: true,
-    requestTimeout: 300000
+    requestTimeout: 300000  
 };
 function isNumber(str) {
     return (/^[0-9]+$/.test(str) && (str.length == 4));
@@ -259,8 +259,7 @@ function asyncQuery2(queryString) {
                 return resolve('OK');
                 
             });
-        });
-        
+        });       
         
     }).catch((err) => {
         console.log("Loi dc catch 2: " + err + ' ');
