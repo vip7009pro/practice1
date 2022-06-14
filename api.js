@@ -239,7 +239,7 @@ const config = {
     password: process.env.DB_PASS,
     server: process.env.DB_SERVER,
     database: process.env.DB_NAME,
-    port: 3021,
+    port: 5005,
     trustServerCertificate: true,
     requestTimeout: 300000  
 };
