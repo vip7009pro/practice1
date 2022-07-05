@@ -30,7 +30,7 @@ io.on('connection', client => {
         console.log("Connected clients: " + io.engine.clientsCount);
     });
 });
-const port = 80;
+const port = 3007;
 var corsOptions = {
     origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost','https://script.google.com/'],
     optionsSuccessStatus: 200,
