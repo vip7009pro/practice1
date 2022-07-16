@@ -441,7 +441,7 @@ exports.process_api = function (req, res) {
                     var token = jwt.sign({ payload: loginResult }, 'nguyenvanhung', { expiresIn: 3600 * 24 });
                     res.cookie('token', token);
                     //console.log(token);                       
-                    res.send({ tk_status: "ok", token_content: token });
+                    res.send({ tk_status: "ok", token_content: token, userData: loginResult });
                     console.log('login thanh cong');
                 }
                 else {
@@ -1696,6 +1696,148 @@ exports.process_api = function (req, res) {
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
             let setpdQuery = ` INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE, PROD_REQUEST_NO, CODE_50, CODE_03, CODE_55, G_CODE, RIV_NO, PROD_REQUEST_QTY, CUST_CD, EMPL_NO, DELIVERY_DT, REMK, G_CODE2) VALUES ('002', '${DATA.PROD_REQUEST_DATE}', '${DATA.PROD_REQUEST_NO}', '${DATA.CODE_50}', '${DATA.CODE_03}', '${DATA.CODE_55}', '${DATA.G_CODE}', '${DATA.RIV_NO}', '${DATA.PROD_REQUEST_QTY}', '${DATA.CUST_CD}', '${DATA.EMPL_NO}', '${DATA.DELIVERY_DATE}', '${DATA.REMARK}', '${DATA.G_CODE}')`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'getmaindept')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECt MAINDEPTCODE AS id, CTR_CD, MAINDEPTCODE, MAINDEPTNAME, MAINDEPTNAME_KR FROM ZTBMAINDEPARMENT`;
+            console.log("Nguyen van hung");
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insertmaindept')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTBMAINDEPARMENT (CTR_CD, MAINDEPTCODE, MAINDEPTNAME, MAINDEPTNAME_KR) VALUES ('002',${DATA.MAINDEPTCODE},N'${DATA.MAINDEPTNAME}',N'${DATA.MAINDEPTNAME_KR}')`;           
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'updatemaindept')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE ZTBMAINDEPARMENT SET MAINDEPTCODE=${DATA.MAINDEPTCODE}, MAINDEPTNAME='${DATA.MAINDEPTNAME}', MAINDEPTNAME_KR ='${DATA.MAINDEPTNAME_KR}' WHERE MAINDEPTCODE= ${DATA.MAINDEPTCODE}`;           
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'deletemaindept')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM ZTBMAINDEPARMENT WHERE MAINDEPTCODE= ${DATA.MAINDEPTCODE}`;           
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'getsubdept')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT SUBDEPTCODE AS id, CTR_CD, MAINDEPTCODE, SUBDEPTCODE,SUBDEPTNAME, SUBDEPTNAME_KR FROM ZTBSUBDEPARTMENT WHERE MAINDEPTCODE=${DATA.MAINDEPTCODE}`;
+            console.log("Nguyen van hung");
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insertsubdept')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTBSUBDEPARTMENT (CTR_CD, MAINDEPTCODE, SUBDEPTCODE, SUBDEPTNAME, SUBDEPTNAME_KR) VALUES ('002',${DATA.MAINDEPTCODE},${DATA.SUBDEPTCODE},N'${DATA.SUBDEPTNAME}',N'${DATA.SUBDEPTNAME_KR}')`;           
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'updatesubdept')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE ZTBSUBDEPARTMENT SET SUBDEPTCODE=${DATA.SUBDEPTCODE}, SUBDEPTNAME='${DATA.SUBDEPTNAME}', SUBDEPTNAME_KR ='${DATA.SUBDEPTNAME_KR}' WHERE SUBDEPTCODE= ${DATA.SUBDEPTCODE}`;           
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'deletesubdept')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM ZTBSUBDEPARTMENT WHERE SUBDEPTCODE= ${DATA.SUBDEPTCODE}`;           
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'getworkposition')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT WORK_POSITION_CODE AS id, CTR_CD, SUBDEPTCODE, WORK_POSITION_CODE,WORK_POSITION_NAME, WORK_POSITION_NAME_KR, ATT_GROUP_CODE FROM ZTBWORKPOSITION WHERE SUBDEPTCODE=${DATA.SUBDEPTCODE}`;            
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insertworkposition')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTBWORKPOSITION (CTR_CD, SUBDEPTCODE, WORK_POSITION_CODE, WORK_POSITION_NAME, WORK_POSITION_NAME_KR, ATT_GROUP_CODE) VALUES ('002',${DATA.SUBDEPTCODE},${DATA.WORK_POSITION_CODE},N'${DATA.WORK_POSITION_NAME}',N'${DATA.WORK_POSITION_NAME_KR}',${DATA.ATT_GROUP_CODE})`;           
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             console.log(checkkq);
