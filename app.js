@@ -4,7 +4,14 @@ var cookieParser = require('cookie-parser');
 var api_module = require('./api');
 var cors = require('cors')
 require('dotenv').config();
+var compression = require('compression')
 
+
+
+app.use(compression({
+    level: 6,
+    threshold: 10000* 1024
+}));
 console.log("usser  =" + process.env.DB_USER);
 console.log("server  =" + process.env.DB_SERVER);
 const server = require('http').createServer(app);
