@@ -4,7 +4,16 @@ var cookieParser = require('cookie-parser');
 var api_module = require('./api');
 var cors = require('cors')
 require('dotenv').config();
+var compression = require('compression')
+
+
+
+app.use(compression({
+    level: 6,
+    threshold: 10000* 1024
+}));
 console.log("usser  =" + process.env.DB_USER);
+console.log("server  =" + process.env.DB_SERVER);
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
     cors: {
@@ -28,9 +37,9 @@ io.on('connection', client => {
         console.log("Connected clients: " + io.engine.clientsCount);
     });
 });
-const port = 80;
+const port = 3007;
 var corsOptions = {
-    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://localhost'],
+    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost','https://script.google.com/','*'],
     optionsSuccessStatus: 200,
     credentials: true
 }
@@ -55,6 +64,7 @@ app.use('/login2', function (req, res, next) {
 app.post('/api', function (req, res) {
     //api_module.process_api(req,res);   
     var qr = req.body;
+    
     if (req.coloiko == 'kocoloi' || qr['command'] == 'login' || qr['command'] == 'login2') {
         api_module.process_api(req, res);
     }
@@ -62,6 +72,11 @@ app.post('/api', function (req, res) {
         res.send({ tk_status: 'ng' });
     }
 });
+app.post('/api2', function (req, res) {
+    api_module.process_api(req,res);   
+    var qr = req.body;  
+});
+
 app.get('/', function (req, res) {    
     //res.redirect('/nhansu');
     res.redirect('http://14.160.33.94:3010');
@@ -101,5 +116,5 @@ app.get('/login2', function (req, res) {
     console.log(req.cookies);
 });
 app.listen(port, function () {
-    console.log("App dang nghe port 100");
+    console.log("App dang nghe port " + port);
 });
