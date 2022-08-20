@@ -1,7 +1,9 @@
 var sql = require("mssql");
 var jwt = require('jsonwebtoken');
 const moment = require("moment");
+const { existsSync } = require("fs");
 require('dotenv').config();
+const  fs = require('fs').promises;
 
 
 function generate_condition_get_invoice($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $product_type, $empl_name,$po_no) {
@@ -534,6 +536,7 @@ exports.checklogin_login = function (req, res, next) {
 }
  
 exports.process_api = function (req, res) {
+    //console.log(req.files.file);
     var qr = req.body;
     let rightnow= new Date().toLocaleString();
     console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr['command']);
@@ -1810,7 +1813,7 @@ exports.process_api = function (req, res) {
     {
         (async () => {            
             let DATA = qr['DATA']; 
-            console.log(DATA);
+            //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
             let setpdQuery = `INSERT INTO ZTBPOTable (CTR_CD, CUST_CD, EMPL_NO,G_CODE, PO_NO, PO_QTY, PO_DATE, RD_DATE, PROD_PRICE,REMARK) VALUES ('002','${DATA.CUST_CD}', '${DATA.EMPL_NO}','${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.PO_QTY}', '${DATA.PO_DATE}', '${DATA.RD_DATE}', '${DATA.PROD_PRICE}','${DATA.REMARK}')`;
@@ -1824,7 +1827,7 @@ exports.process_api = function (req, res) {
     {
         (async () => {            
             let DATA = qr['DATA']; 
-            console.log(DATA);
+            //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
             let setpdQuery = `INSERT INTO ZTBDelivery (CTR_CD, CUST_CD, EMPL_NO, G_CODE, PO_NO, DELIVERY_QTY, DELIVERY_DATE, NOCANCEL, REMARK) VALUES ('002','${DATA.CUST_CD}', '${DATA.EMPL_NO}', '${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.DELIVERY_QTY}', '${DATA.DELIVERY_DATE}', 1,'${DATA.REMARK}')`;
@@ -2648,7 +2651,7 @@ exports.process_api = function (req, res) {
     {
         (async () => {            
             let DATA = qr['DATA']; 
-            console.log(DATA);
+            //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
             let setpdQuery = `INSERT INTO ZTBPLANTB (CTR_CD,EMPL_NO,CUST_CD,G_CODE,PLAN_DATE,D1,D2,D3,D4,D5,D6,D7,D8,REMARK) VALUES ('002','${DATA.EMPL_NO}','${DATA.CUST_CD}', '${DATA.G_CODE}', '${DATA.PLAN_DATE}', ${DATA.D1},${DATA.D2},${DATA.D3},${DATA.D4},${DATA.D5},${DATA.D6},${DATA.D7},${DATA.D8},'${DATA.REMARK}')`;
@@ -2702,7 +2705,7 @@ exports.process_api = function (req, res) {
     {
         (async () => {            
             let DATA = qr['DATA']; 
-            console.log(DATA);
+            //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
             let setpdQuery = `INSERT INTO ZTBFCSTTB (CTR_CD, EMPL_NO,CUST_CD,G_CODE,PROD_PRICE,FCSTYEAR,FCSTWEEKNO,W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16,W17,W18,W19,W20,W21,W22) VALUES ('002','${DATA.EMPL_NO}','${DATA.CUST_CD}','${DATA.G_CODE}','${DATA.PROD_PRICE}','${DATA.YEAR}','${DATA.WEEKNO}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.W9}','${DATA.W10}','${DATA.W11}','${DATA.W12}','${DATA.W13}','${DATA.W14}','${DATA.W15}','${DATA.W16}','${DATA.W17}','${DATA.W18}','${DATA.W19}','${DATA.W20}','${DATA.W21}','${DATA.W22}')`;
@@ -2719,10 +2722,355 @@ exports.process_api = function (req, res) {
             console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `SELECT P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING,  P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX-  P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) ${generate_condition_get_ycsx(DATA.alltime, DATA.start_date, DATA.end_date, DATA.cust_name, DATA.codeCMS, DATA.codeKD, DATA.prod_type, DATA.empl_name, DATA.phanloai, DATA.ycsx_pending, DATA.prod_request_no, DATA.material, DATA.inspect_inputcheck) } ORDER BY P400.PROD_REQUEST_NO DESC`;
+            let setpdQuery = `SELECT P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING,  P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX-  P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) ${generate_condition_get_ycsx(DATA.alltime, DATA.start_date, DATA.end_date, DATA.cust_name, DATA.codeCMS, DATA.codeKD, DATA.prod_type, DATA.empl_name, DATA.phanloai, DATA.ycsx_pending, DATA.prod_request_no, DATA.material, DATA.inspect_inputcheck) } ORDER BY P400.PROD_REQUEST_NO DESC`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkLastYCSX')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYYMMDD'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 * FROM P400 WHERE PROD_REQUEST_DATE='${currenttime}' ORDER BY INS_DATE DESC`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'getSystemDateTime')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT GETDATE() AS SYSTEM_DATETIME`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkpobalance_tdycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss');
+            let checkkq = "OK";
+            let setpdQuery = `SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) WHERE AA.G_CODE='${DATA.G_CODE}' GROUP BY AA.G_CODE`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checktonkho_tdycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss');
+            let checkkq = "OK";
+            let setpdQuery = `SELECT M100.G_CODE, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) WHERE M100.G_CODE='${DATA.G_CODE}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkfcst_tdycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss');
+            let checkkq = "OK";
+            let setpdQuery = `SELECT G_CODE, SUM(W1) AS W1, SUM(W2) AS W2, SUM(W3) AS W3, SUM(W4) AS W4, SUM(W5) AS W5, SUM(W6) AS W6, SUM(W7) AS W7, SUM(W8) AS W8 FROM ZTBFCSTTB WHERE FCSTYEAR = YEAR(GETDATE()) AND FCSTWEEKNO = (SELECT MAX(FCSTWEEKNO)FROM ZTBFCSTTB WHERE FCSTYEAR = YEAR(GETDATE()) ) AND G_CODE='${DATA.G_CODE}' GROUP BY G_CODE`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insert_ycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX) VALUES ('002','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}','${DATA.REMK}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}')`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'getLastProcessLotNo')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 PROCESS_LOT_NO,SUBSTRING(PROCESS_LOT_NO,6,3) AS SEQ_NO, INS_DATE FROM P501 WHERE SUBSTRING(PROCESS_LOT_NO,1,2) = '${DATA.machine}' AND PROCESS_IN_DATE = '${DATA.in_date}' ORDER BY INS_DATE DESC`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkYCSXO300')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 * FROM O300 WHERE PROD_REQUEST_NO = '${DATA.prod_request_no}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkProcessInNoP500')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            let in_date = moment().format('YYYYMMDD'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 PROCESS_IN_DATE, PROCESS_IN_NO, EQUIPMENT_CD FROM P500 WHERE PROCESS_IN_DATE='${in_date}'  ORDER BY INS_DATE DESC`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insert_p500')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);            
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY) VALUES ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.next_process_in_no}','999','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO}','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','NM1')`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insert_p501')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES  ('002','${DATA.in_date}','${DATA.next_process_in_no}','001','001','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}')`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'delete_ycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM P400 WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkYcsxExist')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);            
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM P400 WHERE PROD_REQUEST_NO= ${DATA.PROD_REQUEST_NO}`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'update_ycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE P400 SET REMK='${DATA.REMK}', CODE_50='${DATA.CODE_50}', CODE_55='${DATA.CODE_55}', PROD_REQUEST_QTY='${DATA.PROD_REQUEST_QTY}', UPD_EMPL='${DATA.EMPL_NO}', DELIVERY_DT='${DATA.DELIVERY_DT}', UPD_DATE=GETDATE() WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'setpending_ycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE P400 SET YCSX_PENDING='${DATA.YCSX_PENDING}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'pheduyet_ycsx')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE P400 SET PDUYET='${DATA.PDUYET}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'ycsx_fullinfo')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `DECLARE @tradate as datetime DECLARE @inventory as varchar(6) SET @tradate = '${DATA.TRADATE}' SET @inventory = '${DATA.INVENTORY}' SELECT P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (TONLIEU.GRAND_TOTAL-TONLIEU.HOLDING) AS TONLIEU, TONLIEU.HOLDING, TONLIEU.GRAND_TOTAL AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON P400.G_CODE = M100.G_CODE LEFT JOIN M010 ON P400.EMPL_NO = M010.EMPL_NO RIGHT JOIN M140 ON P400.G_CODE = M140.G_CODE LEFT JOIN M090 ON M090.M_CODE = M140.M_CODE LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD LEFT JOIN ( SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, isnull(AA.INVENTORY_QTY,0) AS TON_DAU, isnull(BB.IN_CFM_QTY,0) AS INPUT, isnull(CC.OUT_CFM_QTY,0) AS OUTPUT, isnull(DD.RETURN_IN_QTY,0) AS RETURN_IN, isnull(EE.HOLDING_QTY,0) AS HOLDING, (isnull(AA.INVENTORY_QTY,0) + isnull(BB.IN_CFM_QTY,0)- isnull(CC.OUT_CFM_QTY,0) +isnull(DD.RETURN_IN_QTY,0)-isnull(EE.HOLDING_QTY,0)) AS GRAND_TOTAL FROM M090 LEFT JOIN (SELECT DISTINCT M_CODE, SUM(INVENTORY_QTY) AS INVENTORY_QTY FROM KIEMKE_NVL WHERE INVENTORY_DATE=@inventory GROUP BY M_CODE) AS AA ON (AA.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(IN_CFM_QTY) AS IN_CFM_QTY FROM I222 WHERE INS_DATE> @tradate GROUP BY M_CODE ) AS BB ON (BB.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE INS_DATE>@tradate GROUP BY M_CODE ) AS CC ON (CC.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(RETURN_QTY) AS RETURN_IN_QTY FROM RETURN_NVL WHERE UPD_DATE>@tradate GROUP BY M_CODE) AS DD ON (DD.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(HOLDING_QTY) AS HOLDING_QTY FROM HOLDING_TB WHERE HOLDING_OUT_DATE is not null GROUP BY M_CODE) AS EE ON (EE.M_CODE = M090.M_CODE)) AS TONLIEU ON (M140.M_CODE = TONLIEU.M_CODE) WHERE P400.PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'tonlieugcode')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `DECLARE @tradate as datetime DECLARE @inventory as varchar(6) SET @tradate = '${DATA.tradate}' SET @inventory = '${DATA.inventory}' SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, isnull(AA.INVENTORY_QTY,0) AS TON_DAU, isnull(BB.IN_CFM_QTY,0) AS INPUT, isnull(CC.OUT_CFM_QTY,0) AS OUTPUT, isnull(DD.RETURN_IN_QTY,0) AS RETURN_IN, isnull(EE.HOLDING_QTY,0) AS HOLDING, (isnull(AA.INVENTORY_QTY,0) + isnull(BB.IN_CFM_QTY,0)- isnull(CC.OUT_CFM_QTY,0) +isnull(DD.RETURN_IN_QTY,0)-isnull(EE.HOLDING_QTY,0)) AS GRAND_TOTAL FROM M090 LEFT JOIN (SELECT DISTINCT M_CODE, SUM(INVENTORY_QTY) AS INVENTORY_QTY FROM KIEMKE_NVL WHERE INVENTORY_DATE=@inventory GROUP BY M_CODE) AS AA ON (AA.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(IN_CFM_QTY) AS IN_CFM_QTY FROM I222 WHERE INS_DATE> @tradate GROUP BY M_CODE ) AS BB ON (BB.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE INS_DATE>@tradate GROUP BY M_CODE ) AS CC ON (CC.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(RETURN_QTY) AS RETURN_IN_QTY FROM RETURN_NVL WHERE UPD_DATE>@tradate GROUP BY M_CODE) AS DD ON (DD.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(HOLDING_QTY) AS HOLDING_QTY FROM HOLDING_TB WHERE HOLDING_OUT_DATE is not null GROUP BY M_CODE) AS EE ON (EE.M_CODE = M090.M_CODE) WHERE M090.M_CODE='${DATA.M_CODE}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'check_inventorydate')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT MAX(INVENTORY_DATE) AS INVENTORY_DATE FROM KIEMKE_NVL`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'check_banve')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];             
+            console.log(DATA);
+            const draw_path ='D:\\xampp\\htdocs\\banve\\';
+            if(!existsSync(draw_path + DATA.filename))
+            {
+                res.send({tk_status:'OK'});
+            }
+            else
+            {
+                res.send({tk_status:'NG'});
+            }            
+        })()
+    }
+    else if (qr['command'] == 'update_banve_value')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);           
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE M100 SET BANVE='${DATA.banvevalue}' WHERE G_CODE= '${DATA.G_CODE}'`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'check_amazon_data')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            //console.log(DATA);           
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM AMAZONE_DATA WHERE DATA_1='${DATA.DATA}' OR DATA_2='${DATA.DATA}' OR  DATA_3='${DATA.DATA}' OR DATA_4='${DATA.DATA}' `;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'get_ycsxInfo2')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);           
+            let checkkq = "OK";
+            let setpdQuery = `SELECT P400.CODE_50, P400.G_CODE, M100.G_NAME, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, M100.PROD_MODEL FROM P400 JOIN M100 ON (P400.G_CODE = M100.G_CODE) WHERE P400.PROD_REQUEST_NO='${DATA.ycsxno}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'get_cavityAmazon')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);           
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 CAVITY_PRINT FROM BOM_AMAZONE LEFT JOIN DESIGN_AMAZONE ON (BOM_AMAZONE.G_CODE_MAU = DESIGN_AMAZONE.G_CODE_MAU AND  BOM_AMAZONE.DOITUONG_NO = DESIGN_AMAZONE.DOITUONG_NO) WHERE BOM_AMAZONE.G_CODE='${DATA.g_code}'`;
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'insertData_Amazon')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);           
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO AMAZONE_DATA (CTR_CD,G_CODE,PROD_REQUEST_NO,NO_IN,ROW_NO,DATA_1,DATA_2,DATA_3,DATA_4,PRINT_STATUS,INLAI_COUNT,REMARK,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.PROD_REQUEST_NO}','${DATA.NO_IN}','${DATA.ROW_NO}','${DATA.DATA_1}','${DATA.DATA_2}','${DATA.DATA_3}','${DATA.DATA_4}','${DATA.PRINT_STATUS}','${DATA.INLAI_COUNT}','${DATA.REMARK}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.INS_EMPL}')`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            console.log(checkkq);
             res.send(checkkq);             
         })()
     }

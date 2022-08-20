@@ -5,8 +5,22 @@ var api_module = require('./api');
 var cors = require('cors')
 require('dotenv').config();
 var compression = require('compression')
+const fileupload = require("express-fileupload");
+var multer = require('multer');
+const  fs = require('fs');
+//var upload = multer({ dest: 'uploadfiles/' });
 
-
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploadfiles')
+    },
+    filename: function (req, file, cb) {       
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+            cb(null, file.originalname);
+    }
+  })
+  
+const upload = multer({ storage: storage });
 
 app.use(compression({
     level: 6,
@@ -45,14 +59,19 @@ var corsOptions = {
 }
 app.use(cors(corsOptions));
 app.use(cookieParser());
+
 app.use(express.static(__dirname + '/public'));
 app.set('views', './views');
 app.set('view engine', 'ejs');
 var bodyParser = require('body-parser');
 const { Socket } = require("socket.io");
+const { existsSync } = require("fs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/', function (req, res, next) {    
+    api_module.checklogin_index(req, res, next);
+});
+app.use('/upload', function (req, res, next) {    
     api_module.checklogin_index(req, res, next);
 });
 app.use('/login', function (req, res, next) {
@@ -61,10 +80,9 @@ app.use('/login', function (req, res, next) {
 app.use('/login2', function (req, res, next) {
     api_module.checklogin_login(req, res, next);
 });
-app.post('/api', function (req, res) {
-    //api_module.process_api(req,res);   
+app.post('/api',function (req, res) {
+    //api_module.process_api(req,res); 
     var qr = req.body;
-    
     if (req.coloiko == 'kocoloi' || qr['command'] == 'login' || qr['command'] == 'login2') {
         api_module.process_api(req, res);
     }
@@ -72,6 +90,65 @@ app.post('/api', function (req, res) {
         res.send({ tk_status: 'ng' });
     }
 });
+
+app.post('/upload',  upload.single('banve'),function (req, res) {    
+    console.log(req.body.filename);
+    if(req.coloiko ==='coloi')    
+    {        
+        if(req.file)
+        {
+            fs.rm('uploadfiles\\' + req.file.originalname), ()=> {
+                console.log("DELETED " + req.file.originalname);
+            };        
+            console.log('successfully deleted ' + 'uploadfiles\\' + req.file.originalname);
+            res.send({tk_status:"NG",message:"Chưa đăng nhập"});
+        }
+        else
+        {
+            res.send({tk_status:"NG",message:"File chưa lên"}); 
+        }
+       
+    }
+    else if(req.coloiko ==='kocoloi')    
+    {        
+        if(req.file)
+        {
+            const filename = req.file.originalname;
+            const newfilename = req.body.filename;
+            console.log('ket qua:' + existsSync('D:\\xampp\\htdocs\\banve\\' + filename));
+            if(!existsSync('D:\\xampp\\htdocs\\banve\\' + filename))
+            {              
+                    fs.copyFile('uploadfiles\\' + filename, 'D:\\xampp\\htdocs\\banve\\' + newfilename +'.pdf', (err) => {
+                    if (err) {
+                        res.send({tk_status:"NG",message:"Upload file thất bại: " + err});
+                    }
+                    else {
+                        fs.rm('uploadfiles\\' + req.file.originalname,(error) => {
+                            //you can handle the error here
+                        }); 
+                        res.send({tk_status:"OK",message:"Upload file thành công"});
+                    }
+                  });
+            }
+            else
+            {
+                fs.rm('uploadfiles\\' + req.file.originalname,(error) => {
+                    //you can handle the error here
+                }); 
+                console.log('DELETED: '+'uploadfiles\\' + req.file.originalname );
+                res.send({tk_status:"NG",message:"File đã tồn tại"});            
+            }
+        }
+        else
+        {
+            res.send({tk_status:"NG",message:"File chưa lên"});           
+
+        }
+        
+    }   
+});
+
+
 app.post('/api2', function (req, res) {
     api_module.process_api(req,res);   
     var qr = req.body;  
