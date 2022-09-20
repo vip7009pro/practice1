@@ -35,6 +35,7 @@ const io = require('socket.io')(server, {
     }
 });
 server.listen(3005);
+//server.listen(5012);
 io.on('connection', client => {
     console.log("A client connected");
     console.log("Connected clients: " + io.engine.clientsCount);
@@ -51,6 +52,7 @@ io.on('connection', client => {
         console.log("Connected clients: " + io.engine.clientsCount);
     });
 });
+//const port = 5011;
 const port = 3007;
 var corsOptions = {
     origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost','https://script.google.com/','*'],
@@ -115,10 +117,12 @@ app.post('/upload',  upload.single('banve'),function (req, res) {
         {
             const filename = req.file.originalname;
             const newfilename = req.body.filename;
-            console.log('ket qua:' + existsSync('D:\\xampp\\htdocs\\banve\\' + filename));
-            if(!existsSync('D:\\xampp\\htdocs\\banve\\' + filename))
+            const draw_folder = 'D:\\xampp\\htdocs\\banve\\';
+            console.log('ket qua:' + existsSync(draw_folder + filename));
+
+            if(!existsSync(draw_folder + filename))
             {              
-                    fs.copyFile('uploadfiles\\' + filename, 'D:\\xampp\\htdocs\\banve\\' + newfilename +'.pdf', (err) => {
+                    fs.copyFile('uploadfiles\\' + filename, draw_folder + newfilename +'.pdf', (err) => {
                     if (err) {
                         res.send({tk_status:"NG",message:"Upload file thất bại: " + err});
                     }
