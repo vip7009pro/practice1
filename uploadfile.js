@@ -23,7 +23,7 @@ async function readFile(filePath) {
       const csvLine = `\n${name},${quantity},${price}`
       await fs.writeFile('\\\\192.168.1.55\\qc\\IMAGE\\groceries.csv', csvLine, { flag: 'a' });
     } catch (error) {
-      console.error(`Got an error trying to write to a file: ${error.message}`);
+      console.error(`Got an error trying to write to a file: ${error.message}`);      
     }
   }
 
