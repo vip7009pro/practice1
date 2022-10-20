@@ -35,6 +35,7 @@ const io = require('socket.io')(server, {
     }
 });
 server.listen(3005);
+console.log('Socket server listening on port 3005');
 //server.listen(5012);
 io.on('connection', client => {
     console.log("A client connected");
@@ -123,6 +124,65 @@ app.post('/upload',  upload.single('banve'),function (req, res) {
             if(!existsSync(draw_folder + filename))
             {              
                     fs.copyFile('uploadfiles\\' + filename, draw_folder + newfilename +'.pdf', (err) => {
+                    if (err) {
+                        res.send({tk_status:"NG",message:"Upload file thất bại: " + err});
+                    }
+                    else {
+                        fs.rm('uploadfiles\\' + req.file.originalname,(error) => {
+                            //you can handle the error here
+                        }); 
+                        res.send({tk_status:"OK",message:"Upload file thành công"});
+                    }
+                  });
+            }
+            else
+            {
+                fs.rm('uploadfiles\\' + req.file.originalname,(error) => {
+                    //you can handle the error here
+                }); 
+                console.log('DELETED: '+'uploadfiles\\' + req.file.originalname );
+                res.send({tk_status:"NG",message:"File đã tồn tại"});            
+            }
+        }
+        else
+        {
+            res.send({tk_status:"NG",message:"File chưa lên"});           
+
+        }
+        
+    }   
+});
+
+app.post('/uploadavatar',  upload.single('avatar'),function (req, res) {    
+    console.log(req.body.filename);
+    if(req.coloiko ==='coloi')    
+    {        
+        if(req.file)
+        {
+            fs.rm('uploadfiles\\' + req.file.originalname), ()=> {
+                console.log("DELETED " + req.file.originalname);
+            };        
+            console.log('successfully deleted ' + 'uploadfiles\\' + req.file.originalname);
+            res.send({tk_status:"NG",message:"Chưa đăng nhập"});
+        }
+        else
+        {
+            res.send({tk_status:"NG",message:"File chưa lên"}); 
+        }
+       
+    }
+    else if(req.coloiko ==='kocoloi')    
+    {        
+        if(req.file)
+        {
+            const filename = req.file.originalname;
+            const newfilename = req.body.filename;
+            const draw_folder = 'D:\\xampp\\htdocs\\Picture_NS\\';
+            console.log('ket qua:' + existsSync(draw_folder + filename));
+
+            if(!existsSync(draw_folder + filename))
+            {              
+                    fs.copyFile('uploadfiles\\' + filename, draw_folder + newfilename +'.jpg', (err) => {
                     if (err) {
                         res.send({tk_status:"NG",message:"Upload file thất bại: " + err});
                     }

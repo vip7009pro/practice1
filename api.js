@@ -345,6 +345,50 @@ function generate_condition_get_inspection_ng_data($inspect_time_checkvalue, $fr
     $condition += $inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $ycsx_no;
     return $condition;
 }
+function generate_condition_get_dtc_data($inspect_time_checkvalue, $fromdate, $todate, $input_code_cms, $input_code_KD, $ycsx_no, $m_name, $m_code,$test_name, $test_type, $id) {
+    $condition = "WHERE 1=1 ";
+
+    if ($inspect_time_checkvalue === false) {
+        $inspect_time_checkvalue = " AND ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME BETWEEN '"+$fromdate+" 00:00:00' AND  '"+$todate+" 23:59:59' ";
+    }
+    else {
+        $inspect_time_checkvalue = "";
+    }      
+    if ($input_code_cms != '') {
+        $input_code_cms = " AND M100.G_CODE = '"+$input_code_cms+"'";
+    }
+    if ($input_code_KD != '') {
+        $input_code_KD = " AND M100.G_NAME LIKE  '%"+$input_code_KD+"%'";
+    } 
+    if ($ycsx_no != '') {
+        $ycsx_no = " AND ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO =  '"+$ycsx_no+"'";
+    }     
+    if ($id != '') {
+        $id = " AND ZTB_REL_REQUESTTABLE.DTC_ID =  '"+$id+"'";
+    }     
+    if ($m_code != '') {
+        $m_code = " AND M090.M_CODE =  '"+$m_code+"'";
+    }     
+    if ($m_name != '') {
+        $m_name = " AND M090.M_NAME LIKE  '%"+$m_name+"%'";
+    }     
+    if ($test_name !== '0') {
+        $test_name = " AND ZTB_REL_RESULT.TEST_CODE ='"+$test_name+"'";
+    }     
+    else
+    {
+        $test_name ='';
+    }
+    if ($test_type !== '0') {
+        $test_type = " AND ZTB_REL_TESTTYPE.TEST_TYPE_CODE ='"+$test_type+"'";
+    }  
+    else
+    {
+        $test_type ='';
+    }  
+    $condition += $inspect_time_checkvalue+$input_code_cms+$input_code_KD + $ycsx_no + $m_name + $m_code +$test_name +$test_type + $id;
+    return $condition;
+}
 
 function generate_condition_pqc1($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $ycsx_no, $process_lot_no, $inspec_ID, $inspect_factory) {
     $condition = "WHERE 1=1 ";
@@ -367,7 +411,7 @@ function generate_condition_pqc1($inspect_time_checkvalue, $start_date, $end_dat
         $ycsx_no = " AND P400.PROD_REQUEST_NO = '"+$ycsx_no+"'";
     }
     if ($process_lot_no != '') {
-        $process_lot_no = " AND P501_A.PROCESS_LOT_NO = '"+$process_lot_no+"'";
+        $process_lot_no = " AND ZTBPQC1TABLE.PROCESS_LOT_NO = '"+$process_lot_no+"'";
     }
     if ($inspec_ID != '') {
         $inspec_ID = " AND ZTBPQC1TABLE.PQC1_ID = '"+$inspec_ID+"'";
@@ -400,10 +444,10 @@ function generate_condition_pqc3($inspect_time_checkvalue, $start_date, $end_dat
         $input_code_KD = " AND M100.G_NAME LIKE  '%" + $input_code_KD + "%'";
     }
     if ($ycsx_no != '') {
-        $ycsx_no = " AND P500_A.PROD_REQUEST_NO = '" + $ycsx_no + "'";
+        $ycsx_no = " AND ZTBPQC3TABLE.PROD_REQUEST_NO = '" + $ycsx_no + "'";
     }
     if ($process_lot_no != '') {
-        $process_lot_no = " AND P501_A.PROCESS_LOT_NO = '" + $process_lot_no + "'";
+        $process_lot_no = " AND ZTBPQC3TABLE.PROCESS_LOT_NO = '" + $process_lot_no + "'";
     }
     if ($inspec_ID != '') {
         $inspec_ID = " AND ZTBPQC3TABLE.PQC3_ID = '" + $inspec_ID + "'";
@@ -417,6 +461,7 @@ function generate_condition_pqc3($inspect_time_checkvalue, $start_date, $end_dat
     $condition = $condition + $inspect_time_checkvalue + $input_cust_name + $input_code_cms + $input_code_KD + $ycsx_no + $process_lot_no + $inspec_ID + $inspect_factory;
     return $condition;
 }
+
 function returnDateFormat(today) {
     let year = today.getFullYear();
     let month = today.getMonth();
@@ -574,7 +619,7 @@ exports.process_api = function (req, res) {
     if (qr['command'] == 'check_chua_pd') {
         (async () => {
             var today = new Date();
-            var today_format = returnDateFormat(today);
+            var today_format = moment().format('YYYY-MM-DD');
             console.log(today_format);
             let kqua;
             let query = "SELECT COUNT(EMPL_NO) AS CPD FROM ZTBOFFREGISTRATIONTB WHERE APPLY_DATE = '" + today_format + "' AND APPROVAL_STATUS  =2";
@@ -625,7 +670,7 @@ exports.process_api = function (req, res) {
         try {
             (async () => {
                 let kqua;
-                let query = "SELECT ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) WHERE ZTBEMPLINFO.EMPL_NO = '" + username + "' AND PASSWORD = '" + password + "'";
+                let query = "SELECT ZTBEMPLINFO.EMPL_IMAGE,ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) WHERE ZTBEMPLINFO.EMPL_NO = '" + username + "' AND PASSWORD = '" + password + "'";
                 kqua = await asyncQuery(query);
                 //console.log(kqua); 
                 loginResult = kqua;
@@ -733,7 +778,7 @@ exports.process_api = function (req, res) {
             var from = new Date(START_DATE);
             var to = new Date(END_DATE);
             var today = new Date();
-            var today_format = returnDateFormat(today);
+            var today_format = moment().format('YYYY-MM-DD');
             let $reason_array = { "Nghỉ phép": "1", "Nửa phép": "2", "Việc riêng": "3", "Nghỉ ốm": "4", "Chế độ": "5", "Không lý do": "6" };
             let checkkq = "OK";
             if (CANGHI == 'Ca ngày') {
@@ -776,7 +821,7 @@ exports.process_api = function (req, res) {
             if (isNumber(START_TIME) && isNumber(FINISH_TIME)) {
                 console.log("la number");
                 var today = new Date();
-                var today_format = returnDateFormat(today);
+                var today_format = moment().format('YYYY-MM-DD');
                 let checkkq = "OK";
                 let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                 let checkAttKQ = await asyncQuery(checkAttQuery);
@@ -949,7 +994,7 @@ exports.process_api = function (req, res) {
             let diemdanhvalue = qr['diemdanhvalue'];
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
                 var today = new Date();
-                var today_format = returnDateFormat(today);
+                var today_format = moment().format('YYYY-MM-DD');
                 let checkkq = "OK";
                 let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                 let checkAttKQ = await asyncQuery(checkAttQuery);
@@ -996,7 +1041,7 @@ exports.process_api = function (req, res) {
             let tangcavalue = qr['tangcayesno1'];
             console.log("la number");
             var today = new Date();
-            var today_format = returnDateFormat(today);
+            var today_format = moment().format('YYYY-MM-DD');
             let checkkq = "OK";
             let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
             let checkAttKQ = await asyncQuery(checkAttQuery);
@@ -1160,7 +1205,7 @@ exports.process_api = function (req, res) {
                     console.log("la number");
                     var today = new Date();
                     today.setDate(today.getDate() - 1);
-                    var today_format = returnDateFormat(today);
+                    var today_format = moment().format('YYYY-MM-DD');
                     let checkkq = "OK";
                     let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                     let checkAttKQ = await asyncQuery(checkAttQuery);
@@ -1189,7 +1234,7 @@ exports.process_api = function (req, res) {
                 console.log("la number");
                 var today = new Date();
                 today.setDate(today.getDate() - 1);
-                var today_format = returnDateFormat(today);
+                var today_format = moment().format('YYYY-MM-DD');
                 let checkkq = "OK";
                 let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                 let checkAttKQ = await asyncQuery(checkAttQuery);
@@ -1215,7 +1260,7 @@ exports.process_api = function (req, res) {
     {
         (async () => {
             var today = new Date();
-            var today_format = returnDateFormat(today);
+            var today_format = moment().format('YYYY-MM-DD');
             let kqua;
             let query = "SELECT TOP 10000 * FROM ZTBDelivery";
             kqua = await asyncQuery(query);
@@ -1228,9 +1273,8 @@ exports.process_api = function (req, res) {
         (async () => {
             let EMPL_NO = req.payload_data['EMPL_NO'];
             let JOB_NAME = req.payload_data['JOB_NAME'];
-            if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
-                var today = new Date();
-                let today_format = returnDateFormat(today);                
+            if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {                
+                let today_format = moment().format('YYYY-MM-DD');                
                 let kqua;
                 let query = "DECLARE @tradate As DATE; SET @tradate = '"+today_format+"' SELECT TONG_FULL.MAINDEPTNAME, TONG_FULL.SUBDEPTNAME, (TONG_FULL.NhaMay1+TONG_FULL.NhaMay2) AS TOTAL_ALL, (isnull(TONG_ON.NhaMay1,0) + isnull(TONG_ON.NhaMay2,0)) AS TOTAL_ON, (isnull(TONG_OFF.NhaMay1,0)+ isnull(TONG_OFF.NhaMay2,0)) AS TOTAL_OFF, (isnull(TONG_NULL.NhaMay1,0)+ isnull(TONG_NULL.NhaMay2,0)) AS TOTAL_CDD, isnull(TONG_FULL.NhaMay1,0) as TOTAL_NM1, isnull(TONG_FULL.NhaMay2,0) as TOTAL_NM2, isnull(TONG_ON.NhaMay1,0) as ON_NM1, isnull(TONG_ON.NhaMay2,0) as ON_NM2, isnull(TONG_OFF.NhaMay1,0) as OFF_NM1, isnull(TONG_OFF.NhaMay2,0) as OFF_NM2, isnull(TONG_NULL.NhaMay1,0) as CDD_NM1, isnull(TONG_NULL.NhaMay2,0) as CDD_NM2 FROM fn_DiemDanhTong_FULL(@tradate) AS TONG_FULL LEFT JOIN (SELECT * FROM fn_DiemDanhTong_ON(@tradate)) AS TONG_ON ON (TONG_ON.SUBDEPTNAME = TONG_FULL.SUBDEPTNAME) LEFT JOIN (SELECT * FROM fn_DiemDanhTong_OFF(@tradate)) AS TONG_OFF ON (TONG_OFF.SUBDEPTNAME = TONG_FULL.SUBDEPTNAME) LEFT JOIN (SELECT * FROM fn_DiemDanhTong_NULL(@tradate)) AS TONG_NULL ON (TONG_NULL.SUBDEPTNAME = TONG_FULL.SUBDEPTNAME) ORDER BY MAINDEPTNAME DESC, SUBDEPTNAME ASC";
                 kqua = await asyncQuery(query);
@@ -1898,7 +1942,7 @@ exports.process_api = function (req, res) {
             //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `INSERT INTO ZTBDelivery (CTR_CD, CUST_CD, EMPL_NO, G_CODE, PO_NO, DELIVERY_QTY, DELIVERY_DATE, NOCANCEL, REMARK) VALUES ('002','${DATA.CUST_CD}', '${DATA.EMPL_NO}', '${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.DELIVERY_QTY}', '${DATA.DELIVERY_DATE}', 1,'${DATA.REMARK}')`;
+            let setpdQuery = `INSERT INTO ZTBDelivery (CTR_CD, CUST_CD, EMPL_NO, G_CODE, PO_NO, DELIVERY_QTY, DELIVERY_DATE, NOCANCEL, REMARK, INVOICE_NO) VALUES ('002','${DATA.CUST_CD}', '${DATA.EMPL_NO}', '${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.DELIVERY_QTY}', '${DATA.DELIVERY_DATE}', 1,'${DATA.REMARK}', '${DATA.INVOICE_NO}')`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             console.log(checkkq);
@@ -2189,7 +2233,7 @@ exports.process_api = function (req, res) {
             //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `SELECT ZTBEMPLINFO.EMPL_NO AS id, ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,'A' AS PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBEMPLINFO.CTR_CD,ZTBSEX.SEX_CODE,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_CODE,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_CODE,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_CODE,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_CODE,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIFT_CODE,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.WORK_POSITION_CODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.SUBDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTCODE,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR  FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE)`;           
+            let setpdQuery = `SELECT ZTBEMPLINFO.EMPL_NO AS id, ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE, PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBEMPLINFO.CTR_CD,ZTBSEX.SEX_CODE,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_CODE,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_CODE,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_CODE,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_CODE,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIFT_CODE,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.WORK_POSITION_CODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.SUBDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTCODE,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR  FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE)`;           
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -2280,10 +2324,12 @@ exports.process_api = function (req, res) {
             
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
                 var today = new Date();
-                let today_format = returnDateFormat(today);
-                let tradiemdanhQuery = "DECLARE @tradate DATE SET @tradate='" + today_format + "' SELECT ZTBEMPLINFO.EMPL_NO as id,ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBOFFREGISTRATIONTB_1.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ( SELECT * FROM ZTBOFFREGISTRATIONTB WHERE ZTBOFFREGISTRATIONTB.APPLY_DATE = @tradate ) AS ZTBOFFREGISTRATIONTB_1 ON (ZTBOFFREGISTRATIONTB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN (	SELECT * FROM ZTBATTENDANCETB WHERE APPLY_DATE= @tradate ) AS ZTBATTENDANCETB_1 ON (ZTBATTENDANCETB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN ZTBREASON ON (ZTBREASON.REASON_CODE = ZTBOFFREGISTRATIONTB_1.REASON_CODE) WHERE ZTBWORKPOSITION.ATT_GROUP_CODE = " + $vitrilamviec + " AND ZTBEMPLINFO.WORK_STATUS_CODE <> 2 AND ZTBEMPLINFO.WORK_STATUS_CODE <> 0 " + $condition;
+               let today_format = moment().format('YYYY-MM-DD');
+               console.log(today_format);
+                //let today_format = '2022-09-30';
+                let tradiemdanhQuery = "DECLARE @tradate DATE SET @tradate='" + today_format + "' SELECT ZTBEMPLINFO.EMPL_NO as id,ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBOFFREGISTRATIONTB_1.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME, ZTBOFFREGISTRATIONTB_1.REMARK FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ( SELECT * FROM ZTBOFFREGISTRATIONTB WHERE ZTBOFFREGISTRATIONTB.APPLY_DATE = @tradate ) AS ZTBOFFREGISTRATIONTB_1 ON (ZTBOFFREGISTRATIONTB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN (	SELECT * FROM ZTBATTENDANCETB WHERE APPLY_DATE= @tradate ) AS ZTBATTENDANCETB_1 ON (ZTBATTENDANCETB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN ZTBREASON ON (ZTBREASON.REASON_CODE = ZTBOFFREGISTRATIONTB_1.REASON_CODE) WHERE ZTBWORKPOSITION.ATT_GROUP_CODE = " + $vitrilamviec + " AND ZTBEMPLINFO.WORK_STATUS_CODE <> 2 AND ZTBEMPLINFO.WORK_STATUS_CODE <> 0 " + $condition;
                 if (JOB_NAME == 'Leader')
-                    tradiemdanhQuery = "DECLARE @tradate DATE SET @tradate='" + today_format + "' SELECT ZTBEMPLINFO.EMPL_NO as id,ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBOFFREGISTRATIONTB_1.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ( SELECT * FROM ZTBOFFREGISTRATIONTB WHERE ZTBOFFREGISTRATIONTB.APPLY_DATE = @tradate ) AS ZTBOFFREGISTRATIONTB_1 ON (ZTBOFFREGISTRATIONTB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN (	SELECT * FROM ZTBATTENDANCETB WHERE APPLY_DATE= @tradate ) AS ZTBATTENDANCETB_1 ON (ZTBATTENDANCETB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN ZTBREASON ON (ZTBREASON.REASON_CODE = ZTBOFFREGISTRATIONTB_1.REASON_CODE) WHERE  (ZTBWORKPOSITION.ATT_GROUP_CODE = " + $vitrilamviec + " OR ZTBSUBDEPARTMENT.SUBDEPTNAME = '" + $subdeptname + "') AND ZTBEMPLINFO.WORK_STATUS_CODE <> 2 AND ZTBEMPLINFO.WORK_STATUS_CODE <> 0 " + $condition;
+                    tradiemdanhQuery = "DECLARE @tradate DATE SET @tradate='" + today_format + "' SELECT ZTBEMPLINFO.EMPL_NO as id,ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBOFFREGISTRATIONTB_1.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME, ZTBOFFREGISTRATIONTB_1.REMARK FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ( SELECT * FROM ZTBOFFREGISTRATIONTB WHERE ZTBOFFREGISTRATIONTB.APPLY_DATE = @tradate ) AS ZTBOFFREGISTRATIONTB_1 ON (ZTBOFFREGISTRATIONTB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN (	SELECT * FROM ZTBATTENDANCETB WHERE APPLY_DATE= @tradate ) AS ZTBATTENDANCETB_1 ON (ZTBATTENDANCETB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN ZTBREASON ON (ZTBREASON.REASON_CODE = ZTBOFFREGISTRATIONTB_1.REASON_CODE) WHERE  (ZTBWORKPOSITION.ATT_GROUP_CODE = " + $vitrilamviec + " OR ZTBSUBDEPARTMENT.SUBDEPTNAME = '" + $subdeptname + "') AND ZTBEMPLINFO.WORK_STATUS_CODE <> 2 AND ZTBEMPLINFO.WORK_STATUS_CODE <> 0 " + $condition;
                 //console.log(tradiemdanhQuery);
                 //checkkq = await asyncQuery(tradiemdanhQuery);x
                 checkkq = await queryDB(tradiemdanhQuery);
@@ -2300,13 +2346,16 @@ exports.process_api = function (req, res) {
         console.log(qr);
         (async () => {
             let kqua;
-            let DATA = qr['DATA'];            
+            let DATA = qr['DATA'];                      
             let JOB_NAME = req.payload_data['JOB_NAME'];
+            let CURRENT_TEAM = DATA.CURRENT_TEAM;
+            console.log("CURRENT_TEAM:" + CURRENT_TEAM);
             let diemdanhvalue = DATA.diemdanhvalue;
             let EMPL_NO = DATA.EMPL_NO;
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff') {
                 var today = new Date();
-                var today_format = returnDateFormat(today);
+                //var today_format = moment().format('YYYY-MM-DD');
+                var today_format = moment().format('YYYY-MM-DD');
               
                 let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                 console.log(checkAttQuery);
@@ -2317,13 +2366,13 @@ exports.process_api = function (req, res) {
                 if (checkAttKQ.tk_status === "NG") 
                 {                  
                     console.log('Chua diem danh, se them moi diem danh');
-                    let insert_diemdanhQuery = "INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF) VALUES ('002','" + EMPL_NO + "','" + today_format + "'," + diemdanhvalue + ")";
+                    let insert_diemdanhQuery = "INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM) VALUES ('002','" + EMPL_NO + "','" + today_format + "'," + diemdanhvalue + ",'" +CURRENT_TEAM+ "')";
                     let insert_dd = await queryDB(insert_diemdanhQuery);
                     res.send(insert_dd);                    
                 }
                 else 
                 {
-                    let update_diemdanhQuery = "UPDATE ZTBATTENDANCETB SET ON_OFF = " + diemdanhvalue + " WHERE  EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
+                    let update_diemdanhQuery = "UPDATE ZTBATTENDANCETB SET ON_OFF = " + diemdanhvalue + ", CURRENT_TEAM='"+ CURRENT_TEAM +"' WHERE  EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                     let update_dd = await queryDB(update_diemdanhQuery);
                     res.send(update_dd);
                     console.log('da diem danh, update gia tri diem danh');
@@ -2345,7 +2394,8 @@ exports.process_api = function (req, res) {
             let tangcavalue = DATA.tangcavalue;
             
             var today = new Date();
-            var today_format = returnDateFormat(today);
+            //var today_format = moment().format('YYYY-MM-DD');
+            var today_format = moment().format('YYYY-MM-DD');
             let checkkq = "OK";
             let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
             console.log(checkAttQuery);
@@ -2384,8 +2434,10 @@ exports.process_api = function (req, res) {
                 var today = new Date();
                 let checkkq = "OK";
                 let setpdQuery = "UPDATE ZTBEMPLINFO SET WORK_SHIFT_CODE=" + $teamvalue + " WHERE EMPL_NO='" + EMPL_NO + "'";
+                let updateam_diemdanh = `UPDATE ZTBATTENDANCETB SET CURRENT_TEAM= ${$teamvalue} WHERE APPLY_DATE ='${moment().format('YYYY-MM-DD')}' AND EMPL_NO='${DATA.EMPL_NO}'`;
                 //console.log(setpdQuery);
-                checkkq = await queryDB(setpdQuery);                
+                checkkq = await queryDB(setpdQuery);  
+                checkkq2 = await queryDB(updateam_diemdanh);                       
                 res.send(checkkq);               
             }
             else {
@@ -2397,7 +2449,8 @@ exports.process_api = function (req, res) {
         console.log(qr);
         (async () => {
             let kqua;
-            let DATA = qr['DATA'];            
+            let DATA = qr['DATA'];    
+            console.log(DATA);        
             let EMPL_NO = req.payload_data['EMPL_NO'];
             let START_DATE = DATA.ngaybatdau;
             let END_DATE = DATA.ngayketthuc;
@@ -2407,15 +2460,88 @@ exports.process_api = function (req, res) {
             var from = new Date(START_DATE);
             var to = new Date(END_DATE);
             var today = new Date();
-            var today_format = returnDateFormat(today);            
-            let checkkq = "OK";           
-            for (var day = from; day <= to; day.setDate(day.getDate() + 1)) {
-                let apply_date = returnDateFormat(day);
-                let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI})`;
-                console.log(query);
-                kqua = await queryDB(query);
-                if (kqua.tk_status != "OK") checkkq = "NG";
+            var today_format = moment().format('YYYY-MM-DD');            
+            let checkkq = "OK";    
+            if(CANGHI ===1)       
+            {
+                for (var day = from; day <= to; day.setDate(day.getDate() + 1)) {
+                    let apply_date = moment(day).format('YYYY-MM-DD');
+                    console.log(apply_date);
+                    let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI})`;
+                    console.log(query);
+                    kqua = await queryDB(query);
+                    if (kqua.tk_status != "OK") checkkq = "NG";
+                }
+
             }
+            else if(CANGHI ===2)
+            {
+                for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
+                    let apply_date = moment(day).format('YYYY-MM-DD');
+                    console.log(apply_date);
+    
+                    let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI})`;
+                    console.log(query);
+                    kqua = await queryDB(query);
+                    if (kqua.tk_status != "OK") checkkq = "NG";
+                }
+            }
+            
+            if(checkkq === "OK")
+            {
+                res.send({tk_status: "OK"});
+            }
+            else
+            {
+                res.send({tk_status: "NG", message: "Ngày đã dược đăng ký rồi, không thể đăng ký lại"});
+            }
+            
+            } 
+        )()
+        //res.send('ket qua tra ve' + req.cookies.token);
+    }
+    else if (qr['command'] == 'dangkynghi2_AUTO') {
+        console.log(qr);
+        (async () => {
+            let kqua;
+            let DATA = qr['DATA'];    
+            console.log(DATA);        
+            let EMPL_NO = DATA.EMPL_NO;
+            let START_DATE = DATA.ngaybatdau;
+            let END_DATE = DATA.ngayketthuc;
+            let REASON_CODE = DATA.reason_code;
+            let REMARK_CONTENT = DATA.remark_content;
+            let CANGHI = DATA.canghi
+            var from = new Date(START_DATE);
+            var to = new Date(END_DATE);
+            var today = new Date();
+            var today_format = moment().format('YYYY-MM-DD');            
+            let checkkq = "OK";    
+            if(CANGHI ===1)       
+            {
+                for (var day = from; day <= to; day.setDate(day.getDate() + 1)) {
+                    let apply_date = moment(day).format('YYYY-MM-DD');
+                    console.log(apply_date);
+                    let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI})`;
+                    console.log(query);
+                    kqua = await queryDB(query);
+                    if (kqua.tk_status != "OK") checkkq = "NG";
+                }
+
+            }
+            else if(CANGHI ===2)
+            {
+                for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
+                    let apply_date = moment(day).format('YYYY-MM-DD');
+                    console.log(apply_date);
+    
+                    let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI})`;
+                    console.log(query);
+                    kqua = await queryDB(query);
+                    if (kqua.tk_status != "OK") checkkq = "NG";
+                }
+            }
+            
             if(checkkq === "OK")
             {
                 res.send({tk_status: "OK"});
@@ -2441,7 +2567,7 @@ exports.process_api = function (req, res) {
             if (isNumber(START_TIME) && isNumber(FINISH_TIME)) {
                 console.log("la number");
                 var today = new Date();
-                var today_format = returnDateFormat(today);                
+                var today_format = moment().format('YYYY-MM-DD');                
                 let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                 let checkAttKQ = await queryDB(checkAttQuery);
                 if (checkAttKQ.tk_status != "NG") {
@@ -2897,7 +3023,7 @@ exports.process_api = function (req, res) {
             console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `SELECT P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING,  P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX-  P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) ${generate_condition_get_ycsx(DATA.alltime, DATA.start_date, DATA.end_date, DATA.cust_name, DATA.codeCMS, DATA.codeKD, DATA.prod_type, DATA.empl_name, DATA.phanloai, DATA.ycsx_pending, DATA.prod_request_no, DATA.material, DATA.inspect_inputcheck) } ORDER BY P400.PROD_REQUEST_NO DESC`;
+            let setpdQuery = `SELECT P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL,M100.DESCR, M100.PDBV, M100.PDBV_EMPL,M100.PDBV_DATE,M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING,  P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX-  P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) ${generate_condition_get_ycsx(DATA.alltime, DATA.start_date, DATA.end_date, DATA.cust_name, DATA.codeCMS, DATA.codeKD, DATA.prod_type, DATA.empl_name, DATA.phanloai, DATA.ycsx_pending, DATA.prod_request_no, DATA.material, DATA.inspect_inputcheck) } ORDER BY P400.PROD_REQUEST_NO DESC`;
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -3036,7 +3162,7 @@ exports.process_api = function (req, res) {
             let DATA = qr['DATA']; 
             console.log(DATA);            
             let checkkq = "OK";
-            let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY) VALUES ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.next_process_in_no}','999','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO}','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','NM1')`;
+            let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY) VALUES ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5,8)}','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO}','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','NM1')`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             console.log(checkkq);
@@ -3050,7 +3176,7 @@ exports.process_api = function (req, res) {
             console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES  ('002','${DATA.in_date}','${DATA.next_process_in_no}','001','001','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}')`;
+            let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES  ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5,8)}','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}')`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             console.log(checkkq);
@@ -3179,7 +3305,7 @@ exports.process_api = function (req, res) {
         (async () => {            
             let DATA = qr['DATA'];             
             console.log(DATA);
-            const draw_path ='D:\\xampp\\htdocs\\banve\\';
+            const draw_path ='C:\\xampp\\htdocs\\banve\\';
             if(!existsSync(draw_path + DATA.filename))
             {
                 res.send({tk_status:'OK'});
@@ -3435,8 +3561,8 @@ exports.process_api = function (req, res) {
             let DATA = qr['DATA']; 
             //console.log(DATA);           
             let checkkq = "OK";
-            let setpdQuery = ` SELECT M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN FROM M100
-            LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+            let setpdQuery = ` SELECT M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV FROM M100
+            LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}'`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -3463,8 +3589,8 @@ exports.process_api = function (req, res) {
             let DATA = qr['DATA']; 
             //console.log(DATA);           
             let checkkq = "OK";
-            let setpdQuery = ` SELECT * FROM (SELECT TOP 8 DATEPART( ISOWK, DATEADD(day,2,DELIVERY_DATE)) As DEL_WEEK, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
-            LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) WHERE YEAR(ZTBDelivery.DELIVERY_DATE) = '${DATA.YEAR}' GROUP BY  DATEPART( ISOWK, DATEADD(day,2,DELIVERY_DATE))  ORDER BY DEL_WEEK DESC) AS AA ORDER BY AA.DEL_WEEK ASC `;
+            let setpdQuery = ` SELECT * FROM (SELECT TOP 8 DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE)) As DEL_WEEK, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
+            LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) WHERE YEAR(ZTBDelivery.DELIVERY_DATE) = '${DATA.YEAR}' GROUP BY  DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE))  ORDER BY DEL_WEEK DESC) AS AA ORDER BY AA.DEL_WEEK ASC `;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -3601,7 +3727,7 @@ exports.process_api = function (req, res) {
             {
                 condition += ` AND ((OK_M1 + OK_M2)  <>0 OR (HOLDING_M1+ HOLDING_M2) <>0)`;
             }
-            let setpdQuery = `SELECT M_CODE, M_NAME, WIDTH_CD, OK_M1 AS TON_NM1, OK_M2 AS TON_NM2, HOLDING_M1 AS HOLDING_NM1, HOLDING_M2 AS HOLDING_NM2, (OK_M1 + OK_M2) AS TOTAL_OK, (HOLDING_M1+ HOLDING_M2) AS TOTAL_HOLDING FROM M090  ${condition}`;
+            let setpdQuery = `SELECT TDS, M_CODE, M_NAME, WIDTH_CD, OK_M1 AS TON_NM1, OK_M2 AS TON_NM2, HOLDING_M1 AS HOLDING_NM1, HOLDING_M2 AS HOLDING_NM2, (OK_M1 + OK_M2) AS TOTAL_OK, (HOLDING_M1+ HOLDING_M2) AS TOTAL_HOLDING FROM M090  ${condition}`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -3697,6 +3823,827 @@ exports.process_api = function (req, res) {
             res.send(checkkq);             
         })()
     }
+    else if (qr['command'] == 'pdbanve')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];     
+            if((JOB_NAME === 'Sub Leader' || JOB_NAME==='Leader') && (SUBDEPTNAME=='PQC1' || SUBDEPTNAME=='PQC3'))
+            {
+                 //console.log(DATA);           
+                let checkkq = "OK";
+                let setpdQuery = ` UPDATE M100 SET PDBV= 'Y', PDBV_EMPL='${EMPL_NO}', PDBV_DATE=GETDATE() WHERE G_CODE='${DATA.G_CODE}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                //console.log(checkkq);
+                res.send(checkkq); 
+            }
+            else
+            {
+                res.send({tk_status:'NG', message:'Không đủ quyền hạn, cần PQC phê duyệt'}); 
+            }
+                   
+        })()
+    }
+    else if (qr['command'] == 'trapqc1data')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT ZTBPQC1TABLE.PQC1_ID,CONCAT(datepart(YEAR,ZTBPQC1TABLE.SETTING_OK_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC1TABLE.SETTING_OK_TIME))) AS YEAR_WEEK, ZTBPQC1TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_DATE,ZTBPQC1TABLE.PROCESS_LOT_NO,M100.G_NAME,M100.G_NAME_KD,ZTBPQC1TABLE.LINEQC_PIC AS LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.FACTORY,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,M100.PROD_LAST_PRICE,(M100.PROD_LAST_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT,ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE
+                FROM
+               ZTBPQC1TABLE
+               LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC1TABLE.PROD_REQUEST_NO)
+               LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC1TABLE.G_CODE)
+               ${generate_condition_pqc1(DATA.ALLTIME, DATA.FROM_DATE, DATA.TO_DATE, DATA.CUST_NAME, DATA.G_CODE, DATA.G_NAME, DATA.PROD_REQUEST_NO, DATA.PROCESS_LOT_NO, DATA.ID,DATA.FACTORY)} 
+               ORDER BY ZTBPQC1TABLE.PQC1_ID DESC`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'trapqc3data')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT CONCAT(datepart(YEAR,ZTBPQC3TABLE.OCCURR_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC3TABLE.OCCURR_TIME))) AS YEAR_WEEK,ZTBPQC3TABLE.PQC3_ID,ZTBPQC3TABLE.PQC1_ID,ZTBPQC1TABLE.FACTORY,ZTBPQC3TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,ZTBPQC3TABLE.PROCESS_LOT_NO,ZTBPQC3TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,M100.PROD_LAST_PRICE,ZTBPQC3TABLE.LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC3TABLE.OCCURR_TIME,ZTBPQC3TABLE.INSPECT_QTY,ZTBPQC3TABLE.DEFECT_QTY,(ZTBPQC3TABLE.DEFECT_QTY *M100.PROD_LAST_PRICE ) AS DEFECT_AMOUNT,ZTBPQC3TABLE.DEFECT_PHENOMENON,ZTBPQC3TABLE.DEFECT_IMAGE_LINK,ZTBPQC3TABLE.REMARK,ZTBPQC3TABLE.WORST5,ZTBPQC3TABLE.WORST5_MONTH
+                FROM ZTBPQC3TABLE 
+               LEFT JOIN ZTBPQC1TABLE ON (ZTBPQC3TABLE.PQC1_ID = ZTBPQC1TABLE.PQC1_ID)
+               LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC3TABLE.G_CODE)
+               LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC3TABLE.PROD_REQUEST_NO)
+               ${generate_condition_pqc3(DATA.ALLTIME, DATA.FROM_DATE, DATA.TO_DATE, DATA.CUST_NAME, DATA.G_CODE, DATA.G_NAME, DATA.PROD_REQUEST_NO, DATA.PROCESS_LOT_NO, DATA.ID,DATA.FACTORY)} 
+               ORDER BY ZTBPQC3TABLE.PQC3_ID DESC`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'tradaofilm')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT KNIFE_FILM_ID,FACTORY_NAME,NGAYBANGIAO,KNIFE_FILM.G_CODE, M100.G_NAME, LOAIBANGIAO_PDP,LOAIPHATHANH,SOLUONG,SOLUONGOHP,LYDOBANGIAO,PQC_EMPL_NO,RND_EMPL_NO,SX_EMPL_NO,MA_DAO,REMARK FROM KNIFE_FILM LEFT JOIN M100 ON (M100.G_CODE = KNIFE_FILM.G_CODE)
+                ORDER BY KNIFE_FILM_ID DESC `;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'traCNDB')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT Z_CNDBTABLE.CNDB_DATE,Z_CNDBTABLE.CNDB_NO,Z_CNDBTABLE.CNDB_ENCODE,Z_CNDBTABLE.M_NAME,Z_CNDBTABLE.DEFECT_NAME,Z_CNDBTABLE.DEFECT_CONTENT,Z_CNDBTABLE.REG_EMPL_NO,Z_CNDBTABLE.REMARK,Z_CNDBTABLE.M_NAME2,Z_CNDBTABLE.INS_DATE,Z_CNDBTABLE.APPROVAL_STATUS,Z_CNDBTABLE.APPROVAL_EMPL,Z_CNDBTABLE.APPROVAL_DATE,Z_SPECIAL_PRODUCT.G_CODE,Z_SPECIAL_PRODUCT.G_NAME,Z_SPECIAL_PRODUCT.CNDB_QTY FROM Z_CNDBTABLE LEFT JOIN Z_SPECIAL_PRODUCT ON (Z_SPECIAL_PRODUCT.CNDB_ENCODE = Z_CNDBTABLE.CNDB_ENCODE)
+                ORDER BY CNDB_DATE DESC `;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'traPOSummaryTotal')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT  SUM(cast(ZTBPOTable.PO_QTY as bigint)) As PO_QTY, SUM(cast(AA.TotalDelivered as bigint)) as TOTAL_DELIVERED, SUM(cast((ZTBPOTable.PO_QTY-AA.TotalDelivered) as bigint)) As PO_BALANCE,SUM((ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE)) As PO_AMOUNT , SUM((AA.TotalDelivered*ZTBPOTable.PROD_PRICE)) As DELIVERED_AMOUNT, SUM(((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE)) As BALANCE_AMOUNT FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery  ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO)  GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO)  JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) `;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'customerRevenue')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT * FROM (
+                    SELECT AA.CUST_NAME_KD, SUM(AA.DELIVERY_AMOUNT) AS DELIVERY_AMOUNT FROM 
+                    (SELECT M010.EMPL_NAME, ZTBDelivery.G_CODE,ZTBDelivery.DELIVERY_QTY,ZTBDelivery.DELIVERY_DATE, M110.CUST_NAME_KD, (ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERY_AMOUNT
+                    FROM ZTBDelivery
+                    LEFT JOIN M110 ON (ZTBDelivery.CUST_CD = M110.CUST_CD)
+                    LEFT JOIN M010 ON (ZTBDelivery.EMPL_NO = M010.EMPL_NO)
+                    LEFT JOIN ZTBPOTable ON (ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO)
+                    WHERE DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}') AS AA
+                    GROUP BY AA.CUST_NAME_KD) AS BB
+                    ORDER BY BB.DELIVERY_AMOUNT DESC `;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'PICRevenue')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT * FROM (
+                    SELECT AA.EMPL_NAME, SUM(AA.DELIVERY_AMOUNT) AS DELIVERY_AMOUNT FROM 
+                    (SELECT M010.EMPL_NAME, ZTBDelivery.G_CODE,ZTBDelivery.DELIVERY_QTY,ZTBDelivery.DELIVERY_DATE, M110.CUST_NAME_KD, (ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERY_AMOUNT
+                    FROM ZTBDelivery
+                    LEFT JOIN M110 ON (ZTBDelivery.CUST_CD = M110.CUST_CD)
+                    LEFT JOIN M010 ON (ZTBDelivery.EMPL_NO = M010.EMPL_NO)
+                    LEFT JOIN ZTBPOTable ON (ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO)
+                    WHERE DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}') AS AA
+                    GROUP BY AA.EMPL_NAME) AS BB
+                    ORDER BY BB.DELIVERY_AMOUNT DESC`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'POBalanceByCustomer')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT XX.CUST_NAME_KD, YY.TOTAL_PO_BALANCE, XX.TSP, XX.LABEL, XX.UV, XX.OLED, XX.TAPE, XX.RIBBON, XX.SPT, (YY.TOTAL_PO_BALANCE- XX.TSP- XX.LABEL- XX.UV- XX.OLED- XX.TAPE- XX.RIBBON- XX.SPT) AS OTHERS FROM  (SELECT  PV.CUST_NAME_KD, (isnull(PV.[TSP],0)+isnull(PV.[LABEL],0)+isnull(PV.[UV],0)+isnull(PV.[TAPE],0) + isnull(PV.[SPT],0)+ isnull(PV.[OLED],0)  + isnull(PV.[RIBBON],0)) As TOTAL_PO_BALANCE, isnull(PV.[TSP],0) As TSP, isnull(PV.[LABEL],0) As LABEL,isnull(PV.[UV],0) As UV, isnull(PV.[OLED],0) As OLED,isnull(PV.[TAPE],0) As TAPE, isnull(PV.[SPT],0) As SPT, isnull(PV.[RIBBON],0) As RIBBON FROM ( SELECT P.PO_BALANCE, P.PROD_TYPE, P.CUST_NAME_KD FROM (   SELECT AA.PO_NO,  M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE, M110.CUST_NAME_KD, M100.G_NAME, M010.EMPL_NAME, AA.G_CODE, ZTBPOTable.PO_QTY, ZTBPOTable.PROD_PRICE, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT,DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, YEAR(PO_DATE) As PO_YEAR, CASE     WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER'        ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, ZTBPOTable.PO_ID FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD)  ) AS P ) AS j PIVOT (SUM(j.PO_BALANCE) FOR j.PROD_TYPE IN ([TSP],[LABEL],[UV],[OLED],[TAPE],[SPT],[RIBBON])) AS PV ) AS XX JOIN /*customer sum po balance*/  (SELECT AA.CUST_NAME_KD, SUM(AA.PO_BALANCE) AS TOTAL_PO_BALANCE FROM (SELECT AA.PO_NO,  M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE, M110.CUST_NAME_KD, M100.G_NAME, M010.EMPL_NAME, AA.G_CODE, ZTBPOTable.PO_QTY, ZTBPOTable.PROD_PRICE, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT,DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, YEAR(PO_DATE) As PO_YEAR, CASE     WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER'        ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, ZTBPOTable.PO_ID FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD)) AS AA GROUP BY AA.CUST_NAME_KD ) AS YY ON XX.CUST_NAME_KD = YY.CUST_NAME_KD WHERE XX.TOTAL_PO_BALANCE >0 ORDER BY TOTAL_PO_BALANCE DESC`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'setnhamay')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `UPDATE ZTBEMPLINFO SET FACTORY_CODE = ${DATA.FACTORY} WHERE EMPL_NO='${DATA.EMPL_NO}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'baocaofcstss')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT FCST1.WEEKNO, FCST1.SEVT AS SEVT1,FCST1.SEV AS SEV1, FCST1.[SAMSUNG-ASIA] AS SAMSUNG_ASIA1, FCST1.TOTAL_SS AS TT_SS1, FCST2.SEVT AS SEVT2,FCST2.SEV AS SEV2, FCST2.[SAMSUNG-ASIA] AS SAMSUNG_ASIA2,FCST2.TOTAL_SS AS TT_SS2 FROM ( SELECT CASE WHEN LEN(WEEKNO) =2 THEN CONCAT('W0',SUBSTRING(WEEKNO,2,1)) ELSE WEEKNO END AS WEEKNO, [SEVT],[SEV], [SAMSUNG-ASIA], ([SEVT]+[SEV]+ [SAMSUNG-ASIA]) AS TOTAL_SS FROM ( SELECT CUST_NAME_KD, WEEKNO,FCST FROM (SELECT * FROM (SELECT M110. CUST_NAME_KD, SUM(ZTBFCSTTB.W1) AS W1,SUM(ZTBFCSTTB.W2) AS W2,SUM(ZTBFCSTTB.W3) AS W3,SUM(ZTBFCSTTB.W4) AS W4,SUM(ZTBFCSTTB.W5) AS W5,SUM(ZTBFCSTTB.W6) AS W6,SUM(ZTBFCSTTB.W7) AS W7,SUM(ZTBFCSTTB.W8) AS W8,SUM(ZTBFCSTTB.W9) AS W9,SUM(ZTBFCSTTB.W10) AS W10,SUM(ZTBFCSTTB.W11) AS W11,SUM(ZTBFCSTTB.W12) AS W12,SUM(ZTBFCSTTB.W13) AS W13,SUM(ZTBFCSTTB.W14) AS W14,SUM(ZTBFCSTTB.W15) AS W15,SUM(ZTBFCSTTB.W16) AS W16,SUM(ZTBFCSTTB.W17) AS W17,SUM(ZTBFCSTTB.W18) AS W18,SUM(ZTBFCSTTB.W19) AS W19,SUM(ZTBFCSTTB.W20) AS W20,SUM(ZTBFCSTTB.W21) AS W21,SUM(ZTBFCSTTB.W22) AS W22 FROM ZTBFCSTTB LEFT JOIN M110 ON (M110.CUST_CD= ZTBFCSTTB.CUST_CD) WHERE FCSTYEAR=${DATA.FCSTYEAR1} AND FCSTWEEKNO=${DATA.FCSTWEEKNUM1} GROUP BY M110. CUST_NAME_KD) AS AA) AS PVDT UNPIVOT ( FCST FOR WEEKNO IN (W1, W2, W3, W4, W5, W6, W7, W8, W9, W10, W11, W12, W13, W14, W15, W16, W17, W18, W19, W20, W21, W22) ) AS UNPV ) AS PVTB PIVOT ( SUM(FCST) FOR CUST_NAME_KD IN ([SEVT],[SEV],[SAMSUNG-ASIA]) ) AS PVT ) AS FCST1 LEFT JOIN ( SELECT CASE WHEN LEN(WEEKNO) =2 THEN CONCAT('W0',SUBSTRING(WEEKNO,2,1)) ELSE WEEKNO END AS WEEKNO, [SEVT],[SEV], [SAMSUNG-ASIA], ([SEVT]+[SEV]+ [SAMSUNG-ASIA]) AS TOTAL_SS FROM ( SELECT CUST_NAME_KD, WEEKNO,FCST FROM (SELECT * FROM (SELECT M110. CUST_NAME_KD, SUM(ZTBFCSTTB.W1) AS W1,SUM(ZTBFCSTTB.W2) AS W2,SUM(ZTBFCSTTB.W3) AS W3,SUM(ZTBFCSTTB.W4) AS W4,SUM(ZTBFCSTTB.W5) AS W5,SUM(ZTBFCSTTB.W6) AS W6,SUM(ZTBFCSTTB.W7) AS W7,SUM(ZTBFCSTTB.W8) AS W8,SUM(ZTBFCSTTB.W9) AS W9,SUM(ZTBFCSTTB.W10) AS W10,SUM(ZTBFCSTTB.W11) AS W11,SUM(ZTBFCSTTB.W12) AS W12,SUM(ZTBFCSTTB.W13) AS W13,SUM(ZTBFCSTTB.W14) AS W14,SUM(ZTBFCSTTB.W15) AS W15,SUM(ZTBFCSTTB.W16) AS W16,SUM(ZTBFCSTTB.W17) AS W17,SUM(ZTBFCSTTB.W18) AS W18,SUM(ZTBFCSTTB.W19) AS W19,SUM(ZTBFCSTTB.W20) AS W20,SUM(ZTBFCSTTB.W21) AS W21,SUM(ZTBFCSTTB.W22) AS W22 FROM ZTBFCSTTB LEFT JOIN M110 ON (M110.CUST_CD= ZTBFCSTTB.CUST_CD) WHERE FCSTYEAR=${DATA.FCSTYEAR2} AND FCSTWEEKNO=${DATA.FCSTWEEKNUM2} GROUP BY M110. CUST_NAME_KD) AS AA) AS PVDT UNPIVOT ( FCST FOR WEEKNO IN (W1, W2, W3, W4, W5, W6, W7, W8, W9, W10, W11, W12, W13, W14, W15, W16, W17, W18, W19, W20, W21, W22) ) AS UNPV ) AS PVTB PIVOT ( SUM(FCST) FOR CUST_NAME_KD IN ([SEVT],[SEV],[SAMSUNG-ASIA]) ) AS PVT ) AS FCST2 ON (FCST1.WEEKNO = FCST2.WEEKNO) ORDER BY FCST1.WEEKNO ASC`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'fcstamount')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT FCSTYEAR,FCSTWEEKNO, SUM(W1+W2+W3+W4) AS FCST4W_QTY,  SUM((W1+W2+W3+W4)*PROD_PRICE) AS FCST4W_AMOUNT,SUM(W1+W2+W3+W4+W5+W6+W7+W8) AS FCST8W_QTY,  SUM((W1+W2+W3+W4+W5+W6+W7+W8)*PROD_PRICE) AS FCST8W_AMOUNT  FROM ZTBFCSTTB
+                WHERE FCSTYEAR=${DATA.FCSTYEAR} AND FCSTWEEKNO=${DATA.FCSTWEEKNO}
+                GROUP BY FCSTYEAR,FCSTWEEKNO`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'dtcdata')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT  ZTB_REL_RESULT.DTC_ID, (CASE ZTBEMPLINFO.FACTORY_CODE WHEN 1 THEN 'NM1' WHEN 2 THEN 'NM2' END) AS FACTORY , ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME, ZTB_REL_REQUESTTABLE.TEST_EMPL_NO, ZTB_REL_RESULT.G_CODE, ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO, M100.G_NAME, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_SPECTTABLE.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,LOWER_TOR , ZTB_REL_RESULT.RESULT, ZTB_REL_SPECTTABLE.REMARK ,ZTB_REL_RESULT.REMARK, ZTB_REL_SPECTTABLE.REMARK , ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME , ZTB_REL_RESULT.SAMPLE_NO, ZTB_REL_REQUESTTABLE.REQUEST_DATETIME , ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO ,ZTB_REL_RESULT.M_CODE ,M090.M_NAME , M090.WIDTH_CD AS SIZE, ZTB_REL_REQUESTTABLE.REMARK, NHAP_NVL.LOTCMS , ZTB_REL_RESULT.TEST_CODE,M090.TDS, M090.TDS_EMPL ,TDS_UPD_DATE FROM ZTB_REL_RESULT LEFT JOIN M100 ON(M100.G_CODE = ZTB_REL_RESULT.G_CODE) LEFT JOIN M090 ON (M090.M_CODE = ZTB_REL_RESULT.M_CODE) LEFT JOIN ZTB_REL_SPECTTABLE ON (  ZTB_REL_SPECTTABLE.G_CODE = ZTB_REL_RESULT.G_CODE AND ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_RESULT.POINT_CODE AND ZTB_REL_SPECTTABLE.M_CODE = ZTB_REL_RESULT.M_CODE)  LEFT JOIN ZTB_REL_REQUESTTABLE ON (ZTB_REL_REQUESTTABLE.DTC_ID = ZTB_REL_RESULT.DTC_ID AND ZTB_REL_REQUESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE )  LEFT JOIN ZTB_REL_TESTTABLE ON (ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE) LEFT JOIN ZTB_REL_TESTTYPE ON (ZTB_REL_TESTTYPE.TEST_TYPE_CODE = ZTB_REL_REQUESTTABLE.TEST_TYPE_CODE) LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN NHAP_NVL ON(NHAP_NVL.LOTNCC = ZTB_REL_REQUESTTABLE.REMARK AND NHAP_NVL.SIZE = M090.WIDTH_CD) ${generate_condition_get_dtc_data(DATA.ALLTIME, DATA.FROM_DATE,DATA.TO_DATE, DATA.G_CODE, DATA.G_NAME, DATA.PROD_REQUEST_NO, DATA.M_NAME, DATA.M_CODE, DATA.TEST_NAME, DATA.TEST_TYPE, DATA.ID)} ORDER BY TEST_FINISH_TIME DESC`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'update_empl_image')
+    {
+        (async () => {            
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` UPDATE ZTBEMPLINFO SET EMPL_IMAGE='Y' WHERE EMPL_NO='${DATA.EMPL_NO}' `;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'getcodefullinfo')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
+                //console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'getbomsx')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT M140.MAIN_M,M140.G_CODE, M100.G_NAME, M100.G_NAME_KD, M140.RIV_NO, M140.M_CODE, M090.M_NAME, M090.WIDTH_CD, M140.M_QTY, M140.INS_EMPL, M140.INS_DATE, M140.UPD_EMPL,M140.UPD_DATE FROM M140 JOIN M100 ON (M140.G_CODE = M100.G_CODE) JOIN M090 ON (M090.M_CODE = M140.M_CODE) WHERE M140.G_CODE='${DATA.G_CODE}' AND M140.RIV_NO='A' `;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'getbomgia')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = ` SELECT * FROM ZTB_BOM2  WHERE RIV_NO='A' AND G_CODE='${DATA.G_CODE}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'getNextSEQ_G_CODE')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT MAX(SEQ_NO) AS LAST_SEQ_NO FROM M100 WHERE CODE_12 = '${DATA.CODE_12}' AND CODE_27='${DATA.CODE_27}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }
+    else if (qr['command'] == 'insertM100')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `INSERT INTO M100 (CTR_CD,CUST_CD,PROD_PROJECT,PROD_MODEL,CODE_12,PROD_TYPE,G_NAME_KD,DESCR,PROD_MAIN_MATERIAL,G_NAME,G_LENGTH,G_WIDTH,PD,G_C,G_C_R,G_SG_L,G_SG_R,PACK_DRT,KNIFE_TYPE,KNIFE_LIFECYCLE,KNIFE_PRICE,CODE_33,ROLE_EA_QTY,RPM,PIN_DISTANCE,PROCESS_TYPE,EQ1,EQ2,PROD_DIECUT_STEP,PROD_PRINT_TIMES,REMK,USE_YN,G_CODE,G_CG,G_LG, SEQ_NO, CODE_27, REV_NO, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE) VALUES ('002','${DATA.CODE_FULL_INFO.CUST_CD}','${DATA.CODE_FULL_INFO.PROD_PROJECT}','${DATA.CODE_FULL_INFO.PROD_MODEL}','${DATA.CODE_FULL_INFO.CODE_12}','${DATA.CODE_FULL_INFO.PROD_TYPE}','${DATA.CODE_FULL_INFO.G_NAME_KD}','${DATA.CODE_FULL_INFO.DESCR}','${DATA.CODE_FULL_INFO.PROD_MAIN_MATERIAL}','${DATA.CODE_FULL_INFO.G_NAME}','${DATA.CODE_FULL_INFO.G_LENGTH}','${DATA.CODE_FULL_INFO.G_WIDTH}','${DATA.CODE_FULL_INFO.PD}','${DATA.CODE_FULL_INFO.G_C}','${DATA.CODE_FULL_INFO.G_C_R}','${DATA.CODE_FULL_INFO.G_SG_L}','${DATA.CODE_FULL_INFO.G_SG_R}','${DATA.CODE_FULL_INFO.PACK_DRT}','${DATA.CODE_FULL_INFO.KNIFE_TYPE}','${DATA.CODE_FULL_INFO.KNIFE_LIFECYCLE}','${DATA.CODE_FULL_INFO.KNIFE_PRICE}','${DATA.CODE_FULL_INFO.CODE_33}','${DATA.CODE_FULL_INFO.ROLE_EA_QTY}','${DATA.CODE_FULL_INFO.RPM}','${DATA.CODE_FULL_INFO.PIN_DISTANCE}','${DATA.CODE_FULL_INFO.PROCESS_TYPE}','${DATA.CODE_FULL_INFO.EQ1}','${DATA.CODE_FULL_INFO.EQ2}','${DATA.CODE_FULL_INFO.PROD_DIECUT_STEP}','${DATA.CODE_FULL_INFO.PROD_PRINT_TIMES}','${DATA.CODE_FULL_INFO.REMK}','${DATA.CODE_FULL_INFO.USE_YN}','${DATA.G_CODE}','${DATA.CODE_FULL_INFO.G_CG}','${DATA.CODE_FULL_INFO.G_LG}','${DATA.NEXT_SEQ_NO}','${DATA.CODE_27}','A','${EMPL_NO}','${EMPL_NO}',GETDATE(), GETDATE())`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }    
+    else if (qr['command'] == 'updateM100')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `UPDATE M100 SET CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}',PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}', PDBV='P', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }        
+    else if (qr['command'] == 'getMaterialList')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `SELECT M_CODE, M_NAME, WIDTH_CD FROM M090`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'insertM140')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `INSERT INTO M140 (CTR_CD, G_CODE,RIV_NO,G_SEQ,M_CODE,M_QTY,META_PAT_CD,REMK,USE_YN,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, MAIN_M) VALUES ('002','${DATA.G_CODE}','A','${DATA.G_SEQ}', '${DATA.M_CODE}','${DATA.M_QTY}', 'x', '','Y', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}','${DATA.MAIN_M}')`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'insertBOM2')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `INSERT INTO ZTB_BOM2 (CTR_CD, G_CODE, RIV_NO, G_SEQ, M_CODE, M_NAME, CUST_CD, USAGE, MAT_MASTER_WIDTH, MAT_CUTWIDTH, MAT_ROLL_LENGTH, MAT_THICKNESS, M_QTY, REMARK, PROCESS_ORDER, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, MAIN_M) VALUES ('002', '${DATA.G_CODE}','A','${DATA.G_SEQ}','${DATA.M_CODE}','${DATA.M_NAME}','${DATA.CUST_CD}','${DATA.USAGE}','${DATA.MAT_MASTER_WIDTH}','${DATA.MAT_CUTWIDTH}','${DATA.MAT_ROLL_LENGTH}','${DATA.MAT_THICKNESS}','${DATA.M_QTY}','${DATA.REMARK}','${DATA.PROCESS_ORDER}','${EMPL_NO}','${EMPL_NO}',GETDATE(),GETDATE(),'${DATA.MAIN_M}')`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'deleteM140')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `DELETE FROM M140 WHERE G_CODE='${DATA.G_CODE}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'deleteBOM2')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+                let checkkq = "OK";
+                let setpdQuery = `DELETE FROM ZTB_BOM2 WHERE G_CODE='${DATA.G_CODE}'`;
+                console.log(setpdQuery);       
+                checkkq = await queryDB(setpdQuery);
+                res.send(checkkq); 
+                //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'listAmazon')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT DISTINCT BOM_AMAZONE.G_CODE, M100.G_NAME, M100.G_NAME_KD FROM BOM_AMAZONE JOIN M100 ON (M100.G_CODE=  BOM_AMAZONE.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getBOMAMAZON')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT BOM_AMAZONE.G_CODE, M100.G_NAME, DESIGN_AMAZONE.G_CODE_MAU,  M100_B.G_NAME AS TEN_MAU,BOM_AMAZONE.DOITUONG_NO, DESIGN_AMAZONE.DOITUONG_NAME, BOM_AMAZONE.GIATRI, BOM_AMAZONE.REMARK FROM BOM_AMAZONE LEFT JOIN DESIGN_AMAZONE ON (BOM_AMAZONE.G_CODE_MAU= DESIGN_AMAZONE.G_CODE_MAU AND BOM_AMAZONE.DOITUONG_NO= DESIGN_AMAZONE.DOITUONG_NO) LEFT JOIN M100 ON (M100.G_CODE = BOM_AMAZONE.G_CODE)  LEFT JOIN  (SELECT * FROM M100) AS M100_B ON (M100_B.G_CODE = DESIGN_AMAZONE.G_CODE_MAU) WHERE BOM_AMAZONE.G_CODE='${DATA.G_CODE}'`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getBOMAMAZON_EMPTY')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT DESIGN_AMAZONE.G_CODE_MAU, M100.G_NAME AS TEN_MAU, DOITUONG_NO, DOITUONG_NAME FROM DESIGN_AMAZONE JOIN M100 ON (M100.G_CODE = DESIGN_AMAZONE.G_CODE_MAU) WHERE G_CODE_MAU ='${DATA.G_CODE_MAU}'`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'loadcodephoi')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT DISTINCT DESIGN_AMAZONE.G_CODE_MAU, M100.G_NAME FROM DESIGN_AMAZONE JOIN M100 ON (M100.G_CODE = DESIGN_AMAZONE.G_CODE_MAU)`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'checkExistBOMAMAZON')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM BOM_AMAZONE WHERE G_CODE='${DATA.G_CODE}'`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'insertAmazonBOM')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO BOM_AMAZONE (CTR_CD, G_CODE, G_CODE_MAU, DOITUONG_NO, GIATRI, REMARK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}', '${DATA.G_CODE_MAU}','${DATA.DOITUONG_NO}','${DATA.GIATRI}','${DATA.REMARK}',GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}')`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'updateAmazonBOM')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE BOM_AMAZONE SET GIATRI='${DATA.GIATRI}', REMARK = '${DATA.REMARK}' WHERE G_CODE='${DATA.G_CODE}' AND G_CODE_MAU='${DATA.G_CODE_MAU}' AND DOITUONG_NO=${DATA.DOITUONG_NO}`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'xoadangkynghi_AUTO')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM ZTBOFFREGISTRATIONTB WHERE APPLY_DATE='${moment().format('YYYY-MM-DD')}' AND EMPL_NO='${DATA.EMPL_NO}' AND REMARK ='AUTO'`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getddmaindepttb')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `DECLARE @startdate DATE; 
+            DECLARE @enddate DATE; 
+            SET @startdate='${moment().format('YYYY-MM-DD')}' 
+            SET @enddate='${moment().format('YYYY-MM-DD')}' 
+            SELECT XX.MAINDEPTNAME, XX.COUNT_TOTAL, isnull(YY.COUT_ON,0) AS COUT_ON, isnull(YY.COUT_OFF,0) AS COUT_OFF, (XX.COUNT_TOTAL - isnull(YY.COUT_ON,0)- isnull(YY.COUT_OFF,0)) AS COUNT_CDD, (CONVERT(float,isnull(YY.COUT_ON,0))/CONVERT(float,XX.COUNT_TOTAL)*100) AS ON_RATE FROM 
+            (SELECT DISTINCT ZTBMAINDEPARMENT.MAINDEPTNAME, SUM(CASE WHEN EMPL_NO is not null THEN 1 ELSE 0 END) AS COUNT_TOTAL FROM ZTBEMPLINFO JOIN ZTBWORKPOSITION ON (ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE)
+            JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE)
+            JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE)
+            WHERE ZTBEMPLINFO.WORK_STATUS_CODE = 1
+            GROUP BY ZTBMAINDEPARMENT.MAINDEPTNAME) AS XX
+            LEFT JOIN 
+            (
+            SELECT DISTINCT AA.MAINDEPTNAME, SUM(CASE WHEN AA.ON_OFF =1 THEN 1 ELSE 0 END) AS COUT_ON, SUM(CASE WHEN AA.ON_OFF =0 THEN 1 ELSE 0 END) AS COUT_OFF FROM
+            (SELECT ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBATTENDANCETB.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME,  ZTBOFFREGISTRATIONTB.REMARK,ZTBATTENDANCETB.XACNHAN FROM ZTBATTENDANCETB LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTBATTENDANCETB.EMPL_NO) LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ZTBOFFREGISTRATIONTB ON (ZTBOFFREGISTRATIONTB.EMPL_NO = ZTBATTENDANCETB.EMPL_NO AND ZTBOFFREGISTRATIONTB.APPLY_DATE = ZTBATTENDANCETB.APPLY_DATE) LEFT JOIN ZTBREASON ON ( ZTBOFFREGISTRATIONTB.REASON_CODE = ZTBREASON.REASON_CODE) WHERE  ZTBATTENDANCETB.APPLY_DATE BETWEEN @startdate AND @enddate ) AS AA
+            GROUP BY AA.MAINDEPTNAME) AS YY
+            ON XX.MAINDEPTNAME = YY. MAINDEPTNAME`;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getqlsxplan')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.PLAN_ORDER, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE,ZTB_QLSXPLAN.PROD_REQUEST_NO,ZTB_QLSXPLAN.PLAN_QTY,ZTB_QLSXPLAN.PLAN_EQ,ZTB_QLSXPLAN.PLAN_FACTORY,ZTB_QLSXPLAN.PLAN_LEADTIME,ZTB_QLSXPLAN.INS_EMPL,ZTB_QLSXPLAN.INS_DATE,ZTB_QLSXPLAN.UPD_EMPL,ZTB_QLSXPLAN.UPD_DATE, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY FROM ZTB_QLSXPLAN JOIN P400 ON (P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO) JOIN M100 ON (P400.G_CODE = M100.G_CODE) WHERE ZTB_QLSXPLAN.PLAN_DATE='${DATA.PLAN_DATE}' ORDER BY ZTB_QLSXPLAN.PLAN_ORDER ASC `;
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'checkdiemdanh')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM ZTBATTENDANCETB WHERE EMPL_NO= '${EMPL_NO}' AND APPLY_DATE= '${moment().format('YYYY-MM-DD')}' `; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getchithidatatable')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT ZTB_QLSXCHITHI.CHITHI_ID, ZTB_QLSXCHITHI.PLAN_ID, ZTB_QLSXCHITHI.M_CODE, M090.M_NAME, M090.WIDTH_CD, ZTB_QLSXCHITHI.M_ROLL_QTY, ZTB_QLSXCHITHI.M_MET_QTY,ZTB_QLSXCHITHI.M_QTY, ZTB_QLSXCHITHI.INS_EMPL, ZTB_QLSXCHITHI.INS_DATE, ZTB_QLSXCHITHI.UPD_EMPL, ZTB_QLSXCHITHI.UPD_DATE FROM ZTB_QLSXCHITHI JOIN M090 ON (M090.M_CODE = ZTB_QLSXCHITHI.M_CODE) WHERE ZTB_QLSXCHITHI.PLAN_ID='${DATA.PLAN_ID}' `; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getLastestPLAN_ID')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 PLAN_ID from ZTB_QLSXPLAN WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' ORDER BY PLAN_ID DESC `; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'getLastestPLANORDER')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT  TOP 1 *  FROM ZTB_QLSXPLAN WHERE PLAN_DATE='${DATA.PLAN_DATE}' AND PLAN_EQ='${DATA.PLAN_EQ}' AND PLAN_FACTORY='${DATA.PLAN_FACTORY}' ORDER BY PLAN_ORDER DESC`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'addPlanQLSX')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTB_QLSXPLAN (CTR_CD,PLAN_ID,PLAN_DATE,PROD_REQUEST_NO,PLAN_QTY,PLAN_EQ,PLAN_FACTORY,PLAN_LEADTIME,STEP,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE,PLAN_ORDER) VALUES('002','${DATA.PLAN_ID}','${DATA.PLAN_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.PLAN_QTY}','${DATA.PLAN_EQ}','${DATA.PLAN_FACTORY}','${DATA.PLAN_LEADTIME}','${DATA.STEP}','${EMPL_NO}',GETDATE(),'${EMPL_NO}',GETDATE(),'${DATA.PLAN_ORDER}' )`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'deletePlanQLSX')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM ZTB_QLSXPLAN WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'updatePlanQLSX')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE ZTB_QLSXPLAN SET PLAN_QTY=${DATA.PLAN_QTY}, STEP=${DATA.STEP}, PLAN_LEADTIME=${DATA.PLAN_LEADTIME}, PLAN_ORDER=${DATA.PLAN_ORDER},PROCESS_NUMBER=${DATA.PROCESS_NUMBER},UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'deleteChiThi')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM ZTB_QLSXCHITHI WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq); 
+            //console.log(checkkq);                   
+        })()
+    }  
+    else if (qr['command'] == 'insertChiThi')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO ZTB_QLSXCHITHI (CTR_CD, PLAN_ID, M_CODE, M_ROLL_QTY, M_MET_QTY, INS_EMPL, INS_DATE, UPD_EMPL, UPD_DATE, M_QTY) VALUES ('002','${DATA.PLAN_ID}','${DATA.M_CODE}','${DATA.M_ROLL_QTY}','${DATA.M_MET_QTY}','${EMPL_NO}', GETDATE(),'${EMPL_NO}',GETDATE(),'${DATA.M_QTY}')`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }  
+    else if (qr['command'] == 'getO300_LAST_OUT_NO')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 OUT_NO, OUT_DATE FROM O300 WHERE OUT_DATE='${moment().format("YYYYMMDD")}' ORDER BY OUT_NO DESC`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }  
     else {
         console.log(qr['command']);        
         res.send({tk_status:"ok",data:req.payload_data});
