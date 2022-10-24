@@ -3126,7 +3126,7 @@ exports.process_api = function (req, res) {
             console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `SELECT * FROM P400 WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' AND PROCESS_REQUEST_DATE='${DATA.PROD_REQUEST_DATE}'`;
+            let setpdQuery = `SELECT * FROM P400 WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' AND PROD_REQUEST_DATE='${DATA.PROD_REQUEST_DATE}'`;
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -3361,9 +3361,8 @@ exports.process_api = function (req, res) {
             let DATA = qr['DATA']; 
             console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
-            let checkkq = "OK";
-            //let setpdQuery = `DECLARE @tradate as datetime DECLARE @inventory as varchar(6) SET @tradate = '${DATA.TRADATE}' SET @inventory = '${DATA.INVENTORY}' SELECT P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (TONLIEU.GRAND_TOTAL-TONLIEU.HOLDING) AS TONLIEU, TONLIEU.HOLDING, TONLIEU.GRAND_TOTAL AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON P400.G_CODE = M100.G_CODE LEFT JOIN M010 ON P400.EMPL_NO = M010.EMPL_NO RIGHT JOIN M140 ON P400.G_CODE = M140.G_CODE LEFT JOIN M090 ON M090.M_CODE = M140.M_CODE LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD LEFT JOIN ( SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, isnull(AA.INVENTORY_QTY,0) AS TON_DAU, isnull(BB.IN_CFM_QTY,0) AS INPUT, isnull(CC.OUT_CFM_QTY,0) AS OUTPUT, isnull(DD.RETURN_IN_QTY,0) AS RETURN_IN, isnull(EE.HOLDING_QTY,0) AS HOLDING, (isnull(AA.INVENTORY_QTY,0) + isnull(BB.IN_CFM_QTY,0)- isnull(CC.OUT_CFM_QTY,0) +isnull(DD.RETURN_IN_QTY,0)-isnull(EE.HOLDING_QTY,0)) AS GRAND_TOTAL FROM M090 LEFT JOIN (SELECT DISTINCT M_CODE, SUM(INVENTORY_QTY) AS INVENTORY_QTY FROM KIEMKE_NVL WHERE INVENTORY_DATE=@inventory GROUP BY M_CODE) AS AA ON (AA.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(IN_CFM_QTY) AS IN_CFM_QTY FROM I222 WHERE INS_DATE> @tradate GROUP BY M_CODE ) AS BB ON (BB.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE INS_DATE>@tradate GROUP BY M_CODE ) AS CC ON (CC.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(RETURN_QTY) AS RETURN_IN_QTY FROM RETURN_NVL WHERE UPD_DATE>@tradate GROUP BY M_CODE) AS DD ON (DD.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(HOLDING_QTY) AS HOLDING_QTY FROM HOLDING_TB WHERE HOLDING_OUT_DATE is not null GROUP BY M_CODE) AS EE ON (EE.M_CODE = M090.M_CODE)) AS TONLIEU ON (M140.M_CODE = TONLIEU.M_CODE) WHERE P400.PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
-            let setpdQuery = `  SELECT P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (M090.OK_M1 + M090.OK_M2) AS TONLIEU, (M090.HOLDING_M1 + M090.HOLDING_M2) AS HOLDING, (M090.OK_M1 + M090.OK_M2  + M090.HOLDING_M1 + M090.HOLDING_M2) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION FROM P400 
+            let checkkq = "OK";            
+            let setpdQuery = ` SELECT P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (M090.OK_M1 + M090.OK_M2) AS TONLIEU, (M090.HOLDING_M1 + M090.HOLDING_M2) AS HOLDING, (M090.OK_M1 + M090.OK_M2  + M090.HOLDING_M1 + M090.HOLDING_M2) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION, M100.PROD_DIECUT_STEP, M100.PROD_PRINT_TIMES,M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1 , M100.LOSS_SETTING2 ,M100.NOTE FROM P400 
             LEFT JOIN M100 ON P400.G_CODE = M100.G_CODE 
             LEFT JOIN M010 ON P400.EMPL_NO = M010.EMPL_NO 
             LEFT JOIN M140 ON P400.G_CODE = M140.G_CODE 
@@ -3664,8 +3663,8 @@ exports.process_api = function (req, res) {
             let DATA = qr['DATA']; 
             //console.log(DATA);           
             let checkkq = "OK";
-            let setpdQuery = ` SELECT M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV FROM M100
-            LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}'`;
+            let setpdQuery = ` SELECT M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2, Setting1, Setting2, UPH1, UPH2, Step1, Step2, LOSS_SX1, LOSS_SX2, LOSS_SETTING1 , LOSS_SETTING2 ,NOTE
+            FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}'`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
@@ -4207,7 +4206,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
                 let checkkq = "OK";
-                let setpdQuery = `SELECT G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
+                let setpdQuery = `SELECT G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN, FACTORY,  Setting1, Setting2, UPH1, UPH2, Step1, Step2, LOSS_SX1, LOSS_SX2, LOSS_SETTING1 , LOSS_SETTING2 ,NOTE  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
                 //console.log(setpdQuery);       
                 checkkq = await queryDB(setpdQuery);
                 res.send(checkkq); 
@@ -4668,11 +4667,15 @@ exports.process_api = function (req, res) {
             let JOB_NAME = req.payload_data['JOB_NAME'];     
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
-            let checkkq = "OK";
-            let setpdQuery = `DELETE FROM ZTB_QLSXPLAN WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            let checkkq = "OK";            
+            let setpdQuery1 = `DELETE FROM ZTB_QLSXPLAN WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            let setpdQuery2 = `DELETE FROM ZTB_QLSXCHITHI WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            let setpdQuery3 = `DELETE FROM O300 WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            let setpdQuery4 = `DELETE FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
             //${moment().format('YYYY-MM-DD')}
-            console.log(setpdQuery);       
-            checkkq = await queryDB(setpdQuery);
+            console.log(setpdQuery1);       
+            checkkq = await queryDB(setpdQuery1);
+            checkkq = await queryDB(setpdQuery2);
             res.send(checkkq); 
             //console.log(checkkq);                   
         })()
@@ -4764,6 +4767,91 @@ exports.process_api = function (req, res) {
             res.send(checkkq);             
         })()
     }  
+    else if (qr['command'] == 'insertO300')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO O300 (CTR_CD,OUT_DATE,OUT_NO,CODE_03,CODE_50,CODE_52,PROD_REQUEST_DATE,PROD_REQUEST_NO,USE_YN,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,FACTORY,PLAN_ID) VALUES('002','${DATA.OUT_DATE}','${DATA.OUT_NO}','${DATA.CODE_03}','${DATA.CODE_50}','${DATA.CODE_52}','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.USE_YN}',GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}','${DATA.FACTORY}','${DATA.PLAN_ID}')`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }  
+    else if (qr['command'] == 'insertO301')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `INSERT INTO O301 (CTR_CD, OUT_DATE, OUT_NO, OUT_SEQ, CODE_03, M_CODE, OUT_PRE_QTY, USE_YN, INS_DATE, INS_EMPL, PLAN_ID) VALUES('002','${DATA.OUT_DATE}','${DATA.OUT_NO}','${DATA.OUT_SEQ}','${DATA.CODE_03}','${DATA.M_CODE}','${DATA.OUT_PRE_QTY}','${DATA.USE_YN}',GETDATE(),'${EMPL_NO}','${DATA.PLAN_ID}')`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }  
+    else if (qr['command'] == 'checkPLANID_O302')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 * FROM O302 WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkPLANID_O301')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 * FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'saveQLSX')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE M100 SET PROD_DIECUT_STEP=${DATA.PROD_DIECUT_STEP}, PROD_PRINT_TIMES=${DATA.PROD_PRINT_TIMES}, FACTORY='${DATA.FACTORY}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', Setting1='${DATA.Setting1}', Setting2='${DATA.Setting2}', UPH1='${DATA.UPH1}',UPH2='${DATA.UPH2}',Step1='${DATA.Step1}',Step2='${DATA.Step2}',LOSS_SX1='${DATA.LOSS_SX1}', LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',NOTE='${DATA.NOTE}' WHERE G_CODE='${DATA.G_CODE}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
     else {
         console.log(qr['command']);        
         res.send({tk_status:"ok",data:req.payload_data});
