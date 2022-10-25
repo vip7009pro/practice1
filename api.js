@@ -4733,6 +4733,23 @@ exports.process_api = function (req, res) {
             res.send(checkkq);             
         })()
     }  
+    else if (qr['command'] == 'updateChiThi')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE ZTB_QLSXCHITHI SET M_MET_QTY ='${DATA.M_MET_QTY}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }  
     else if (qr['command'] == 'getO300_LAST_OUT_NO')
     {
         (async () => {
@@ -4801,6 +4818,23 @@ exports.process_api = function (req, res) {
             res.send(checkkq);             
         })()
     }  
+    else if (qr['command'] == 'updateO301')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE O301 SET OUT_PRE_QTY='${DATA.OUT_PRE_QTY}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }  
     else if (qr['command'] == 'checkPLANID_O302')
     {
         (async () => {
@@ -4818,6 +4852,23 @@ exports.process_api = function (req, res) {
             res.send(checkkq);             
         })()
     }
+    else if (qr['command'] == 'checkPLANID_O300')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT TOP 1 * FROM O300 WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
     else if (qr['command'] == 'checkPLANID_O301')
     {
         (async () => {
@@ -4828,7 +4879,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let checkkq = "OK";
-            let setpdQuery = `SELECT TOP 1 * FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            let setpdQuery = `SELECT TOP 1 * FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}' ORDER BY OUT_SEQ DESC`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -4846,6 +4897,84 @@ exports.process_api = function (req, res) {
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let checkkq = "OK";
             let setpdQuery = `UPDATE M100 SET PROD_DIECUT_STEP=${DATA.PROD_DIECUT_STEP}, PROD_PRINT_TIMES=${DATA.PROD_PRINT_TIMES}, FACTORY='${DATA.FACTORY}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', Setting1='${DATA.Setting1}', Setting2='${DATA.Setting2}', UPH1='${DATA.UPH1}',UPH2='${DATA.UPH2}',Step1='${DATA.Step1}',Step2='${DATA.Step2}',LOSS_SX1='${DATA.LOSS_SX1}', LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',NOTE='${DATA.NOTE}' WHERE G_CODE='${DATA.G_CODE}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'deleteMCODEExistIN_O302')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM ZTB_QLSXCHITHI
+            WHERE NOT EXISTS 
+            (SELECT * FROM O302
+            WHERE O302.PLAN_ID = ZTB_QLSXCHITHI.PLAN_ID
+            AND O302.M_CODE = ZTB_QLSXCHITHI.M_CODE)
+            AND ZTB_QLSXCHITHI.PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'deleteMCODE_O301_Not_ExistIN_O302')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `DELETE FROM O301
+            WHERE NOT EXISTS 
+            (SELECT * FROM O302
+            WHERE O302.PLAN_ID = O301.PLAN_ID
+            AND O302.M_CODE = O301.M_CODE)
+            AND O301.PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkM_CODE_PLAN_ID_Exist')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM ZTB_QLSXCHITHI WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkM_CODE_PLAN_ID_Exist_in_O301')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
