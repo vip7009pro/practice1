@@ -4645,7 +4645,7 @@ exports.process_api = function (req, res) {
             (
             SELECT PLAN_ID, M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE PLAN_ID='2J80046A' GROUP BY PLAN_ID, M_CODE
             ) AS AA ON (AA.PLAN_ID=ZTB_QLSXCHITHI.PLAN_ID AND AA.M_CODE=ZTB_QLSXCHITHI.M_CODE)
-            WHERE ZTB_QLSXCHITHI.PLAN_ID='${DATA.PLAN_ID}' 
+            WHERE ZTB_QLSXCHITHI.PLAN_ID='${DATA.PLAN_ID}' ORDER BY ZTB_QLSXCHITHI.M_CODE ASC
             `; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
@@ -4946,7 +4946,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let checkkq = "OK";
-            let setpdQuery = `UPDATE M100 SET PROD_DIECUT_STEP=${DATA.PROD_DIECUT_STEP}, PROD_PRINT_TIMES=${DATA.PROD_PRINT_TIMES}, FACTORY='${DATA.FACTORY}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', Setting1='${DATA.Setting1}', Setting2='${DATA.Setting2}', UPH1='${DATA.UPH1}',UPH2='${DATA.UPH2}',Step1='${DATA.Step1}',Step2='${DATA.Step2}',LOSS_SX1='${DATA.LOSS_SX1}', LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',NOTE='${DATA.NOTE}' WHERE G_CODE='${DATA.G_CODE}'`; 
+            let setpdQuery = `UPDATE M100 SET FACTORY='${DATA.FACTORY}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', Setting1='${DATA.Setting1}', Setting2='${DATA.Setting2}', UPH1='${DATA.UPH1}',UPH2='${DATA.UPH2}',Step1='${DATA.Step1}',Step2='${DATA.Step2}',LOSS_SX1='${DATA.LOSS_SX1}', LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',NOTE='${DATA.NOTE}' WHERE G_CODE='${DATA.G_CODE}'`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
