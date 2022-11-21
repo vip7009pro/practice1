@@ -1,8 +1,9 @@
 const { io } = require("socket.io-client");
 
-const socket = io('http://192.168.1.21:3005');
+const socket = io('http://14.160.33.94:3009');
 socket.on("connect", () => {
     console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+    socket.emit('notification', 'nguyen van hung');
   });
 
   socket.on("disconnect", () => {
@@ -10,8 +11,8 @@ socket.on("connect", () => {
   });
 
   socket.on('notification', data => {
-    //socket.emit('notification', data);
+    socket.emit('notification', data);
     console.log(data);
-});
-
-socket.emit('notification','nguyen van hung') ;
+    socket.emit('notification','n1111guyen van hung') ;    
+}
+);
