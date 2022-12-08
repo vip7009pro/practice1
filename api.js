@@ -5389,7 +5389,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let checkkq = "OK";
-            let setpdQuery = `SELECT M100.G_NAME_KD, M100.G_NAME, ZTB_SX_EQ_STATUS.FACTORY,ZTB_SX_EQ_STATUS.EQ_NAME,ZTB_SX_EQ_STATUS.EQ_ACTIVE,ZTB_SX_EQ_STATUS.REMARK,ZTB_SX_EQ_STATUS.EQ_STATUS,ZTB_SX_EQ_STATUS.CURR_PLAN_ID,ZTB_SX_EQ_STATUS.CURR_G_CODE,ZTB_SX_EQ_STATUS.INS_EMPL,ZTB_SX_EQ_STATUS.INS_DATE,ZTB_SX_EQ_STATUS.UPD_EMPL,ZTB_SX_EQ_STATUS.UPD_DATE,ZTB_SX_EQ_STATUS.EQ_CODE FROM ZTB_SX_EQ_STATUS LEFT JOIN M100 ON (M100.G_CODE = ZTB_SX_EQ_STATUS.CURR_G_CODE)`; 
+            let setpdQuery = `SELECT M100.G_NAME_KD, M100.G_NAME, ZTB_SX_EQ_STATUS.FACTORY,ZTB_SX_EQ_STATUS.EQ_NAME,ZTB_SX_EQ_STATUS.EQ_ACTIVE,ZTB_SX_EQ_STATUS.REMARK,ZTB_SX_EQ_STATUS.EQ_STATUS,ZTB_SX_EQ_STATUS.CURR_PLAN_ID,ZTB_SX_EQ_STATUS.CURR_G_CODE,ZTB_SX_EQ_STATUS.INS_EMPL,ZTB_SX_EQ_STATUS.INS_DATE,ZTB_SX_EQ_STATUS.UPD_EMPL,ZTB_SX_EQ_STATUS.UPD_DATE,ZTB_SX_EQ_STATUS.EQ_CODE FROM ZTB_SX_EQ_STATUS LEFT JOIN M100 ON (M100.G_CODE = ZTB_SX_EQ_STATUS.CURR_G_CODE) ORDER BY FACTORY DESC, EQ_NAME ASC`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -5562,6 +5562,43 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let checkkq = "OK";
+            let condition = ' WHERE 1=1  ';
+            if(DATA.ALLTIME === false)
+            {
+                condition += ` AND ZTB_QLSXPLAN.PLAN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'`;
+            }
+            if(DATA.G_NAME !== '')
+            {
+                condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+            }
+            if(DATA.G_CODE !== '')
+            {
+                condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+            }
+            if(DATA.PLAN_ID !== '')
+            {
+                condition += ` AND ZTB_QLSXPLAN.PLAN_ID = '${DATA.PLAN_ID}'`;
+            }
+            if(DATA.PROD_REQUEST_NO !== '')
+            {
+                condition += ` AND ZTB_QLSXPLAN.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+            }
+            if(DATA.FACTORY !== 'ALL')
+            {
+                condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY = '${DATA.FACTORY}'`;
+            }
+            if(DATA.M_NAME !=='')
+            {
+                condition+= ` AND M090.M_NAME LIKE '%${DATA.M_NAME}%'`
+            }
+            if(DATA.M_CODE !=='')
+            {
+                condition+= ` AND M090.M_CODE = '${DATA.M_CODE}'`
+            }
+            if(DATA.PLAN_EQ !== 'ALL')
+            {
+                condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2)= '${DATA.PLAN_EQ}'`;
+            }
             let setpdQuery = `SELECT ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE, ZTB_QLSXPLAN.PROD_REQUEST_NO, M100.G_NAME, M100.G_NAME_KD, ZTB_QLSXPLAN.PLAN_QTY, ZTB_QLSXPLAN.PLAN_EQ, ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.STEP, OUTVL.M_NAME, OUTVL.TOTAL_OUT_QTY,(OUTVL.TOTAL_OUT_QTY- P500_A.REMAIN_QTY) AS USED_QTY, P500_A.REMAIN_QTY, ZTB_SX_RESULT.PD, ZTB_SX_RESULT.CAVITY, ZTB_SX_RESULT.SETTING_MET, CAST(((OUTVL.TOTAL_OUT_QTY- P500_A.REMAIN_QTY) - ZTB_SX_RESULT.SETTING_MET)/ZTB_SX_RESULT.PD * ZTB_SX_RESULT.CAVITY*1000 AS int) AS ESTIMATED_QTY,ZTB_QLSXPLAN.KETQUASX ,
             (CAST(ZTB_QLSXPLAN.KETQUASX AS float)-CAST(((OUTVL.TOTAL_OUT_QTY- P500_A.REMAIN_QTY) - ZTB_SX_RESULT.SETTING_MET)/ZTB_SX_RESULT.PD * ZTB_SX_RESULT.CAVITY*1000 AS int))/CAST(((OUTVL.TOTAL_OUT_QTY- P500_A.REMAIN_QTY) - ZTB_SX_RESULT.SETTING_MET)/ZTB_SX_RESULT.PD * ZTB_SX_RESULT.CAVITY*1000 AS int)*100 AS LOSS_SX,
              INSPECT_INPUT_TABLE.INS_INPUT, (INSPECT_INPUT_TABLE.INS_INPUT - ZTB_QLSXPLAN.KETQUASX)/ZTB_QLSXPLAN.KETQUASX AS LOSS_SX_KT,  INSPECT_OUTPUT_TABLE.INS_OUTPUT, (INSPECT_OUTPUT_TABLE.INS_OUTPUT- INSPECT_INPUT_TABLE.INS_INPUT)/INSPECT_INPUT_TABLE.INS_INPUT AS LOSS_KT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME, ZTB_SX_RESULT.RPM,ZTB_SX_RESULT.EQ_NAME AS EQ_NAME_TT,ZTB_SX_RESULT.SX_DATE, ZTB_SX_RESULT.WORK_SHIFT, ZTB_SX_RESULT.INS_EMPL, ZTB_SX_EFFICIENCY.FACTORY, ZTB_SX_EFFICIENCY.BOC_KIEM, ZTB_SX_EFFICIENCY.LAY_DO, ZTB_SX_EFFICIENCY.MAY_HONG, ZTB_SX_EFFICIENCY.DAO_NG, ZTB_SX_EFFICIENCY.CHO_LIEU, ZTB_SX_EFFICIENCY.CHO_BTP, ZTB_SX_EFFICIENCY.HET_LIEU, ZTB_SX_EFFICIENCY.LIEU_NG, ZTB_SX_EFFICIENCY.CAN_HANG, ZTB_SX_EFFICIENCY.HOP_FL, ZTB_SX_EFFICIENCY.CHO_QC, ZTB_SX_EFFICIENCY.CHOT_BAOCAO, ZTB_SX_EFFICIENCY.CHUYEN_CODE, ZTB_SX_EFFICIENCY.KHAC, ZTB_SX_EFFICIENCY.REMARK
@@ -5585,6 +5622,7 @@ exports.process_api = function (req, res) {
             (SELECT PLAN_ID, SUM(CAST(OUTPUT_QTY_EA as float)) AS INS_OUTPUT FROM ZTBINSPECTOUTPUTTB GROUP BY PLAN_ID) AS INSPECT_OUTPUT_TABLE ON (ZTB_QLSXPLAN.PLAN_ID = INSPECT_OUTPUT_TABLE.PLAN_ID)
             LEFT JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE)
             LEFT JOIN ZTB_SX_EFFICIENCY ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID)
+            ${condition}
             ORDER BY ZTB_QLSXPLAN.NEXT_PLAN_ID DESC`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
@@ -5601,17 +5639,65 @@ exports.process_api = function (req, res) {
             let JOB_NAME = req.payload_data['JOB_NAME'];     
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let condition = ' WHERE 1=1  ';
+            if(DATA.ALLTIME === false)
+            {
+                condition += ` AND ZTB_QLSXPLAN.PLAN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'`;
+            }
+            if(DATA.G_NAME !== '')
+            {
+                condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+            }
+            if(DATA.G_CODE !== '')
+            {
+                condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+            }
+            if(DATA.PLAN_ID !== '')
+            {
+                condition += ` AND ZTB_QLSXPLAN.PLAN_ID = '${DATA.PLAN_ID}'`;
+            }
+            if(DATA.PROD_REQUEST_NO !== '')
+            {
+                condition += ` AND ZTB_QLSXPLAN.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+            }
+            if(DATA.FACTORY !== 'ALL')
+            {
+                condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY = '${DATA.FACTORY}'`;
+            }
+            if(DATA.PLAN_EQ !== 'ALL')
+            {
+                condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2)= '${DATA.PLAN_EQ}'`;
+            }
+
             let checkkq = "OK";
-            let setpdQuery = `SELECT ZTB_QLSXPLAN.PLAN_ID, M100.G_NAME, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, ZTB_SX_RESULT.SX_RESULT AS CHOTBC
-            FROM ZTB_QLSXPLAN
-            LEFT JOIN (SELECT DISTINCT PLAN_ID FROM OUT_KNIFE_FILM) AS OUT_KNIFE_FILM_A  
-            ON (ZTB_QLSXPLAN.PLAN_ID  = OUT_KNIFE_FILM_A.PLAN_ID)
-            LEFT JOIN  ZTB_SX_RESULT ON( ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID)
-            LEFT JOIN (SELECT DISTINCT PLAN_ID_OUTPUT FROM OUT_KHO_SX) AS OUT_KHO_SX_A 
-            ON (ZTB_QLSXPLAN.PLAN_ID = OUT_KHO_SX_A.PLAN_ID_OUTPUT)
-            LEFT JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE)
-            WHERE PLAN_DATE ='${DATA.PLAN_DATE}'
-            ORDER BY ZTB_QLSXPLAN.PLAN_ID`; 
+        let setpdQuery = `SELECT  ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.PLAN_DATE,  ZTB_QLSXPLAN.PLAN_EQ, M100.G_NAME,M100.G_NAME_KD, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,O301_A.PLAN_ID AS DKXL, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, ZTB_SX_RESULT.SX_RESULT AS CHOTBC
+        FROM ZTB_QLSXPLAN
+        LEFT JOIN (SELECT DISTINCT PLAN_ID FROM OUT_KNIFE_FILM) AS OUT_KNIFE_FILM_A  
+        ON (ZTB_QLSXPLAN.PLAN_ID  = OUT_KNIFE_FILM_A.PLAN_ID)
+        LEFT JOIN  ZTB_SX_RESULT ON( ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID)
+        LEFT JOIN (SELECT DISTINCT PLAN_ID_OUTPUT FROM OUT_KHO_SX) AS OUT_KHO_SX_A 
+        ON (ZTB_QLSXPLAN.PLAN_ID = OUT_KHO_SX_A.PLAN_ID_OUTPUT)
+        LEFT JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE)
+        LEFT JOIN (SELECT DISTINCT PLAN_ID FROM O301 WHERE INS_DATE > '2022-11-21') AS O301_A ON (O301_A.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID)
+            ${condition}
+            ORDER BY ZTB_QLSXPLAN.PLAN_DATE DESC`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'updateDKXLPLAN')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+        let setpdQuery = `UPDATE ZTB_QLSXPLAN SET DKXL='V' WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
