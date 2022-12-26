@@ -5419,7 +5419,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let checkkq = "OK";
-            let setpdQuery = `SELECT M100.G_NAME_KD, M100.G_NAME, ZTB_SX_EQ_STATUS.FACTORY,ZTB_SX_EQ_STATUS.EQ_NAME,ZTB_SX_EQ_STATUS.EQ_ACTIVE,ZTB_SX_EQ_STATUS.REMARK,ZTB_SX_EQ_STATUS.EQ_STATUS,ZTB_SX_EQ_STATUS.CURR_PLAN_ID,ZTB_SX_EQ_STATUS.CURR_G_CODE,ZTB_SX_EQ_STATUS.INS_EMPL,ZTB_SX_EQ_STATUS.INS_DATE,ZTB_SX_EQ_STATUS.UPD_EMPL,ZTB_SX_EQ_STATUS.UPD_DATE,ZTB_SX_EQ_STATUS.EQ_CODE FROM ZTB_SX_EQ_STATUS LEFT JOIN M100 ON (M100.G_CODE = ZTB_SX_EQ_STATUS.CURR_G_CODE) ORDER BY FACTORY DESC, EQ_NAME ASC`; 
+            let setpdQuery = `SELECT M100.G_NAME_KD, M100.G_NAME, ZTB_SX_EQ_STATUS.FACTORY,ZTB_SX_EQ_STATUS.EQ_NAME,ZTB_SX_EQ_STATUS.EQ_ACTIVE,ZTB_SX_EQ_STATUS.REMARK,ZTB_SX_EQ_STATUS.EQ_STATUS,ZTB_SX_EQ_STATUS.CURR_PLAN_ID,ZTB_SX_EQ_STATUS.CURR_G_CODE,ZTB_SX_EQ_STATUS.INS_EMPL,ZTB_SX_EQ_STATUS.INS_DATE,ZTB_SX_EQ_STATUS.UPD_EMPL,ZTB_SX_EQ_STATUS.UPD_DATE,ZTB_SX_EQ_STATUS.EQ_CODE FROM ZTB_SX_EQ_STATUS LEFT JOIN M100 ON (M100.G_CODE = ZTB_SX_EQ_STATUS.CURR_G_CODE) LEFT  JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_EQ_STATUS.CURR_PLAN_ID) ORDER BY FACTORY DESC, EQ_NAME ASC`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -5925,6 +5925,40 @@ exports.process_api = function (req, res) {
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
             let checkkq = "OK";
             let setpdQuery = ` SELECT TOP 1 * FROM P500 WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' AND PLAN_ID is null`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'updateXUATLIEUCHINH_PLAN')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = ` UPDATE ZTB_QLSXPLAN SET MAIN_MATERIAL='V' WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'update_XUAT_DAO_FILM_PLAN')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = ` UPDATE ZTB_QLSXPLAN SET XUATDAOFILM='V' WHERE PLAN_ID='${DATA.PLAN_ID}'`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
