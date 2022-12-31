@@ -5967,7 +5967,7 @@ exports.process_api = function (req, res) {
     }
     else if (qr['command'] == 'update_XUAT_DAO_FILM_PLAN')
     {
-        (async () => {
+        (async () => { 
             let DATA = qr['DATA']; 
             console.log(DATA);
             let EMPL_NO = req.payload_data['EMPL_NO'];     
