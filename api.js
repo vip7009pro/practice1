@@ -3340,7 +3340,7 @@ exports.process_api = function (req, res) {
             let DATA = qr['DATA']; 
             console.log(DATA);            
             let checkkq = "OK";
-            let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY) VALUES ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5,8)}','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO}','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','NM1')`;
+            let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY, PLAN_ID) VALUES ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5,8)}','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO}','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','NM1','${DATA.PLAN_ID}')`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             console.log(checkkq);
@@ -3354,7 +3354,7 @@ exports.process_api = function (req, res) {
             console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
-            let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES  ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5,8)}','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}')`;
+            let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID) VALUES  ('002','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5,8)}','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}')`;
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             console.log(checkkq);
@@ -5852,7 +5852,7 @@ exports.process_api = function (req, res) {
             }
 
             let checkkq = "OK";
-        let setpdQuery = `SELECT   ZTB_QLSXPLAN.PLAN_QTY, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.PLAN_DATE,  ZTB_QLSXPLAN.PLAN_EQ, M100.G_NAME,M100.G_NAME_KD, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,O301_A.PLAN_ID AS DKXL, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, ZTB_SX_RESULT.SX_RESULT AS CHOTBC
+        let setpdQuery = `SELECT   ZTB_SX_RESULT.WORK_SHIFT, ZTB_QLSXPLAN.PLAN_QTY, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.PLAN_DATE,  ZTB_QLSXPLAN.PLAN_EQ, M100.G_NAME,M100.G_NAME_KD, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,O301_A.PLAN_ID AS DKXL, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, ZTB_SX_RESULT.SX_RESULT AS CHOTBC
         FROM ZTB_QLSXPLAN
         LEFT JOIN (SELECT DISTINCT PLAN_ID FROM OUT_KNIFE_FILM) AS OUT_KNIFE_FILM_A  
         ON (ZTB_QLSXPLAN.PLAN_ID  = OUT_KNIFE_FILM_A.PLAN_ID)
@@ -6058,6 +6058,23 @@ exports.process_api = function (req, res) {
             res.send(checkkq);             
         })()
     }
+    else if (qr['command'] == 'checktrungAMZ_Full')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = `SELECT * FROM AMAZONE_DATA WHERE DATA_1 IN( SELECT AAA.originalcodecount FROM ( SELECT AA.code as originalcodecount, COUNT(AA.code) AS COUNT_ FROM (SELECT code FROM ( SELECT DATA_1 FROM AMAZONE_DATA UNION ALL SELECT DATA_2 FROM AMAZONE_DATA ) AS UNIQUEDATA(code) ) as AA GROUP BY AA.code HAVING COUNT(AA.code) >1 ) AS AAA ) UNION SELECT * FROM AMAZONE_DATA WHERE DATA_2 IN( SELECT AAA.originalcodecount FROM ( SELECT AA.code as originalcodecount, COUNT(AA.code) AS COUNT_ FROM (SELECT code FROM ( SELECT DATA_1 FROM AMAZONE_DATA UNION ALL SELECT DATA_2 FROM AMAZONE_DATA ) AS UNIQUEDATA(code) ) as AA GROUP BY AA.code HAVING COUNT(AA.code) >1 ) AS AAA )`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
     else if (qr['command'] == 'traShortageKD')
     {
         (async () => {
@@ -6091,6 +6108,25 @@ exports.process_api = function (req, res) {
             }            
             
             let setpdQuery = `SELECT M100.G_NAME, ZTB_SHORTAGE_LIST.G_CODE,  ZTB_SHORTAGE_LIST.ST_ID,ZTB_SHORTAGE_LIST.PLAN_DATE, M110.CUST_NAME_KD, PO_TON.PO_BALANCE, TONKHOFULL.TON_TP, TONKHOFULL.BTP, TONKHOFULL.TONG_TON_KIEM, ZTB_SHORTAGE_LIST.D1_9H, ZTB_SHORTAGE_LIST.D1_13H, ZTB_SHORTAGE_LIST.D1_19H, ZTB_SHORTAGE_LIST.D1_21H, ZTB_SHORTAGE_LIST.D1_23H, ZTB_SHORTAGE_LIST.D2_9H, ZTB_SHORTAGE_LIST.D2_13H, ZTB_SHORTAGE_LIST.D2_21H, ZTB_SHORTAGE_LIST.D3_SANG, ZTB_SHORTAGE_LIST.D3_CHIEU, ZTB_SHORTAGE_LIST.D4_SANG, ZTB_SHORTAGE_LIST.D4_CHIEU, (ZTB_SHORTAGE_LIST.D1_9H+ ZTB_SHORTAGE_LIST.D1_13H+ ZTB_SHORTAGE_LIST.D1_19H+ ZTB_SHORTAGE_LIST.D1_21H+ ZTB_SHORTAGE_LIST.D1_23H) AS TODAY_TOTAL, (TONKHOFULL.TON_TP - (ZTB_SHORTAGE_LIST.D1_9H+ ZTB_SHORTAGE_LIST.D1_13H+ ZTB_SHORTAGE_LIST.D1_19H+ ZTB_SHORTAGE_LIST.D1_21H+ ZTB_SHORTAGE_LIST.D1_23H)) AS TODAY_THIEU, CASE WHEN M100.UPH1 > M100.UPH2 THEN M100.UPH2 ELSE M100.UPH1 END AS UPH, ZTB_SHORTAGE_LIST.PRIORITY FROM ZTB_SHORTAGE_LIST LEFT JOIN M100 ON (M100.G_CODE = ZTB_SHORTAGE_LIST.G_CODE) LEFT JOIN M110 ON (M110.CUST_CD = ZTB_SHORTAGE_LIST.CUST_CD) LEFT JOIN M010 ON (M010.EMPL_NO = ZTB_SHORTAGE_LIST.EMPL_NO) LEFT JOIN (SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) GROUP BY AA.G_CODE) AS PO_TON ON(ZTB_SHORTAGE_LIST.G_CODE = PO_TON.G_CODE) LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY, 0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK, isnull(TONKIEM.WAIT_SORTING_RMA, 0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT, 0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA, 0) AS BTP, isnull(THANHPHAM.TONKHO, 0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY, ( isnull(TONKIEM.TOTAL_WAIT, 0) + isnull(BTP.BTP_QTY_EA, 0)+ isnull(THANHPHAM.TONKHO, 0) - isnull(tbl_Block_table2.Block_Qty, 0) ) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN], 0) AS NHAPKHO, isnull([OUT], 0) AS XUATKHO, ( isnull([IN], 0)- isnull([OUT], 0) ) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON ( THANHPHAM.Product_MaVach = M100.G_CODE ) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM( INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA ) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE ) WHERE UPDATE_DATE = CONVERT( date, GETDATE() ) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD ) AS TONKIEM ON ( THANHPHAM.Product_MaVach = TONKIEM.G_CODE ) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON ( tbl_Block_table2.Product_MaVach = M100.G_CODE ) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON ( M100.G_CODE = ZTB_HALF_GOODS.G_CODE ) WHERE UPDATE_DATE = CONVERT( date, GETDATE() ) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME ) AS BTP ON ( BTP.G_CODE = THANHPHAM.Product_MaVach ) ) AS TONKHOFULL ON ( TONKHOFULL.G_CODE = ZTB_SHORTAGE_LIST.G_CODE ) ${condition} ORDER BY ZTB_SHORTAGE_LIST.ST_ID DESC`; 
+            //${moment().format('YYYY-MM-DD')}
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'tinhhinhchotbaocaosx')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = `SELECT ZTB_SX_RESULT.SX_DATE, COUNT(ZTB_SX_RESULT.PLAN_ID) AS TOTAL, COUNT(CASE WHEN ZTB_SX_RESULT.MASS_END_TIME is not null THEN 1 ELSE null END) AS DA_CHOT, COUNT(CASE WHEN ZTB_SX_RESULT.MASS_END_TIME is  null THEN 1 ELSE null END) AS CHUA_CHOT,  COUNT(CASE WHEN ZTB_SX_EFFICIENCY.PLAN_ID is not null THEN 1 ELSE null END) AS DA_NHAP_HIEUSUAT, COUNT(CASE WHEN ZTB_SX_EFFICIENCY.PLAN_ID is  null THEN 1 ELSE null END) AS CHUA_NHAP_HIEUSUAT    FROM ZTB_SX_RESULT LEFT JOIN ZTB_SX_EFFICIENCY ON (ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT) 
+            WHERE ZTB_SX_RESULT.FACTORY='${DATA.FACTORY}'
+            GROUP BY ZTB_SX_RESULT.SX_DATE ORDER BY ZTB_SX_RESULT.SX_DATE DESC `; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
