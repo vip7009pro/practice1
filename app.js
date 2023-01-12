@@ -56,7 +56,7 @@ io.on('connection', client => {
 //const port = 5011;
 const port = 3007;
 var corsOptions = {
-    origin: ['http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost','https://script.google.com/','*'],
+    origin: ['http://14.160.33.94','http://14.160.33.94:3000','http://14.160.33.94:3010','http://14.160.33.94:3030','http://localhost','https://script.google.com/','*'],
     optionsSuccessStatus: 200,
     credentials: true
 }
