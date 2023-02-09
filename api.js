@@ -4,8 +4,6 @@ const moment = require("moment");
 const { existsSync } = require("fs");
 require('dotenv').config();
 const  fs = require('fs').promises;
-
-
 function generate_condition_get_invoice($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $product_type, $empl_name,$po_no,$material) {
     $condition = "WHERE 1=1 ";
     if ($inspect_time_checkvalue == false) {
@@ -35,8 +33,6 @@ function generate_condition_get_invoice($inspect_time_checkvalue, $start_date, $
     if ($material != '') {
         $material = " AND M100.PROD_MAIN_MATERIAL LIKE  '%"+$material+"%'";
     }
-   
-   
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $po_no + $material;
     return $condition;
 }
@@ -66,7 +62,6 @@ function generate_condition_get_plan($inspect_time_checkvalue, $start_date, $end
     if ($material != '') {
         $material = " AND M100.PROD_MAIN_MATERIAL LIKE  '%"+$material+"%'";
     }  
-   
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $material;
     return $condition;
 }
@@ -99,7 +94,6 @@ function generate_condition_get_fcst($inspect_time_checkvalue, $start_date, $end
     if ($material != '') {
         $material = " AND M100.PROD_MAIN_MATERIAL LIKE  '%"+$material+"%'";
     }  
-   
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $material;
     return $condition;
 }
@@ -149,8 +143,6 @@ function generate_condition_get_po($inspect_time_checkvalue, $start_date, $end_d
     {
         $justPoBalance="";
     }
-
-
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $po_no + $over +$material +$justPoBalance + $id;
     return $condition;
 }
@@ -195,18 +187,14 @@ function generate_condition_get_ycsx($inspect_time_checkvalue, $start_date, $end
     {
         $inspect_input="";
     }
-
     if($ycsxpending !== false)
     {
         $ycsxpending = ` AND P400.YCSX_PENDING=1 `;
-
     }
     else
     {
         $ycsxpending="";
     }
-
-    
     if($phan_loai !== '')
     {
         if($phan_loai !=='00')
@@ -223,14 +211,11 @@ function generate_condition_get_ycsx($inspect_time_checkvalue, $start_date, $end
         else
         {
             $phan_loai ="";
-    
         }
-        
     }
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name +  $material + $inspect_input + $phan_loai + $prod_request_no + $ycsxpending;
     return $condition;
 }
-
 function generate_condition_get_inspection_input($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $product_type, $empl_name,$ycsx_no) {
     $condition = "WHERE 1=1 ";
     if ($inspect_time_checkvalue == false) {
@@ -257,11 +242,9 @@ function generate_condition_get_inspection_input($inspect_time_checkvalue, $star
     if ($ycsx_no != '') {
         $ycsx_no = " AND P400.PROD_REQUEST_NO =  '"+$ycsx_no+"'";
     }  
-   
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $ycsx_no;
     return $condition;
 }
-
 function generate_condition_get_inspection_output($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $product_type, $empl_name,$ycsx_no) {
     $condition = "WHERE 1=1 ";
     if ($inspect_time_checkvalue == false) {
@@ -288,15 +271,11 @@ function generate_condition_get_inspection_output($inspect_time_checkvalue, $sta
     if ($ycsx_no != '') {
         $ycsx_no = " AND P400.PROD_REQUEST_NO =  '"+$ycsx_no+"'";
     }  
-   
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$product_type+$empl_name + $ycsx_no;
     return $condition;
 }
-
 function generate_condition_get_inspection_inoutycsx($input_cust_name, $input_code_cms, $input_code_KD, $product_type, $empl_name,$ycsx_no) {
     $condition = "WHERE 1=1 ";
-    
-   
     if ($input_cust_name != '') {
         $input_cust_name = " AND M110.CUST_NAME_KD LIKE '%"+$input_cust_name+"%'";
     }
@@ -320,7 +299,6 @@ function generate_condition_get_inspection_inoutycsx($input_cust_name, $input_co
 }
 function generate_condition_get_inspection_ng_data($inspect_time_checkvalue, $fromdate, $todate, $input_cust_name, $input_code_cms, $input_code_KD, $product_type, $empl_name,$ycsx_no) {
     $condition = "WHERE 1=1 ";
-
     if ($inspect_time_checkvalue == false) {
         $inspect_time_checkvalue = " AND ZTBINSPECTNGTB.INSPECT_DATETIME BETWEEN '"+$fromdate+" 00:00:00' AND  '"+$todate+" 23:59:59' ";
     }
@@ -350,7 +328,6 @@ function generate_condition_get_inspection_ng_data($inspect_time_checkvalue, $fr
 }
 function generate_condition_get_dtc_data($inspect_time_checkvalue, $fromdate, $todate, $input_code_cms, $input_code_KD, $ycsx_no, $m_name, $m_code,$test_name, $test_type, $id) {
     $condition = "WHERE 1=1 ";
-
     if ($inspect_time_checkvalue === false) {
         $inspect_time_checkvalue = " AND ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME BETWEEN '"+$fromdate+" 00:00:00' AND  '"+$todate+" 23:59:59' ";
     }
@@ -392,7 +369,6 @@ function generate_condition_get_dtc_data($inspect_time_checkvalue, $fromdate, $t
     $condition += $inspect_time_checkvalue+$input_code_cms+$input_code_KD + $ycsx_no + $m_name + $m_code +$test_name +$test_type + $id;
     return $condition;
 }
-
 function generate_condition_pqc1($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $ycsx_no, $process_lot_no, $inspec_ID, $inspect_factory) {
     $condition = "WHERE 1=1 ";
     if ($inspect_time_checkvalue == false) {
@@ -428,7 +404,6 @@ function generate_condition_pqc1($inspect_time_checkvalue, $start_date, $end_dat
     $condition = $condition+$inspect_time_checkvalue+$input_cust_name+$input_code_cms+$input_code_KD+$ycsx_no+$process_lot_no+$inspec_ID+$inspect_factory;
     return $condition;
 }
-
 function generate_condition_pqc3($inspect_time_checkvalue, $start_date, $end_date, $input_cust_name, $input_code_cms, $input_code_KD, $ycsx_no, $process_lot_no, $inspec_ID, $inspect_factory) {
     $condition = "WHERE 1=1 ";
     if ($inspect_time_checkvalue == false) {
@@ -464,7 +439,6 @@ function generate_condition_pqc3($inspect_time_checkvalue, $start_date, $end_dat
     $condition = $condition + $inspect_time_checkvalue + $input_cust_name + $input_code_cms + $input_code_KD + $ycsx_no + $process_lot_no + $inspec_ID + $inspect_factory;
     return $condition;
 }
-
 function returnDateFormat(today) {
     let year = today.getFullYear();
     let month = today.getMonth();
@@ -496,10 +470,8 @@ function asyncQuery2(queryString) {
                     return reject(err + ' ');
                 }
                 return resolve('OK');
-                
             });
         });       
-        
     }).catch((err) => {
         //console.log("Loi dc catch 2: " + err + ' ');
     });
@@ -536,8 +508,6 @@ function asyncQuery(queryString) {
         //console.log("Loi dc catch: " + err + ' ');
     });
 }
-
-
 const queryDB = async (query) => {
     let kq=''; 
     try {
@@ -562,25 +532,22 @@ const queryDB = async (query) => {
     catch (err) {
         ////console.log(err);
         kq = {tk_status:"NG", message: err+' '};
-        
     }    
-    
     return kq;
 }
-
-const bulkQueryDB = async ()=>{
-
-}
-
 exports.checklogin_index = function (req, res, next) {
     ////console.log("bam login ma cung loi?");
     try {
         ////console.log("token client la: " + req.cookies.token);
         var token = req.cookies.token;
+        //console.log(req.body.DATA.token_string);
+        if(token === undefined) token = req.body.DATA.token_string;
+        //console.log('token= ' + token);  
         var decoded = jwt.verify(token, 'nguyenvanhung');
-        ////console.log(decoded);   
+        //console.log(decoded);   
         let payload_json = JSON.parse(decoded['payload']);
-        ////console.log(payload_json[0]);        
+        //console.log(payload_json);        
+        //console.log(payload_json[0]);        
         ////console.log('Cookie client = ' + req.cookies.token);  
         req.payload_data = payload_json[0];
         ////console.log(payload_json);
@@ -595,10 +562,10 @@ exports.checklogin_index = function (req, res, next) {
 }
 exports.checklogin_login = function (req, res, next) {
     try {
-        ////console.log("token client la: " + req.cookies.token);
+        console.log("token client la: " + req.cookies.token);
         var token = req.cookies.token;
         var decoded = jwt.verify(token, 'nguyenvanhung');
-        ////console.log(decoded);   
+        console.log('token= ' + token);   
         let payload_json = JSON.parse(decoded['payload']);
         ////console.log(payload_json[0]);        
         ////console.log('Cookie client = ' + req.cookies.token);  
@@ -612,13 +579,11 @@ exports.checklogin_login = function (req, res, next) {
         next();
     }
 }
- 
 exports.process_api = function (req, res) {
     ////console.log(req.files.file);
     var qr = req.body;
     let rightnow= new Date().toLocaleString();
     console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr['command']);
-    
     if (qr['command'] == 'check_chua_pd') {
         (async () => {
             var today = new Date();
@@ -630,7 +595,6 @@ exports.process_api = function (req, res) {
             let chuapdqty = JSON.parse(kqua)[0]['CPD'];
             //console.log(chuapdqty);
             res.send(chuapdqty + '');
-            
         })()
     }
     else if (qr['command'] == 'login2') {  
@@ -655,6 +619,38 @@ exports.process_api = function (req, res) {
                 }
                 else {
                     res.send({ tk_status: "ng", token_content: token });
+                    //console.log('login that bai');
+                }
+            })()
+        }
+        catch (err) {
+            //console.log("Loi day neh: " + err + ' ');
+        }        
+    }
+    else if (qr['command'] == 'login3') {  
+        let DATA = qr['DATA'];
+        let username = DATA.user;
+        let password = DATA.pass;
+        var loginResult = false;
+        try {
+            (async () => {
+                let kqua;
+                let query = "SELECT ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) ";
+                kqua = await asyncQuery(query);
+                ////console.log(kqua); 
+                loginResult = kqua;
+                //console.log("KET QUA LOGIN = " + loginResult);
+                if (loginResult != 0) {
+                    var token = jwt.sign({ payload: loginResult }, 'nguyenvanhung', { expiresIn: 3600 * 100000 });
+                    res.cookie('token', token);
+                    ////console.log(token);                       
+                    //res.send({ tk_status: "ok", token_content: token, user_data: loginResult });
+                    //console.log('login thanh cong');
+                    res.send(kqua);
+                }
+                else {
+                    res.send(kqua);
+                    //res.send({ tk_status: "ng", token_content: token });
                     //console.log('login that bai');
                 }
             })()
@@ -694,7 +690,6 @@ exports.process_api = function (req, res) {
         catch (err) {
             //console.log("Loi day neh: " + err + ' ');
         }
-        
     }
     else if (qr['command'] == 'logout') {
         res.cookie('token', 'reset');
@@ -756,7 +751,6 @@ exports.process_api = function (req, res) {
                         </ul>
                     `;
                     res.send({ tk_status: 'ok', htmldata: htmlcontent });
-                    
                 }).catch((err) => {
                     //console.log("loi promise roi " + err + ' ');
                 });
@@ -766,7 +760,6 @@ exports.process_api = function (req, res) {
             //console.log(err + '');
             res.send("loi roi");
         }
-        
     }
     else if (qr['command'] == 'dangkynghi') {
         //console.log(qr);
@@ -809,7 +802,6 @@ exports.process_api = function (req, res) {
                     res.send(checkkq);
                 }
             }
-            
         })()
         //res.send('ket qua tra ve' + req.cookies.token);
     }
@@ -847,7 +839,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send('Lỗi, Nhập sai định dạng');
             }
-            
         })()
     }
     else if (qr['command'] == 'tralichsu') {
@@ -865,7 +856,6 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status: "OK", data: kqua});
             }
-            
         })()
     }
     else if (qr['command'] == 'mydiemdanh') {
@@ -902,7 +892,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NO_LEADER"});
             }
-            
         })()
     }
     else if (qr['command'] == 'setpheduyet') {
@@ -932,7 +921,6 @@ exports.process_api = function (req, res) {
                 res.send({tk_status:'NO_LEADER'});
             }
         })()
-        
     }
     else if (qr['command'] == 'diemdanh') {
         //console.log(qr);
@@ -985,7 +973,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
-            
         })()
     }
     else if (qr['command'] == 'setdiemdanh') {
@@ -1030,7 +1017,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
-            
         })()
     }
     else if (qr['command'] == 'dangkytangca2') {
@@ -1063,7 +1049,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "ng"});
             }
-            
         })()
     }
     else if (qr['command'] == 'diemdanh_total') {
@@ -1129,7 +1114,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "NO_LEADER"});
             }
-            
         })()
     }
     else if (qr['command'] == 'setteamtab') {
@@ -1159,7 +1143,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
-            
         })()
     }
     else if (qr['command'] == 'setteambt') {
@@ -1185,7 +1168,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "NO_LEADER"});
             }
-            
         })()
     }
     else if (qr['command'] == 'confirmtangca') {
@@ -1268,7 +1250,6 @@ exports.process_api = function (req, res) {
             let query = "SELECT TOP 10000 * FROM ZTBDelivery";
             kqua = await asyncQuery(query);
             res.send({tk_status: "OK", data: kqua});
-            
         })()
     }
     else if (qr['command'] == 'diemdanhsummary')
@@ -1287,7 +1268,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NO_LEADER"});
             }
-            
         })()
     }
     else if (qr['command'] == 'checklogin')
@@ -1361,7 +1341,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: "OK"});
             }   
-            
         })()
     }
     else if (qr['command'] == 'getchat') {
@@ -1377,11 +1356,9 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status: "OK", data: kqua});
             }
-            
         })()
     }
     else if (qr['command'] == 'temp_info') {
-       
         (async () => {           
             let PARAM = qr['param'];
             let OPTION = qr['option'];
@@ -1394,7 +1371,6 @@ exports.process_api = function (req, res) {
                 query ="SELECT TOP 1 G_NAME FROM P501 JOIN P500 ON (P501.PROCESS_IN_DATE =P500.PROCESS_IN_DATE AND P501.PROCESS_IN_NO =P500.PROCESS_IN_NO AND P501.PROCESS_IN_SEQ =P500.PROCESS_IN_SEQ) JOIN M100 ON (M100.G_CODE = P500.G_CODE) WHERE PROCESS_LOT_NO='"+ PARAM+"'";              
                 break;
               default:
-
             }     
             ////console.log(query);
             kqua = await asyncQuery(query);           
@@ -1406,10 +1382,7 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status: "OK", data: kqua});
             }
-            
         })()
-        
-
     }
     else if (qr['command'] == 'insert_pqc1') 
     {
@@ -1419,7 +1392,6 @@ exports.process_api = function (req, res) {
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";
             let setpdQuery = "  INSERT INTO [dbo].[ZTBPQC1TABLE]([CTR_CD],[PROCESS_LOT_NO],[LINEQC_PIC],[PROD_PIC],[PROD_LEADER],[LINE_NO],[STEPS],[CAVITY],[SETTING_OK_TIME],[FACTORY],[REMARK],[INS_DATE],[UPD_DATE]) VALUES ('002','"+DATA.PROCESS_LOT_NO+"','"+DATA.LINEQC_PIC+"','"+DATA.PROD_PIC+"','"+DATA.PROD_LEADER+"','"+DATA.LINE_NO+"','"+DATA.STEPS+"','"+DATA.CAVITY+"','"+DATA.SETTING_OK_TIME+"','"+DATA.FACTORY+"','"+DATA.REMARK+"','"+currenttime+"','"+currenttime+"')";
-            
             checkkq = await asyncQuery2(setpdQuery);
             if (checkkq != "OK") {                
                 res.send({tk_status:"NG",message:"Có lỗi khi nhập data lên hệ thống"});
@@ -1443,7 +1415,6 @@ exports.process_api = function (req, res) {
                 if(checkkq.tk_status == "NG")
                 {
                     errflag = "NG";
-
                 }
             }          
             //console.log(errflag);
@@ -1467,7 +1438,6 @@ exports.process_api = function (req, res) {
             ////console.log(query);
             kqua = await queryDB(query);                
             res.send(kqua);
-                  
         })()
     }
     else if (qr['command'] == 'insert_pqc2') 
@@ -1522,7 +1492,6 @@ exports.process_api = function (req, res) {
                     //console.log("invalid case selected");
                     break;
             }
-                       
             //console.log(query);
             kqua = await queryDB(query);                
             res.send(kqua);                  
@@ -1537,7 +1506,6 @@ exports.process_api = function (req, res) {
             ////console.log(query);
             kqua = await queryDB(query);                
             res.send(kqua);
-                  
         })()
     }
     else if (qr['command'] == 'checkMNAME')
@@ -1759,19 +1727,13 @@ exports.process_api = function (req, res) {
                      res.send(kqua);    
                 break;
                 case 'Tra cứu kế hoạch':
-                    
-
                 break;
                 case 'Tra cứu FCST':
-
                 break;
                 case 'Tra cứu YCSX':
-
                 break;
-                
             }          
             //query = `SELECT * FROM ZTBEMPLINFO`;
-                         
         })()
     }
     else if (qr['command'] == 'get_inspection')
@@ -1801,7 +1763,6 @@ exports.process_api = function (req, res) {
                     res.send(kqua);    
                 break;
                 case 'Xuất Kiểm (LOT)':
-                   
                     query = `SELECT ZTBINSPECTOUTPUTTB.STATUS, ZTBINSPECTOUTPUTTB.INSPECT_OUTPUT_ID,M110.CUST_NAME_KD, M010.EMPL_NAME,ZTBINSPECTOUTPUTTB.G_CODE,M100.G_NAME,M100.PROD_TYPE,M100.G_NAME_KD,ZTBINSPECTOUTPUTTB.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.PROD_REQUEST_QTY,ZTBINSPECTOUTPUTTB.PROCESS_LOT_NO,P501_A.INS_DATE AS PROD_DATETIME, ZTBINSPECTOUTPUTTB.OUTPUT_DATETIME,ZTBINSPECTOUTPUTTB.OUTPUT_QTY_EA,ZTBINSPECTOUTPUTTB.REMARK,P400.EMPL_NO AS PIC_KD,CASE 
                     WHEN (DATEPART(HOUR,OUTPUT_DATETIME) >=8 AND DATEPART(HOUR,OUTPUT_DATETIME) <20) THEN 'CA NGAY'
                     ELSE 'CA DEM' END AS CA_LAM_VIEC,
@@ -1814,7 +1775,6 @@ exports.process_api = function (req, res) {
                     LEFT JOIN (SELECT * FROM P501 WHERE INS_DATE>'2021-07-01') AS P501_A ON (P501_A.PROCESS_LOT_NO = ZTBINSPECTOUTPUTTB.PROCESS_LOT_NO)
                     LEFT JOIN M100 ON (M100.G_CODE = ZTBINSPECTOUTPUTTB.G_CODE)
                     LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD)
-                     
                      ${generate_condition_get_inspection_output(DATA.ALLTIME,DATA.FROM_DATE,DATA.TO_DATE, DATA.CUST_NAME,DATA.G_CODE,DATA.G_NAME,DATA.PROD_TYPE,DATA.EMPL_NAME, DATA.PROD_REQUEST_NO)} ORDER BY ZTBINSPECTOUTPUTTB.INSPECT_OUTPUT_ID DESC`;
                      //console.log(query);
                      kqua = await queryDB(query);        
@@ -1836,7 +1796,6 @@ exports.process_api = function (req, res) {
                      kqua = await queryDB(query);        
                      ////console.log(kqua);        
                      res.send(kqua);    
-
                 break;
                 case 'Nhật Ký Kiểm Tra':
                     query = `SELECT ZTBINSPECTNGTB.INSPECT_ID, CONCAT(datepart(YEAR,INSPECT_START_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,INSPECT_START_TIME))) AS YEAR_WEEK, M110.CUST_NAME_KD,ZTBINSPECTNGTB.PROD_REQUEST_NO,M100.G_NAME_KD,M100.G_NAME,ZTBINSPECTNGTB.G_CODE,M100.PROD_TYPE,ZTBINSPECTNGTB.M_LOT_NO,isnull(M090.M_NAME,'NO_INFO') as M_NAME,isnull(M090.WIDTH_CD,0) as WIDTH_CD,ZTBINSPECTNGTB.EMPL_NO AS INSPECTOR,ZTBINSPECTNGTB.LINEQC_PIC AS LINEQC,ZTBINSPECTNGTB.PROD_PIC,M100.CODE_33 AS UNIT ,ZTBINSPECTNGTB.PROCESS_LOT_NO,ZTBINSPECTNGTB.PROCESS_IN_DATE,ZTBINSPECTNGTB.INSPECT_DATETIME, ZTBINSPECTNGTB.INSPECT_START_TIME,ZTBINSPECTNGTB.INSPECT_FINISH_TIME,ZTBINSPECTNGTB.FACTORY,ZTBINSPECTNGTB.LINEQC_PIC,ZTBINSPECTNGTB.MACHINE_NO,ZTBINSPECTNGTB.INSPECT_TOTAL_QTY,ZTBINSPECTNGTB.INSPECT_OK_QTY,CAST(INSPECT_TOTAL_QTY AS float)/(CAST(DATEDIFF(MINUTE, ZTBINSPECTNGTB.INSPECT_START_TIME,ZTBINSPECTNGTB.INSPECT_FINISH_TIME) AS float) / CAST(60 as float) )  AS INSPECT_SPEED,(ERR1+ERR2+ERR3) AS INSPECT_TOTAL_LOSS_QTY, (ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS INSPECT_TOTAL_NG_QTY, (ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11) AS MATERIAL_NG_QTY, (ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG_QTY,M100.PROD_LAST_PRICE AS PROD_PRICE,ZTBINSPECTNGTB.ERR1,ZTBINSPECTNGTB.ERR2,ZTBINSPECTNGTB.ERR3,ZTBINSPECTNGTB.ERR4,ZTBINSPECTNGTB.ERR5,ZTBINSPECTNGTB.ERR6,ZTBINSPECTNGTB.ERR7,ZTBINSPECTNGTB.ERR8,ZTBINSPECTNGTB.ERR9,ZTBINSPECTNGTB.ERR10,ZTBINSPECTNGTB.ERR11,ZTBINSPECTNGTB.ERR12,ZTBINSPECTNGTB.ERR13,ZTBINSPECTNGTB.ERR14,ZTBINSPECTNGTB.ERR15,ZTBINSPECTNGTB.ERR16,ZTBINSPECTNGTB.ERR17,ZTBINSPECTNGTB.ERR18,ZTBINSPECTNGTB.ERR19,ZTBINSPECTNGTB.ERR20,ZTBINSPECTNGTB.ERR21,ZTBINSPECTNGTB.ERR22,ZTBINSPECTNGTB.ERR23,ZTBINSPECTNGTB.ERR24,ZTBINSPECTNGTB.ERR25,ZTBINSPECTNGTB.ERR26,ZTBINSPECTNGTB.ERR27,ZTBINSPECTNGTB.ERR28,ZTBINSPECTNGTB.ERR29,ZTBINSPECTNGTB.ERR30,ZTBINSPECTNGTB.ERR31,ZTBINSPECTNGTB.ERR32, isnull(ZTBINSPECTNGTB.CNDB_ENCODES,'') AS CNDB_ENCODES  FROM ZTBINSPECTNGTB  LEFT JOIN M110 ON (ZTBINSPECTNGTB.CUST_CD = M110.CUST_CD)  LEFT JOIN M100 ON (ZTBINSPECTNGTB.G_CODE = M100.G_CODE) LEFT JOIN M090 ON(ZTBINSPECTNGTB.M_CODE = M090.M_CODE) 
@@ -1845,12 +1804,9 @@ exports.process_api = function (req, res) {
                      kqua = await queryDB(query);        
                      ////console.log(kqua);        
                      res.send(kqua);    
-
                 break;
-                
             }          
             //query = `SELECT * FROM ZTBEMPLINFO`;
-                         
         })()
     }
     else if (qr['command'] == 'get_listcode')
@@ -1867,8 +1823,6 @@ exports.process_api = function (req, res) {
             kqua = await queryDB(query);        
             ////console.log(kqua);        
             res.send(kqua);    
-
-                         
         })()
     }
     else if (qr['command'] == 'get_listcustomer')
@@ -1885,8 +1839,6 @@ exports.process_api = function (req, res) {
             kqua = await queryDB(query);        
             ////console.log(kqua);        
             res.send(kqua);    
-
-                         
         })()
     }
     else if (qr['command'] == 'add_customer')
@@ -1903,7 +1855,6 @@ exports.process_api = function (req, res) {
             kqua = await queryDB(query);        
             //console.log(kqua);        
             res.send(kqua); 
-                         
         })()
     }
     else if (qr['command'] == 'edit_customer')
@@ -1920,8 +1871,6 @@ exports.process_api = function (req, res) {
             kqua = await queryDB(query);        
             ////console.log(kqua);        
             res.send(kqua);    
-
-                         
         })()
     }
     else if (qr['command'] == 'insert_po')
@@ -2014,7 +1963,6 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                       
         })()
     }
     else if (qr['command'] == 'updatemaindept')
@@ -2036,7 +1984,6 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                      
         })()
     }
     else if (qr['command'] == 'deletemaindept')
@@ -2053,13 +2000,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);   
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                     
         })()
     }
     else if (qr['command'] == 'getsubdept')
@@ -2091,13 +2036,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);  
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                      
         })()
     }
     else if (qr['command'] == 'updatesubdept')
@@ -2114,13 +2057,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);    
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                    
         })()
     }
     else if (qr['command'] == 'deletesubdept')
@@ -2137,13 +2078,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);   
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                    
         })()
     }
     else if (qr['command'] == 'getworkposition')
@@ -2174,13 +2113,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);     
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                    
         })()
     }
     else if (qr['command'] == 'updateworkposition')
@@ -2197,13 +2134,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);  
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                       
         })()
     }
     else if (qr['command'] == 'deleteworkposition')
@@ -2220,13 +2155,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);   
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                     
         })()
     }
     else if (qr['command'] == 'getemployee_full')
@@ -2260,13 +2193,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);  
-
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                       
         })()
     }
     else if (qr['command'] == 'updateemployee')
@@ -2283,13 +2214,11 @@ exports.process_api = function (req, res) {
                 checkkq = await queryDB(setpdQuery);
                 //console.log(checkkq);
                 res.send(checkkq);  
-                
             }
             else
             {
                 res.send({tk_status:'NG', message:'Bạn không phải leader'}); 
             }
-                     
         })()
     }
     else if (qr['command'] == 'diemdanhnhom') {
@@ -2323,8 +2252,6 @@ exports.process_api = function (req, res) {
                     $condition = "";
                     break;
             }
-            
-            
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff' || JOB_NAME == 'ADMIN') {
                 var today = new Date();
                let today_format = moment().format('YYYY-MM-DD');
@@ -2342,7 +2269,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: 'NG', message:'Không phải leader'});
             }
-            
         })()
     }
     else if (qr['command'] == 'diemdanhnhomBP') {
@@ -2377,7 +2303,6 @@ exports.process_api = function (req, res) {
                     $condition = "";
                     break;
             }           
-            
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff' || JOB_NAME == 'ADMIN') {
                 var today = new Date();
                let today_format = moment().format('YYYY-MM-DD');
@@ -2393,7 +2318,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status: 'NG', message:'Không phải leader'});
             }
-            
         })()
     }
     else if (qr['command'] == 'setdiemdanhnhom') {
@@ -2410,13 +2334,11 @@ exports.process_api = function (req, res) {
                 var today = new Date();
                 //var today_format = moment().format('YYYY-MM-DD');
                 var today_format = moment().format('YYYY-MM-DD');
-              
                 let checkAttQuery = "SELECT ON_OFF FROM ZTBATTENDANCETB WHERE EMPL_NO='" + EMPL_NO + "' AND APPLY_DATE='" + today_format + "'";
                 //console.log(checkAttQuery);
                 let checkAttKQ = await queryDB(checkAttQuery);
                 //console.log('checkqa = ' + checkAttKQ);
                 //console.log(checkAttKQ);                
-
                 if (checkAttKQ.tk_status === "NG") 
                 {                  
                     //console.log('Chua diem danh, se them moi diem danh');
@@ -2435,7 +2357,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send('NO_LEADER');
             }
-            
         })()
     }
     else if (qr['command'] == 'dangkytangcanhom') {
@@ -2446,7 +2367,6 @@ exports.process_api = function (req, res) {
             let EMPL_NO = DATA.EMPL_NO;            
             let OVERTIME_INFO = DATA.overtime_info;
             let tangcavalue = DATA.tangcavalue;
-            
             var today = new Date();
             //var today_format = moment().format('YYYY-MM-DD');
             var today_format = moment().format('YYYY-MM-DD');
@@ -2465,13 +2385,11 @@ exports.process_api = function (req, res) {
                 {
                     res.send({tk_status: "NG", message:"Chưa điểm danh nên không tăng ca được"});
                 }
-               
                 //console.log(kqua);                
             }
             else {
                 res.send({tk_status: "NG", message:"Chưa điểm danh nên không tăng ca được"});
             }
-            
         })()
     }
     else if (qr['command'] == 'setteamnhom') {
@@ -2483,7 +2401,6 @@ exports.process_api = function (req, res) {
             let JOB_NAME = req.payload_data['JOB_NAME'];
             let $teamvalue = DATA.teamvalue;
             ////console.log($teamvalue +  EMPL_NO);
-
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff' || JOB_NAME == 'ADMIN') {
                 var today = new Date();
                 let checkkq = "OK";
@@ -2526,21 +2443,18 @@ exports.process_api = function (req, res) {
                     kqua = await queryDB(query);
                     if (kqua.tk_status != "OK") checkkq = "NG";
                 }
-
             }
             else if(CANGHI ===2)
             {
                 for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
                     let apply_date = moment(day).format('YYYY-MM-DD');
                     //console.log(apply_date);
-    
                     let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI})`;
                     //console.log(query);
                     kqua = await queryDB(query);
                     if (kqua.tk_status != "OK") checkkq = "NG";
                 }
             }
-            
             if(checkkq === "OK")
             {
                 res.send({tk_status: "OK"});
@@ -2549,7 +2463,6 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status: "NG", message: "Ngày đã dược đăng ký rồi, không thể đăng ký lại"});
             }
-            
             } 
         )()
         //res.send('ket qua tra ve' + req.cookies.token);
@@ -2581,21 +2494,18 @@ exports.process_api = function (req, res) {
                     kqua = await queryDB(query);
                     if (kqua.tk_status != "OK") checkkq = "NG";
                 }
-
             }
             else if(CANGHI ===2)
             {
                 for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
                     let apply_date = moment(day).format('YYYY-MM-DD');
                     //console.log(apply_date);
-    
                     let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('002','${EMPL_NO }','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI})`;
                     //console.log(query);
                     kqua = await queryDB(query);
                     if (kqua.tk_status != "OK") checkkq = "NG";
                 }
             }
-            
             if(checkkq === "OK")
             {
                 res.send({tk_status: "OK"});
@@ -2604,7 +2514,6 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status: "NG", message: "Ngày đã dược đăng ký rồi, không thể đăng ký lại"});
             }
-            
             } 
         )()
         //res.send('ket qua tra ve' + req.cookies.token);
@@ -2636,7 +2545,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NG", message:'Lỗi, nhập sai định dạng giờ phút'});
             }
-            
         })()
     }
     else if (qr['command'] == 'pheduyetnhom') {
@@ -2661,7 +2569,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NG", message:"Không phải leader or staff"});
             }         
-            
         })()
     }
     else if (qr['command'] == 'pheduyetnhomBP') {
@@ -2674,8 +2581,6 @@ exports.process_api = function (req, res) {
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff' || JOB_NAME == 'ADMIN') {
                 let kqua;
                 let query = `SELECT ZTBOFFREGISTRATIONTB.OFF_ID AS id, ZTBOFFREGISTRATIONTB.CTR_CD,ZTBOFFREGISTRATIONTB.EMPL_NO,ZTBOFFREGISTRATIONTB.REQUEST_DATE,ZTBOFFREGISTRATIONTB.APPLY_DATE,ZTBOFFREGISTRATIONTB.REASON_CODE,ZTBOFFREGISTRATIONTB.REMARK,ZTBOFFREGISTRATIONTB.APPROVAL_STATUS,ZTBOFFREGISTRATIONTB.OFF_ID,ZTBOFFREGISTRATIONTB.CA_NGHI,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR,ZTBREASON.REASON_NAME,ZTBREASON.REASON_NAME_KR,ZTBATTENDANCETB.ON_OFF,ZTBATTENDANCETB.OVERTIME_INFO,ZTBATTENDANCETB.OVERTIME FROM ZTBOFFREGISTRATIONTB JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTBOFFREGISTRATIONTB.EMPL_NO) JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) JOIN ZTBREASON ON (ZTBREASON.REASON_CODE = ZTBOFFREGISTRATIONTB.REASON_CODE) LEFT JOIN ZTBATTENDANCETB ON (ZTBATTENDANCETB.APPLY_DATE = ZTBOFFREGISTRATIONTB.APPLY_DATE AND ZTBATTENDANCETB.EMPL_NO = ZTBOFFREGISTRATIONTB.EMPL_NO) WHERE ZTBMAINDEPARMENT.MAINDEPTCODE=${MAINDEPTCODE}  ORDER BY OFF_ID DESC`;
-                
-                
                 kqua = await queryDB(query);
                 // //console.log(kqua);
                 res.send(kqua);
@@ -2683,7 +2588,6 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NG", message:"Không phải leader or staff"});
             }         
-            
         })()
     }
     else if (qr['command'] == 'setpheduyetnhom') {
@@ -2713,7 +2617,6 @@ exports.process_api = function (req, res) {
                 res.send({tk_status: "NG", message:'NO_LEADER'});
             }
         })()
-        
     }
     else if (qr['command'] == 'xacnhanchamcongnhom')
     {
@@ -2755,39 +2658,33 @@ exports.process_api = function (req, res) {
             else {
                 res.send({tk_status:"NG", message:"Không phải leader"});
             }
-            
         })()
     }
     else if (qr['command'] == 'getmaindeptlist')
     {
         (async () => {
-           
             let EMPL_NO = req.payload_data['EMPL_NO'];
             let JOB_NAME = req.payload_data['JOB_NAME'];                           
             let kqua;
             let query = "SELECT * FROM ZTBMAINDEPARMENT";
             kqua = await queryDB(query);
             res.send(kqua);           
-            
         })()
     }
     else if (qr['command'] == 'workpositionlist')
     {
         (async () => {
-           
             let EMPL_NO = req.payload_data['EMPL_NO'];
             let JOB_NAME = req.payload_data['JOB_NAME'];                               
             let kqua;
             let query = "SELECT * FROM ZTBWORKPOSITION";
             kqua = await queryDB(query);
             res.send(kqua);
-                    
         })()
     }
     else if (qr['command'] == 'workpositionlist_BP')
     {
         (async () => {
-           
             let EMPL_NO = req.payload_data['EMPL_NO'];
             let JOB_NAME = req.payload_data['JOB_NAME']; 
             let MAINDEPTCODE = req.payload_data['MAINDEPTCODE'];                              
@@ -2797,13 +2694,11 @@ exports.process_api = function (req, res) {
             WHERE ZTBMAINDEPARMENT.MAINDEPTCODE=${MAINDEPTCODE}`;
             kqua = await queryDB(query);
             res.send(kqua);
-                    
         })()
     }
     else if (qr['command'] == 'diemdanhhistorynhom')
     {
         (async () => {
-           
             let DATA = qr['DATA'];
             let EMPL_NO = req.payload_data['EMPL_NO'];
             let JOB_NAME = req.payload_data['JOB_NAME'];
@@ -2813,14 +2708,11 @@ exports.process_api = function (req, res) {
             let workshiftcode = DATA.WORK_SHIFT_CODE;
             let factorycode = DATA.FACTORY_CODE;
             ////console.log(DATA);
-
             let condition = "1=1 ";
             if(maindeptcode != 0)
             {
                 condition += ` AND DD_TT.MAINDEPTCODE = ${maindeptcode}`
             }
-           
-          
             switch (workshiftcode)
             {
                 case 1: 
@@ -2839,15 +2731,10 @@ exports.process_api = function (req, res) {
                     condition += ` AND DD_TT.WORK_SHIFT_CODE <> 1 `
                 break;                   
             }
-
-                
-            
             if(factorycode !=0)
             {
                 condition += ` AND DD_TT.FACTORY_CODE = ${factorycode} `;
             }
-           
-
             if (JOB_NAME == 'Leader' || JOB_NAME == 'Sub Leader' || JOB_NAME == 'Dept Staff' || JOB_NAME == 'ADMIN') {                     
                 let kqua;
                 let query = `DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE; SET @startdate='${start_date}' SET @enddate='${end_date}' SELECT DD_TT.APPLY_DATE as id,DD_TT.APPLY_DATE, COUNT(DD_TT.ON_OFF) AS TOTAL, COUNT(CASE DD_TT.ON_OFF WHEN 1 THEN 1 ELSE null END) AS TOTAL_ON, COUNT(CASE DD_TT.ON_OFF WHEN 0 THEN 1 ELSE null END) AS TOTAL_OFF, CAST(COUNT(CASE DD_TT.ON_OFF WHEN 1 THEN 1 ELSE null END) AS FLOAT) / CAST ( COUNT(DD_TT.ON_OFF) AS FLOAT) * 100 AS ON_RATE FROM ( SELECT ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,  ZTBMAINDEPARMENT.MAINDEPTCODE,ZTBWORKSHIFT.WORK_SHIFT_CODE, ZTBFACTORY.FACTORY_CODE, JOB_NAME,WORK_SHIF_NAME,WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBATTENDANCETB.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME, ZTBOFFREGISTRATIONTB.REMARK, ZTBATTENDANCETB.XACNHAN FROM ZTBATTENDANCETB LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTBATTENDANCETB.EMPL_NO) LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ZTBOFFREGISTRATIONTB ON (ZTBOFFREGISTRATIONTB.EMPL_NO = ZTBATTENDANCETB.EMPL_NO AND ZTBOFFREGISTRATIONTB.APPLY_DATE = ZTBATTENDANCETB.APPLY_DATE) LEFT JOIN ZTBREASON ON ( ZTBOFFREGISTRATIONTB.REASON_CODE = ZTBREASON.REASON_CODE) WHERE ZTBATTENDANCETB.APPLY_DATE BETWEEN @startdate AND @enddate ) AS DD_TT WHERE  ${condition} GROUP BY DD_TT.APPLY_DATE ORDER BY DD_TT.APPLY_DATE ASC`;
@@ -3581,14 +3468,11 @@ exports.process_api = function (req, res) {
             if(DATA.codeSearch !== '')
             {
                 condition += ` AND TONKHOFULL.G_NAME LIKE '%${DATA.codeSearch}%'`;
-
             }
             if(DATA.allcode !== false)
             {
                 condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
-
             }
-            
             let setpdQuery = `SELECT PO_TABLE_1.G_CODE,TONKHOFULL.G_NAME,TONKHOFULL.G_NAME_KD, PO_TABLE_1.PO_QTY, TOTAL_DELIVERED, PO_TABLE_1.PO_BALANCE, TONKHOFULL.CHO_KIEM, TONKHOFULL.CHO_CS_CHECK, TONKHOFULL.CHO_KIEM_RMA, TONKHOFULL.TONG_TON_KIEM, TONKHOFULL.BTP, TONKHOFULL.TON_TP, TONKHOFULL.BLOCK_QTY, TONKHOFULL.GRAND_TOTAL_STOCK, (TONKHOFULL.GRAND_TOTAL_STOCK-PO_TABLE_1.PO_BALANCE) AS THUA_THIEU FROM ( SELECT G_CODE, SUM(PO_QTY) AS PO_QTY, SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, SUM(PO_BALANCE) AS PO_BALANCE FROM ( SELECT AA.G_CODE, ZTBPOTable.PO_QTY, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) ) AS PO_BALANCE_TABLE GROUP BY G_CODE ) AS PO_TABLE_1 LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ) AS TONKHOFULL ON (TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE) ${condition}`;
             ////console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -3606,14 +3490,11 @@ exports.process_api = function (req, res) {
             if(DATA.codeSearch !== '')
             {
                 condition += ` AND TONKHOFULL.G_NAME LIKE '%${DATA.codeSearch}%'`;
-
             }
             if(DATA.allcode !== false)
             {
                 condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
-
             }
-            
             let setpdQuery = `SELECT TONKHOFULL.G_NAME_KD, SUM(PO_TABLE_1.PO_QTY) AS PO_QTY , SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, SUM(PO_TABLE_1.PO_BALANCE) AS PO_BALANCE, SUM(TONKHOFULL.CHO_KIEM) AS CHO_KIEM, SUM(TONKHOFULL.CHO_CS_CHECK) AS CHO_CS_CHECK, SUM(TONKHOFULL.CHO_KIEM_RMA) AS CHO_KIEM_RMA, SUM(TONKHOFULL.TONG_TON_KIEM) AS TONG_TON_KIEM, SUM(TONKHOFULL.BTP) AS BTP, SUM(TONKHOFULL.TON_TP) AS TON_TP, SUM(TONKHOFULL.BLOCK_QTY) AS BLOCK_QTY, SUM(TONKHOFULL.GRAND_TOTAL_STOCK) AS GRAND_TOTAL_STOCK, SUM((TONKHOFULL.GRAND_TOTAL_STOCK-PO_TABLE_1.PO_BALANCE)) AS THUA_THIEU FROM ( SELECT G_CODE, SUM(PO_QTY) AS PO_QTY, SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, SUM(PO_BALANCE) AS PO_BALANCE FROM ( SELECT AA.G_CODE, ZTBPOTable.PO_QTY, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) ) AS PO_BALANCE_TABLE GROUP BY G_CODE ) AS PO_TABLE_1 LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ) AS TONKHOFULL ON (TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE)   ${condition} GROUP BY TONKHOFULL.G_NAME_KD`;
             ////console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -3632,17 +3513,14 @@ exports.process_api = function (req, res) {
             {
                 condition += `AND tbl_InputOutput.IO_Date BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}' `;
             }
-
             if(DATA.G_CODE !== '')
             {
                 condition += ` AND tbl_InputOutput.Product_MaVach = '${DATA.G_CODE}' `;
             }
-
             if(DATA.G_NAME !== '')
             {
                 condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
             }
-
             if(DATA.CUST_NAME !== '')
             {
                 condition += ` AND tbl_InputOutput.Customer_ShortName LIKE '%${DATA.CUST_NAME}%' `;
@@ -3651,10 +3529,7 @@ exports.process_api = function (req, res) {
             {
                 condition += ` AND Customer_ShortName <> 'CMSV' `;
             }   
-            
             condition += ` AND tbl_InputOutput.IO_Type = '${DATA.INOUT}' `;          
-
-
             let setpdQuery = `SELECT M110.CUST_NAME_KD, tbl_InputOutput.Product_MaVach AS G_CODE, M100.G_NAME, M100.G_NAME_KD, tbl_InputOutput.Customer_ShortName, tbl_InputOutput.IO_Date, CONVERT(datetime,tbl_InputOutput.IO_Time) AS INPUT_DATETIME, tbl_InputOutput.IO_Shift ,tbl_InputOutput.IO_Type, tbl_InputOutput.IO_Qty FROM tbl_InputOutput LEFT JOIN M100 ON (M100.G_CODE= tbl_InputOutput.Product_MaVach) 
             LEFT JOIN tbl_Customer ON (tbl_Customer.Customer_SortName = tbl_InputOutput.Customer_ShortName)
             LEFT JOIN M110 ON (M110.CUST_CD = tbl_Customer.CUST_CD) ${condition} ORDER BY tbl_InputOutput.IO_Time DESC`;
@@ -3671,17 +3546,14 @@ exports.process_api = function (req, res) {
             //console.log(DATA);           
             let checkkq = "OK";
             let condition= ' WHERE 1=1 ';            
-
             if(DATA.G_CODE !== '')
             {
                 condition += ` AND M100.G_CODE = '${DATA.G_CODE}' `;
             }
-
             if(DATA.G_NAME !== '')
             {
                 condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
             }
-
             if(DATA.JUSTBALANCE !== false)
             {
                 condition += `AND THANHPHAM.TONKHO >0 `;
@@ -3700,12 +3572,10 @@ exports.process_api = function (req, res) {
             //console.log(DATA);           
             let checkkq = "OK";
             let condition= ' WHERE 1=1 ';    
-
             if(DATA.G_NAME !== '')
             {
                 condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
             }
-
             if(DATA.JUSTBALANCE !== false)
             {
                 condition += `AND THANHPHAM.TONKHO >0 `;
@@ -3724,17 +3594,14 @@ exports.process_api = function (req, res) {
             //console.log(DATA);           
             let checkkq = "OK";
             let condition= ' WHERE 1=1 ';    
-
             if(DATA.G_NAME !== '')
             {
                 condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
             }
-
             if(DATA.JUSTBALANCE !== false)
             {
                 condition += `AND THANHPHAM.TONKHO >0 `;
             }    
-
             if(DATA.G_CODE !== '')
             {
                 condition += ` AND M100.G_CODE = '${DATA.G_CODE}' `;
@@ -3970,7 +3837,6 @@ exports.process_api = function (req, res) {
             {
                 condition +=  ` AND P400.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
             }
-
             let setpdQuery = ` SELECT  M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.M_LOT_NO, O302.OUT_CFM_QTY, O302.ROLL_QTY, (O302.OUT_CFM_QTY* O302.ROLL_QTY) AS TOTAL_OUT_QTY, O302.INS_DATE 
             FROM O302
             LEFT JOIN O301 ON (O302.OUT_DATE = O301.OUT_DATE AND O302.OUT_NO = O301.OUT_NO AND O301.OUT_SEQ = O302.OUT_SEQ)
@@ -4036,7 +3902,6 @@ exports.process_api = function (req, res) {
             {
                 res.send({tk_status:'NG', message:'Không đủ quyền hạn, cần PQC phê duyệt'}); 
             }
-                   
         })()
     }
     else if (qr['command'] == 'trapqc1data')
@@ -4750,7 +4615,6 @@ exports.process_api = function (req, res) {
             ) 
             AS PVTB
             ) AS BB ON (BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO)
-            
             WHERE ZTB_QLSXPLAN.PLAN_DATE='${DATA.PLAN_DATE}' ORDER BY ZTB_QLSXPLAN.PLAN_ORDER ASC `;
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -4793,7 +4657,6 @@ exports.process_api = function (req, res) {
             ) 
             AS PVTB
             ) AS BB ON (BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO)
-            
             ${condition} ORDER BY ZTB_QLSXPLAN.PLAN_ORDER ASC `;
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -4826,7 +4689,6 @@ exports.process_api = function (req, res) {
             ) 
             AS PVTB
             ) AS BB ON (BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO)
-            
             WHERE ZTB_QLSXPLAN.PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' ORDER BY ZTB_QLSXPLAN.PLAN_ORDER DESC `;
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
@@ -5362,7 +5224,6 @@ exports.process_api = function (req, res) {
             {
                 conditon += ` AND OUT_KHO_SX.FACTORY = '${DATA.FACTORY}' `;
             }
-
             let setpdQuery = `SELECT  OUT_KHO_SX.FACTORY, OUT_KHO_SX.PHANLOAI, OUT_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, OUT_KHO_SX.M_LOT_NO, OUT_KHO_SX.PLAN_ID_INPUT,OUT_KHO_SX.PLAN_ID_OUTPUT, OUT_KHO_SX.ROLL_QTY, OUT_KHO_SX.OUT_QTY, OUT_KHO_SX.TOTAL_OUT_QTY, OUT_KHO_SX.INS_DATE FROM OUT_KHO_SX LEFT JOIN M090 ON (M090.M_CODE = OUT_KHO_SX.M_CODE) ${conditon} ORDER BY OUT_KHO_SX.INS_DATE DESC`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
@@ -5385,7 +5246,6 @@ exports.process_api = function (req, res) {
             {
                 conditon += ` AND IN_KHO_SX.FACTORY = '${DATA.FACTORY}' `;
             }
-            
             let setpdQuery = `SELECT  IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY, IN_KHO_SX.INS_DATE FROM IN_KHO_SX LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE) ${conditon} ORDER BY IN_KHO_SX.INS_DATE DESC`; 
             //${moment().format('YYYY-MM-DD')}
             console.log(setpdQuery);       
@@ -5488,9 +5348,6 @@ exports.process_api = function (req, res) {
             {
                 condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
             }
-
-
-
             let setpdQuery = `SELECT P500.PLAN_ID, P500.PROD_REQUEST_NO, M100.G_NAME,M100.G_CODE, M100.G_NAME_KD, P500.M_CODE, M090.M_NAME, M090.WIDTH_CD, P500.M_LOT_NO, isnull(BB.TOTAL_OUT_QTY,0)  AS INPUT_QTY, (isnull(BB.TOTAL_OUT_QTY,0)- isnull(P500.REMAIN_QTY,0)) AS USED_QTY ,isnull(P500.REMAIN_QTY,0) AS REMAIN_QTY, P500.EMPL_NO, P500.EQUIPMENT_CD, P500.INS_DATE FROM P500
             LEFT JOIN M100 ON (M100.G_CODE = P500.G_CODE)
             LEFT JOIN M090 ON (M090.M_CODE = P500.M_CODE)
@@ -5564,12 +5421,10 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
             let condition = " WHERE 1=1";
-            
             if (DATA.ALLTIME !== true) condition +=  ` AND AMAZONE_DATA.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'`;
             if (DATA.G_NAME !== "") condition +=  `AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
             if (DATA.NO_IN !== "") condition += ` AND AMAZONE_DATA.NO_IN ='${DATA.NO_IN}' `;
             if (DATA.PROD_REQUEST_NO !== "") condition += ` AND AMAZONE_DATA.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}' `;
-
             let checkkq = "OK";
             let setpdQuery = `SELECT M100.G_NAME, AMAZONE_DATA.G_CODE, AMAZONE_DATA.PROD_REQUEST_NO, AMAZONE_DATA.NO_IN, AMAZONE_DATA.ROW_NO, AMAZONE_DATA.DATA_1, AMAZONE_DATA.DATA_2,AMAZONE_DATA.DATA_3,AMAZONE_DATA.DATA_4, AMAZONE_DATA.PRINT_STATUS, AMAZONE_DATA.INLAI_COUNT, AMAZONE_DATA.REMARK, AMAZONE_DATA.INS_DATE, AMAZONE_DATA.INS_EMPL FROM AMAZONE_DATA LEFT JOIN M100 ON (M100.G_CODE = AMAZONE_DATA.G_CODE) ${condition}`; 
             //${moment().format('YYYY-MM-DD')}
@@ -5819,7 +5674,6 @@ exports.process_api = function (req, res) {
             {
                 condition+= ` AND OUTKHO.M_NAME LIKE '%${DATA.M_NAME}%'`
             }            
-            
             let setpdQuery = `
             SELECT P400.G_CODE, CASE WHEN P400.CODE_55 = '04' THEN 'SAMPLE' ELSE 'MASS' END AS PHAN_LOAI, P400.PROD_REQUEST_NO, M100.G_NAME,M100.G_NAME_KD,M100.FACTORY, M100.EQ1, M100.EQ2, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(SD_LIEU.M_NAME,'X') AS M_NAME, isnull(SD_LIEU.TOTAL_OUT_QTY,0) AS M_OUTPUT,(isnull(SD_LIEU.REMAIN_QTY,0)) AS REMAIN_QTY, (isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) AS USED_QTY,  M100.PD, M100.G_C* M100.G_C_R AS CAVITY, CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS ESTIMATED_QTY, isnull(KQSXTABLE.CD1,0) AS CD1, isnull(KQSXTABLE.CD2,0) AS CD2,  isnull(INS_INPUT_TB.INS_INPUT,0) INS_INPUT, isnull(INS_OUTPUT_TB.INS_OUTPUT,0)
             AS INS_OUTPUT,
@@ -5842,7 +5696,6 @@ exports.process_api = function (req, res) {
             WHEN (isnull(OUTKHO.TOTAL_OUTPUT,0)- isnull(RETURN_TABLE.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(OUTKHO.TOTAL_OUTPUT,0)- isnull(RETURN_TABLE.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
             ELSE 0
             END AS TOTAL_LOSS
-            
             FROM P400
             LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, PVTB.[1] AS CD1, PVTB.[2] AS CD2 FROM 
             (
@@ -5857,7 +5710,6 @@ exports.process_api = function (req, res) {
             LEFT JOIN 
             ( 
 				SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME,SUM(isnull(TOTAL_IN_QTY,0)) AS TOTAL_OUTPUT FROM IN_KHO_SX LEFT JOIN M090 ON (M090.M_CODE =IN_KHO_SX.M_CODE ) LEFT JOIN ZTB_QLSXPLAN ON (IN_KHO_SX.PLAN_ID_SUDUNG =ZTB_QLSXPLAN.PLAN_ID)  WHERE PHANLOAI='N' GROUP BY  ZTB_QLSXPLAN.PROD_REQUEST_NO,  M090.M_NAME
-
             ) AS OUTKHO ON (P400.PROD_REQUEST_NO= OUTKHO.PROD_REQUEST_NO)
             LEFT JOIN 
             (	SELECT  PROD_REQUEST_NO, SUM(INPUT_QTY_EA) AS INS_INPUT FROM ZTBINSPECTINPUTTB GROUP BY PROD_REQUEST_NO
@@ -5923,7 +5775,6 @@ GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
             {
                 condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2)= '${DATA.PLAN_EQ}'`;
             }
-
             let checkkq = "OK";
         let setpdQuery = `SELECT   ZTB_SX_RESULT.WORK_SHIFT, ZTB_QLSXPLAN.PLAN_QTY, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.PLAN_DATE,  ZTB_QLSXPLAN.PLAN_EQ, M100.G_NAME,M100.G_NAME_KD, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,O301_A.PLAN_ID AS DKXL, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, ZTB_SX_RESULT.SX_RESULT AS CHOTBC
         FROM ZTB_QLSXPLAN
@@ -6196,7 +6047,6 @@ GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
             {
                 condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME}%'`;
             }            
-            
             let setpdQuery = `SELECT M100.G_NAME, ZTB_SHORTAGE_LIST.G_CODE,  ZTB_SHORTAGE_LIST.ST_ID,ZTB_SHORTAGE_LIST.PLAN_DATE, M110.CUST_NAME_KD, PO_TON.PO_BALANCE, TONKHOFULL.TON_TP, TONKHOFULL.BTP, TONKHOFULL.TONG_TON_KIEM, ZTB_SHORTAGE_LIST.D1_9H, ZTB_SHORTAGE_LIST.D1_13H, ZTB_SHORTAGE_LIST.D1_19H, ZTB_SHORTAGE_LIST.D1_21H, ZTB_SHORTAGE_LIST.D1_23H, ZTB_SHORTAGE_LIST.D2_9H, ZTB_SHORTAGE_LIST.D2_13H, ZTB_SHORTAGE_LIST.D2_21H, ZTB_SHORTAGE_LIST.D3_SANG, ZTB_SHORTAGE_LIST.D3_CHIEU, ZTB_SHORTAGE_LIST.D4_SANG, ZTB_SHORTAGE_LIST.D4_CHIEU, (ZTB_SHORTAGE_LIST.D1_9H+ ZTB_SHORTAGE_LIST.D1_13H+ ZTB_SHORTAGE_LIST.D1_19H+ ZTB_SHORTAGE_LIST.D1_21H+ ZTB_SHORTAGE_LIST.D1_23H) AS TODAY_TOTAL, (TONKHOFULL.TON_TP - (ZTB_SHORTAGE_LIST.D1_9H+ ZTB_SHORTAGE_LIST.D1_13H+ ZTB_SHORTAGE_LIST.D1_19H+ ZTB_SHORTAGE_LIST.D1_21H+ ZTB_SHORTAGE_LIST.D1_23H)) AS TODAY_THIEU, CASE WHEN M100.UPH1 > M100.UPH2 THEN M100.UPH2 ELSE M100.UPH1 END AS UPH, ZTB_SHORTAGE_LIST.PRIORITY FROM ZTB_SHORTAGE_LIST LEFT JOIN M100 ON (M100.G_CODE = ZTB_SHORTAGE_LIST.G_CODE) LEFT JOIN M110 ON (M110.CUST_CD = ZTB_SHORTAGE_LIST.CUST_CD) LEFT JOIN M010 ON (M010.EMPL_NO = ZTB_SHORTAGE_LIST.EMPL_NO) LEFT JOIN (SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) GROUP BY AA.G_CODE) AS PO_TON ON(ZTB_SHORTAGE_LIST.G_CODE = PO_TON.G_CODE) LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY, 0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK, isnull(TONKIEM.WAIT_SORTING_RMA, 0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT, 0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA, 0) AS BTP, isnull(THANHPHAM.TONKHO, 0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY, ( isnull(TONKIEM.TOTAL_WAIT, 0) + isnull(BTP.BTP_QTY_EA, 0)+ isnull(THANHPHAM.TONKHO, 0) - isnull(tbl_Block_table2.Block_Qty, 0) ) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN], 0) AS NHAPKHO, isnull([OUT], 0) AS XUATKHO, ( isnull([IN], 0)- isnull([OUT], 0) ) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON ( THANHPHAM.Product_MaVach = M100.G_CODE ) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM( INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA ) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE ) WHERE UPDATE_DATE = CONVERT( date, GETDATE() ) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD ) AS TONKIEM ON ( THANHPHAM.Product_MaVach = TONKIEM.G_CODE ) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON ( tbl_Block_table2.Product_MaVach = M100.G_CODE ) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON ( M100.G_CODE = ZTB_HALF_GOODS.G_CODE ) WHERE UPDATE_DATE = CONVERT( date, GETDATE() ) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME ) AS BTP ON ( BTP.G_CODE = THANHPHAM.Product_MaVach ) ) AS TONKHOFULL ON ( TONKHOFULL.G_CODE = ZTB_SHORTAGE_LIST.G_CODE ) ${condition} ORDER BY ZTB_SHORTAGE_LIST.ST_ID DESC`; 
             //${moment().format('YYYY-MM-DD')}
             //console.log(setpdQuery);       
@@ -6234,6 +6084,23 @@ GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
             let checkkq = "OK";
             let setpdQuery = ` SELECT TOP 1 * FROM ZTBFCSTTB WHERE FCSTYEAR = '${DATA.FCSTWEEKNO}' ORDER BY FCSTWEEKNO DESC `; 
+            //${moment().format('YYYY-MM-DD')}
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'get_material_table')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = ` SELECT * FROM ZTB_MATERIAL_TB `; 
             //${moment().format('YYYY-MM-DD')}
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
