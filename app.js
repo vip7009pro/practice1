@@ -9,7 +9,7 @@ const fileupload = require("express-fileupload");
 var multer = require("multer");
 const fs = require("fs");
 //var upload = multer({ dest: 'uploadfiles/' });
-let client_array=[];
+let client_array = [];
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploadfiles");
@@ -214,42 +214,24 @@ app.post("/api2", function (req, res) {
   var qr = req.body;
 });
 app.get("/", function (req, res) {
-  //res.redirect('/nhansu');
-  res.redirect("http://14.160.33.94:3010");
-  //res.redirect("14.160.33.94:3010");
+  res.send("okema");
 });
-app.get("/nhansu", function (req, res) {
-  res.redirect("http://14.160.33.94:3010");
-  /* if (req.coloiko == 'kocoloi') {
-        res.render('pages/index.ejs',
-            {
-                variable: 'Đây là nội dung của biến được truyền vào', selection: 'result_table', rootPath: __dirname, login_data: req.payload_data
-            }
-        );
-    }
-    else {
-        res.redirect('/login2');
-    } */
+app.get("/oauth", (req, res) => {
+  const csrfState = Math.random().toString(36).substring(2);
+  res.cookie("csrfState", csrfState, { maxAge: 60000 });
+  let url = "https://www.tiktok.com/auth/authorize/";
+  url += "?client_key=awnyx5wczi8ydq2l";
+  url += "&scope=user.info.basic,video.list";
+  url += "&response_type=code";
+  url += `&redirect_uri=${encodeURIComponent(
+    "http://14.160.33.94:3007/authCallback"
+  )}`;
+  url += "&state=" + csrfState;
+  res.redirect(url);
 });
-app.get("/about", function (req, res) {
-  if (req.coloiko == "kocoloi") {
-    res.render("pages/about.ejs", {
-      variable: "Đây là nội dung của biến được truyền vào",
-      selection: "result_table",
-      rootPath: __dirname,
-      login_data: req.payload_data,
-    });
-  } else {
-    res.redirect("/login2");
-  }
-});
-app.get("/login", function (req, res) {
-  res.render("pages/login.ejs");
-  console.log(req.cookies);
-});
-app.get("/login2", function (req, res) {
-  res.render("pages/login2.ejs");
-  console.log(req.cookies);
+app.get("/authCallback", (req, res) => {
+  console.log("code", req.query.code);
+  res.send(req.query.code);
 });
 app.listen(port, function () {
   console.log("App dang nghe port " + port);

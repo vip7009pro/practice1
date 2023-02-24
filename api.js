@@ -3198,13 +3198,13 @@ exports.process_api = function (req, res) {
         (async () => {            
             let DATA = qr['DATA'];             
             //console.log(DATA);
-            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
+            let currenttime = moment().format('YYYY-MM-DD HH:mm:ss');
             let checkkq = "OK";
-            let setpdQuery = `SELECT TOP 1 * FROM O300 WHERE PROD_REQUEST_NO = '${DATA.prod_request_no}'`;
-            ////console.log(setpdQuery);       
+            let setpdQuery = `SELECT TOP 1 * FROM O300 WHERE PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+            console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             ////console.log(checkkq);
-            res.send(checkkq);             
+            res.send(checkkq);
         })()
     }
     else if (qr['command'] == 'checkProcessInNoP500')
@@ -3837,7 +3837,7 @@ exports.process_api = function (req, res) {
             {
                 condition +=  ` AND P400.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
             }
-            let setpdQuery = ` SELECT  M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.M_LOT_NO, O302.OUT_CFM_QTY, O302.ROLL_QTY, (O302.OUT_CFM_QTY* O302.ROLL_QTY) AS TOTAL_OUT_QTY, O302.INS_DATE 
+            let setpdQuery = ` SELECT  M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, O302.PLAN_ID, M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.M_LOT_NO, O302.OUT_CFM_QTY, O302.ROLL_QTY, (O302.OUT_CFM_QTY* O302.ROLL_QTY) AS TOTAL_OUT_QTY, O302.INS_DATE 
             FROM O302
             LEFT JOIN O301 ON (O302.OUT_DATE = O301.OUT_DATE AND O302.OUT_NO = O301.OUT_NO AND O301.OUT_SEQ = O302.OUT_SEQ)
             LEFT JOIN O300 ON (O300.OUT_DATE = O301.OUT_DATE AND O300.OUT_NO = O301.OUT_NO)
@@ -4279,8 +4279,9 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
                 let checkkq = "OK";
-                let setpdQuery = `SELECT M_CODE, M_NAME, WIDTH_CD FROM M090`;
-                //console.log(setpdQuery);       
+                //let setpdQuery = `SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, ZTB_MATERIAL_TB.CUST_CD, ZTB_MATERIAL_TB.SSPRICE, ZTB_MATERIAL_TB.CMSPRICE, ZTB_MATERIAL_TB.SLITTING_PRICE, ZTB_MATERIAL_TB.MASTER_WIDTH, ZTB_MATERIAL_TB.ROLL_LENGTH FROM M090 LEFT JOIN ZTB_MATERIAL_TB ON (ZTB_MATERIAL_TB.M_NAME = M090.M_NAME)`;
+                //console.log(setpdQuery);  
+                let setpdQuery = ` SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD FROM M090 `;     
                 checkkq = await queryDB(setpdQuery);
                 res.send(checkkq); 
                 ////console.log(checkkq);                   
@@ -5677,7 +5678,7 @@ exports.process_api = function (req, res) {
             let setpdQuery = `
             SELECT P400.G_CODE, CASE WHEN P400.CODE_55 = '04' THEN 'SAMPLE' ELSE 'MASS' END AS PHAN_LOAI, P400.PROD_REQUEST_NO, M100.G_NAME,M100.G_NAME_KD,M100.FACTORY, M100.EQ1, M100.EQ2, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(SD_LIEU.M_NAME,'X') AS M_NAME, isnull(SD_LIEU.TOTAL_OUT_QTY,0) AS M_OUTPUT,(isnull(SD_LIEU.REMAIN_QTY,0)) AS REMAIN_QTY, (isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) AS USED_QTY,  M100.PD, M100.G_C* M100.G_C_R AS CAVITY, CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS ESTIMATED_QTY, isnull(KQSXTABLE.CD1,0) AS CD1, isnull(KQSXTABLE.CD2,0) AS CD2,  isnull(INS_INPUT_TB.INS_INPUT,0) INS_INPUT, isnull(INS_OUTPUT_TB.INS_OUTPUT,0)
             AS INS_OUTPUT,
-            CASE WHEN CAST((isnull(OUTKHO.TOTAL_OUTPUT,0)- isnull(RETURN_TABLE.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) <>0 THEN 1-isnull(KQSXTABLE.CD1,0) /CAST((isnull(OUTKHO.TOTAL_OUTPUT,0)- isnull(RETURN_TABLE.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS float) ELSE 0 END AS LOSS_SX1,
+            CASE WHEN CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) <>0 THEN 1-isnull(KQSXTABLE.CD1,0) /CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS float) ELSE 0 END AS LOSS_SX1,
             CASE 
             WHEN isnull(KQSXTABLE.CD1,0) <>0 AND  M100.EQ2 <> 'NO' THEN 1-CAST(isnull(KQSXTABLE.CD2,0) as float) /Cast(isnull(KQSXTABLE.CD1,0) as float) 
             WHEN isnull(KQSXTABLE.CD1,0) <>0 AND  M100.EQ2 = 'NO' THEN 0
@@ -5693,7 +5694,7 @@ exports.process_api = function (req, res) {
             ELSE 0
             END AS LOSS_SX4,
             CASE 
-            WHEN (isnull(OUTKHO.TOTAL_OUTPUT,0)- isnull(RETURN_TABLE.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(OUTKHO.TOTAL_OUTPUT,0)- isnull(RETURN_TABLE.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
+            WHEN (isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(SD_LIEU.TOTAL_OUT_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
             ELSE 0
             END AS TOTAL_LOSS
             FROM P400
@@ -5719,16 +5720,24 @@ exports.process_api = function (req, res) {
                 SELECT  PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS INS_OUTPUT FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO
             ) AS INS_OUTPUT_TB ON (INS_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
             LEFT JOIN 
-            (SELECT DISTINCT PROD_REQUEST_NO AS PROD_REQUEST_NO1 FROM ZTB_QLSXPLAN) AS ZTB_QLSXPLAN_A ON (ZTB_QLSXPLAN_A.PROD_REQUEST_NO1 = P400.PROD_REQUEST_NO)
-            LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
-            LEFT JOIN (
-			SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME,SUM(isnull(TOTAL_IN_QTY,0)) AS REMAIN_QTY FROM IN_KHO_SX LEFT JOIN M090 ON (M090.M_CODE =IN_KHO_SX.M_CODE ) LEFT JOIN ZTB_QLSXPLAN ON (IN_KHO_SX.PLAN_ID_SUDUNG =ZTB_QLSXPLAN.PLAN_ID)  WHERE PHANLOAI='R' GROUP BY  ZTB_QLSXPLAN.PROD_REQUEST_NO,  M090.M_NAME
-			) AS RETURN_TABLE ON (RETURN_TABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)	
-			LEFT JOIN (
-			SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME, SUM(OUT_KHO_SX.TOTAL_OUT_QTY) AS TOTAL_OUT_QTY,  SUM(OUT_KHO_SX.TOTAL_OUT_QTY - isnull(CASE WHEN P500.PROCESS_IN_DATE is null THEN OUT_KHO_SX.TOTAL_OUT_QTY ELSE P500.REMAIN_QTY END,0)) AS USED_QTY ,SUM(isnull(CASE WHEN P500.PROCESS_IN_DATE is null THEN OUT_KHO_SX.TOTAL_OUT_QTY ELSE P500.REMAIN_QTY END,0)) AS  REMAIN_QTY  FROM OUT_KHO_SX LEFT JOIN P500 ON (OUT_KHO_SX.PLAN_ID_OUTPUT = P500.PLAN_ID AND OUT_KHO_SX.M_LOT_NO = P500.M_LOT_NO) LEFT JOIN M090 ON (OUT_KHO_SX.M_CODE = M090.M_CODE) LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = OUT_KHO_SX.PLAN_ID_OUTPUT)
-WHERE OUT_KHO_SX.PHANLOAI='N'
-GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
-			) AS SD_LIEU ON(SD_LIEU.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+            (SELECT DISTINCT PROD_REQUEST_NO AS PROD_REQUEST_NO1 FROM ZTB_QLSXPLAN) AS ZTB_QLSXPLAN_A ON (ZTB_QLSXPLAN_A.PROD_REQUEST_NO1 = P400.PROD_REQUEST_NO) 
+			LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
+			LEFT JOIN
+			(SELECT AA.PROD_REQUEST_NO, AA.M_NAME, AA.TOTAL_OUT_QTY, isnull(BB.REMAIN_QTY,0) AS REMAIN_QTY, (AA.TOTAL_OUT_QTY - isnull(BB.REMAIN_QTY,0) ) AS USED_QTY FROM 
+			(SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME, SUM(OUT_KHO_SX.TOTAL_OUT_QTY) AS TOTAL_OUT_QTY 
+			FROM OUT_KHO_SX 			
+			LEFT JOIN M090 ON (OUT_KHO_SX.M_CODE = M090.M_CODE) 
+			LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = OUT_KHO_SX.PLAN_ID_OUTPUT)
+			WHERE OUT_KHO_SX.PHANLOAI='N'
+			GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME) AS AA
+			LEFT JOIN 
+			(SELECT P500.PROD_REQUEST_NO, M090.M_NAME, SUM(P500.REMAIN_QTY) AS REMAIN_QTY
+			FROM P500	LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = P500.PLAN_ID)
+			LEFT JOIN M090 ON (P500.M_CODE = M090.M_CODE)
+			WHERE ZTB_QLSXPLAN.PROCESS_NUMBER =1 
+			GROUP BY P500.PROD_REQUEST_NO, M090.M_NAME) AS BB
+			ON (AA.PROD_REQUEST_NO = BB.PROD_REQUEST_NO AND AA.M_NAME = BB.M_NAME)
+			) AS SD_LIEU ON (SD_LIEU.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
             ${condition}
             ORDER BY P400.PROD_REQUEST_NO DESC`; 
             //${moment().format('YYYY-MM-DD')}
@@ -6100,7 +6109,170 @@ GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
             let checkkq = "OK";
-            let setpdQuery = ` SELECT * FROM ZTB_MATERIAL_TB `; 
+            let condition = ` WHERE 1=1 `;
+            if(DATA.M_NAME !=='')
+            {
+                condition += ` AND M_NAME LIKE '%${DATA.M_NAME}%'`
+            }
+            if(DATA.NGMATERIAL === true)
+            {
+                condition +=  ` AND  (CUST_CD is null OR SSPRICE is null OR CMSPRICE is null OR SLITTING_PRICE is null OR MASTER_WIDTH is null OR ROLL_LENGTH is null)`;
+            }
+            let setpdQuery = ` SELECT * FROM ZTB_MATERIAL_TB ${condition}`; 
+            //${moment().format('YYYY-MM-DD')}
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'checkMaterialInfo')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let condition = ` `;
+            if(DATA.M_NAME !=='')
+            {
+                condition += ` WHERE M_NAME LIKE '%${DATA.M_NAME}%'`
+            }            
+            let setpdQuery = ` SELECT * FROM ZTB_MATERIAL_TB ${condition}`; 
+            //${moment().format('YYYY-MM-DD')}
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'update_material_table_from_bom')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = ` INSERT INTO ZTB_MATERIAL_TB  (CTR_CD,M_NAME) SELECT DISTINCT '002', ZTB_BOM2.M_NAME FROM ZTB_BOM2 WHERE (ZTB_BOM2.M_NAME not in (SELECT M_NAME FROM  ZTB_MATERIAL_TB) AND ZTB_BOM2.CATEGORY = 1)`; 
+            //${moment().format('YYYY-MM-DD')}
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'update_material_info')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = ` UPDATE ZTB_MATERIAL_TB SET CUST_CD ='${DATA.CUST_CD}', SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}',MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}' WHERE M_ID=${DATA.M_ID}`; 
+            //${moment().format('YYYY-MM-DD')}
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            res.send(checkkq);             
+        })()
+    }
+    else if (qr['command'] == 'load_kehoachchithi')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];     
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME'];            
+            let checkkq = "OK";
+            let setpdQuery = `
+            SELECT ZTB_KHCT_TABLE.KH_ID, ZTB_KHCT_TABLE.KH_FACTORY, ZTB_KHCT_TABLE.KH_DATE, ZTB_KHCT_TABLE.KH_EQ, ZTB_KHCT_TABLE.PROD_REQUEST_NO, ZTB_KHCT_TABLE.SELECTED_PLAN_ID, 
+  M100.G_CODE, 
+  M100.G_NAME, 
+  M100.G_NAME_KD, 
+  P400.PROD_REQUEST_DATE, 
+  P400.PROD_REQUEST_QTY, 
+  isnull(BB.CD1, 0) AS CD1, 
+  isnull(BB.CD2, 0) AS CD2, 
+  CASE WHEN (
+    M100.EQ1 <> 'FR' 
+    AND M100.EQ1 <> 'SR' 
+    AND M100.EQ1 <> 'DC' 
+    AND M100.EQ1 <> 'ED'
+  ) THEN 0 ELSE P400.PROD_REQUEST_QTY - isnull(BB.CD1, 0) END AS TON_CD1, 
+  CASE WHEN (
+    M100.EQ2 <> 'FR' 
+    AND M100.EQ2 <> 'SR' 
+    AND M100.EQ2 <> 'DC' 
+    AND M100.EQ2 <> 'ED'
+  ) THEN 0 ELSE P400.PROD_REQUEST_QTY - isnull(BB.CD2, 0) END AS TON_CD2, 
+  M100.FACTORY, 
+  M100.EQ1, 
+  M100.EQ2, 
+  M100.Setting1, 
+  M100.Setting2, 
+  M100.UPH1, 
+  M100.UPH2, 
+  M100.Step1, 
+  M100.Step2, 
+  M100.LOSS_SX1, 
+  M100.LOSS_SX2, 
+  M100.LOSS_SETTING1, 
+  M100.LOSS_SETTING2, 
+  M100.NOTE,
+    ZTB_QLSXPLAN.XUATDAOFILM, 
+  ZTB_QLSXPLAN.EQ_STATUS, 
+  ZTB_QLSXPLAN.MAIN_MATERIAL, 
+  ZTB_QLSXPLAN.INT_TEM, 
+  ZTB_QLSXPLAN.CHOTBC, 
+  ZTB_QLSXPLAN.DKXL, 
+  ZTB_QLSXPLAN.NEXT_PLAN_ID, 
+  ZTB_QLSXPLAN.KQ_SX_TAM, 
+  ZTB_QLSXPLAN.KETQUASX, 
+  ZTB_QLSXPLAN.PROCESS_NUMBER, 
+  ZTB_QLSXPLAN.PLAN_ORDER, 
+  ZTB_QLSXPLAN.STEP, 
+  ZTB_QLSXPLAN.PLAN_ID, 
+  ZTB_QLSXPLAN.PLAN_DATE, 
+  ZTB_QLSXPLAN.PLAN_QTY, 
+  ZTB_QLSXPLAN.PLAN_EQ, 
+  ZTB_QLSXPLAN.PLAN_FACTORY
+FROM ZTB_KHCT_TABLE
+LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_KHCT_TABLE.SELECTED_PLAN_ID)
+LEFT JOIN P400 ON (
+    P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO
+  ) 
+  LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) 
+  LEFT JOIN (
+    SELECT 
+      PVTB.PROD_REQUEST_NO, 
+      PVTB.[1] AS CD1, 
+      PVTB.[2] AS CD2 
+    FROM 
+      (
+        SELECT 
+          PROD_REQUEST_NO, 
+          PROCESS_NUMBER, 
+          SUM(KETQUASX) AS KETQUASX 
+        FROM 
+          ZTB_QLSXPLAN 
+        WHERE 
+          STEP = 0 
+        GROUP BY 
+          PROD_REQUEST_NO, 
+          PROCESS_NUMBER
+      ) AS PV PIVOT (
+        SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1], [2])
+      ) AS PVTB
+  ) AS BB ON (
+    BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO
+)`; 
             //${moment().format('YYYY-MM-DD')}
             //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
