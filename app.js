@@ -10,6 +10,20 @@ var multer = require("multer");
 const fs = require("fs");
 //var upload = multer({ dest: 'uploadfiles/' });
 let client_array = [];
+
+const API_PORT = 3007;
+const SOCKET_PORT = 3005;
+const DRAW_PATH ='D:\\xampp\\htdocs\\banve\\';
+const EMPL_IMAGE_PATH ='D:\\xampp\\htdocs\\Picture_NS\\';
+
+/* const API_PORT = 5011;
+const SOCKET_PORT = 3005;
+//const SOCKET_PORT = 5012;
+
+const DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
+const EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
+ */
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploadfiles");
@@ -34,8 +48,8 @@ const io = require("socket.io")(server, {
     origin: "*",
   },
 });
-server.listen(3005);
-console.log("Socket server listening on port 3005");
+server.listen(SOCKET_PORT);
+console.log("Socket server listening on port " + SOCKET_PORT);
 //server.listen(5012);
 io.on("connection", (client) => {
   console.log("A client connected");
@@ -45,12 +59,28 @@ io.on("connection", (client) => {
     //console.log(data);
   });
   client.on("notification", (data) => {
-    io.sockets.emit("notification", data);
+    io.sockets.emit("notification", data);    
     client_array.push(data);
     //console.log(client_array);
     console.log(data);
   });
-  client.on("disconnect", () => {
+  client.on("login", (data) => {    
+    if(!client_array.includes(data))
+    client_array.push(data);
+    //io.sockets.emit("login", client_array);
+    io.sockets.emit("login", data + 'da dang nhap');
+    //console.log(client_array);
+    console.log(data +' da dang nhap');
+  });
+  client.on("logout", (data) => { 
+    if(client_array.indexOf(data) >-1)   
+    client_array.splice(client_array.indexOf(data),1);
+    io.sockets.emit("logout", client_array);
+    //console.log(client_array);
+    console.log(data +' da dang xuat');
+  });
+  client.on("disconnect", (data) => {
+    console.log(data);
     console.log("A client disconnected !");
     console.log("Connected clients: " + io.engine.clientsCount);
   });
@@ -126,7 +156,7 @@ app.post("/upload", upload.single("banve"), function (req, res) {
     if (req.file) {
       const filename = req.file.originalname;
       const newfilename = req.body.filename;
-      const draw_folder = "D:\\xampp\\htdocs\\banve\\";
+      const draw_folder = DRAW_PATH;
       console.log("ket qua:" + existsSync(draw_folder + filename));
       if (!existsSync(draw_folder + filename)) {
         fs.copyFile(
@@ -177,7 +207,7 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
     if (req.file) {
       const filename = req.file.originalname;
       const newfilename = req.body.filename;
-      const draw_folder = "D:\\xampp\\htdocs\\Picture_NS\\";
+      const draw_folder = EMPL_IMAGE_PATH;
       console.log("ket qua:" + existsSync(draw_folder + filename));
       if (!existsSync(draw_folder + filename)) {
         fs.copyFile(
@@ -209,30 +239,6 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
     }
   }
 });
-app.post("/api2", function (req, res) {
-  api_module.process_api(req, res);
-  var qr = req.body;
-});
-app.get("/", function (req, res) {
-  res.send("okema");
-});
-app.get("/oauth", (req, res) => {
-  const csrfState = Math.random().toString(36).substring(2);
-  res.cookie("csrfState", csrfState, { maxAge: 60000 });
-  let url = "https://www.tiktok.com/auth/authorize/";
-  url += "?client_key=awnyx5wczi8ydq2l";
-  url += "&scope=user.info.basic,video.list";
-  url += "&response_type=code";
-  url += `&redirect_uri=${encodeURIComponent(
-    "http://14.160.33.94:3007/authCallback"
-  )}`;
-  url += "&state=" + csrfState;
-  res.redirect(url);
-});
-app.get("/authCallback", (req, res) => {
-  console.log("code", req.query.code);
-  res.send(req.query.code);
-});
-app.listen(port, function () {
-  console.log("App dang nghe port " + port);
+app.listen(API_PORT, function () {
+  console.log("App dang nghe port " + API_PORT);
 });
