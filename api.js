@@ -1549,7 +1549,41 @@ exports.process_api = function (req, res) {
         (async () => {            
             let DATA = qr['DATA'];
             let kqua;                             
-            let query = `SELECT I222.M_CODE, M090.M_NAME, M090.WIDTH_CD FROM I222 JOIN M090 ON (M090.M_CODE = I222.M_CODE) WHERE I222.M_LOT_NO='${DATA.M_LOT_NO}'`;
+            let query = `SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.OUT_CFM_QTY, O302.ROLL_QTY, O302.LIEUQL_SX, O302.OUT_DATE FROM O302 JOIN M090 ON (M090.M_CODE = O302.M_CODE) WHERE O302.M_LOT_NO='${DATA.M_LOT_NO}'`;
+            ////console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);                  
+        })()
+    }
+    else if (qr['command'] == 'checkMNAMEfromLotI222')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let kqua;                             
+            let query = `SELECT M110.CUST_NAME_KD, I222.CUST_CD, I222.M_CODE, M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY, I222.ROLL_QTY FROM I222 JOIN M090 ON (M090.M_CODE = I222.M_CODE) LEFT JOIN M110 ON (M110.CUST_CD = I222.CUST_CD) WHERE I222.M_LOT_NO='${DATA.M_LOT_NO}'`;
+            ////console.log(query);
+            kqua = await queryDB(query);                
+            res.send(kqua);                  
+        })()
+    }
+    else if (qr['command'] == 'checkMNAMEfromLotI222Total')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let kqua;                             
+            let query = ` SELECT  M_CODE, SUBSTRING(M_LOT_NO,1,6) AS LOTCMS, SUM(IN_CFM_QTY* ROLL_QTY) AS TOTAL_CFM_QTY, SUM(ROLL_QTY) AS TOTAL_ROLL FROM I222 WHERE M_CODE='${DATA.M_CODE}' AND  SUBSTRING(M_LOT_NO,1,6)='${DATA.LOTCMS}' GROUP BY  M_CODE, SUBSTRING(M_LOT_NO,1,6)  `;
+            console.log(query);
+            kqua = await queryDB(query);  
+            console.log(kqua);              
+            res.send(kqua);                  
+        })()
+    }
+    else if (qr['command'] == 'checkPQC3_IDfromPLAN_ID')
+    {
+        (async () => {            
+            let DATA = qr['DATA'];
+            let kqua;                             
+            let query = `SELECT DISTINCT P501.PLAN_ID, ZTBPQC3TABLE.PQC3_ID,  ZTBPQC3TABLE.DEFECT_PHENOMENON FROM P501 LEFT JOIN ZTBPQC3TABLE ON (P501.PROCESS_LOT_NO = ZTBPQC3TABLE.PROCESS_LOT_NO) WHERE P501.PLAN_ID='${DATA.PLAN_ID}' AND ZTBPQC3TABLE.PQC3_ID is not null`;
             ////console.log(query);
             kqua = await queryDB(query);                
             res.send(kqua);                  
@@ -3340,7 +3374,7 @@ exports.process_api = function (req, res) {
             //console.log(DATA);
             let currenttime = moment().format('YYYY-MM-DD HH:mm:ss'); 
             let checkkq = "OK";            
-            let setpdQuery = ` SELECT M100.PDBV, M140.LIEUQL_SX, M100.PROD_MAIN_MATERIAL, M100.PO_TYPE, P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (isnull(M090.OK_M1,0) + isnull(M090.OK_M2,0)) AS TONLIEU, (isnull(M090.HOLDING_M1,0) + isnull(M090.HOLDING_M2,0)) AS HOLDING, (isnull(M090.OK_M1,0) + isnull(M090.OK_M2,0)  + isnull(M090.HOLDING_M1,0) + isnull(M090.HOLDING_M2,0)) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION, M100.PROD_DIECUT_STEP, M100.PROD_PRINT_TIMES,M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1 , M100.LOSS_SETTING2 ,M100.NOTE FROM P400 
+            let setpdQuery = ` SELECT M100.FSC, M100.PDBV, M140.LIEUQL_SX, M100.PROD_MAIN_MATERIAL, M100.PO_TYPE, P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (isnull(M090.OK_M1,0) + isnull(M090.OK_M2,0)) AS TONLIEU, (isnull(M090.HOLDING_M1,0) + isnull(M090.HOLDING_M2,0)) AS HOLDING, (isnull(M090.OK_M1,0) + isnull(M090.OK_M2,0)  + isnull(M090.HOLDING_M1,0) + isnull(M090.HOLDING_M2,0)) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION, M100.PROD_DIECUT_STEP, M100.PROD_PRINT_TIMES,M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1 , M100.LOSS_SETTING2 ,M100.NOTE FROM P400 
             LEFT JOIN M100 ON P400.G_CODE = M100.G_CODE 
             LEFT JOIN M010 ON P400.EMPL_NO = M010.EMPL_NO 
             LEFT JOIN M140 ON P400.G_CODE = M140.G_CODE 
@@ -4218,7 +4252,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
                 let checkkq = "OK";
-                let setpdQuery = `SELECT PO_TYPE, G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN, FACTORY,  Setting1, Setting2, UPH1, UPH2, Step1, Step2, LOSS_SX1, LOSS_SX2, LOSS_SETTING1 , LOSS_SETTING2 ,NOTE  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
+                let setpdQuery = `SELECT FSC, PO_TYPE, G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN, FACTORY,  Setting1, Setting2, UPH1, UPH2, Step1, Step2, LOSS_SX1, LOSS_SX2, LOSS_SETTING1 , LOSS_SETTING2 ,NOTE  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
                 //console.log(setpdQuery);       
                 checkkq = await queryDB(setpdQuery);
                 res.send(checkkq); 
@@ -4286,7 +4320,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
                 let checkkq = "OK";
-                let setpdQuery = `INSERT INTO M100 (CTR_CD,CUST_CD,PROD_PROJECT,PROD_MODEL,CODE_12,PROD_TYPE,G_NAME_KD,DESCR,PROD_MAIN_MATERIAL,G_NAME,G_LENGTH,G_WIDTH,PD,G_C,G_C_R,G_SG_L,G_SG_R,PACK_DRT,KNIFE_TYPE,KNIFE_LIFECYCLE,KNIFE_PRICE,CODE_33,ROLE_EA_QTY,RPM,PIN_DISTANCE,PROCESS_TYPE,EQ1,EQ2,PROD_DIECUT_STEP,PROD_PRINT_TIMES,REMK,USE_YN,G_CODE,G_CG,G_LG, SEQ_NO, CODE_27, REV_NO, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, PO_TYPE) VALUES ('002','${DATA.CODE_FULL_INFO.CUST_CD}','${DATA.CODE_FULL_INFO.PROD_PROJECT}','${DATA.CODE_FULL_INFO.PROD_MODEL}','${DATA.CODE_FULL_INFO.CODE_12}','${DATA.CODE_FULL_INFO.PROD_TYPE}','${DATA.CODE_FULL_INFO.G_NAME_KD}','${DATA.CODE_FULL_INFO.DESCR}','${DATA.CODE_FULL_INFO.PROD_MAIN_MATERIAL}','${DATA.CODE_FULL_INFO.G_NAME}','${DATA.CODE_FULL_INFO.G_LENGTH}','${DATA.CODE_FULL_INFO.G_WIDTH}','${DATA.CODE_FULL_INFO.PD}','${DATA.CODE_FULL_INFO.G_C}','${DATA.CODE_FULL_INFO.G_C_R}','${DATA.CODE_FULL_INFO.G_SG_L}','${DATA.CODE_FULL_INFO.G_SG_R}','${DATA.CODE_FULL_INFO.PACK_DRT}','${DATA.CODE_FULL_INFO.KNIFE_TYPE}','${DATA.CODE_FULL_INFO.KNIFE_LIFECYCLE}','${DATA.CODE_FULL_INFO.KNIFE_PRICE}','${DATA.CODE_FULL_INFO.CODE_33}','${DATA.CODE_FULL_INFO.ROLE_EA_QTY}','${DATA.CODE_FULL_INFO.RPM}','${DATA.CODE_FULL_INFO.PIN_DISTANCE}','${DATA.CODE_FULL_INFO.PROCESS_TYPE}','${DATA.CODE_FULL_INFO.EQ1}','${DATA.CODE_FULL_INFO.EQ2}','${DATA.CODE_FULL_INFO.PROD_DIECUT_STEP}','${DATA.CODE_FULL_INFO.PROD_PRINT_TIMES}','${DATA.CODE_FULL_INFO.REMK}','${DATA.CODE_FULL_INFO.USE_YN}','${DATA.G_CODE}','${DATA.CODE_FULL_INFO.G_CG}','${DATA.CODE_FULL_INFO.G_LG}','${DATA.NEXT_SEQ_NO}','${DATA.CODE_27}','A','${EMPL_NO}','${EMPL_NO}',GETDATE(), GETDATE(), '${DATA.CODE_FULL_INFO.PO_TYPE}')`;
+                let setpdQuery = `INSERT INTO M100 (CTR_CD,CUST_CD,PROD_PROJECT,PROD_MODEL,CODE_12,PROD_TYPE,G_NAME_KD,DESCR,PROD_MAIN_MATERIAL,G_NAME,G_LENGTH,G_WIDTH,PD,G_C,G_C_R,G_SG_L,G_SG_R,PACK_DRT,KNIFE_TYPE,KNIFE_LIFECYCLE,KNIFE_PRICE,CODE_33,ROLE_EA_QTY,RPM,PIN_DISTANCE,PROCESS_TYPE,EQ1,EQ2,PROD_DIECUT_STEP,PROD_PRINT_TIMES,REMK,USE_YN,G_CODE,G_CG,G_LG, SEQ_NO, CODE_27, REV_NO, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, PO_TYPE, FSC) VALUES ('002','${DATA.CODE_FULL_INFO.CUST_CD}','${DATA.CODE_FULL_INFO.PROD_PROJECT}','${DATA.CODE_FULL_INFO.PROD_MODEL}','${DATA.CODE_FULL_INFO.CODE_12}','${DATA.CODE_FULL_INFO.PROD_TYPE}','${DATA.CODE_FULL_INFO.G_NAME_KD}','${DATA.CODE_FULL_INFO.DESCR}','${DATA.CODE_FULL_INFO.PROD_MAIN_MATERIAL}','${DATA.CODE_FULL_INFO.G_NAME}','${DATA.CODE_FULL_INFO.G_LENGTH}','${DATA.CODE_FULL_INFO.G_WIDTH}','${DATA.CODE_FULL_INFO.PD}','${DATA.CODE_FULL_INFO.G_C}','${DATA.CODE_FULL_INFO.G_C_R}','${DATA.CODE_FULL_INFO.G_SG_L}','${DATA.CODE_FULL_INFO.G_SG_R}','${DATA.CODE_FULL_INFO.PACK_DRT}','${DATA.CODE_FULL_INFO.KNIFE_TYPE}','${DATA.CODE_FULL_INFO.KNIFE_LIFECYCLE}','${DATA.CODE_FULL_INFO.KNIFE_PRICE}','${DATA.CODE_FULL_INFO.CODE_33}','${DATA.CODE_FULL_INFO.ROLE_EA_QTY}','${DATA.CODE_FULL_INFO.RPM}','${DATA.CODE_FULL_INFO.PIN_DISTANCE}','${DATA.CODE_FULL_INFO.PROCESS_TYPE}','${DATA.CODE_FULL_INFO.EQ1}','${DATA.CODE_FULL_INFO.EQ2}','${DATA.CODE_FULL_INFO.PROD_DIECUT_STEP}','${DATA.CODE_FULL_INFO.PROD_PRINT_TIMES}','${DATA.CODE_FULL_INFO.REMK}','${DATA.CODE_FULL_INFO.USE_YN}','${DATA.G_CODE}','${DATA.CODE_FULL_INFO.G_CG}','${DATA.CODE_FULL_INFO.G_LG}','${DATA.NEXT_SEQ_NO}','${DATA.CODE_27}','A','${EMPL_NO}','${EMPL_NO}',GETDATE(), GETDATE(), '${DATA.CODE_FULL_INFO.PO_TYPE}','${DATA.CODE_FULL_INFO.FSC}')`;
                 //console.log(setpdQuery);       
                 checkkq = await queryDB(setpdQuery);
                 res.send(checkkq); 
@@ -4303,7 +4337,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
                 let checkkq = "OK";
-                let setpdQuery = `INSERT INTO M100 (CTR_CD,CUST_CD,PROD_PROJECT,PROD_MODEL,CODE_12,PROD_TYPE,G_NAME_KD,DESCR,PROD_MAIN_MATERIAL,G_NAME,G_LENGTH,G_WIDTH,PD,G_C,G_C_R,G_SG_L,G_SG_R,PACK_DRT,KNIFE_TYPE,KNIFE_LIFECYCLE,KNIFE_PRICE,CODE_33,ROLE_EA_QTY,RPM,PIN_DISTANCE,PROCESS_TYPE,EQ1,EQ2,PROD_DIECUT_STEP,PROD_PRINT_TIMES,REMK,USE_YN,G_CODE,G_CG,G_LG, SEQ_NO, CODE_27, REV_NO, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, PO_TYPE) VALUES ('002','${DATA.CODE_FULL_INFO.CUST_CD}','${DATA.CODE_FULL_INFO.PROD_PROJECT}','${DATA.CODE_FULL_INFO.PROD_MODEL}','${DATA.CODE_FULL_INFO.CODE_12}','${DATA.CODE_FULL_INFO.PROD_TYPE}','${DATA.CODE_FULL_INFO.G_NAME_KD}','${DATA.CODE_FULL_INFO.DESCR}','${DATA.CODE_FULL_INFO.PROD_MAIN_MATERIAL}','${DATA.CODE_FULL_INFO.G_NAME}','${DATA.CODE_FULL_INFO.G_LENGTH}','${DATA.CODE_FULL_INFO.G_WIDTH}','${DATA.CODE_FULL_INFO.PD}','${DATA.CODE_FULL_INFO.G_C}','${DATA.CODE_FULL_INFO.G_C_R}','${DATA.CODE_FULL_INFO.G_SG_L}','${DATA.CODE_FULL_INFO.G_SG_R}','${DATA.CODE_FULL_INFO.PACK_DRT}','${DATA.CODE_FULL_INFO.KNIFE_TYPE}','${DATA.CODE_FULL_INFO.KNIFE_LIFECYCLE}','${DATA.CODE_FULL_INFO.KNIFE_PRICE}','${DATA.CODE_FULL_INFO.CODE_33}','${DATA.CODE_FULL_INFO.ROLE_EA_QTY}','${DATA.CODE_FULL_INFO.RPM}','${DATA.CODE_FULL_INFO.PIN_DISTANCE}','${DATA.CODE_FULL_INFO.PROCESS_TYPE}','${DATA.CODE_FULL_INFO.EQ1}','${DATA.CODE_FULL_INFO.EQ2}','${DATA.CODE_FULL_INFO.PROD_DIECUT_STEP}','${DATA.CODE_FULL_INFO.PROD_PRINT_TIMES}','${DATA.CODE_FULL_INFO.REMK}','${DATA.CODE_FULL_INFO.USE_YN}','${DATA.G_CODE}','${DATA.CODE_FULL_INFO.G_CG}','${DATA.CODE_FULL_INFO.G_LG}','${DATA.NEXT_SEQ_NO}','${DATA.CODE_27}','${DATA.REV_NO}','${EMPL_NO}','${EMPL_NO}',GETDATE(), GETDATE(), '${DATA.CODE_FULL_INFO.PO_TYPE}')`;
+                let setpdQuery = `INSERT INTO M100 (CTR_CD,CUST_CD,PROD_PROJECT,PROD_MODEL,CODE_12,PROD_TYPE,G_NAME_KD,DESCR,PROD_MAIN_MATERIAL,G_NAME,G_LENGTH,G_WIDTH,PD,G_C,G_C_R,G_SG_L,G_SG_R,PACK_DRT,KNIFE_TYPE,KNIFE_LIFECYCLE,KNIFE_PRICE,CODE_33,ROLE_EA_QTY,RPM,PIN_DISTANCE,PROCESS_TYPE,EQ1,EQ2,PROD_DIECUT_STEP,PROD_PRINT_TIMES,REMK,USE_YN,G_CODE,G_CG,G_LG, SEQ_NO, CODE_27, REV_NO, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, PO_TYPE, FSC) VALUES ('002','${DATA.CODE_FULL_INFO.CUST_CD}','${DATA.CODE_FULL_INFO.PROD_PROJECT}','${DATA.CODE_FULL_INFO.PROD_MODEL}','${DATA.CODE_FULL_INFO.CODE_12}','${DATA.CODE_FULL_INFO.PROD_TYPE}','${DATA.CODE_FULL_INFO.G_NAME_KD}','${DATA.CODE_FULL_INFO.DESCR}','${DATA.CODE_FULL_INFO.PROD_MAIN_MATERIAL}','${DATA.CODE_FULL_INFO.G_NAME}','${DATA.CODE_FULL_INFO.G_LENGTH}','${DATA.CODE_FULL_INFO.G_WIDTH}','${DATA.CODE_FULL_INFO.PD}','${DATA.CODE_FULL_INFO.G_C}','${DATA.CODE_FULL_INFO.G_C_R}','${DATA.CODE_FULL_INFO.G_SG_L}','${DATA.CODE_FULL_INFO.G_SG_R}','${DATA.CODE_FULL_INFO.PACK_DRT}','${DATA.CODE_FULL_INFO.KNIFE_TYPE}','${DATA.CODE_FULL_INFO.KNIFE_LIFECYCLE}','${DATA.CODE_FULL_INFO.KNIFE_PRICE}','${DATA.CODE_FULL_INFO.CODE_33}','${DATA.CODE_FULL_INFO.ROLE_EA_QTY}','${DATA.CODE_FULL_INFO.RPM}','${DATA.CODE_FULL_INFO.PIN_DISTANCE}','${DATA.CODE_FULL_INFO.PROCESS_TYPE}','${DATA.CODE_FULL_INFO.EQ1}','${DATA.CODE_FULL_INFO.EQ2}','${DATA.CODE_FULL_INFO.PROD_DIECUT_STEP}','${DATA.CODE_FULL_INFO.PROD_PRINT_TIMES}','${DATA.CODE_FULL_INFO.REMK}','${DATA.CODE_FULL_INFO.USE_YN}','${DATA.G_CODE}','${DATA.CODE_FULL_INFO.G_CG}','${DATA.CODE_FULL_INFO.G_LG}','${DATA.NEXT_SEQ_NO}','${DATA.CODE_27}','${DATA.REV_NO}','${EMPL_NO}','${EMPL_NO}',GETDATE(), GETDATE(), '${DATA.CODE_FULL_INFO.PO_TYPE}', '${DATA.CODE_FULL_INFO.FSC}')`;
                 //console.log(setpdQuery);       
                 checkkq = await queryDB(setpdQuery);
                 res.send(checkkq); 
@@ -4320,7 +4354,7 @@ exports.process_api = function (req, res) {
             let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
             let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
                 let checkkq = "OK";
-                let setpdQuery = `UPDATE M100 SET PO_TYPE='${DATA.PO_TYPE}', CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}',PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}', PDBV='P', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
+                let setpdQuery = `UPDATE M100 SET FSC='${DATA.FSC}', PO_TYPE='${DATA.PO_TYPE}', CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}',PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}', PDBV='P', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
                 //console.log(setpdQuery);       
                 checkkq = await queryDB(setpdQuery);
                 res.send(checkkq); 
@@ -6954,6 +6988,120 @@ ZTB_QLSXPLAN.PROD_REQUEST_NO, O302.PLAN_ID,ZTB_QLSXPLAN.PLAN_EQ, M100.G_CODE, M1
             res.send(checkkq);             
         })()
     }    
+    else if (qr['command'] == 'updateDTC_TEST_EMPL')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = ` UPDATE ZTB_REL_REQUESTTABLE SET TEST_EMPL_NO='${EMPL_NO}', TEST_FINISH_TIME=GETDATE()  WHERE DTC_ID=${DATA.DTC_ID} AND TEST_CODE=${DATA.TEST_CODE}`; 
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'traholdingmaterial')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let condition = ` WHERE 1=1  `;
+            if(DATA.ALLTIME === false)
+            {
+                condition += ` AND HOLDING_TB.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'`;
+            }
+            if(DATA.M_CODE !=='')
+            {
+                condition += ` AND HOLDING_TB.M_CODE = '${DATA.M_CODE}' `;
+            }
+            if(DATA.M_NAME !=='')
+            {
+                condition += ` AND M090.M_NAME LIKE '%${DATA.M_NAME}%' `;
+            }
+            if(DATA.M_LOT_NO !=='')
+            {
+                condition += ` AND HOLDING_TB.M_LOT_NO = '${DATA.M_LOT_NO}' `;
+            }
+            if(DATA.M_STATUS !=='ALL')
+            {
+                condition += ` AND HOLDING_TB.QC_PASS = '${DATA.M_STATUS}' `;
+            }
+
+            let setpdQuery = ` SELECT HOLDING_TB.ID, HOLDING_TB.HOLDING_MONTH, HOLDING_TB.FACTORY, HOLDING_TB.WAHS_CD, HOLDING_TB.LOC_CD, HOLDING_TB.M_LOT_NO, HOLDING_TB.M_CODE, M090.M_NAME, M090.WIDTH_CD, HOLDING_TB.HOLDING_ROLL_QTY,HOLDING_TB.HOLDING_QTY, ( HOLDING_TB.HOLDING_ROLL_QTY*HOLDING_TB.HOLDING_QTY) AS HOLDING_TOTAL_QTY, HOLDING_TB.HOLDING_IN_DATE, HOLDING_TB.HOLDING_OUT_DATE, HOLDING_TB.VENDOR_LOT, HOLDING_TB.USE_YN, HOLDING_TB.INS_DATE, HOLDING_TB.INS_EMPL, HOLDING_TB.UPD_DATE, HOLDING_TB.UPD_EMPL, HOLDING_TB.QC_PASS, HOLDING_TB.QC_PASS_DATE, HOLDING_TB.QC_PASS_EMPL FROM HOLDING_TB 
+            LEFT JOIN M090 ON (M090.M_CODE = HOLDING_TB.M_CODE) ${condition}`; 
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'updateQCPASS_HOLDING')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = `UPDATE HOLDING_TB SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}' WHERE HOLDING_TB.ID=${DATA.ID} AND M_LOT_NO='${DATA.M_LOT_NO}'`; 
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'updateQCPASS_FAILING')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = `UPDATE ZTB_SX_NG_MATERIAL SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}' WHERE ZTB_SX_NG_MATERIAL.PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}' AND M_LOT_NO='${DATA.M_LOT_NO}'`; 
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'loadQCFailData')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = ` SELECT ZTB_SX_NG_MATERIAL.FACTORY,ZTB_SX_NG_MATERIAL.PLAN_ID_SUDUNG,M100.G_NAME, ZTB_SX_NG_MATERIAL.LIEUQL_SX,ZTB_SX_NG_MATERIAL.M_CODE,ZTB_SX_NG_MATERIAL.M_LOT_NO,ZTB_SX_NG_MATERIAL.VENDOR_LOT, 
+            M090.M_NAME, M090.WIDTH_CD, ZTB_SX_NG_MATERIAL.ROLL_QTY,ZTB_SX_NG_MATERIAL.IN_QTY,ZTB_SX_NG_MATERIAL.TOTAL_IN_QTY,ZTB_SX_NG_MATERIAL.USE_YN,ZTB_SX_NG_MATERIAL.PQC3_ID, ZTBPQC3TABLE.DEFECT_PHENOMENON, ZTB_SX_NG_MATERIAL.OUT_DATE,ZTB_SX_NG_MATERIAL.INS_EMPL,ZTB_SX_NG_MATERIAL.INS_DATE,ZTB_SX_NG_MATERIAL.UPD_EMPL,ZTB_SX_NG_MATERIAL.UPD_DATE,ZTB_SX_NG_MATERIAL.PHANLOAI,ZTB_SX_NG_MATERIAL.QC_PASS,ZTB_SX_NG_MATERIAL.QC_PASS_DATE,ZTB_SX_NG_MATERIAL.QC_PASS_EMPL,ZTB_SX_NG_MATERIAL.REMARK
+             FROM ZTB_SX_NG_MATERIAL
+            LEFT JOIN ZTB_QLSXPLAN ON (ZTB_SX_NG_MATERIAL.PLAN_ID_SUDUNG = ZTB_QLSXPLAN.PLAN_ID)
+            LEFT JOIN M100 ON (ZTB_QLSXPLAN.G_CODE = M100.G_CODE)
+            LEFT JOIN M090 ON (M090.M_CODE = ZTB_SX_NG_MATERIAL.M_CODE)
+            LEFT JOIN ZTBPQC3TABLE ON (ZTB_SX_NG_MATERIAL.PQC3_ID = ZTBPQC3TABLE.PQC3_ID) ORDER BY ZTB_SX_NG_MATERIAL.INS_DATE DESC`; 
+            console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
     else if (qr['command'] == 'getinputdtcspec')
     {
         (async () => {
@@ -6974,6 +7122,91 @@ ZTB_QLSXPLAN.PROD_REQUEST_NO, O302.PLAN_ID,ZTB_QLSXPLAN.PLAN_EQ, M100.G_CODE, M1
            WHERE ZTB_REL_REQUESTTABLE.DTC_ID=${DATA.DTC_ID} AND ZTB_REL_REQUESTTABLE.TEST_CODE=${DATA.TEST_CODE}
            ORDER BY ZTB_REL_REQUESTTABLE.DTC_ID DESC, ZTB_REL_TESTTABLE.TEST_NAME DESC`; 
             console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'loadIQC1table')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = ` SELECT IQC1_TABLE.IQC1_ID, IQC1_TABLE.M_CODE, IQC1_TABLE.M_LOT_NO, IQC1_TABLE.LOT_CMS, IQC1_TABLE.LOT_VENDOR, IQC1_TABLE.CUST_CD, M110.CUST_NAME_KD, IQC1_TABLE.EXP_DATE, IQC1_TABLE.INPUT_LENGTH, IQC1_TABLE.TOTAL_ROLL, IQC1_TABLE.NQ_CHECK_ROLL, IQC1_TABLE.DTC_ID, IQC1_TABLE.TEST_EMPL, IQC1_TABLE.TOTAL_RESULT,XX.NGOAIQUAN, XX.KICHTHUOC,XX.THICKNESS, XX.DIENTRO, XX.CANNANG, XX.KEOKEO, XX.KEOKEO2, XX.FTIR, XX.MAIMON, XX.XRF, XX.SCANBARCODE, XX.PHTHALATE, XX.MAUSAC, XX.SHOCKNHIET, XX.TINHDIEN, XX.NHIETAM, XX.TVOC, XX.DOBONG, IQC1_TABLE.INS_DATE, IQC1_TABLE.INS_EMPL, IQC1_TABLE.UPD_DATE, IQC1_TABLE.UPD_EMPL, IQC1_TABLE.REMARK, CASE WHEN (XX.NGOAIQUAN=0 OR XX.KICHTHUOC=0 OR XX.THICKNESS=0 OR XX.DIENTRO=0 OR XX.CANNANG=0 OR XX.KEOKEO=0 OR XX.KEOKEO2=0 OR XX.FTIR=0 OR XX.MAIMON=0 OR XX.XRF=0 OR XX.SCANBARCODE=0 OR XX.PHTHALATE=0 OR XX.MAUSAC=0 OR XX.SHOCKNHIET=0 OR XX.TINHDIEN=0 OR XX.NHIETAM=0 OR XX.TVOC=0 OR XX.DOBONG=0) THEN 'NG' ELSE 'OK' END AS AUTO_JUDGEMENT FROM IQC1_TABLE LEFT JOIN 
+            (SELECT PVTB.DTC_ID, isnull(PVTB.[Điện trở],-1) AS DIENTRO,isnull(PVTB.[Kích thước],-1) AS KICHTHUOC,isnull(PVTB.[Cân nặng],-1) AS CANNANG,isnull(PVTB.[Kéo keo],0) AS KEOKEO,isnull(PVTB.[FTIR],-1) AS FTIR,isnull(PVTB.[Mài mòn],-1) AS MAIMON ,isnull(PVTB.[XRF],-1) AS XRF,isnull(PVTB.[Scanbarcode],-1) AS SCANBARCODE,isnull(PVTB.[Kéo keo 2],-1) AS KEOKEO2,isnull(PVTB.[Phtalate],-1) AS PHTHALATE,isnull(PVTB.[Màu sắc],-1) AS MAUSAC,isnull(PVTB.[Shock nhiệt],-1) AS SHOCKNHIET,isnull(PVTB.[Tĩnh điện],-1) AS TINHDIEN,isnull(PVTB.[Nhiệt cao Ẩm cao],-1) AS NHIETAM,isnull(PVTB.[TVOC],-1) AS TVOC ,isnull(PVTB.[Độ bóng],-1) AS DOBONG,isnull(PVTB.[Ngoại quan],-1) AS NGOAIQUAN, isnull(PVTB.[Độ dày],-1) AS THICKNESS
+             FROM 
+            (SELECT AA.DTC_ID, AA.TEST_NAME,  CASE WHEN SUM(CASE WHEN AA.JUDGEMENT = 'NG' THEN 1 ELSE 0 END) >0 THEN 0 ELSE 1 END AS FINAL_JUDGEMENT  FROM
+            (SELECT  ZTB_REL_REQUESTTABLE.DTC_ID,  ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_TESTPOINT.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,ZTB_REL_SPECTTABLE.LOWER_TOR , ZTB_REL_RESULT.RESULT, CASE WHEN (ZTB_REL_SPECTTABLE.CENTER_VALUE + ZTB_REL_SPECTTABLE.UPPER_TOR >= ZTB_REL_RESULT.RESULT AND ZTB_REL_SPECTTABLE.CENTER_VALUE - ZTB_REL_SPECTTABLE.LOWER_TOR <= ZTB_REL_RESULT.RESULT) THEN 'OK' ELSE 'NG' END AS JUDGEMENT
+            FROM  ZTB_REL_REQUESTTABLE
+            LEFT JOIN ZTB_REL_RESULT ON (ZTB_REL_REQUESTTABLE.DTC_ID = ZTB_REL_RESULT.DTC_ID AND ZTB_REL_REQUESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE )  
+            LEFT JOIN ZTB_REL_SPECTTABLE ON (  ZTB_REL_SPECTTABLE.G_CODE = ZTB_REL_REQUESTTABLE.G_CODE AND ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_REQUESTTABLE.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_RESULT.POINT_CODE AND ZTB_REL_SPECTTABLE.M_CODE = ZTB_REL_REQUESTTABLE.M_CODE)
+            LEFT JOIN ZTB_REL_TESTPOINT ON(ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_TESTPOINT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_TESTPOINT.POINT_CODE)
+            LEFT JOIN ZTB_REL_TESTTABLE ON (ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_REQUESTTABLE.TEST_CODE)) AS AA GROUP BY AA.DTC_ID, AA.TEST_NAME) AS BANGNGUON
+            PIVOT 
+            (SUM (BANGNGUON.FINAL_JUDGEMENT) 
+                FOR BANGNGUON.TEST_NAME IN ([Điện trở],[Kích thước],[Cân nặng],[Kéo keo],[FTIR],[Mài mòn],[XRF],[Scanbarcode],[Kéo keo 2],[Phtalate],[Màu sắc],[Shock nhiệt],[Tĩnh điện],[Nhiệt cao Ẩm cao],[TVOC],[Độ bóng],[Ngoại quan],[Độ dày]
+            )
+            )
+            AS PVTB) AS XX
+            ON (XX.DTC_ID = IQC1_TABLE.DTC_ID)
+            LEFT JOIN M110 ON (M110.CUST_CD = IQC1_TABLE.CUST_CD)`; 
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'insertIQC1table')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = `INSERT INTO IQC1_TABLE (CTR_CD,M_CODE,M_LOT_NO,LOT_CMS,LOT_VENDOR,CUST_CD,EXP_DATE,INPUT_LENGTH,TOTAL_ROLL,NQ_CHECK_ROLL,DTC_ID,TEST_EMPL,INS_DATE,INS_EMPL,REMARK) VALUES ('002','${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.LOT_CMS}','${DATA.LOT_VENDOR}','${DATA.CUST_CD}','${DATA.EXP_DATE}','${DATA.INPUT_LENGTH}','${DATA.TOTAL_ROLL}','${DATA.NQ_CHECK_ROLL}','${DATA.DTC_ID}','${DATA.TEST_EMPL}',GETDATE(),'${EMPL_NO}','${DATA.REMARK}')`; 
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'updateQCPASSI222')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() WHERE M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.LOT_CMS}'`; 
+            //console.log(setpdQuery);       
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);             
+        })()
+    }    
+    else if (qr['command'] == 'updateIQC1Table')
+    {
+        (async () => {
+            let DATA = qr['DATA']; 
+            console.log(DATA);
+            let EMPL_NO = req.payload_data['EMPL_NO'];      
+            let JOB_NAME = req.payload_data['JOB_NAME'];     
+            let MAINDEPTNAME = req.payload_data['MAINDEPTNAME'];     
+            let SUBDEPTNAME = req.payload_data['SUBDEPTNAME']; 
+            let checkkq = "OK"; 
+            let setpdQuery = `UPDATE  IQC1_TABLE  SET TOTAL_RESULT= '${DATA.VALUE}', UPD_EMPL='${EMPL_NO}', UPD_DATE = GETDATE() WHERE M_CODE ='${DATA.M_CODE}' AND LOT_CMS = '${DATA.LOT_CMS}'`; 
+            //console.log(setpdQuery);       
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
             res.send(checkkq);             
