@@ -34,6 +34,7 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
+
 app.use(
   compression({
     level: 6,
@@ -89,6 +90,7 @@ io.on("connection", (client) => {
 const port = 3007;
 var corsOptions = {
   origin: [
+    "http://localhost:3000",
     "http://localhost",
     "http://14.160.33.94",
     "http://14.160.33.94:3000",
