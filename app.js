@@ -11,18 +11,36 @@ const fs = require("fs");
 //var upload = multer({ dest: 'uploadfiles/' });
 let client_array = [];
 
-const API_PORT = 3007;
-const SOCKET_PORT = 3005;
-const DRAW_PATH ='D:\\xampp\\htdocs\\banve\\';
-const EMPL_IMAGE_PATH ='D:\\xampp\\htdocs\\Picture_NS\\';
 
-/* const API_PORT = 5011;
-const SOCKET_PORT = 3005;
-//const SOCKET_PORT = 5012;
 
-const DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
-const EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
- */
+let API_PORT = 5011;
+let SOCKET_PORT = 3005;
+let DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
+let EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
+let TEMP_UPLOAD_FOLDER = "C:\\TEMP_UPLOAD_FOLDER\\";
+let DESTINATION_FOlDER = "C:\\xampp\\htdocs";
+
+const SELECT_SERVER=1;
+
+if(SELECT_SERVER===1)
+{
+  API_PORT = 3007;
+  SOCKET_PORT = 3005;
+  DRAW_PATH = "D:\\xampp\\htdocs\\banve\\";
+  EMPL_IMAGE_PATH = "D:\\xampp\\htdocs\\Picture_NS\\";
+  TEMP_UPLOAD_FOLDER = "D:\\TEMP_UPLOAD_FOLDER\\";
+  DESTINATION_FOlDER = "D:\\UPLOADFILES\\";
+}
+else
+{
+  API_PORT = 5011;
+  SOCKET_PORT = 3005;
+  //SOCKET_PORT = 5012;
+  DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
+  EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
+  TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
+  DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -34,7 +52,16 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-
+const storage2 = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, TEMP_UPLOAD_FOLDER);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.originalname);
+  },
+});
+const upload2 = multer({ storage: storage2 });
 app.use(
   compression({
     level: 6,
@@ -60,25 +87,24 @@ io.on("connection", (client) => {
     //console.log(data);
   });
   client.on("notification", (data) => {
-    io.sockets.emit("notification", data);    
+    io.sockets.emit("notification", data);
     client_array.push(data);
     //console.log(client_array);
     console.log(data);
   });
-  client.on("login", (data) => {    
-    if(!client_array.includes(data))
-    client_array.push(data);
+  client.on("login", (data) => {
+    if (!client_array.includes(data)) client_array.push(data);
     //io.sockets.emit("login", client_array);
-    io.sockets.emit("login", data + 'da dang nhap');
+    io.sockets.emit("login", data + "da dang nhap");
     //console.log(client_array);
-    console.log(data +' da dang nhap');
+    console.log(data + " da dang nhap");
   });
-  client.on("logout", (data) => { 
-    if(client_array.indexOf(data) >-1)   
-    client_array.splice(client_array.indexOf(data),1);
+  client.on("logout", (data) => {
+    if (client_array.indexOf(data) > -1)
+      client_array.splice(client_array.indexOf(data), 1);
     io.sockets.emit("logout", client_array);
     //console.log(client_array);
-    console.log(data +' da dang xuat');
+    console.log(data + " da dang xuat");
   });
   client.on("disconnect", (data) => {
     console.log(data);
@@ -234,6 +260,74 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
           //you can handle the error here
         });
         console.log("DELETED: " + "uploadfiles\\" + req.file.originalname);
+        res.send({ tk_status: "NG", message: "File đã tồn tại" });
+      }
+    } else {
+      res.send({ tk_status: "NG", message: "File chưa lên" });
+    }
+  }
+});
+app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
+ /*  console.log("vao uploaded file thanh cong");
+  console.log(req.body.filename);
+  console.log(req.body.uploadfoldername); */
+  if (req.coloiko === "coloi") {
+    if (req.file) {
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
+        () => {
+          console.log("DELETED " + req.file.originalname);
+        };
+      console.log(
+        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
+      );
+      res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
+    } else {
+      res.send({ tk_status: "NG", message: "File chưa lên" });
+    }
+  } else if (req.coloiko === "kocoloi") {
+    if (req.file) {
+      const filename = req.file.originalname;
+      const newfilename = req.body.filename;
+      const uploadfoldername = req.body.uploadfoldername;
+      console.log(
+        "ket qua:" +
+          existsSync(DESTINATION_FOlDER + uploadfoldername + filename)
+      );
+      console.log(
+        "ket qua:" + existsSync(DESTINATION_FOlDER + uploadfoldername)
+      );
+      if (!existsSync(DESTINATION_FOlDER + uploadfoldername + filename)) {
+        //fs.mkdir(DESTINATION_FOlDER + uploadfoldername);
+        if (!existsSync(DESTINATION_FOlDER + uploadfoldername)) {
+          fs.mkdir(DESTINATION_FOlDER + uploadfoldername, (e) => {
+            if (!e) {
+            } else {
+              console.log(e);
+            }
+          });
+        }
+        fs.copyFile(
+          TEMP_UPLOAD_FOLDER + filename,
+          DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename,
+          (err) => {
+            if (err) {
+              res.send({
+                tk_status: "NG",
+                message: "Upload file thất bại: " + err,
+              });
+            } else {
+              fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+                //you can handle the error here
+              });
+              res.send({ tk_status: "OK", message: "Upload file thành công" });
+            }
+          }
+        );
+      } else {
+        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+          //you can handle the error here
+        });
+        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
         res.send({ tk_status: "NG", message: "File đã tồn tại" });
       }
     } else {
