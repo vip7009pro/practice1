@@ -145,6 +145,9 @@ app.use("/", function (req, res, next) {
 app.use("/upload", function (req, res, next) {
   api_module.checklogin_index(req, res, next);
 });
+app.use("/uploadfile", function (req, res, next) {
+  api_module.checklogin_index(req, res, next);
+});
 app.use("/login", function (req, res, next) {
   api_module.checklogin_login(req, res, next);
 });
@@ -268,9 +271,9 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
   }
 });
 app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
- /*  console.log("vao uploaded file thanh cong");
+  console.log("vao uploaded file thanh cong");
   console.log(req.body.filename);
-  console.log(req.body.uploadfoldername); */
+  console.log(req.body.uploadfoldername);
   if (req.coloiko === "coloi") {
     if (req.file) {
       fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
@@ -289,13 +292,19 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
       const filename = req.file.originalname;
       const newfilename = req.body.filename;
       const uploadfoldername = req.body.uploadfoldername;
-      console.log(
+      const newfilenamelist = req.body.newfilenamelist;
+      
+      let filenamearray= [];
+      if(newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
+      console.log('filenamearray:',filenamearray);
+
+      /* console.log(
         "ket qua:" +
           existsSync(DESTINATION_FOlDER + uploadfoldername + filename)
       );
       console.log(
         "ket qua:" + existsSync(DESTINATION_FOlDER + uploadfoldername)
-      );
+      ); */
       if (!existsSync(DESTINATION_FOlDER + uploadfoldername + filename)) {
         //fs.mkdir(DESTINATION_FOlDER + uploadfoldername);
         if (!existsSync(DESTINATION_FOlDER + uploadfoldername)) {
@@ -306,23 +315,66 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
             }
           });
         }
-        fs.copyFile(
-          TEMP_UPLOAD_FOLDER + filename,
-          DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename,
-          (err) => {
-            if (err) {
-              res.send({
-                tk_status: "NG",
-                message: "Upload file thất bại: " + err,
-              });
-            } else {
-              fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-                //you can handle the error here
-              });
-              res.send({ tk_status: "OK", message: "Upload file thành công" });
+
+        if(filenamearray.length ===0)
+        {
+          fs.copyFile(
+            TEMP_UPLOAD_FOLDER + filename,
+            DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename,
+            (err) => {
+              if (err) {
+                res.send({
+                  tk_status: "NG",
+                  message: "Upload file thất bại: " + err,
+                });
+              } else {
+                fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+                  //you can handle the error here
+                });
+                res.send({ tk_status: "OK", message: "Upload file thành công" });
+              }
             }
+          );
+
+        }
+        else
+        {
+          let err_code='';
+          for(let i=0;i<filenamearray.length; i++)
+          {
+            fs.copyFile(
+              TEMP_UPLOAD_FOLDER + filename,
+              DESTINATION_FOlDER + uploadfoldername + "\\" + filenamearray[i],
+              (err) => {
+                if (err) {
+                 err_code += err + '| ';
+                } else {
+                 
+                }
+              }
+            );
+
           }
-        );
+          if(err_code ==='')
+          {
+            fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+              //res.send({ tk_status: "NG", message: "Upload file thất bại: " + error });
+            });
+            res.send({ tk_status: "OK", message: "Upload file thành công" });
+          }
+          else
+          {
+            res.send({
+              tk_status: "NG",
+              message: "Upload file thất bại: " + err,
+            });
+          }
+          
+
+        }
+        
+
+
       } else {
         fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
           //you can handle the error here
