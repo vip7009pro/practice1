@@ -64,8 +64,8 @@ const storage2 = multer.diskStorage({
 const upload2 = multer({ storage: storage2 });
 app.use(
   compression({
-    level: 6,
-    threshold: 10000 * 1024,
+    level: 9,
+    threshold: 10 * 1024,
   })
 );
 console.log("usser  =" + process.env.DB_USER);
