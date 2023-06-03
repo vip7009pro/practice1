@@ -117,12 +117,13 @@ const port = 3007;
 var corsOptions = {
   origin: [
     "http://localhost:3000",
+    "http://64.176.197.26:80",
+    "http://64.176.197.26",
     "http://localhost",
     "http://14.160.33.94",
-    "http://14.160.33.94:3000",
+    "http://14.160.33.94:3000", 
     "http://14.160.33.94:3010",
-    "http://14.160.33.94:3030",
-    "http://localhost",
+    "http://14.160.33.94:3030",   
     "https://script.google.com/",
     "*",
   ],
@@ -139,7 +140,8 @@ const { Socket } = require("socket.io");
 const { existsSync } = require("fs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/", function (req, res, next) {
+
+app.use("/", function (req, res, next) {  
   api_module.checklogin_index(req, res, next);
 });
 app.use("/upload", function (req, res, next) {
@@ -165,6 +167,7 @@ app.post("/api", function (req, res) {
   ) {
     api_module.process_api(req, res);
   } else {
+    console.log('loi cmnr');
     res.send({ tk_status: "ng" });
   }
 });
