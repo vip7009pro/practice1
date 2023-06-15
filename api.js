@@ -847,10 +847,10 @@ exports.process_api = function (req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
- /*  if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
+  /* if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
-  if (1) {
+  if (1 /* qr["command"] ==='login' || req.payload_data["EMPL_NO"]==='NHU1903' */) {
     switch (qr["command"]) {
       case "check_chua_pd":
         s(async () => {
@@ -1915,7 +1915,7 @@ exports.process_api = function (req, res) {
       case "insert_pqc1":
         (async () => {
           let DATA = qr["DATA"];
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -1968,7 +1968,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_pqc2":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBPQC2TABLE (CTR_CD, PROCESS_LOT_NO, LINEQC_PIC, TIME1, TIME2, TIME3, CHECK1, CHECK2, CHECK3, REMARK, INS_DATE, UPD_DATE, PQC1_ID) VALUES ('002','${DATA.PROCESS_LOT_NO}','${DATA.LINEQC_PIC}','${DATA.CHECKSHEET.TIME1}','${DATA.CHECKSHEET.TIME2}','${DATA.CHECKSHEET.TIME3}','${DATA.CHECKSHEET.CHECK1}','${DATA.CHECKSHEET.CHECK2}','${DATA.CHECKSHEET.CHECK3}','${DATA.REMARK}','${currenttime}','${currenttime}',${DATA.PQC1_ID})`;
@@ -1979,7 +1979,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_pqc3":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBPQC3TABLE (CTR_CD, PROCESS_LOT_NO, LINEQC_PIC, OCCURR_TIME, INSPECT_QTY, DEFECT_QTY, DEFECT_PHENOMENON, DEFECT_IMAGE_LINK, REMARK, INS_DATE, UPD_DATE, PQC1_ID) VALUES('002','${DATA.PROCESS_LOT_NO}','${DATA.LINEQC_PIC}','${DATA.OCCURR_TIME}',${DATA.INSPECT_QTY},${DATA.DEFECT_QTY},N'${DATA.DEFECT_PHENOMENON}','${DATA.DEFECT_IMAGE_LINK}',N'${DATA.REMARK}','${currenttime}','${currenttime}',${DATA.PQC1_ID})`;
@@ -1990,7 +1990,7 @@ exports.process_api = function (req, res) {
         break;
       case "getpqcdata":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let kqua;
           let query = ``;
           switch (DATA.SELECTION) {
@@ -2124,7 +2124,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertcndb1data":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let kqua;
           let query = `INSERT INTO Z_CNDBTABLE (CTR_CD,CNDB_DATE,CNDB_NO,CNDB_ENCODE,M_NAME,DEFECT_NAME,DEFECT_CONTENT,REG_EMPL_NO,REMARK) VALUES ('002','${DATA.CNDB_DATE}','${DATA.CNDB_NO}','${DATA.CNDB_ENCODE}','${DATA.M_NAME}',N'${DATA.DEFECT_NAME}',N'${DATA.DEFECT_CONTENT}','${DATA.REG_EMPL_NO}',N'${DATA.REMARK}')`;
           //console.log(query);
@@ -2136,7 +2136,7 @@ exports.process_api = function (req, res) {
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
-          //console.log(DATA);
+          ////console.log(DATA);
           let kqua;
           let query = `INSERT INTO Z_SPECIAL_M_LOT (CTR_CD,CNDB_NO,CNDB_ENCODE,M_LOT_NO,SPECIAL_START,SPECIAL_END,UPDATE_HISTORY,REG_EMPL_NO,APPROVE_STATUS,INS_DATE,REMARK) VALUES ('002','${DATA.CNDB_NO}','${DATA.CNDB_ENCODE}','${DATA.M_LOT_NO}','${DATA.SPECIAL_START}','${DATA.SPECIAL_END}','${EMPL_NO} | ${currenttime}','${EMPL_NO}','W','${currenttime}',N'${DATA.REMARK}')`;
           //console.log(query);
@@ -2230,7 +2230,7 @@ exports.process_api = function (req, res) {
       case "get_invoice":
         //console.log(qr);
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           //let EMPL_NO = req.payload_data['EMPL_NO'];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
@@ -2302,7 +2302,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_inspection":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
@@ -2409,7 +2409,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_listcode":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
@@ -2423,7 +2423,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_listcustomer":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
@@ -2437,7 +2437,7 @@ exports.process_api = function (req, res) {
         break;
       case "add_customer":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
@@ -2451,7 +2451,7 @@ exports.process_api = function (req, res) {
         break;
       case "edit_customer":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
@@ -2465,7 +2465,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_po":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBPOTable (CTR_CD, CUST_CD, EMPL_NO,G_CODE, PO_NO, PO_QTY, PO_DATE, RD_DATE, PROD_PRICE,REMARK) VALUES ('002','${
@@ -2483,7 +2483,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_invoice":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBDelivery (CTR_CD, CUST_CD, EMPL_NO, G_CODE, PO_NO, DELIVERY_QTY, DELIVERY_DATE, NOCANCEL, REMARK, INVOICE_NO) VALUES ('002','${
@@ -2501,7 +2501,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_last_prod_request_no":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 PROD_REQUEST_NO FROM P400 ORDER BY INS_DATE DESC`;
@@ -2513,7 +2513,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_new_ycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = ` INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE, PROD_REQUEST_NO, CODE_50, CODE_03, CODE_55, G_CODE, RIV_NO, PROD_REQUEST_QTY, CUST_CD, EMPL_NO, DELIVERY_DT, REMK, G_CODE2) VALUES ('002', '${DATA.PROD_REQUEST_DATE}', '${DATA.PROD_REQUEST_NO}', '${DATA.CODE_50}', '${DATA.CODE_03}', '${DATA.CODE_55}', '${DATA.G_CODE}', '${DATA.RIV_NO}', '${DATA.PROD_REQUEST_QTY}', '${DATA.CUST_CD}', '${DATA.EMPL_NO}', '${DATA.DELIVERY_DATE}', '${DATA.REMARK}', '${DATA.G_CODE}')`;
@@ -2525,7 +2525,7 @@ exports.process_api = function (req, res) {
         break;
       case "getmaindept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECt MAINDEPTCODE AS id, CTR_CD, MAINDEPTCODE, MAINDEPTNAME, MAINDEPTNAME_KR FROM ZTBMAINDEPARMENT`;
@@ -2538,7 +2538,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertmaindept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2554,7 +2554,7 @@ exports.process_api = function (req, res) {
         break;
       case "updatemaindept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2570,7 +2570,7 @@ exports.process_api = function (req, res) {
         break;
       case "deletemaindept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2586,7 +2586,7 @@ exports.process_api = function (req, res) {
         break;
       case "getsubdept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT SUBDEPTCODE AS id, CTR_CD, MAINDEPTCODE, SUBDEPTCODE,SUBDEPTNAME, SUBDEPTNAME_KR FROM ZTBSUBDEPARTMENT WHERE MAINDEPTCODE=${DATA.MAINDEPTCODE}`;
@@ -2599,7 +2599,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertsubdept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2615,7 +2615,7 @@ exports.process_api = function (req, res) {
         break;
       case "updatesubdept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2631,7 +2631,7 @@ exports.process_api = function (req, res) {
         break;
       case "deletesubdept":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2647,7 +2647,7 @@ exports.process_api = function (req, res) {
         break;
       case "getworkposition":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT WORK_POSITION_CODE AS id, CTR_CD, SUBDEPTCODE, WORK_POSITION_CODE,WORK_POSITION_NAME, WORK_POSITION_NAME_KR, ATT_GROUP_CODE FROM ZTBWORKPOSITION WHERE SUBDEPTCODE=${DATA.SUBDEPTCODE}`;
@@ -2659,7 +2659,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertworkposition":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2675,7 +2675,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateworkposition":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2691,7 +2691,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteworkposition":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2707,7 +2707,7 @@ exports.process_api = function (req, res) {
         break;
       case "getemployee_full":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT ZTBEMPLINFO.EMPL_NO AS id, ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE, PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBEMPLINFO.CTR_CD,ZTBSEX.SEX_CODE,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_CODE,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_CODE,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_CODE,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_CODE,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIFT_CODE,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.WORK_POSITION_CODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.SUBDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTCODE,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR  FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE)`;
@@ -2719,7 +2719,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertemployee":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -2738,7 +2738,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateemployee":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";
@@ -3020,7 +3020,7 @@ exports.process_api = function (req, res) {
         //console.log(qr);
         (async () => {
           let kqua;
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let START_DATE = DATA.ngaybatdau;
           let END_DATE = DATA.ngayketthuc;
@@ -3066,7 +3066,7 @@ exports.process_api = function (req, res) {
         //console.log(qr);
         (async () => {
           let kqua;
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = DATA.EMPL_NO;
           let START_DATE = DATA.ngaybatdau;
           let END_DATE = DATA.ngayketthuc;
@@ -3348,7 +3348,7 @@ exports.process_api = function (req, res) {
           let maindeptcode = DATA.MAINDEPTCODE;
           let workshiftcode = DATA.WORK_SHIFT_CODE;
           let factorycode = DATA.FACTORY_CODE;
-          ////console.log(DATA);
+          //////console.log(DATA);
           let condition = "1=1 ";
           if (maindeptcode != 0) {
             condition += ` AND DD_TT.MAINDEPTCODE = ${maindeptcode}`;
@@ -3409,7 +3409,7 @@ exports.process_api = function (req, res) {
         break;
       case "traPODataFull":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let query = `SELECT  ZTBPOTable.PO_ID, M110.CUST_NAME_KD,AA.PO_NO, M100.G_NAME,M100.G_NAME_KD, AA.G_CODE, ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, ZTBPOTable.PROD_PRICE, ZTBPOTable.PO_QTY, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT, isnull(TONKHOFULL.TONG_TON_KIEM,0) AS TON_KIEM , isnull(TONKHOFULL.BTP,0) AS BTP ,isnull(TONKHOFULL.TON_TP,0) AS TP , isnull(TONKHOFULL.BLOCK_QTY,0) AS BLOCK_QTY , isnull(TONKHOFULL.GRAND_TOTAL_STOCK,0) AS GRAND_TOTAL_STOCK , M010.EMPL_NAME, M100.PROD_TYPE, KKK.M_NAME_FULLBOM,M100.PROD_MAIN_MATERIAL, M110.CUST_CD, M010.EMPL_NO, DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, CASE WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER' ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) LEFT JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE ) AS KKK ON (KKK.G_CODE = ZTBPOTable.G_CODE) LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ) AS TONKHOFULL ON (TONKHOFULL.G_CODE = ZTBPOTable.G_CODE)  ${generate_condition_get_po(
@@ -3433,7 +3433,7 @@ exports.process_api = function (req, res) {
         break;
       case "traInvoiceDataFull":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           query = `SELECT M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBDelivery.PO_NO,ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM
@@ -3502,7 +3502,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_po":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `UPDATE ZTBPOTable SET PO_QTY=${DATA.PO_QTY}, PO_DATE='${DATA.PO_DATE}', RD_DATE='${DATA.RD_DATE}', PROD_PRICE=${DATA.PROD_PRICE}, REMARK='${DATA.REMARK}', G_CODE='${DATA.G_CODE}',CUST_CD='${DATA.CUST_CD}', EMPL_NO='${DATA.EMPL_NO}' WHERE PO_ID=${DATA.PO_ID}`;
@@ -3514,7 +3514,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_po":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM ZTBPOTable WHERE PO_ID=${DATA.PO_ID}`;
@@ -3526,7 +3526,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_invoice":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM ZTBDelivery WHERE DELIVERY_ID=${DATA.DELIVERY_ID}`;
@@ -3538,7 +3538,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_invoice":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `UPDATE ZTBDelivery SET CUST_CD='${DATA.CUST_CD}', G_CODE='${DATA.G_CODE}', PO_NO='${DATA.PO_NO}',  DELIVERY_DATE='${DATA.DELIVERY_DATE}', EMPL_NO='${DATA.EMPL_NO}', DELIVERY_QTY='${DATA.DELIVERY_QTY}', REMARK='${DATA.REMARK}' WHERE DELIVERY_ID=${DATA.DELIVERY_ID}`;
@@ -3550,7 +3550,7 @@ exports.process_api = function (req, res) {
         break;
       case "traPlanDataFull":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           query = `SELECT ZTBPLANTB.PLAN_ID, M010.EMPL_NAME, ZTBPLANTB.EMPL_NO, M110.CUST_NAME_KD, ZTBPLANTB.CUST_CD, ZTBPLANTB.G_CODE, M100.G_NAME_KD, M100.G_NAME,  M100.PROD_TYPE ,M100.PROD_MAIN_MATERIAL, ZTBPLANTB.PLAN_DATE, ZTBPLANTB.D1,ZTBPLANTB.D2,ZTBPLANTB.D3,ZTBPLANTB.D4,ZTBPLANTB.D5,ZTBPLANTB.D6,ZTBPLANTB.D7,ZTBPLANTB.D8, ZTBPLANTB.REMARK  FROM ZTBPLANTB JOIN M100 ON (M100.G_CODE = ZTBPLANTB.G_CODE) JOIN M110 ON (M110.CUST_CD = ZTBPLANTB.CUST_CD) JOIN M010 ON (M010.EMPL_NO= ZTBPLANTB.EMPL_NO) ${generate_condition_get_plan(
@@ -3571,7 +3571,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_plan":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM ZTBPLANTB WHERE PLAN_ID=${DATA.PLAN_ID}`;
@@ -3583,7 +3583,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_shortage":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM ZTB_SHORTAGE_LIST WHERE ST_ID=${DATA.ST_ID}`;
@@ -3595,7 +3595,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkPlanExist":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT * FROM ZTBPLANTB WHERE G_CODE='${DATA.G_CODE}' AND CUST_CD='${DATA.CUST_CD}'  AND PLAN_DATE='${DATA.PLAN_DATE}' `;
@@ -3607,7 +3607,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkShortageExist":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT * FROM ZTBPLANTB WHERE G_CODE='${DATA.G_CODE}' AND CUST_CD='${DATA.CUST_CD}'  AND PLAN_DATE='${DATA.PLAN_DATE}' `;
@@ -3619,7 +3619,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_plan":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBPLANTB (CTR_CD,EMPL_NO,CUST_CD,G_CODE,PLAN_DATE,D1,D2,D3,D4,D5,D6,D7,D8,REMARK) VALUES ('002','${DATA.EMPL_NO}','${DATA.CUST_CD}', '${DATA.G_CODE}', '${DATA.PLAN_DATE}', ${DATA.D1},${DATA.D2},${DATA.D3},${DATA.D4},${DATA.D5},${DATA.D6},${DATA.D7},${DATA.D8},'${DATA.REMARK}')`;
@@ -3631,7 +3631,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_shortage":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTB_SHORTAGE_LIST (CTR_CD,G_CODE,CUST_CD,EMPL_NO,PLAN_DATE,D1_9H,D1_13H,D1_19H,D1_21H,D1_23H,D1_OTHER,D2_9H,D2_13H,D2_21H,D3_SANG,D3_CHIEU,D4_SANG,D4_CHIEU,PRIORITY,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE) VALUES ('002','${DATA.G_CODE}','${DATA.CUST_CD}','${DATA.EMPL_NO}','${DATA.PLAN_DATE}','${DATA.D1_9H}','${DATA.D1_13H}','${DATA.D1_19H}','${DATA.D1_21H}','${DATA.D1_23H}','${DATA.D1_OTHER}','${DATA.D2_9H}','${DATA.D2_13H}','${DATA.D2_21H}','${DATA.D3_SANG}','${DATA.D3_CHIEU}','${DATA.D4_SANG}','${DATA.D4_CHIEU}','${DATA.PRIORITY}','${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}',GETDATE())`;
@@ -3643,7 +3643,7 @@ exports.process_api = function (req, res) {
         break;
       case "traFcstDataFull":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           query = `SELECT ZTBFCSTTB.FCST_ID, ZTBFCSTTB.FCSTYEAR, ZTBFCSTTB.FCSTWEEKNO,ZTBFCSTTB.G_CODE, M100.G_NAME_KD, M100.G_NAME, M010.EMPL_NAME,ZTBFCSTTB.EMPL_NO, M110.CUST_NAME_KD, M100.PROD_PROJECT, M100.PROD_MODEL, M100.PROD_MAIN_MATERIAL, ZTBFCSTTB.PROD_PRICE,ZTBFCSTTB.W1,ZTBFCSTTB.W2,ZTBFCSTTB.W3,ZTBFCSTTB.W4,ZTBFCSTTB.W5,ZTBFCSTTB.W6,ZTBFCSTTB.W7,ZTBFCSTTB.W8,ZTBFCSTTB.W9,ZTBFCSTTB.W10,ZTBFCSTTB.W11,ZTBFCSTTB.W12,ZTBFCSTTB.W13,ZTBFCSTTB.W14,ZTBFCSTTB.W15,ZTBFCSTTB.W16,ZTBFCSTTB.W17,ZTBFCSTTB.W18,ZTBFCSTTB.W19,ZTBFCSTTB.W20,ZTBFCSTTB.W21,ZTBFCSTTB.W22, ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W1 AS W1A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W2 AS W2A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W3  AS W3A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W4  AS W4A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W5 AS W5A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W6 AS W6A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W7 AS W7A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W8 AS W8A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W9 AS W9A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W10 AS W10A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W11 AS W11A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W12 AS W12A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W13 AS W13A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W14 AS W14A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W15 AS W15A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W16 AS W16A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W17 AS W17A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W18 AS W18A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W19 AS W19A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W20 AS W20A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W21 AS W21A,ZTBFCSTTB.PROD_PRICE * ZTBFCSTTB.W22 AS W22A  FROM ZTBFCSTTB JOIN M100 ON (M100.G_CODE = ZTBFCSTTB.G_CODE) JOIN M110 ON(M110.CUST_CD = ZTBFCSTTB.CUST_CD) JOIN M010 ON (M010.EMPL_NO = ZTBFCSTTB.EMPL_NO) ${generate_condition_get_fcst(
@@ -3664,7 +3664,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_fcst":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM ZTBFCSTTB WHERE FCST_ID=${DATA.FCST_ID}`;
@@ -3676,7 +3676,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkFcstExist":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT * FROM ZTBFCSTTB WHERE G_CODE='${DATA.G_CODE}' AND CUST_CD='${DATA.CUST_CD}'  AND FCSTYEAR=${DATA.FCSTYEAR}  AND FCSTWEEKNO= ${DATA.FCSTWEEKNO}`;
@@ -3688,7 +3688,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_fcst":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBFCSTTB (CTR_CD, EMPL_NO,CUST_CD,G_CODE,PROD_PRICE,FCSTYEAR,FCSTWEEKNO,W1,W2,W3,W4,W5,W6,W7,W8,W9,W10,W11,W12,W13,W14,W15,W16,W17,W18,W19,W20,W21,W22) VALUES ('002','${DATA.EMPL_NO}','${DATA.CUST_CD}','${DATA.G_CODE}','${DATA.PROD_PRICE}','${DATA.YEAR}','${DATA.WEEKNO}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.W9}','${DATA.W10}','${DATA.W11}','${DATA.W12}','${DATA.W13}','${DATA.W14}','${DATA.W15}','${DATA.W16}','${DATA.W17}','${DATA.W18}','${DATA.W19}','${DATA.W20}','${DATA.W21}','${DATA.W22}')`;
@@ -3700,7 +3700,7 @@ exports.process_api = function (req, res) {
         break;
       case "traYCSXDataFull":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL,M100.DESCR, M100.PDBV, M100.PDBV_EMPL,M100.PDBV_DATE,M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING,  P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX-  P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) ${generate_condition_get_ycsx(
@@ -3726,7 +3726,7 @@ exports.process_api = function (req, res) {
         break;
       case "traYCSXDataFull_QLSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT M100.FACTORY, M100.Setting1, M100.Setting2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1, M100.LOSS_SETTING2, M100.NOTE, M100.UPH1, M100.UPH2, P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL,M100.DESCR, M100.PDBV, M100.PDBV_EMPL,M100.PDBV_DATE,M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING, P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX- P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION ,isnull(PO_TON.PO_BALANCE,0) AS PO_BALANCE, M100.EQ1, M100.EQ2, isnull(AA.CD1,0) AS CD1 ,isnull(AA.CD2,0) AS CD2, isnull(BB.CD_IN,0) AS CD_IN, isnull(BB.CD_DIECUT,0) AS CD_DIECUT, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, CASE WHEN (M100.EQ1 <> 'FR' AND M100.EQ1 <> 'SR' AND M100.EQ1 <> 'DC' AND M100.EQ1 <> 'ED') THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(AA.CD1,0) END AS TON_CD1,CASE WHEN (M100.EQ2 <> 'FR' AND M100.EQ2 <> 'SR' AND M100.EQ2 <> 'DC' AND M100.EQ2 <> 'ED') THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(AA.CD2,0) END AS TON_CD2,isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN (SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) GROUP BY AA.G_CODE) AS PO_TON ON(P400.G_CODE = PO_TON.G_CODE) LEFT JOIN ( SELECT PVTB.PROD_REQUEST_NO, PVTB.[1] AS CD1, PVTB.[2] AS CD2 FROM ( SELECT PROD_REQUEST_NO, PROCESS_NUMBER, SUM(KETQUASX) AS KETQUASX FROM ZTB_QLSXPLAN WHERE STEP =0 GROUP BY PROD_REQUEST_NO, PROCESS_NUMBER ) AS PV PIVOT ( SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2]) ) AS PVTB ) AS AA ON (P400.PROD_REQUEST_NO= AA.PROD_REQUEST_NO) LEFT JOIN ( SELECT PVTB.PROD_REQUEST_NO, PVTB.[IN] AS CD_IN, PVTB.[DIECUT] AS CD_DIECUT FROM ( SELECT PROD_REQUEST_NO, CASE WHEN (SUBSTRING(PLAN_EQ,1,2)='FR' OR SUBSTRING(PLAN_EQ,1,2)='SR') THEN 'IN' ELSE 'DIECUT' END AS PROCESS_NAME, SUM(KETQUASX) AS KETQUASX FROM ZTB_QLSXPLAN WHERE STEP =0 GROUP BY PROD_REQUEST_NO, CASE WHEN (SUBSTRING(PLAN_EQ,1,2)='FR' OR SUBSTRING(PLAN_EQ,1,2)='SR') THEN 'IN' ELSE 'DIECUT' END ) AS PV PIVOT ( SUM(PV.KETQUASX) FOR PV.PROCESS_NAME IN ([IN],[DIECUT]) ) AS PVTB ) AS BB ON (P400.PROD_REQUEST_NO= BB.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
@@ -3752,7 +3752,7 @@ exports.process_api = function (req, res) {
         break;
       case "getP400":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT * FROM P400 WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' AND PROD_REQUEST_DATE='${DATA.PROD_REQUEST_DATE}'`;
@@ -3764,7 +3764,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkLastYCSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYYMMDD");
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 * FROM P400 WHERE PROD_REQUEST_DATE='${currenttime}' ORDER BY INS_DATE DESC`;
@@ -3776,7 +3776,7 @@ exports.process_api = function (req, res) {
         break;
       case "getSystemDateTime":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT GETDATE() AS SYSTEM_DATETIME`;
@@ -3788,7 +3788,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkpobalance_tdycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) WHERE AA.G_CODE='${DATA.G_CODE}' GROUP BY AA.G_CODE`;
@@ -3800,7 +3800,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkpobalance_allcode":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO)  GROUP BY AA.G_CODE`;
@@ -3812,7 +3812,7 @@ exports.process_api = function (req, res) {
         break;
       case "checktonkho_tdycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT M100.G_CODE, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) WHERE M100.G_CODE='${DATA.G_CODE}'`;
@@ -3824,7 +3824,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkfcst_tdycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT G_CODE, SUM(W1) AS W1, SUM(W2) AS W2, SUM(W3) AS W3, SUM(W4) AS W4, SUM(W5) AS W5, SUM(W6) AS W6, SUM(W7) AS W7, SUM(W8) AS W8 FROM ZTBFCSTTB WHERE FCSTYEAR = YEAR(GETDATE()) AND FCSTWEEKNO = (SELECT MAX(FCSTWEEKNO)FROM ZTBFCSTTB WHERE FCSTYEAR = YEAR(GETDATE()) ) AND G_CODE='${DATA.G_CODE}' GROUP BY G_CODE`;
@@ -3836,7 +3836,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_ycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX) VALUES ('002','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}','${DATA.REMK}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}')`;
@@ -3848,7 +3848,7 @@ exports.process_api = function (req, res) {
         break;
       case "getLastProcessLotNo":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 PROCESS_LOT_NO,SUBSTRING(PROCESS_LOT_NO,6,3) AS SEQ_NO, INS_DATE FROM P501 WHERE SUBSTRING(PROCESS_LOT_NO,1,2) = '${DATA.machine}' AND PROCESS_IN_DATE = '${DATA.in_date}' ORDER BY INS_DATE DESC`;
@@ -3860,7 +3860,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkYCSXO300":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 * FROM O300 WHERE PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
@@ -3872,7 +3872,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkYCSXQLSXPLAN":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 * FROM ZTB_QLSXPLAN WHERE PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
@@ -3884,7 +3884,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkProcessInNoP500":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let in_date = moment().format("YYYYMMDD");
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 PROCESS_IN_DATE, PROCESS_IN_NO, EQUIPMENT_CD FROM P500 WHERE PROCESS_IN_DATE='${in_date}'  ORDER BY INS_DATE DESC`;
@@ -3896,7 +3896,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_p500":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY, PLAN_ID) VALUES ('002','${
             DATA.in_date
@@ -3918,7 +3918,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_p501":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID) VALUES  ('002','${
@@ -3939,7 +3939,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_ycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM P400 WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
@@ -3951,7 +3951,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkYcsxExist":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT * FROM P400 WHERE PROD_REQUEST_NO= ${DATA.PROD_REQUEST_NO}`;
           ////console.log(setpdQuery);
@@ -3962,7 +3962,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_ycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `UPDATE P400 SET REMK='${DATA.REMK}', CODE_50='${DATA.CODE_50}', CODE_55='${DATA.CODE_55}', PROD_REQUEST_QTY='${DATA.PROD_REQUEST_QTY}', UPD_EMPL='${DATA.EMPL_NO}', DELIVERY_DT='${DATA.DELIVERY_DT}', UPD_DATE=GETDATE() WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
@@ -3974,7 +3974,7 @@ exports.process_api = function (req, res) {
         break;
       case "setpending_ycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `UPDATE P400 SET YCSX_PENDING='${DATA.YCSX_PENDING}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
@@ -3986,7 +3986,7 @@ exports.process_api = function (req, res) {
         break;
       case "pheduyet_ycsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `UPDATE P400 SET PDUYET='${DATA.PDUYET}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
@@ -3998,7 +3998,7 @@ exports.process_api = function (req, res) {
         break;
       case "ycsx_fullinfo":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = ` SELECT M100.FSC, M100.PDBV, M140.LIEUQL_SX, M100.PROD_MAIN_MATERIAL, M100.PO_TYPE, P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (isnull(M090.OK_M1,0) + isnull(M090.OK_M2,0)) AS TONLIEU, (isnull(M090.HOLDING_M1,0) + isnull(M090.HOLDING_M2,0)) AS HOLDING, (isnull(M090.OK_M1,0) + isnull(M090.OK_M2,0)  + isnull(M090.HOLDING_M1,0) + isnull(M090.HOLDING_M2,0)) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION, M100.PROD_DIECUT_STEP, M100.PROD_PRINT_TIMES,M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1 , M100.LOSS_SETTING2 ,M100.NOTE FROM P400 
@@ -4015,7 +4015,7 @@ exports.process_api = function (req, res) {
         break;
       case "tonlieugcode":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `DECLARE @tradate as datetime DECLARE @inventory as varchar(6) SET @tradate = '${DATA.tradate}' SET @inventory = '${DATA.inventory}' SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, isnull(AA.INVENTORY_QTY,0) AS TON_DAU, isnull(BB.IN_CFM_QTY,0) AS INPUT, isnull(CC.OUT_CFM_QTY,0) AS OUTPUT, isnull(DD.RETURN_IN_QTY,0) AS RETURN_IN, isnull(EE.HOLDING_QTY,0) AS HOLDING, (isnull(AA.INVENTORY_QTY,0) + isnull(BB.IN_CFM_QTY,0)- isnull(CC.OUT_CFM_QTY,0) +isnull(DD.RETURN_IN_QTY,0)-isnull(EE.HOLDING_QTY,0)) AS GRAND_TOTAL FROM M090 LEFT JOIN (SELECT DISTINCT M_CODE, SUM(INVENTORY_QTY) AS INVENTORY_QTY FROM KIEMKE_NVL WHERE INVENTORY_DATE=@inventory GROUP BY M_CODE) AS AA ON (AA.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(IN_CFM_QTY) AS IN_CFM_QTY FROM I222 WHERE INS_DATE> @tradate GROUP BY M_CODE ) AS BB ON (BB.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE INS_DATE>@tradate GROUP BY M_CODE ) AS CC ON (CC.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(RETURN_QTY) AS RETURN_IN_QTY FROM RETURN_NVL WHERE UPD_DATE>@tradate GROUP BY M_CODE) AS DD ON (DD.M_CODE = M090.M_CODE) LEFT JOIN (SELECT DISTINCT M_CODE, SUM(HOLDING_QTY) AS HOLDING_QTY FROM HOLDING_TB WHERE HOLDING_OUT_DATE is not null GROUP BY M_CODE) AS EE ON (EE.M_CODE = M090.M_CODE) WHERE M090.M_CODE='${DATA.M_CODE}'`;
@@ -4027,7 +4027,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_inventorydate":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT MAX(INVENTORY_DATE) AS INVENTORY_DATE FROM KIEMKE_NVL`;
@@ -4039,7 +4039,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_banve":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           const draw_path = "C:\\xampp\\htdocs\\banve\\";
           if (!existsSync(draw_path + DATA.filename)) {
             res.send({ tk_status: "OK" });
@@ -4050,7 +4050,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_banve_value":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `UPDATE M100 SET BANVE='${DATA.banvevalue}' WHERE G_CODE= '${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
@@ -4061,7 +4061,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_amazon_data":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT * FROM AMAZONE_DATA WHERE DATA_1='${DATA.DATA}' OR DATA_2='${DATA.DATA}' OR  DATA_3='${DATA.DATA}' OR DATA_4='${DATA.DATA}' `;
           //////console.log(setpdQuery);
@@ -4072,7 +4072,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkIDCongViecAMZ":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 * FROM AMAZONE_DATA WHERE NO_IN='${DATA.NO_IN}' `;
           //////console.log(setpdQuery);
@@ -4083,7 +4083,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_ycsxInfo2":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT P400.CODE_50, P400.G_CODE, M100.G_NAME, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, M100.PROD_MODEL FROM P400 JOIN M100 ON (P400.G_CODE = M100.G_CODE) WHERE P400.PROD_REQUEST_NO='${DATA.ycsxno}'`;
           //////console.log(setpdQuery);
@@ -4094,7 +4094,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_cavityAmazon":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 CAVITY_PRINT FROM BOM_AMAZONE LEFT JOIN DESIGN_AMAZONE ON (BOM_AMAZONE.G_CODE_MAU = DESIGN_AMAZONE.G_CODE_MAU AND  BOM_AMAZONE.DOITUONG_NO = DESIGN_AMAZONE.DOITUONG_NO) WHERE BOM_AMAZONE.G_CODE='${DATA.g_code}'`;
           //////console.log(setpdQuery);
@@ -4105,7 +4105,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertData_Amazon":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO AMAZONE_DATA (CTR_CD,G_CODE,PROD_REQUEST_NO,NO_IN,ROW_NO,DATA_1,DATA_2,DATA_3,DATA_4,PRINT_STATUS,INLAI_COUNT,REMARK,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.PROD_REQUEST_NO}','${DATA.NO_IN}','${DATA.ROW_NO}','${DATA.DATA_1}','${DATA.DATA_2}','${DATA.DATA_3}','${DATA.DATA_4}','${DATA.PRINT_STATUS}','${DATA.INLAI_COUNT}','${DATA.REMARK}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.INS_EMPL}')`;
           ////console.log(setpdQuery);
@@ -4116,7 +4116,7 @@ exports.process_api = function (req, res) {
         break;
       case "traPOFullCMS":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.codeSearch !== "") {
@@ -4134,7 +4134,7 @@ exports.process_api = function (req, res) {
         break;
       case "traPOFullKD":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.codeSearch !== "") {
@@ -4152,7 +4152,7 @@ exports.process_api = function (req, res) {
         break;
       case "trakhotpInOut":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.ALLTIME !== true) {
@@ -4182,7 +4182,7 @@ exports.process_api = function (req, res) {
         break;
       case "traSTOCKCMS":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.G_CODE !== "") {
@@ -4203,7 +4203,7 @@ exports.process_api = function (req, res) {
         break;
       case "traSTOCKKD":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.G_NAME !== "") {
@@ -4221,7 +4221,7 @@ exports.process_api = function (req, res) {
         break;
       case "traSTOCKTACH":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.G_NAME !== "") {
@@ -4243,7 +4243,7 @@ exports.process_api = function (req, res) {
       case "codeinfo":
         (async () => {
           let DATA = qr["DATA"];
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT M100.LOSS_ST_SX1, M100.LOSS_ST_SX2, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2, Setting1, Setting2, UPH1, UPH2, Step1, Step2, LOSS_SX1, LOSS_SX2, LOSS_SETTING1 , LOSS_SETTING2 , NOTE FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}'`;
           console.log(setpdQuery);
@@ -4254,7 +4254,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_dailyclosing":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT FROM ZTBDelivery 
                     LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DATE}' GROUP BY DELIVERY_DATE ORDER BY  DELIVERY_DATE ASC `;
@@ -4266,7 +4266,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_weeklyclosing":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT * FROM (SELECT TOP 8 DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE)) As DEL_WEEK, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
                     LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) WHERE YEAR(ZTBDelivery.DELIVERY_DATE) = '${DATA.YEAR}' GROUP BY  DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE))  ORDER BY DEL_WEEK DESC) AS AA ORDER BY AA.DEL_WEEK ASC `;
@@ -4278,7 +4278,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_monthlyclosing":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT  MONTH(ZTBDelivery.DELIVERY_DATE) AS MONTH_NUM,SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY,  SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
                     LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) WHERE YEAR(ZTBDelivery.DELIVERY_DATE) = '${DATA.YEAR}'
@@ -4291,7 +4291,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_annuallyclosing":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT  YEAR(ZTBDelivery.DELIVERY_DATE) AS YEAR_NUM, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY,  SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
                     LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) 
@@ -4304,7 +4304,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_runningpobalance":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT * FROM ( SELECT TOP 8 AA.PO_YEAR, AA.PO_WEEK, CONCAT(AA.PO_YEAR,'_', AA.PO_WEEK) AS YEAR_WEEK, isnull(AA.RUNNING_PO_QTY,0) AS RUNNING_PO_QTY, isnull(BB.RUNNING_DEL_QTY,0) AS RUNNING_DEL_QTY, (isnull(AA.RUNNING_PO_QTY,0)-isnull(BB.RUNNING_DEL_QTY,0)) AS RUNNING_PO_BALANCE FROM 
                     (
@@ -4334,7 +4334,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_weeklypo":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT  DISTINCT YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,2,PO_DATE)) As PO_WEEK, CONCAT(YEAR(PO_DATE),'_', DATEPART( ISOWK, DATEADD(day,2,PO_DATE))) AS YEAR_WEEK ,
                     SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_QTY
@@ -4348,7 +4348,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_weeklydelivery":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT DISTINCT YEAR(DELIVERY_DATE) AS DEL_YEAR,DATEPART( ISOWK, DATEADD(day,2,DELIVERY_DATE)) As DEL_WEEK,  CONCAT(YEAR(DELIVERY_DATE),'_', DATEPART( ISOWK, DATEADD(day,2,DELIVERY_DATE))) AS YEAR_WEEK ,
                     SUM(ZTBDelivery.DELIVERY_QTY) OVER(PARTITION BY YEAR(DELIVERY_DATE),DATEPART(ISOWK, DATEADD(day,2,DELIVERY_DATE))) AS WEEKLY_DELIVERY_QTY
@@ -4362,7 +4362,7 @@ exports.process_api = function (req, res) {
         break;
       case "kd_pooverweek":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT * FROM (SELECT DISTINCT  TOP 8 YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,2,PO_DATE)) As PO_WEEK, CONCAT(YEAR(PO_DATE),'_', DATEPART( ISOWK, DATEADD(day,2,PO_DATE))) AS YEAR_WEEK ,
                     SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_QTY
@@ -4377,7 +4377,7 @@ exports.process_api = function (req, res) {
         break;
       case "tratonlieu":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let condition = "WHERE 1=1 ";
           if (DATA.M_NAME !== "") {
@@ -4398,7 +4398,7 @@ exports.process_api = function (req, res) {
         break;
       case "tranhaplieu":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT  I222.QC_PASS, I222.QC_PASS_EMPL, I222.QC_PASS_DATE, I222.M_LOT_NO, I222.M_CODE,M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY,  I222.ROLL_QTY, (I222.IN_CFM_QTY * I222.ROLL_QTY) AS TOTAL_IN_QTY, I222.INS_DATE, M110.CUST_NAME_KD FROM I222 
                     LEFT JOIN  M110 ON (I222.CUST_CD = M110.CUST_CD)
@@ -4414,7 +4414,7 @@ exports.process_api = function (req, res) {
         break;
       case "traxuatlieu":
         (async () => {
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let condition = ` WHERE 1=1 `;
           if (DATA.ALLTIME !== true) {
@@ -4453,7 +4453,7 @@ exports.process_api = function (req, res) {
       case "setngoaiquan":
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` UPDATE M100 SET NO_INSPECTION= '${DATA.VALUE}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE='${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
@@ -4465,7 +4465,7 @@ exports.process_api = function (req, res) {
       case "resetbanve":
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
-          ////console.log(DATA);
+          //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` UPDATE M100 SET BANVE= 'N' WHERE G_CODE='${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
@@ -4484,7 +4484,7 @@ exports.process_api = function (req, res) {
             (JOB_NAME === "Sub Leader" || JOB_NAME === "Leader") &&
             (SUBDEPTNAME == "PQC1" || SUBDEPTNAME == "PQC3")
           ) {
-            ////console.log(DATA);
+            //////console.log(DATA);
             let checkkq = "OK";
             let setpdQuery = ` UPDATE M100 SET PDBV= 'Y', PDBV_EMPL='${EMPL_NO}', PDBV_DATE=GETDATE() WHERE G_CODE='${DATA.G_CODE}'`;
             ////console.log(setpdQuery);
@@ -4510,7 +4510,7 @@ exports.process_api = function (req, res) {
                         FROM
                        ZTBPQC1TABLE
                        LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC1TABLE.PROD_REQUEST_NO)
-                       LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC1TABLE.G_CODE)
+                       LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC1TABLE.G_CODE)                       
                        ${generate_condition_pqc1(
                          DATA.ALLTIME,
                          DATA.FROM_DATE,
@@ -4537,11 +4537,12 @@ exports.process_api = function (req, res) {
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT CONCAT(datepart(YEAR,ZTBPQC3TABLE.OCCURR_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC3TABLE.OCCURR_TIME))) AS YEAR_WEEK,ZTBPQC3TABLE.PQC3_ID,ZTBPQC3TABLE.PQC1_ID,ZTBPQC1TABLE.FACTORY,ZTBPQC3TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,ZTBPQC3TABLE.PROCESS_LOT_NO,ZTBPQC3TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,M100.PROD_LAST_PRICE,ZTBPQC3TABLE.LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC3TABLE.OCCURR_TIME,ZTBPQC3TABLE.INSPECT_QTY,ZTBPQC3TABLE.DEFECT_QTY,(ZTBPQC3TABLE.DEFECT_QTY *M100.PROD_LAST_PRICE ) AS DEFECT_AMOUNT,ZTBPQC3TABLE.DEFECT_PHENOMENON,ZTBPQC3TABLE.DEFECT_IMAGE_LINK,ZTBPQC3TABLE.REMARK,ZTBPQC3TABLE.WORST5,ZTBPQC3TABLE.WORST5_MONTH, ZTBPQC3TABLE.ERR_CODE
+          let setpdQuery = `SELECT M110.CUST_NAME_KD, CONCAT(datepart(YEAR,ZTBPQC3TABLE.OCCURR_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC3TABLE.OCCURR_TIME))) AS YEAR_WEEK,ZTBPQC3TABLE.PQC3_ID,ZTBPQC3TABLE.PQC1_ID,ZTBPQC1TABLE.FACTORY,ZTBPQC3TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,ZTBPQC3TABLE.PROCESS_LOT_NO,ZTBPQC3TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,M100.PROD_LAST_PRICE,ZTBPQC3TABLE.LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC3TABLE.OCCURR_TIME,ZTBPQC3TABLE.INSPECT_QTY,ZTBPQC3TABLE.DEFECT_QTY,(ZTBPQC3TABLE.DEFECT_QTY *M100.PROD_LAST_PRICE ) AS DEFECT_AMOUNT,ZTBPQC3TABLE.DEFECT_PHENOMENON,ZTBPQC3TABLE.DEFECT_IMAGE_LINK,ZTBPQC3TABLE.REMARK,ZTBPQC3TABLE.WORST5,ZTBPQC3TABLE.WORST5_MONTH, ZTBPQC3TABLE.ERR_CODE
                         FROM ZTBPQC3TABLE 
                        LEFT JOIN ZTBPQC1TABLE ON (ZTBPQC3TABLE.PQC1_ID = ZTBPQC1TABLE.PQC1_ID)
                        LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC3TABLE.G_CODE)
                        LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC3TABLE.PROD_REQUEST_NO)
+                       LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD)
                        ${generate_condition_pqc3(
                          DATA.ALLTIME,
                          DATA.FROM_DATE,
@@ -4681,7 +4682,7 @@ exports.process_api = function (req, res) {
         break;
       case "baocaofcstss":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4696,7 +4697,7 @@ exports.process_api = function (req, res) {
         break;
       case "fcstamount":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4713,7 +4714,7 @@ exports.process_api = function (req, res) {
         break;
       case "dtcdata":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4740,7 +4741,7 @@ exports.process_api = function (req, res) {
         break;
       case "dtcspec":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4771,7 +4772,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_empl_image":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4786,7 +4787,7 @@ exports.process_api = function (req, res) {
         break;
       case "getcodefullinfo":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4801,7 +4802,7 @@ exports.process_api = function (req, res) {
         break;
       case "getbomsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4816,7 +4817,7 @@ exports.process_api = function (req, res) {
         break;
       case "getbomgia":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4831,7 +4832,7 @@ exports.process_api = function (req, res) {
         break;
       case "getNextSEQ_G_CODE":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4846,7 +4847,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertM100":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4861,7 +4862,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertM100_AddVer":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4876,7 +4877,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateM100":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4891,7 +4892,7 @@ exports.process_api = function (req, res) {
         break;
       case "getMaterialList":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4907,7 +4908,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertM140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4922,7 +4923,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_M140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4937,7 +4938,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkGSEQ_M140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4952,7 +4953,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertBOM2":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4967,7 +4968,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteM140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4982,7 +4983,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteM140_2":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -4997,7 +4998,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteBOM2":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5012,7 +5013,7 @@ exports.process_api = function (req, res) {
         break;
       case "listAmazon":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5027,7 +5028,7 @@ exports.process_api = function (req, res) {
         break;
       case "getBOMAMAZON":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5042,7 +5043,7 @@ exports.process_api = function (req, res) {
         break;
       case "getAMAZON_DESIGN":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5057,7 +5058,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteAMZDesign":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5072,7 +5073,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkDesignExistAMZ":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5087,7 +5088,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertAMZDesign":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5102,7 +5103,7 @@ exports.process_api = function (req, res) {
         break;
       case "getBOMAMAZON_EMPTY":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5117,7 +5118,7 @@ exports.process_api = function (req, res) {
         break;
       case "loadcodephoi":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5132,7 +5133,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkExistBOMAMAZON":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5147,7 +5148,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertAmazonBOM":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5162,7 +5163,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateAmazonBOM":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5177,7 +5178,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateAmazonBOMCodeInfo":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5192,7 +5193,7 @@ exports.process_api = function (req, res) {
         break;
       case "xoadangkynghi_AUTO":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5209,7 +5210,7 @@ exports.process_api = function (req, res) {
         break;
       case "getddmaindepttb":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5239,7 +5240,7 @@ exports.process_api = function (req, res) {
         break;
       case "getqlsxplan":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5269,7 +5270,7 @@ exports.process_api = function (req, res) {
         break;
       case "getqlsxplan2":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5307,7 +5308,7 @@ exports.process_api = function (req, res) {
         break;
       case "getqlsxplan_table":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5337,7 +5338,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkdiemdanh":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5355,7 +5356,7 @@ exports.process_api = function (req, res) {
         break;
       case "getchithidatatable":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5379,7 +5380,7 @@ exports.process_api = function (req, res) {
         break;
       case "getLastestPLAN_ID":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5395,7 +5396,7 @@ exports.process_api = function (req, res) {
         break;
       case "getLastestPLANORDER":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5411,7 +5412,7 @@ exports.process_api = function (req, res) {
         break;
       case "addPlanQLSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5427,7 +5428,7 @@ exports.process_api = function (req, res) {
         break;
       case "deletePlanQLSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5447,7 +5448,7 @@ exports.process_api = function (req, res) {
         break;
       case "updatePlanQLSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5464,7 +5465,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteChiThi":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5480,7 +5481,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertChiThi":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5495,7 +5496,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateChiThi":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5510,7 +5511,7 @@ exports.process_api = function (req, res) {
         break;
       case "getO300_LAST_OUT_NO":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5527,7 +5528,7 @@ exports.process_api = function (req, res) {
         break;
       case "getO300_ROW":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5542,7 +5543,7 @@ exports.process_api = function (req, res) {
         break;
       case "setEMPL_WORK_POSITION":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5557,7 +5558,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertO300":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5572,7 +5573,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertO301":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5587,7 +5588,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateO301":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5602,7 +5603,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkPLANID_O302":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5617,7 +5618,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkPLANID_O300":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5632,7 +5633,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkPLANID_O301":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5647,7 +5648,7 @@ exports.process_api = function (req, res) {
         break;
       case "saveQLSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5662,7 +5663,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteMCODEExistIN_O302":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5682,7 +5683,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteMCODE_O301_Not_ExistIN_O302":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5702,7 +5703,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkM_CODE_PLAN_ID_Exist":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5717,7 +5718,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkM_CODE_PLAN_ID_Exist_in_O301":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5732,7 +5733,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateLIEUQL_SX_M140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5747,7 +5748,7 @@ exports.process_api = function (req, res) {
         break;
       case "checktonlieutrongxuong":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5767,7 +5768,7 @@ exports.process_api = function (req, res) {
         break;
       case "xuatkhoao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5782,7 +5783,7 @@ exports.process_api = function (req, res) {
         break;
       case "nhapkhoao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5797,7 +5798,7 @@ exports.process_api = function (req, res) {
         break;
       case "lichsuxuatkhoao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5816,7 +5817,7 @@ exports.process_api = function (req, res) {
         break;
       case "lichsunhapkhoao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5835,7 +5836,7 @@ exports.process_api = function (req, res) {
         break;
       case "deleteXuatKhoAo":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5850,7 +5851,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkM_CODE_CHITHI":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5865,7 +5866,7 @@ exports.process_api = function (req, res) {
         break;
       case "lichsuinputlieusanxuat":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5885,7 +5886,7 @@ exports.process_api = function (req, res) {
         break;
       case "lichsuinputlieusanxuat_full":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5927,7 +5928,7 @@ exports.process_api = function (req, res) {
         break;
       case "confirmlieutonsx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5942,7 +5943,7 @@ exports.process_api = function (req, res) {
         break;
       case "returnkhoao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5971,7 +5972,7 @@ exports.process_api = function (req, res) {
         break;
       case "traDataAMZ":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -5995,7 +5996,7 @@ exports.process_api = function (req, res) {
         break;
       case "move_plan":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6010,7 +6011,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkplansetting":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6025,7 +6026,7 @@ exports.process_api = function (req, res) {
         break;
       case "setUSE_YN_KHO_AO_INPUT":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6041,7 +6042,7 @@ exports.process_api = function (req, res) {
         break;
       case "inspect_daily_ppm":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6060,7 +6061,7 @@ exports.process_api = function (req, res) {
         break;
       case "inspect_weekly_ppm":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6082,7 +6083,7 @@ exports.process_api = function (req, res) {
         break;
       case "inspect_monthly_ppm":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6102,7 +6103,7 @@ exports.process_api = function (req, res) {
         break;
       case "inspect_yearly_ppm":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6120,7 +6121,7 @@ exports.process_api = function (req, res) {
         break;
       case "loadDataSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6187,7 +6188,7 @@ exports.process_api = function (req, res) {
         break;
       case "loadDataSX_YCSX":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6214,7 +6215,9 @@ exports.process_api = function (req, res) {
           }
           let setpdQuery = `
           SELECT 
-          P400.YCSX_PENDING, P400.G_CODE, CASE WHEN P400.CODE_55 = '04' THEN 'SAMPLE' ELSE 'MASS' END AS PHAN_LOAI, P400.PROD_REQUEST_NO, M100.G_NAME,M100.G_NAME_KD,M100.FACTORY, M100.EQ1, M100.EQ2, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(SD_LIEU.M_NAME,'X') AS M_NAME,  isnull(SD_LIEU.TOTAL_OUT_QTY,0) AS M_OUTPUT,isnull(SCANNED.SCANNED_QTY,0) AS SCANNED_QTY,(isnull(SD_LIEU.REMAIN_QTY,0)) AS REMAIN_QTY, (isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) AS USED_QTY, M100.PD, M100.G_C* M100.G_C_R AS CAVITY, CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS WAREHOUSE_ESTIMATED_QTY, CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS ESTIMATED_QTY, isnull(KQSXTABLE.CD1,0) AS CD1, isnull(KQSXTABLE.CD2,0) AS CD2,  isnull(INS_INPUT_TB.INS_INPUT,0) INS_INPUT, isnull(INS_OUTPUT_TB.INS_OUTPUT,0)
+         CASE WHEN  isnull(INS_OUTPUT_TB.INS_OUTPUT,0) >= P400.PROD_REQUEST_QTY  THEN 'CLOSED' ELSE 'PENDING' END AS YCSX_PENDING, P400.G_CODE, CASE WHEN P400.CODE_55 = '04' THEN 'SAMPLE' ELSE 'MASS' END AS PHAN_LOAI, P400.PROD_REQUEST_NO, M100.G_NAME,M100.G_NAME_KD,M100.FACTORY, M100.EQ1, M100.EQ2, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(SD_LIEU.M_NAME,'X') AS M_NAME,  isnull(SD_LIEU.TOTAL_OUT_QTY,0) AS M_OUTPUT,isnull(SCANNED.SCANNED_QTY,0) AS SCANNED_QTY,(isnull(SD_LIEU.REMAIN_QTY,0)) AS REMAIN_QTY, (isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) AS USED_QTY, M100.PD, M100.G_C* M100.G_C_R AS CAVITY, CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS WAREHOUSE_ESTIMATED_QTY, CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS ESTIMATED_QTY, isnull(KQSXTABLE.CD1,0) AS CD1, isnull(KQSXTABLE.CD2,0) AS CD2,  isnull(INS_INPUT_TB.INS_INPUT,0) INS_INPUT, 
+		  isnull(NHATKYKT.INSPECT_TOTAL_QTY,0) AS INSPECT_TOTAL_QTY, isnull(NHATKYKT.INSPECT_OK_QTY,0) AS INSPECT_OK_QTY, isnull(NHATKYKT.INSPECT_LOSS_QTY,0) AS INSPECT_LOSS_QTY, isnull(NHATKYKT.INSPECT_TOTAL_NG,0) AS INSPECT_TOTAL_NG, isnull(NHATKYKT.INSPECT_MATERIAL_NG,0) AS INSPECT_MATERIAL_NG, isnull(NHATKYKT.INSPECT_PROCESS_NG,0) AS INSPECT_PROCESS_NG,
+		 isnull(INS_OUTPUT_TB.INS_OUTPUT,0)
                      AS INS_OUTPUT,
                      CASE WHEN CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) <>0 THEN 1-isnull(KQSXTABLE.CD1,0) /CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS float) ELSE 0 END AS LOSS_SX1,
                      CASE 
@@ -6289,7 +6292,11 @@ exports.process_api = function (req, res) {
                          WHERE IN_KHO_SX.USE_YN='X'
                          GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME				
                      ) AS SCANNED 
-                     ON (SCANNED.PROD_REQUEST_NO = SD_LIEU.PROD_REQUEST_NO AND SCANNED.M_NAME = SD_LIEU.M_NAME)
+                     ON (SCANNED.PROD_REQUEST_NO = SD_LIEU.PROD_REQUEST_NO AND SCANNED.M_NAME = SD_LIEU.M_NAME) 
+					 LEFT JOIN (
+					 SELECT PROD_REQUEST_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY, SUM(ERR1+ ERR2+ERR3) AS INSPECT_LOSS_QTY, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11) AS INSPECT_MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS INSPECT_PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
+) INSPECT_TOTAL_NG  FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME >= '2022-10-18' GROUP BY PROD_REQUEST_NO
+					 ) AS NHATKYKT ON (NHATKYKT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
                     ${condition}
                     ORDER BY P400.PROD_REQUEST_NO DESC`;
           //${moment().format('YYYY-MM-DD')}
@@ -6300,7 +6307,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkQLSXPLANSTATUS":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6347,7 +6354,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateDKXLPLAN":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6362,7 +6369,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkWebVer":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6377,7 +6384,7 @@ exports.process_api = function (req, res) {
         break;
       case "getP4002":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6392,7 +6399,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_OUT_KNIFE_FILM":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6409,7 +6416,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_PLAN_ID_OUT_KNIFE_FILM":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6424,7 +6431,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_PLAN_ID_KHO_AO":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6439,7 +6446,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkProd_request_no_Exist_O302":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6454,7 +6461,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateXUATLIEUCHINH_PLAN":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6469,7 +6476,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_XUAT_DAO_FILM_PLAN":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6484,7 +6491,7 @@ exports.process_api = function (req, res) {
         break;
       case "getIns_Status":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6499,7 +6506,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_lieuql_sx_m140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6514,7 +6521,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_m_code_m140":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6529,7 +6536,7 @@ exports.process_api = function (req, res) {
         break;
       case "checktrungAMZ_Full":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6544,7 +6551,7 @@ exports.process_api = function (req, res) {
         break;
       case "traShortageKD":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6575,7 +6582,7 @@ exports.process_api = function (req, res) {
         break;
       case "tinhhinhchotbaocaosx":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6592,7 +6599,7 @@ exports.process_api = function (req, res) {
         break;
       case "checklastfcstweekno":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6607,7 +6614,7 @@ exports.process_api = function (req, res) {
         break;
       case "get_material_table":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6629,7 +6636,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkMaterialInfo":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6648,7 +6655,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_material_table_from_bom":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6663,7 +6670,7 @@ exports.process_api = function (req, res) {
         break;
       case "update_material_info":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6678,7 +6685,7 @@ exports.process_api = function (req, res) {
         break;
       case "load_kehoachchithi":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6774,7 +6781,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_2_m_code_in_kho_ao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6789,7 +6796,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_m_lot_exist_p500":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6804,7 +6811,7 @@ exports.process_api = function (req, res) {
         break;
       case "an_lieu_kho_ao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6819,7 +6826,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_in_kho_ao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6834,7 +6841,7 @@ exports.process_api = function (req, res) {
         break;
       case "delete_out_kho_ao":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6849,7 +6856,7 @@ exports.process_api = function (req, res) {
         break;
       case "tracsconfirm":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6870,7 +6877,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkPLAN_ID":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6901,7 +6908,7 @@ exports.process_api = function (req, res) {
         break;
       case "check_xuat_kho_ao_mobile":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6917,7 +6924,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkEMPL_NO_mobile":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6933,7 +6940,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkM_LOT_NO_p500_mobile":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -6949,7 +6956,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_p500_mobile":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY, PLAN_ID, INPUT_QTY, IN_KHO_ID) VALUES ('002','${
             DATA.in_date
@@ -6974,7 +6981,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkOutKhoSX_mobile":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = `SELECT OUT_KHO_SX.TOTAL_OUT_QTY, OUT_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.IN_KHO_ID  FROM OUT_KHO_SX LEFT JOIN IN_KHO_SX ON  (IN_KHO_SX.PLAN_ID_INPUT = OUT_KHO_SX.PLAN_ID_INPUT AND IN_KHO_SX.M_CODE = OUT_KHO_SX.M_CODE AND IN_KHO_SX.M_LOT_NO = OUT_KHO_SX.M_LOT_NO AND IN_KHO_SX.TOTAL_IN_QTY = OUT_KHO_SX.TOTAL_OUT_QTY)  WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID_OUTPUT}' AND OUT_KHO_SX.M_CODE='${DATA.M_CODE}' AND OUT_KHO_SX.M_LOT_NO='${DATA.M_LOT_NO}'`;
           //console.log(setpdQuery);
@@ -6986,7 +6993,7 @@ exports.process_api = function (req, res) {
         break;
       case "setUSE_YN_KHO_AO_INPUT_mobile":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7002,7 +7009,7 @@ exports.process_api = function (req, res) {
         break;
       case "setUSE_YN_KHO_AO_OUTPUT_mobile":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7018,7 +7025,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkP500PlanID_mobile":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7036,7 +7043,7 @@ exports.process_api = function (req, res) {
         break;
       case "materialLotStatus":
         (async () => {
-          //console.log(DATA);
+          ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7123,7 +7130,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkSpecDTC":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7148,7 +7155,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkSpecDTC2":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7166,7 +7173,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertSpecDTC":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7181,7 +7188,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateSpecDTC":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7196,7 +7203,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkAddedSpec":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7211,7 +7218,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkRegisterdDTCTEST":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7226,7 +7233,7 @@ exports.process_api = function (req, res) {
         break;
       case "getLastDTCID":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7241,7 +7248,7 @@ exports.process_api = function (req, res) {
         break;
       case "loadrecentRegisteredDTCData":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7265,7 +7272,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkLabelID2":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7280,7 +7287,7 @@ exports.process_api = function (req, res) {
         break;
       case "registerDTCTest":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7295,7 +7302,7 @@ exports.process_api = function (req, res) {
         break;
       case "insert_dtc_result":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7310,7 +7317,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateDTC_TEST_EMPL":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7325,7 +7332,7 @@ exports.process_api = function (req, res) {
         break;
       case "traholdingmaterial":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7357,7 +7364,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateQCPASS_HOLDING":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7372,7 +7379,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateQCPASS_FAILING":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7387,7 +7394,7 @@ exports.process_api = function (req, res) {
         break;
       case "loadQCFailData":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7410,7 +7417,7 @@ exports.process_api = function (req, res) {
         break;
       case "getinputdtcspec":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7433,7 +7440,7 @@ exports.process_api = function (req, res) {
         break;
       case "loadIQC1table":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7465,7 +7472,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertIQC1table":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7480,7 +7487,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateQCPASSI222":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7495,7 +7502,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateIQC1Table":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7510,7 +7517,7 @@ exports.process_api = function (req, res) {
         break;
       case "insertFailingData":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7525,7 +7532,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateQCFailTableData":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7540,7 +7547,7 @@ exports.process_api = function (req, res) {
         break;
       case "updateMaterialHoldingReason":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7555,7 +7562,7 @@ exports.process_api = function (req, res) {
         break;
       case "checkPROCESS_LOT_NO":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7570,7 +7577,7 @@ exports.process_api = function (req, res) {
         break;
       case "uploadfile":
         (async () => {
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7587,7 +7594,7 @@ exports.process_api = function (req, res) {
       case "checkPlanIdP501":
         (async () => {
           let DATA = qr["DATA"];
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7603,7 +7610,7 @@ exports.process_api = function (req, res) {
       case "checkProcessLotNo_Prod_Req_No":
         (async () => {
           let DATA = qr["DATA"];
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7619,7 +7626,7 @@ exports.process_api = function (req, res) {
       case "saveLOSS_SETTING_SX":
         (async () => {
           let DATA = qr["DATA"];
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
@@ -7635,13 +7642,146 @@ exports.process_api = function (req, res) {
       case "checkFSC_PLAN_ID":
         (async () => {
           let DATA = qr["DATA"];
-          console.log(DATA);
+          //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.G_CODE, M100.FSC FROM ZTB_QLSXPLAN JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE) WHERE ZTB_QLSXPLAN.PLAN_ID='${DATA.PLAN_ID}' `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkcustcodeponoPOBALANCE":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT  (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) WHERE ZTBPOTable.G_CODE='${DATA.G_CODE}' AND ZTBPOTable.CUST_CD='${DATA.CUST_CD}' AND ZTBPOTable.PO_NO='${DATA.PO_NO}'`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "diemdanhallbp":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `DECLARE @tradate DATE SET @tradate='${moment().format('YYYY-MM-DD')}' SELECT ZTBEMPLINFO.EMPL_NO as id,ZTBEMPLINFO.EMPL_NO,CMS_ID,MIDLAST_NAME,FIRST_NAME,PHONE_NUMBER,SEX_NAME,WORK_STATUS_NAME,FACTORY_NAME,JOB_NAME,WORK_SHIF_NAME,ZTBEMPLINFO.WORK_POSITION_CODE, WORK_POSITION_NAME,SUBDEPTNAME,MAINDEPTNAME,REQUEST_DATE,ZTBOFFREGISTRATIONTB_1.APPLY_DATE,APPROVAL_STATUS,OFF_ID,CA_NGHI,ON_OFF,OVERTIME_INFO,OVERTIME, REASON_NAME, ZTBOFFREGISTRATIONTB_1.REMARK FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) LEFT JOIN ( SELECT * FROM ZTBOFFREGISTRATIONTB WHERE ZTBOFFREGISTRATIONTB.APPLY_DATE = @tradate ) AS ZTBOFFREGISTRATIONTB_1 ON (ZTBOFFREGISTRATIONTB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN (	SELECT * FROM ZTBATTENDANCETB WHERE APPLY_DATE= @tradate ) AS ZTBATTENDANCETB_1 ON (ZTBATTENDANCETB_1.EMPL_NO = ZTBEMPLINFO.EMPL_NO) LEFT JOIN ZTBREASON ON (ZTBREASON.REASON_CODE = ZTBOFFREGISTRATIONTB_1.REASON_CODE) 
+          WHERE ZTBMAINDEPARMENT.MAINDEPTCODE = ${DATA.MAINDEPTCODE}  AND JOB_NAME='Worker' AND ZTBEMPLINFO.WORK_STATUS_CODE <> 2 AND ZTBEMPLINFO.WORK_STATUS_CODE <> 0`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "machinecounting":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT SUBSTRING(EQ_NAME,1,2) AS EQ_NAME, COUNT(SUBSTRING(EQ_NAME,1,2)) AS EQ_QTY FROM ZTB_SX_EQ_STATUS WHERE EQ_ACTIVE ='OK'  GROUP BY SUBSTRING(EQ_NAME,1,2) ORDER BY EQ_NAME DESC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "ycsxbalancecapa":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT EQ1 AS EQ_NAME, isnull(LEADTIME1,0) + isnull(LEADTIME2,0) AS YCSX_BALANCE FROM 
+          (
+          SELECT YCSXCAPATB.EQ1, SUM(YCSXCAPATB.LEATIME1) AS LEADTIME1 FROM 
+          (SELECT TONYCSX_TABLE.EQ1, (TONYCSX_TABLE.Setting1 + TONYCSX_TABLE.TON_CD1/TONYCSX_TABLE.UPH1*60) AS LEATIME1  FROM 
+          (
+          SELECT P400.PROD_REQUEST_NO,  M100.G_CODE, M100.G_NAME,P400.PROD_REQUEST_QTY, isnull(KQSXTB.CD1,0) AS CD1, isnull(KQSXTB.CD2,0) AS CD2, 
+          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) ELSE 0 END AS TON_CD1,
+          CASE WHEN CAPA_TB.EQ2 IN ('FR','SR','DC','ED') THEN 
+          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) ELSE 0 END 
+          ELSE 0 END TON_CD2,
+          CAPA_TB.FACTORY, CAPA_TB.EQ1, CAPA_TB.EQ2,  CAPA_TB.Setting1, CAPA_TB.Setting2, CAPA_TB.UPH1, CAPA_TB.UPH2, CAPA_TB.Step1, CAPA_TB.Step2  FROM P400
+          LEFT JOIN 
+          ((SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2 FROM 
+          (
+              SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
+          )
+          AS PV
+          PIVOT
+          ( 
+          SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2])
+          ) 
+          AS PVTB)) AS KQSXTB ON (P400.PROD_REQUEST_NO = KQSXTB.PROD_REQUEST_NO)
+          LEFT JOIN 
+          (
+          SELECT G_CODE, G_NAME, FACTORY, EQ1, EQ2, Setting1, Setting2, UPH1, UPH2, Step1, Step2 FROM M100 WHERE FACTORY IN ('NM1','NM2') AND EQ1 IN('FR','SR','DC','ED') AND Setting1 is not null AND Setting1 <>0 AND UPH1 is not null AND UPH1 <>0 AND ((EQ2 IN ('FR','SR','DC','ED') AND Setting2 is not null AND Setting2 <>0 AND UPH2 is not null AND UPH2 <>0) OR (EQ2 NOT IN ('FR','SR','DC','ED')))
+          ) AS CAPA_TB
+          ON(CAPA_TB.G_CODE = P400.G_CODE)
+          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
+          WHERE PROD_REQUEST_DATE > '20230101' AND CAPA_TB.FACTORY is not null
+          ) AS TONYCSX_TABLE
+          ) AS YCSXCAPATB
+          GROUP BY YCSXCAPATB.EQ1
+          ) AS LTCD1
+          LEFT JOIN
+          (SELECT YCSXCAPATB.EQ2, SUM(YCSXCAPATB.LEATIME2) AS LEADTIME2 FROM 
+          (SELECT TONYCSX_TABLE.EQ2, CASE WHEN TONYCSX_TABLE.EQ2 IN ('FR','SR','DC','ED') THEN (TONYCSX_TABLE.Setting2 + TONYCSX_TABLE.TON_CD2/TONYCSX_TABLE.UPH2*60) ELSE 0 END AS LEATIME2   FROM 
+          (
+          SELECT P400.PROD_REQUEST_NO,  M100.G_CODE, M100.G_NAME,P400.PROD_REQUEST_QTY, isnull(KQSXTB.CD1,0) AS CD1, isnull(KQSXTB.CD2,0) AS CD2, 
+          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) ELSE 0 END AS TON_CD1,
+          CASE WHEN CAPA_TB.EQ2 IN ('FR','SR','DC','ED') THEN 
+          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) ELSE 0 END 
+          ELSE 0 END TON_CD2,
+          CAPA_TB.FACTORY, CAPA_TB.EQ1, CAPA_TB.EQ2,  CAPA_TB.Setting1, CAPA_TB.Setting2, CAPA_TB.UPH1, CAPA_TB.UPH2, CAPA_TB.Step1, CAPA_TB.Step2  FROM P400
+          LEFT JOIN 
+          ((SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2 FROM 
+          (
+              SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
+          )
+          AS PV
+          PIVOT
+          ( 
+          SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2])
+          ) 
+          AS PVTB)) AS KQSXTB ON (P400.PROD_REQUEST_NO = KQSXTB.PROD_REQUEST_NO)
+          LEFT JOIN 
+          (
+          SELECT G_CODE, G_NAME, FACTORY, EQ1, EQ2, Setting1, Setting2, UPH1, UPH2, Step1, Step2 FROM M100 WHERE FACTORY IN ('NM1','NM2') AND EQ1 IN('FR','SR','DC','ED') AND Setting1 is not null AND Setting1 <>0 AND UPH1 is not null AND UPH1 <>0 AND ((EQ2 IN ('FR','SR','DC','ED') AND Setting2 is not null AND Setting2 <>0 AND UPH2 is not null AND UPH2 <>0) OR (EQ2 NOT IN ('FR','SR','DC','ED')))
+          ) AS CAPA_TB
+          ON(CAPA_TB.G_CODE = P400.G_CODE)
+          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
+          WHERE PROD_REQUEST_DATE > '20230101' AND CAPA_TB.FACTORY is not null
+          ) AS TONYCSX_TABLE
+          ) AS YCSXCAPATB
+          WHERE YCSXCAPATB.EQ2 IN ('FR','SR','DC','ED')
+          GROUP BY YCSXCAPATB.EQ2
+          ) AS LTCD2
+          ON (LTCD1.EQ1 = LTCD2.EQ2)
+          ORDER BY EQ1 DESC
+          `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
