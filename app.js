@@ -111,7 +111,7 @@ io.on("connection", (client) => {
     console.log("A client disconnected !");
     console.log("Connected clients: " + io.engine.clientsCount);
   });
-});
+}); 
 //const port = 5011;
 const port = 3007;
 var corsOptions = {
