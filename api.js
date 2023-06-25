@@ -7725,6 +7725,114 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           res.send(checkkq);
         })();
         break;
+      case "machinecounting2":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT FACTORY, SUBSTRING(EQ_NAME,1,2) AS EQ_NAME, COUNT(SUBSTRING(EQ_NAME,1,2)) AS EQ_QTY FROM ZTB_SX_EQ_STATUS WHERE EQ_ACTIVE ='OK'  GROUP BY FACTORY, SUBSTRING(EQ_NAME,1,2) ORDER BY FACTORY ASC, EQ_NAME ASC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "machineTimeEfficiency":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT 
+          AA.PLAN_FACTORY, 
+          SUBSTRING(AA.PLAN_EQ, 0, 3) AS MACHINE, 
+          SUM(AA.TOTAL_TIME) AS TOTAL_TIME, 
+          SUM(AA.RUN_TIME_SX) AS RUN_TIME_SX, 
+          SUM(AA.SETTING_TIME) AS SETTING_TIME, 
+          SUM(AA.TOTAL_LOSS_TIME) AS LOSS_TIME, 
+          CAST(
+            SUM(AA.RUN_TIME_SX) as float
+          )/ CAST(
+            SUM(AA.TOTAL_TIME) as float
+          ) AS HIEU_SUAT_TIME, 
+          CAST(
+            SUM(AA.SETTING_TIME) as float
+          )/ CAST(
+            SUM(AA.TOTAL_TIME) as float
+          ) AS SETTING_TIME_RATE, 
+          CAST(
+            SUM(AA.TOTAL_LOSS_TIME) as float
+          )/ CAST(
+            SUM(AA.TOTAL_TIME) as float
+          ) AS LOSS_TIME_RATE 
+        FROM 
+          (
+            SELECT 
+              ZTB_QLSXPLAN.PLAN_EQ, 
+              ZTB_SX_RESULT.PLAN_ID, 
+              ZTB_SX_RESULT.SX_DATE, 
+              ZTB_QLSXPLAN.PLAN_FACTORY, 
+              M100.G_NAME, 
+              ZTB_SX_RESULT.WORK_SHIFT, 
+              ZTB_SX_RESULT.INS_EMPL, 
+              M010.EMPL_NAME, 
+              ZTB_QLSXPLAN.PLAN_QTY, 
+              ZTB_QLSXPLAN.KETQUASX,
+              DATEDIFF(
+                minute, SETTING_START_TIME, MASS_END_TIME
+              ) as TOTAL_TIME, 	 
+              (
+                DATEDIFF(
+                  minute, MASS_START_TIME, MASS_END_TIME
+                ) 
+              ) AS RUN_TIME_SX, 
+              DATEDIFF(
+                minute, SETTING_START_TIME, MASS_START_TIME
+              ) as SETTING_TIME, 
+              (
+                isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)
+              ) AS TOTAL_LOSS_TIME     
+            FROM 
+              ZTB_SX_RESULT 
+              LEFT JOIN ZTB_SX_EFFICIENCY ON (
+                ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID 
+                AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT
+              ) 
+              LEFT JOIN M010 ON (
+                M010.EMPL_NO = ZTB_SX_RESULT.INS_EMPL
+              ) 
+              LEFT JOIN ZTB_QLSXPLAN ON (
+                ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID
+              ) 
+              LEFT JOIN M100 ON (
+                M100.G_CODE = ZTB_QLSXPLAN.G_CODE
+              ) 
+            LEFT JOIN P400 ON (ZTB_QLSXPLAN.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+            WHERE 
+              MASS_END_TIME is not null AND ((ZTB_QLSXPLAN.PROCESS_NUMBER =1  AND M100.UPH1<>0 AND M100.UPH1 is not null) OR (ZTB_QLSXPLAN.PROCESS_NUMBER =2  AND M100.UPH2<>0 AND M100.UPH2 is not null)) AND P400.CODE_55 <> '04'
+          ) AS AA 
+        WHERE 
+          AA.SX_DATE BETWEEN '${DATA.FROM_DATE}' 
+          AND '${DATA.TO_DATE}' AND AA.PLAN_FACTORY is not null 
+        GROUP BY 
+          AA.PLAN_FACTORY, 
+          SUBSTRING(AA.PLAN_EQ, 0, 3) 
+        ORDER BY 
+          AA.PLAN_FACTORY ASC, 
+          MACHINE DESC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "ycsxbalancecapa":
         (async () => {
           let DATA = qr["DATA"];
@@ -7907,7 +8015,10 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";       
+          let checkkq = "OK";   
+          let condition = ` WHERE SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}' `;
+          if(DATA.FACTORY !=='ALL')
+          condition+=` AND ZTB_SX_RESULT.FACTORY = '${DATA.FACTORY}'`   
           
           let setpdQuery =  `SELECT MACHINE_NAME, SUM(PLAN_QTY) AS PLAN_QTY, SUM(SX_RESULT) AS SX_RESULT_TOTAL, 
           SUM(CASE WHEN  AA.STEP=0 THEN SX_RESULT ELSE 0 END) AS RESULT_STEP_FINAL,
@@ -7927,7 +8038,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
             LEFT JOIN
                         (SELECT PLAN_ID, SUM(CAST(INSPECT_TOTAL_QTY  as float)) AS INSPECT_TOTAL_QTY,  SUM(CAST(INSPECT_OK_QTY  as float)) AS INSPECT_OK_QTY, SUM(CAST((ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
           )  as float)) AS INSPECT_NG_QTY FROM ZTBINSPECTNGTB GROUP BY PLAN_ID) AS INSPECT_NK_TABLE ON (ZTB_SX_RESULT.PLAN_ID = INSPECT_NK_TABLE.PLAN_ID)
-          WHERE SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}' 
+          ${condition}
           ) AS AA
           GROUP BY AA.MACHINE_NAME
           ORDER BY AA.MACHINE_NAME ASC`;
