@@ -3544,7 +3544,7 @@ exports.process_api = function (req, res) {
              LEFT JOIN ZTBREASON ON (
                ZTBOFFREGISTRATIONTB.REASON_CODE = ZTBREASON.REASON_CODE
              )   
-			 WHERE ZTBEMPLINFOA.WORK_STATUS_CODE <>0
+			 WHERE ZTBEMPLINFOA.WORK_STATUS_CODE =1
 			 ORDER BY ZTBEMPLINFOA.DATE_COLUMN DESC, ZTBEMPLINFOA.POSITION_CODE ASC`;
           kqua = await queryDB(query);
           res.send(kqua);
@@ -8249,6 +8249,28 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           (SELECT DATEPART(MONTH, ZTB_SX_RESULT.SX_DATE) AS SX_MONTH, DATEPART(ISO_WEEK,DATEADD(DAY,+2,ZTB_SX_RESULT.SX_DATE)) AS SX_WEEK, ZTB_SX_RESULT.SX_DATE, SUBSTRING(ZTB_SX_RESULT.EQ_NAME,1,2) AS MACHINE_NAME, ZTB_SX_RESULT.SX_RESULT, ZTB_QLSXPLAN.PLAN_QTY  FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_SX_RESULT.PLAN_ID= ZTB_QLSXPLAN.PLAN_ID)${condition}) AS AA
           GROUP BY  AA.SX_MONTH
           ORDER BY AA.SX_MONTH ASC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updatechamcongdiemdanhauto":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";        
+          let setpdQuery =  `INSERT INTO ZTBATTENDANCETB (CTR_CD,EMPL_NO, APPLY_DATE, ON_OFF,CURRENT_TEAM) 
+          SELECT ZTBEMPLINFO.CTR_CD, ZTBEMPLINFO.EMPL_NO,  CAST(GETDATE() as date) AS CHECK_DATE, 1 AS ON_OFF, ZTBEMPLINFO.WORK_SHIFT_CODE AS CURRENT_TEAM FROM
+          ZTBEMPLINFO JOIN
+          (SELECT DISTINCT CHECK_DATE, NV_CCID FROM C001 WHERE CHECK_DATE = CAST(GETDATE() as date)) AS CC 
+          ON (CC.NV_CCID = ZTBEMPLINFO.NV_CCID)
+          WHERE NOT EXISTS 
+          (SELECT EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO)`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
