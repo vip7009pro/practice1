@@ -116,12 +116,12 @@ io.on("connection", (client) => {
 const port = 3007;
 var corsOptions = {
   origin: [
+    "http://14.160.33.94:3000", 
     "http://localhost:3000",
     "http://64.176.197.26:80",
     "http://64.176.197.26",
     "http://localhost",
     "http://14.160.33.94",
-    "http://14.160.33.94:3000", 
     "http://14.160.33.94:3010",
     "http://14.160.33.94:3030",   
     "https://script.google.com/",
