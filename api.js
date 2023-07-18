@@ -8936,7 +8936,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
               condition += ` AND M110.CUST_NAME_KD LIKE '${DATA.CUST_NAME_KD}'`
             }
             let setpdQuery =  ` SELECT 
-            M110.CUST_NAME_KD, M100.G_NAME, M100.G_NAME_KD, M100.PROD_MAIN_MATERIAL, AA.MOQ, AA.[1] AS PRICE1,AA.[2] AS PRICE2,AA.[3] AS PRICE3,AA.[4] AS PRICE4,AA.[5] AS PRICE5,AA.[6] AS PRICE6,AA.[7] AS PRICE7,AA.[8] AS PRICE8,AA.[9] AS PRICE9,AA.[10] AS PRICE10,AA.[11] AS PRICE11,AA.[12] AS PRICE12,AA.[13] AS PRICE13,AA.[14] AS PRICE14,AA.[15] AS PRICE15,AA.[16] AS PRICE16,AA.[17] AS PRICE17,AA.[18] AS PRICE18,AA.[19] AS PRICE19,AA.[20] AS PRICE20, BB.[1] AS PRICE_DATE1,BB.[2] AS PRICE_DATE2,BB.[3] AS PRICE_DATE3,BB.[4] AS PRICE_DATE4,BB.[5] AS PRICE_DATE5,BB.[6] AS PRICE_DATE6,BB.[7] AS PRICE_DATE7,BB.[8] AS PRICE_DATE8,BB.[9] AS PRICE_DATE9,BB.[10] AS PRICE_DATE10,BB.[11] AS PRICE_DATE11,BB.[12] AS PRICE_DATE12,BB.[13] AS PRICE_DATE13,BB.[14] AS PRICE_DATE14,BB.[15] AS PRICE_DATE15,BB.[16] AS PRICE_DATE16,BB.[17] AS PRICE_DATE17,BB.[18] AS PRICE_DATE18,BB.[19] AS PRICE_DATE19,BB.[20] AS PRICE_DATE20
+            M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, M100.PROD_MAIN_MATERIAL, AA.MOQ, AA.[1] AS PRICE1,AA.[2] AS PRICE2,AA.[3] AS PRICE3,AA.[4] AS PRICE4,AA.[5] AS PRICE5,AA.[6] AS PRICE6,AA.[7] AS PRICE7,AA.[8] AS PRICE8,AA.[9] AS PRICE9,AA.[10] AS PRICE10,AA.[11] AS PRICE11,AA.[12] AS PRICE12,AA.[13] AS PRICE13,AA.[14] AS PRICE14,AA.[15] AS PRICE15,AA.[16] AS PRICE16,AA.[17] AS PRICE17,AA.[18] AS PRICE18,AA.[19] AS PRICE19,AA.[20] AS PRICE20, BB.[1] AS PRICE_DATE1,BB.[2] AS PRICE_DATE2,BB.[3] AS PRICE_DATE3,BB.[4] AS PRICE_DATE4,BB.[5] AS PRICE_DATE5,BB.[6] AS PRICE_DATE6,BB.[7] AS PRICE_DATE7,BB.[8] AS PRICE_DATE8,BB.[9] AS PRICE_DATE9,BB.[10] AS PRICE_DATE10,BB.[11] AS PRICE_DATE11,BB.[12] AS PRICE_DATE12,BB.[13] AS PRICE_DATE13,BB.[14] AS PRICE_DATE14,BB.[15] AS PRICE_DATE15,BB.[16] AS PRICE_DATE16,BB.[17] AS PRICE_DATE17,BB.[18] AS PRICE_DATE18,BB.[19] AS PRICE_DATE19,BB.[20] AS PRICE_DATE20
             FROM 
             (
               SELECT * FROM 
@@ -8964,6 +8964,103 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             ${condition}
             `;
             //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "loadbanggia2":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";     
+            let condition =` WHERE 1=1`;
+            if(DATA.ALLTIME !==true)   
+            {
+              condition +=  ` AND PROD_PRICE_TABLE.PRICE_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+            }
+            if(DATA.G_CODE !=='')
+            {
+              condition += ` AND  M100.G_CODE='${DATA.G_CODE}'`;
+            }
+            if(DATA.G_NAME !=='')
+            {
+              condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
+            }
+            if(DATA.M_NAME !=='')
+            {
+              condition +=` AND M100.PROD_MAIN_MATERIAL LIKE '%${DATA.M_NAME}%'`
+            }
+            if(DATA.CUST_NAME_KD !=='')
+            {
+              condition += ` AND M110.CUST_NAME_KD LIKE '${DATA.CUST_NAME_KD}'`
+            }
+            let setpdQuery =  ` 
+            SELECT M100.PROD_MAIN_MATERIAL, M110.CUST_NAME_KD ,PROD_PRICE_TABLE.CUST_CD,PROD_PRICE_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD, PROD_PRICE_TABLE.PRICE_DATE,PROD_PRICE_TABLE.MOQ,PROD_PRICE_TABLE.PROD_PRICE,PROD_PRICE_TABLE.INS_DATE,PROD_PRICE_TABLE.INS_EMPL,PROD_PRICE_TABLE.UPD_DATE,PROD_PRICE_TABLE.UPD_EMPL,PROD_PRICE_TABLE.REMARK,PROD_PRICE_TABLE.FINAL
+            FROM 
+            PROD_PRICE_TABLE
+            LEFT JOIN 
+            M100 ON (M100.G_CODE = PROD_PRICE_TABLE.G_CODE)
+            LEFT JOIN
+            M110 ON (M110.CUST_CD = PROD_PRICE_TABLE.CUST_CD)
+            ${condition}
+            ORDER BY M100.G_CODE ASC, PROD_PRICE_TABLE.PRICE_DATE ASC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "loadbanggiamoinhat":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";     
+            let condition =` WHERE 1=1`;
+            if(DATA.ALLTIME !==true)   
+            {
+              condition +=  ` AND PROD_PRICE_TABLE.PRICE_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+            }
+            if(DATA.G_CODE !=='')
+            {
+              condition += ` AND  M100.G_CODE='${DATA.G_CODE}'`;
+            }
+            if(DATA.G_NAME !=='')
+            {
+              condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
+            }
+            if(DATA.M_NAME !=='')
+            {
+              condition +=` AND M100.PROD_MAIN_MATERIAL LIKE '%${DATA.M_NAME}%'`
+            }
+            if(DATA.CUST_NAME_KD !=='')
+            {
+              condition += ` AND M110.CUST_NAME_KD LIKE '${DATA.CUST_NAME_KD}'`
+            }
+            let setpdQuery =  ` 
+            SELECT M110.CUST_NAME_KD ,PROD_PRICE_TABLE.CUST_CD,PROD_PRICE_TABLE.G_CODE,M100.G_NAME, M100.PROD_MAIN_MATERIAL, PROD_PRICE_TABLE.PRICE_DATE,PROD_PRICE_TABLE.MOQ,PROD_PRICE_TABLE.PROD_PRICE,PROD_PRICE_TABLE.INS_DATE,PROD_PRICE_TABLE.INS_EMPL,PROD_PRICE_TABLE.UPD_DATE,PROD_PRICE_TABLE.UPD_EMPL,PROD_PRICE_TABLE.REMARK,PROD_PRICE_TABLE.FINAL
+            FROM 
+           (SELECT CUST_CD, G_CODE, MOQ, MAX(PRICE_DATE) AS LAST_PRICE_DATE FROM PROD_PRICE_TABLE GROUP BY CUST_CD, G_CODE, MOQ) AS AA
+           LEFT JOIN 
+           PROD_PRICE_TABLE
+           ON (AA.CUST_CD = PROD_PRICE_TABLE.CUST_CD AND AA.G_CODE = PROD_PRICE_TABLE.G_CODE AND AA.LAST_PRICE_DATE = PROD_PRICE_TABLE.PRICE_DATE) 
+           LEFT JOIN 
+           M100 ON (M100.G_CODE = PROD_PRICE_TABLE.G_CODE)
+           LEFT JOIN
+           M110 ON (M110.CUST_CD = PROD_PRICE_TABLE.CUST_CD)
+            ${condition}
+            ORDER BY M100.G_CODE ASC, PROD_PRICE_TABLE.MOQ DESC, PROD_PRICE_TABLE.PRICE_DATE ASC
+            `;
+            console.log(setpdQuery);
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
             res.send(checkkq);
