@@ -5041,7 +5041,7 @@ LEFT JOIN (
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT FSC, PO_TYPE, G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, EQ3, EQ4, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN, FACTORY,  Setting1, Setting2, UPH1, UPH2, Step1, Step2, LOSS_SX1, LOSS_SX2, LOSS_SETTING1 , LOSS_SETTING2 ,NOTE  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
+          let setpdQuery = `SELECT FSC, PO_TYPE, G_CODE, CUST_CD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, EQ3, EQ4, PROD_DIECUT_STEP, PROD_PRINT_TIMES, REMK, USE_YN, FACTORY,  Setting1, Setting2,Setting3,Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2,Step3,Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4, LOSS_SETTING1 , LOSS_SETTING2 ,LOSS_SETTING3 ,LOSS_SETTING4 ,NOTE  FROM M100 WHERE G_CODE='${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
@@ -8157,77 +8157,236 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT EQ1 AS EQ_NAME, isnull(LEADTIME1,0) + isnull(LEADTIME2,0) AS YCSX_BALANCE FROM 
+          let setpdQuery = `SELECT 
+          EQ1 AS EQ_NAME, 
+          (isnull(LEADTIME1, 0) + isnull(LEADTIME2, 0))*1.2 AS YCSX_BALANCE 
+        FROM 
           (
-          SELECT YCSXCAPATB.EQ1, SUM(YCSXCAPATB.LEATIME1) AS LEADTIME1 FROM 
-          (SELECT TONYCSX_TABLE.EQ1, 
-          CASE WHEN TONYCSX_TABLE.TON_CD1 <=0 THEN 0 ELSE (TONYCSX_TABLE.Setting1 + TONYCSX_TABLE.TON_CD1/TONYCSX_TABLE.UPH1*60*Step1) END AS LEATIME1  
-          FROM 
-          (
-          SELECT P400.PROD_REQUEST_NO,  M100.G_CODE, M100.G_NAME,P400.PROD_REQUEST_QTY, isnull(KQSXTB.CD1,0) AS CD1, isnull(KQSXTB.CD2,0) AS CD2, 
-          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) ELSE 0 END AS TON_CD1,
-          CASE WHEN CAPA_TB.EQ2 IN ('FR','SR','DC','ED') THEN 
-          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) ELSE 0 END 
-          ELSE 0 END TON_CD2,
-          CAPA_TB.FACTORY, CAPA_TB.EQ1, CAPA_TB.EQ2,  CAPA_TB.Setting1, CAPA_TB.Setting2, CAPA_TB.UPH1, CAPA_TB.UPH2, CAPA_TB.Step1, CAPA_TB.Step2  FROM P400
-          LEFT JOIN 
-          ((SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2 FROM 
-          (
-              SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
-          )
-          AS PV
-          PIVOT
-          ( 
-          SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2])
-          ) 
-          AS PVTB)) AS KQSXTB ON (P400.PROD_REQUEST_NO = KQSXTB.PROD_REQUEST_NO)
-          LEFT JOIN 
-          (
-          SELECT G_CODE, G_NAME, FACTORY, EQ1, EQ2, Setting1, Setting2, UPH1, UPH2, Step1, Step2 FROM M100 WHERE FACTORY IN ('NM1','NM2') AND EQ1 IN('FR','SR','DC','ED') AND Setting1 is not null AND Setting1 <>0 AND UPH1 is not null AND UPH1 <>0 AND ((EQ2 IN ('FR','SR','DC','ED') AND Setting2 is not null AND Setting2 <>0 AND UPH2 is not null AND UPH2 <>0) OR (EQ2 NOT IN ('FR','SR','DC','ED')))
-          ) AS CAPA_TB
-          ON(CAPA_TB.G_CODE = P400.G_CODE)
-          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
-          WHERE PROD_REQUEST_DATE > '20230101' AND CAPA_TB.FACTORY is not null AND P400.YCSX_PENDING=1  AND P400.CODE_55<>'04'
-          ) AS TONYCSX_TABLE
-          ) AS YCSXCAPATB
-          GROUP BY YCSXCAPATB.EQ1
-          ) AS LTCD1
-          LEFT JOIN
-          (SELECT YCSXCAPATB.EQ2, SUM(YCSXCAPATB.LEATIME2) AS LEADTIME2 FROM 
-          (SELECT TONYCSX_TABLE.EQ2, CASE WHEN TONYCSX_TABLE.EQ2 IN ('FR','SR','DC','ED') THEN 
-          CASE WHEN TONYCSX_TABLE.TON_CD2 <= 0 THEN 0 ELSE (TONYCSX_TABLE.Setting2 + TONYCSX_TABLE.TON_CD2/TONYCSX_TABLE.UPH2*60*Step2) END ELSE 0 END AS LEATIME2   FROM 
-          (
-          SELECT P400.PROD_REQUEST_NO,  M100.G_CODE, M100.G_NAME,P400.PROD_REQUEST_QTY, isnull(KQSXTB.CD1,0) AS CD1, isnull(KQSXTB.CD2,0) AS CD2, 
-          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD1,0) ELSE 0 END AS TON_CD1,
-          CASE WHEN CAPA_TB.EQ2 IN ('FR','SR','DC','ED') THEN 
-          CASE WHEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) >=0 THEN P400.PROD_REQUEST_QTY- isnull(KQSXTB.CD2,0) ELSE 0 END 
-          ELSE 0 END TON_CD2,
-          CAPA_TB.FACTORY, CAPA_TB.EQ1, CAPA_TB.EQ2,  CAPA_TB.Setting1, CAPA_TB.Setting2, CAPA_TB.UPH1, CAPA_TB.UPH2, CAPA_TB.Step1, CAPA_TB.Step2  FROM P400
-          LEFT JOIN 
-          ((SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2 FROM 
-          (
-              SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
-          )
-          AS PV
-          PIVOT
-          ( 
-          SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2])
-          ) 
-          AS PVTB)) AS KQSXTB ON (P400.PROD_REQUEST_NO = KQSXTB.PROD_REQUEST_NO)
-          LEFT JOIN 
-          (
-          SELECT G_CODE, G_NAME, FACTORY, EQ1, EQ2, Setting1, Setting2, UPH1, UPH2, Step1, Step2 FROM M100 WHERE FACTORY IN ('NM1','NM2') AND EQ1 IN('FR','SR','DC','ED') AND Setting1 is not null AND Setting1 <>0 AND UPH1 is not null AND UPH1 <>0 AND ((EQ2 IN ('FR','SR','DC','ED') AND Setting2 is not null AND Setting2 <>0 AND UPH2 is not null AND UPH2 <>0) OR (EQ2 NOT IN ('FR','SR','DC','ED')))
-          ) AS CAPA_TB
-          ON(CAPA_TB.G_CODE = P400.G_CODE)
-          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
-          WHERE PROD_REQUEST_DATE > '20230101' AND CAPA_TB.FACTORY is not null AND P400.YCSX_PENDING=1  AND P400.CODE_55<>'04'
-          ) AS TONYCSX_TABLE
-          ) AS YCSXCAPATB
-          WHERE YCSXCAPATB.EQ2 IN ('FR','SR','DC','ED')
-          GROUP BY YCSXCAPATB.EQ2
-          ) AS LTCD2
-          ON (LTCD1.EQ1 = LTCD2.EQ2)
-          ORDER BY EQ1 DESC
+            SELECT 
+              YCSXCAPATB.EQ1, 
+              SUM(YCSXCAPATB.LEATIME1) AS LEADTIME1 
+            FROM 
+              (
+                SELECT 
+                  TONYCSX_TABLE.EQ1, 
+                  CASE WHEN TONYCSX_TABLE.TON_CD1 <= 0 THEN 0 ELSE (
+                    TONYCSX_TABLE.Setting1 + TONYCSX_TABLE.TON_CD1 / TONYCSX_TABLE.UPH1 * 60 * Step1
+                  ) END AS LEATIME1 
+                FROM 
+                  (
+                    SELECT 
+                      P400.PROD_REQUEST_NO, 
+                      M100.G_CODE, 
+                      M100.G_NAME, 
+                      P400.PROD_REQUEST_QTY, 
+                      isnull(KQSXTB.CD1, 0) AS CD1, 
+                      isnull(KQSXTB.CD2, 0) AS CD2, 
+                      CASE WHEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD1, 0) >= 0 THEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD1, 0) ELSE 0 END AS TON_CD1, 
+                      CASE WHEN CAPA_TB.EQ2 IN ('FR', 'SR', 'DC', 'ED') THEN CASE WHEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD2, 0) >= 0 THEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD2, 0) ELSE 0 END ELSE 0 END TON_CD2, 
+                      CAPA_TB.FACTORY, 
+                      CAPA_TB.EQ1, 
+                      CAPA_TB.EQ2, 
+                      CAPA_TB.Setting1, 
+                      CAPA_TB.Setting2, 
+                      CAPA_TB.UPH1, 
+                      CAPA_TB.UPH2, 
+                      CAPA_TB.Step1, 
+                      CAPA_TB.Step2 
+                    FROM 
+                      P400 
+                      LEFT JOIN (
+                        (
+                          SELECT 
+                            PVTB.PROD_REQUEST_NO, 
+                            isnull(PVTB.[1], 0) AS CD1, 
+                            isnull(PVTB.[2], 0) AS CD2 
+                          FROM 
+                            (
+                              SELECT 
+                                ZTB_QLSXPLAN.PROD_REQUEST_NO, 
+                                ZTB_QLSXPLAN.PROCESS_NUMBER, 
+                                SUM(
+                                  isnull(SX_RESULT, 0)
+                                ) AS KETQUASX 
+                              FROM 
+                                ZTB_SX_RESULT 
+                                LEFT JOIN ZTB_QLSXPLAN ON (
+                                  ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID
+                                ) 
+                              WHERE 
+                                ZTB_QLSXPLAN.STEP = 0 
+                              GROUP BY 
+                                ZTB_QLSXPLAN.PROD_REQUEST_NO, 
+                                ZTB_QLSXPLAN.PROCESS_NUMBER
+                            ) AS PV PIVOT (
+                              SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1], [2])
+                            ) AS PVTB
+                        )
+                      ) AS KQSXTB ON (
+                        P400.PROD_REQUEST_NO = KQSXTB.PROD_REQUEST_NO
+                      ) 
+                      LEFT JOIN (
+                        SELECT 
+                          G_CODE, 
+                          G_NAME, 
+                          FACTORY, 
+                          EQ1, 
+                          EQ2, 
+                          Setting1, 
+                          Setting2, 
+                          UPH1, 
+                          UPH2, 
+                          Step1, 
+                          Step2 
+                        FROM 
+                          M100 
+                        WHERE 
+                          FACTORY IN ('NM1', 'NM2') 
+                          AND EQ1 IN('FR', 'SR', 'DC', 'ED') 
+                          AND Setting1 is not null 
+                          AND Setting1 <> 0 
+                          AND UPH1 is not null 
+                          AND UPH1 <> 0 
+                          AND (
+                            (
+                              EQ2 IN ('FR', 'SR', 'DC', 'ED') 
+                              AND Setting2 is not null 
+                              AND Setting2 <> 0 
+                              AND UPH2 is not null 
+                              AND UPH2 <> 0
+                            ) 
+                            OR (
+                              EQ2 NOT IN ('FR', 'SR', 'DC', 'ED')
+                            )
+                          )
+                      ) AS CAPA_TB ON(CAPA_TB.G_CODE = P400.G_CODE) 
+                      LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) 
+                LEFT JOIN (SELECT PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS OUTPUT_QTY FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO) AS INSP_OUTPUT ON(P400.PROD_REQUEST_NO= INSP_OUTPUT.PROD_REQUEST_NO)
+                    WHERE 
+                      PROD_REQUEST_DATE > '20230101'  AND P400.PROD_REQUEST_QTY > INSP_OUTPUT.OUTPUT_QTY
+                      AND CAPA_TB.FACTORY is not null 
+                      AND P400.YCSX_PENDING = 1 
+                      AND P400.CODE_55 <> '04'
+                  ) AS TONYCSX_TABLE
+              ) AS YCSXCAPATB 
+            GROUP BY 
+              YCSXCAPATB.EQ1
+          ) AS LTCD1 
+          LEFT JOIN (
+            SELECT 
+              YCSXCAPATB.EQ2, 
+              SUM(YCSXCAPATB.LEATIME2) AS LEADTIME2 
+            FROM 
+              (
+                SELECT 
+                  TONYCSX_TABLE.EQ2, 
+                  CASE WHEN TONYCSX_TABLE.EQ2 IN ('FR', 'SR', 'DC', 'ED') THEN CASE WHEN TONYCSX_TABLE.TON_CD2 <= 0 THEN 0 ELSE (
+                    TONYCSX_TABLE.Setting2 + TONYCSX_TABLE.TON_CD2 / TONYCSX_TABLE.UPH2 * 60 * Step2
+                  ) END ELSE 0 END AS LEATIME2 
+                FROM 
+                  (
+                    SELECT 
+                      P400.PROD_REQUEST_NO, 
+                      M100.G_CODE, 
+                      M100.G_NAME, 
+                      P400.PROD_REQUEST_QTY, 
+                      isnull(KQSXTB.CD1, 0) AS CD1, 
+                      isnull(KQSXTB.CD2, 0) AS CD2, 
+                      CASE WHEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD1, 0) >= 0 THEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD1, 0) ELSE 0 END AS TON_CD1, 
+                      CASE WHEN CAPA_TB.EQ2 IN ('FR', 'SR', 'DC', 'ED') THEN CASE WHEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD2, 0) >= 0 THEN P400.PROD_REQUEST_QTY - isnull(KQSXTB.CD2, 0) ELSE 0 END ELSE 0 END TON_CD2, 
+                      CAPA_TB.FACTORY, 
+                      CAPA_TB.EQ1, 
+                      CAPA_TB.EQ2, 
+                      CAPA_TB.Setting1, 
+                      CAPA_TB.Setting2, 
+                      CAPA_TB.UPH1, 
+                      CAPA_TB.UPH2, 
+                      CAPA_TB.Step1, 
+                      CAPA_TB.Step2 
+                    FROM 
+                      P400 
+                      LEFT JOIN (
+                        (
+                          SELECT 
+                            PVTB.PROD_REQUEST_NO, 
+                            isnull(PVTB.[1], 0) AS CD1, 
+                            isnull(PVTB.[2], 0) AS CD2 
+                          FROM 
+                            (
+                              SELECT 
+                                ZTB_QLSXPLAN.PROD_REQUEST_NO, 
+                                ZTB_QLSXPLAN.PROCESS_NUMBER, 
+                                SUM(
+                                  isnull(SX_RESULT, 0)
+                                ) AS KETQUASX 
+                              FROM 
+                                ZTB_SX_RESULT 
+                                LEFT JOIN ZTB_QLSXPLAN ON (
+                                  ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID
+                                ) 
+                              WHERE 
+                                ZTB_QLSXPLAN.STEP = 0 
+                              GROUP BY 
+                                ZTB_QLSXPLAN.PROD_REQUEST_NO, 
+                                ZTB_QLSXPLAN.PROCESS_NUMBER
+                            ) AS PV PIVOT (
+                              SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1], [2])
+                            ) AS PVTB
+                        )
+                      ) AS KQSXTB ON (
+                        P400.PROD_REQUEST_NO = KQSXTB.PROD_REQUEST_NO
+                      ) 
+                      LEFT JOIN (
+                        SELECT 
+                          G_CODE, 
+                          G_NAME, 
+                          FACTORY, 
+                          EQ1, 
+                          EQ2, 
+                          Setting1, 
+                          Setting2, 
+                          UPH1, 
+                          UPH2, 
+                          Step1, 
+                          Step2 
+                        FROM 
+                          M100 
+                        WHERE 
+                          FACTORY IN ('NM1', 'NM2') 
+                          AND EQ1 IN('FR', 'SR', 'DC', 'ED') 
+                          AND Setting1 is not null 
+                          AND Setting1 <> 0 
+                          AND UPH1 is not null 
+                          AND UPH1 <> 0 
+                          AND (
+                            (
+                              EQ2 IN ('FR', 'SR', 'DC', 'ED') 
+                              AND Setting2 is not null 
+                              AND Setting2 <> 0 
+                              AND UPH2 is not null 
+                              AND UPH2 <> 0
+                            ) 
+                            OR (
+                              EQ2 NOT IN ('FR', 'SR', 'DC', 'ED')
+                            )
+                          )
+                      ) AS CAPA_TB ON(CAPA_TB.G_CODE = P400.G_CODE) 
+                      LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) 
+                LEFT JOIN (SELECT PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS OUTPUT_QTY FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO) AS INSP_OUTPUT ON(P400.PROD_REQUEST_NO= INSP_OUTPUT.PROD_REQUEST_NO)
+                    WHERE 
+                      PROD_REQUEST_DATE > '20230101' AND P400.PROD_REQUEST_QTY > INSP_OUTPUT.OUTPUT_QTY
+                      AND CAPA_TB.FACTORY is not null 
+                      AND P400.YCSX_PENDING = 1 
+                      AND P400.CODE_55 <> '04'
+                  ) AS TONYCSX_TABLE
+              ) AS YCSXCAPATB 
+            WHERE 
+              YCSXCAPATB.EQ2 IN ('FR', 'SR', 'DC', 'ED') 
+            GROUP BY 
+              YCSXCAPATB.EQ2
+          ) AS LTCD2 ON (LTCD1.EQ1 = LTCD2.EQ2) 
+        ORDER BY 
+          EQ1 DESC 
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -9260,10 +9419,96 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-          SELECT ZTB_BARCODE_MANAGER.G_CODE, M100.G_NAME, ZTB_BARCODE_MANAGER.BARCODE_STT, ZTB_BARCODE_MANAGER.BARCODE_TYPE, ZTB_BARCODE_MANAGER.BARCODE_CONTENT, ZTB_BARCODE_MANAGER.INS_DATE, ZTB_BARCODE_MANAGER.INS_EMPL, ZTB_BARCODE_MANAGER.UPD_DATE, ZTB_BARCODE_MANAGER.UPD_EMPL FROM ZTB_BARCODE_MANAGER LEFT JOIN M100 ON (M100.G_CODE = ZTB_BARCODE_MANAGER.G_CODE)
+          SELECT pvtb.G_CODE,pvtb.G_NAME, pvtb.BARCODE_STT ,pvtb.BARCODE_TYPE, pvtb.[RND] AS BARCODE_RND,  pvtb.[DTC] AS BARCODE_INSP,  pvtb.[KT] AS BARCODE_RELI, 
+          CASE WHEN pvtb.[RND] = pvtb.[DTC] AND pvtb.[KT] = pvtb.[DTC] THEN 'OK' ELSE 'NG' END AS STATUS
+          FROM 
+          (
+          SELECT ZTB_BARCODE_MANAGER.G_CODE, M100.G_NAME, ZTB_BARCODE_MANAGER.BARCODE_STT, ZTB_BARCODE_MANAGER.BARCODE_TYPE, ZTB_BARCODE_MANAGER.MAINDEPTNAME, ZTB_BARCODE_MANAGER.BARCODE_CONTENT FROM ZTB_BARCODE_MANAGER LEFT JOIN M100 ON (M100.G_CODE = ZTB_BARCODE_MANAGER.G_CODE)
+          ) AS bangnguon
+          PIVOT
+          (
+            MIN(bangnguon.BARCODE_CONTENT) 
+            FOR bangnguon.MAINDEPTNAME IN ([RND],[DTC],[KT])
+          ) AS pvtb
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkbarcodeExist":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+         SELECT * FROM ZTB_BARCODE_MANAGER WHERE G_CODE ='${DATA.G_CODE}'
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "addBarcode":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQueryrnd = `
+            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE, MAINDEPTNAME, BARCODE_CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','RND','${DATA.BARCODE_RND}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+          `;
+          checkkq = await queryDB(setpdQueryrnd);
+          /* console.log(setpdQueryrnd);
+           setpdQueryrnd = `
+            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE, MAINDEPTNAME, BARCODE_CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','DTC','${DATA.BARCODE_RELI}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+          `;
+          checkkq = await queryDB(setpdQueryrnd);
+          console.log(setpdQueryrnd);
+           setpdQueryrnd = `
+            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE, MAINDEPTNAME, BARCODE_CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','KT','${DATA.BARCODE_INSP}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+          `;         
+          checkkq = await queryDB(setpdQueryrnd);
+          console.log(setpdQueryrnd); */
+           //console.log(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateBarcode":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQueryrnd = `
+            UPDATE ZTB_BARCODE_MANAGER SET BARCODE_TYPE='${DATA.BARCODE_TYPE}', BARCODE_CONTENT='${DATA.BARCODE_RND}' WHERE G_CODE='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT} AND MAINDEPTNAME='RND'
+          `;
+          checkkq = await queryDB(setpdQueryrnd);
+          console.log(setpdQueryrnd);
+           setpdQueryrnd = `
+           
+          `;
+          checkkq = await queryDB(setpdQueryrnd);
+          console.log(setpdQueryrnd);
+           setpdQueryrnd = `
+            
+          `;         
+          checkkq = await queryDB(setpdQueryrnd);
+          console.log(setpdQueryrnd);
+           //console.log(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
