@@ -9678,6 +9678,24 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
+        case "getlastestCODKH":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            SELECT TOP 1  G_NAME_KD FROM M100 WHERE CUST_CD ='${DATA.CUST_CD}' ORDER BY G_NAME_KD DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
