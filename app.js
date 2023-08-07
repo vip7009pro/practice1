@@ -13,23 +13,41 @@ let client_array = [];
 
 
 
-let API_PORT = 5011;
+let API_PORT = parseInt(process.env.API_PORT);
+let SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
+let DRAW_PATH =process.env.DRAW_PATH;
+let EMPL_IMAGE_PATH =process.env.EMPL_IMAGE_PATH;
+let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
+let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
+/* let API_PORT = 5011;
 let SOCKET_PORT = 3005;
 let DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
 let EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
 let TEMP_UPLOAD_FOLDER = "C:\\TEMP_UPLOAD_FOLDER\\";
-let DESTINATION_FOlDER = "C:\\xampp\\htdocs";
+let DESTINATION_FOlDER = "C:\\xampp\\htdocs"; */
 
-const SELECT_SERVER=1;
+const SELECT_SERVER=3;
 
 if(SELECT_SERVER===1)
 {
+  
+}
+/* {
   API_PORT = 3007;
   SOCKET_PORT = 3005;
   DRAW_PATH = "D:\\xampp\\htdocs\\banve\\";
   EMPL_IMAGE_PATH = "D:\\xampp\\htdocs\\Picture_NS\\";
   TEMP_UPLOAD_FOLDER = "D:\\TEMP_UPLOAD_FOLDER\\";
   DESTINATION_FOlDER = "D:\\UPLOADFILES\\";
+}
+else if(SELECT_SERVER===3)
+{
+  API_PORT = 3007;
+  SOCKET_PORT = 3005;
+  DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
+  EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
+  TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
+  DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
 }
 else
 {
@@ -40,7 +58,7 @@ else
   EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
   TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
   DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
-}
+} */
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -51,6 +69,7 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
+
 const upload = multer({ storage: storage });
 const storage2 = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -68,7 +87,7 @@ app.use(
     threshold: 10 * 1024,
   })
 );
-console.log("usser  =" + process.env.DB_USER);
+console.log("user  =" + process.env.DB_USER);
 console.log("server  =" + process.env.DB_SERVER);
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
@@ -116,7 +135,9 @@ io.on("connection", (client) => {
 const port = 3007;
 var corsOptions = {
   origin: [
+    "http://192.168.1.22:3000", 
     "http://14.160.33.94:3000", 
+    "http://192.168.100.120", 
     "http://localhost:3000",
     "http://64.176.197.26:80",
     "http://64.176.197.26",
