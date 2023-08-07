@@ -9657,6 +9657,27 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
+        case "loadquanlygiaonhan":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT TOP 100 KNIFE_FILM.KNIFE_FILM_ID,KNIFE_FILM.FACTORY_NAME,KNIFE_FILM.NGAYBANGIAO,KNIFE_FILM.G_CODE, M100.G_NAME, M100.PROD_TYPE, M110.CUST_NAME_KD, KNIFE_FILM.LOAIBANGIAO_PDP,KNIFE_FILM.LOAIPHATHANH,KNIFE_FILM.SOLUONG,KNIFE_FILM.SOLUONGOHP,KNIFE_FILM.LYDOBANGIAO,KNIFE_FILM.PQC_EMPL_NO,KNIFE_FILM.RND_EMPL_NO,KNIFE_FILM.SX_EMPL_NO,KNIFE_FILM.REMARK,KNIFE_FILM.CFM_GIAONHAN,KNIFE_FILM.CFM_INS_EMPL,KNIFE_FILM.CFM_DATE,KNIFE_FILM.KNIFE_FILM_STATUS,KNIFE_FILM.MA_DAO,KNIFE_FILM.TOTAL_PRESS,KNIFE_FILM.CUST_CD,KNIFE_FILM.KNIFE_TYPE
+          FROM KNIFE_FILM 
+          LEFT JOIN M100 ON M100.G_CODE = KNIFE_FILM.G_CODE
+          LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
