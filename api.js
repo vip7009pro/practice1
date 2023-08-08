@@ -755,7 +755,7 @@ const config = {
   password: process.env.DB_PASS,
   server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
-  /* port: 5005, */
+ /*  port: 5005, */
   port: parseInt(process.env.DB_PORT),
   trustServerCertificate: true,
   requestTimeout: 300000,
@@ -885,7 +885,7 @@ exports.process_api = function (req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
-  /*   if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
+   /*  if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
@@ -2515,7 +2515,7 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");  
           let query = "";
-          query = `INSERT INTO M110 (CTR_CD, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}','${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}')`;
+          query = `INSERT INTO M110 (CTR_CD, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}')`;
           console.log(query);
           kqua = await queryDB(query);
           //console.log(kqua);
@@ -2529,7 +2529,7 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 ='${DATA.CUST_ADDR1}', TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME ='${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK ='${DATA.REMK}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CUST_CD='${DATA.CUST_CD}'`;
+          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CUST_CD='${DATA.CUST_CD}'`;
           console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -9477,7 +9477,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             FOR bangnguon.MAINDEPTNAME IN ([RND],[DTC],[KT])
           ) AS pvtb
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -9671,6 +9671,81 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           FROM KNIFE_FILM 
           LEFT JOIN M100 ON M100.G_CODE = KNIFE_FILM.G_CODE
           LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadKTP_IN":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT CAST(I660.INS_DATE as date) AS IN_DATE,I660.FACTORY,I660.AUTO_ID,I660.INSPECT_OUTPUT_ID,I660.PACK_ID,M010.EMPL_NAME, I660.PROD_REQUEST_NO,M110.CUST_NAME_KD, I660.G_CODE, M100.G_NAME, M100.G_NAME_KD, I660.PLAN_ID,I660.IN_QTY,
+          CASE WHEN I660.USE_YN= 'T' THEN 'PENDING' WHEN I660.USE_YN= 'Y' THEN 'TONKHO'  ELSE 'DA GIAO' END AS USE_YN
+          ,I660.EMPL_GIAO,I660.EMPL_NHAN,I660.INS_DATE,I660.INS_EMPL,I660.UPD_DATE,I660.UPD_EMPL,
+          CASE WHEN I660.STATUS ='N' THEN 'OK' ELSE 'BL' END AS STATUS
+          ,I660.REMARK
+          FROM I660
+          LEFT JOIN M100 ON (M100.G_CODE = I660.G_CODE)
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = I660.PROD_REQUEST_NO)
+          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD)
+          LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadKTP_OUT":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT  O660.OUT_DATE, O660.FACTORY,O660.AUTO_ID,O660.INSPECT_OUTPUT_ID,O660.PACK_ID,M010.EMPL_NAME, O660.PROD_REQUEST_NO,O660.G_CODE,M100.G_NAME, M100.G_NAME_KD, O660.PLAN_ID,O660.CUST_CD,O660.OUT_QTY, M110.CUST_NAME_KD, 
+          CASE WHEN O660.OUT_TYPE='N' THEN 'NORMAL' WHEN O660.OUT_TYPE='F' THEN 'FREE' WHEN O660.OUT_TYPE='L' THEN 'CHANGE LOT' ELSE 'OTHER' END AS OUT_TYPE ,
+          CASE WHEN O660.USE_YN='T' THEN 'PREPARING' WHEN O660.USE_YN='Y' THEN 'PRP COMPLETED' ELSE 'COMPLETED' END AS USE_YN
+          ,O660.INS_DATE,O660.INS_EMPL,O660.UPD_DATE,O660.UPD_EMPL,O660.STATUS,O660.REMARK,O660.AUTO_ID_IN,O660.OUT_PRT_SEQ
+          FROM O660
+          LEFT JOIN M100 ON (M100.G_CODE = O660.G_CODE)
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = O660.PROD_REQUEST_NO)
+          LEFT JOIN M110 ON (M110.CUST_CD = O660.CUST_CD)
+          LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO) 
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadSTOCKG_CODE":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD, AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
+          (
+          SELECT G_CODE, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y' GROUP BY G_CODE
+          ) AS AA
+          LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE)
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
