@@ -8,7 +8,6 @@ var compression = require("compression");
 const fileupload = require("express-fileupload");
 var multer = require("multer");
 const fs = require("fs");
-//var upload = multer({ dest: 'uploadfiles/' });
 let client_array = [];
 
 
@@ -26,9 +25,9 @@ let EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
 let TEMP_UPLOAD_FOLDER = "C:\\TEMP_UPLOAD_FOLDER\\";
 let DESTINATION_FOlDER = "C:\\xampp\\htdocs"; */
 
-const SELECT_SERVER=1;
+const SELECT_SERVER=3;
 
-
+/* 
 if(SELECT_SERVER===1)
 {
   API_PORT = 3007;
@@ -56,11 +55,11 @@ else
   EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
   TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
   DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
-}
+} */
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploadfiles");
+    cb(null, TEMP_UPLOAD_FOLDER);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
