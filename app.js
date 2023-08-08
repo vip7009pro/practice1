@@ -26,13 +26,11 @@ let EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
 let TEMP_UPLOAD_FOLDER = "C:\\TEMP_UPLOAD_FOLDER\\";
 let DESTINATION_FOlDER = "C:\\xampp\\htdocs"; */
 
-const SELECT_SERVER=3;
+const SELECT_SERVER=1;
+
 
 if(SELECT_SERVER===1)
 {
-  
-}
-/* {
   API_PORT = 3007;
   SOCKET_PORT = 3005;
   DRAW_PATH = "D:\\xampp\\htdocs\\banve\\";
@@ -58,7 +56,7 @@ else
   EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
   TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
   DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
-} */
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -71,6 +69,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
 const storage2 = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, TEMP_UPLOAD_FOLDER);
@@ -198,12 +197,12 @@ app.post("/upload", upload.single("banve"), function (req, res) {
   console.log(req.body.filename);
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm("uploadfiles\\" + req.file.originalname),
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
         () => {
           console.log("DELETED " + req.file.originalname);
         };
       console.log(
-        "successfully deleted " + "uploadfiles\\" + req.file.originalname
+        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
       );
       res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
     } else {
@@ -215,9 +214,13 @@ app.post("/upload", upload.single("banve"), function (req, res) {
       const newfilename = req.body.filename;
       const draw_folder = DRAW_PATH;
       console.log("ket qua:" + existsSync(draw_folder + filename));
+      console.log(TEMP_UPLOAD_FOLDER + filename,
+        draw_folder + newfilename + ".pdf");
+
       if (!existsSync(draw_folder + filename)) {
+       
         fs.copyFile(
-          "uploadfiles\\" + filename,
+          TEMP_UPLOAD_FOLDER + filename,
           draw_folder + newfilename + ".pdf",
           (err) => {
             if (err) {
@@ -226,7 +229,7 @@ app.post("/upload", upload.single("banve"), function (req, res) {
                 message: "Upload file thất bại: " + err,
               });
             } else {
-              fs.rm("uploadfiles\\" + req.file.originalname, (error) => {
+              fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
                 //you can handle the error here
               });
               res.send({ tk_status: "OK", message: "Upload file thành công" });
@@ -234,10 +237,10 @@ app.post("/upload", upload.single("banve"), function (req, res) {
           }
         );
       } else {
-        fs.rm("uploadfiles\\" + req.file.originalname, (error) => {
+        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
           //you can handle the error here
         });
-        console.log("DELETED: " + "uploadfiles\\" + req.file.originalname);
+        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
         res.send({ tk_status: "NG", message: "File đã tồn tại" });
       }
     } else {
@@ -249,12 +252,12 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
   console.log(req.body.filename);
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm("uploadfiles\\" + req.file.originalname),
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
         () => {
           console.log("DELETED " + req.file.originalname);
         };
       console.log(
-        "successfully deleted " + "uploadfiles\\" + req.file.originalname
+        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
       );
       res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
     } else {
@@ -268,7 +271,7 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
       console.log("ket qua:" + existsSync(draw_folder + filename));
       if (!existsSync(draw_folder + filename)) {
         fs.copyFile(
-          "uploadfiles\\" + filename,
+          TEMP_UPLOAD_FOLDER + filename,
           draw_folder + newfilename + ".jpg",
           (err) => {
             if (err) {
@@ -277,7 +280,7 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
                 message: "Upload file thất bại: " + err,
               });
             } else {
-              fs.rm("uploadfiles\\" + req.file.originalname, (error) => {
+              fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
                 //you can handle the error here
               });
               res.send({ tk_status: "OK", message: "Upload file thành công" });
@@ -285,10 +288,10 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
           }
         );
       } else {
-        fs.rm("uploadfiles\\" + req.file.originalname, (error) => {
+        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
           //you can handle the error here
         });
-        console.log("DELETED: " + "uploadfiles\\" + req.file.originalname);
+        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
         res.send({ tk_status: "NG", message: "File đã tồn tại" });
       }
     } else {
@@ -300,6 +303,7 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
   console.log("vao uploaded file thanh cong");
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);
+  console.log(TEMP_UPLOAD_FOLDER + req.file.originalname);
   if (req.coloiko === "coloi") {
     if (req.file) {
       fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
