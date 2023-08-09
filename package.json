@@ -9,6 +9,7 @@
   "author": "Hung Nguyen Page",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.4.0",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.5",
@@ -19,6 +20,7 @@
     "express-fileupload": "^1.4.0",
     "formidable": "^2.0.1",
     "jsonwebtoken": "^8.5.1",
+    "link-check": "^5.2.0",
     "moment": "^2.29.1",
     "mssql": "^7.2.1",
     "multer": "^1.4.5-lts.1",

@@ -836,9 +836,9 @@ exports.checklogin_index = function (req, res, next) {
     ////console.log("token client la: " + req.cookies.token);
     var token = req.cookies.token;
     //console.log('token= ' + token);
-    //console.log('body', req.body);
+    //console.log('body', req);
     if (token === undefined) token = req.body.DATA.token_string === undefined? req.body.token_string: req.body.DATA.token_string ;
-    //console.log('token= ' + token);
+    //console.log('req', req);
     var decoded = jwt.verify(token, "nguyenvanhung");
     //console.log(decoded);
     let payload_json = JSON.parse(decoded["payload"]);

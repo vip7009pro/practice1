@@ -130,7 +130,9 @@ io.on("connection", (client) => {
 //const port = 5011;
 const port = 3007;
 var corsOptions = {
-  origin: [
+  origin: [    
+    "http://222.252.1.63",
+    "http://222.252.1.63:3000",
     "http://192.168.1.22:3000",
     "http://cms.ddns.net:3000",
     "http://cms.ddns.net",
@@ -302,7 +304,7 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
   console.log("vao uploaded file thanh cong");
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);
-  console.log(TEMP_UPLOAD_FOLDER + req.file.originalname);
+  console.log(' ten file goc: '+ TEMP_UPLOAD_FOLDER + req.file.originalname);
   if (req.coloiko === "coloi") {
     if (req.file) {
       fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
