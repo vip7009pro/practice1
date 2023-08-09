@@ -836,8 +836,8 @@ exports.checklogin_index = function (req, res, next) {
     ////console.log("token client la: " + req.cookies.token);
     var token = req.cookies.token;
     //console.log('token= ' + token);
-    /* console.log('tokenstring', req.body.DATA.token_string); */
-    if (token === undefined) token = req.body.DATA.token_string;
+    //console.log('body', req.body);
+    if (token === undefined) token = req.body.DATA.token_string === undefined? req.body.token_string: req.body.DATA.token_string ;
     //console.log('token= ' + token);
     var decoded = jwt.verify(token, "nguyenvanhung");
     //console.log(decoded);
@@ -857,7 +857,7 @@ exports.checklogin_index = function (req, res, next) {
     }
     next();
   } catch (err) {
-    //console.log("Loi check login index = " + err + ' ');
+    console.log("Loi check login index = " + err + ' ');
     req.coloiko = "coloi";
     next();
   }
@@ -3824,7 +3824,7 @@ LEFT JOIN (
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          query = `SELECT ZTBPLANTB.PLAN_ID, M010.EMPL_NAME, ZTBPLANTB.EMPL_NO, M110.CUST_NAME_KD, ZTBPLANTB.CUST_CD, ZTBPLANTB.G_CODE, M100.G_NAME_KD, M100.G_NAME,  M100.PROD_TYPE ,M100.PROD_MAIN_MATERIAL, ZTBPLANTB.PLAN_DATE, ZTBPLANTB.D1,ZTBPLANTB.D2,ZTBPLANTB.D3,ZTBPLANTB.D4,ZTBPLANTB.D5,ZTBPLANTB.D6,ZTBPLANTB.D7,ZTBPLANTB.D8, ZTBPLANTB.D8, ZTBPLANTB.D9, ZTBPLANTB.D10, ZTBPLANTB.D11, ZTBPLANTB.D12, ZTBPLANTB.D13, ZTBPLANTB.D14, ZTBPLANTB.D15,  ZTBPLANTB.REMARK  FROM ZTBPLANTB JOIN M100 ON (M100.G_CODE = ZTBPLANTB.G_CODE) JOIN M110 ON (M110.CUST_CD = ZTBPLANTB.CUST_CD) JOIN M010 ON (M010.EMPL_NO= ZTBPLANTB.EMPL_NO) ${generate_condition_get_plan(
+          query = `SELECT ZTBPLANTB.PLAN_ID, M010.EMPL_NAME, ZTBPLANTB.EMPL_NO, M110.CUST_NAME_KD, ZTBPLANTB.CUST_CD, ZTBPLANTB.G_CODE, M100.G_NAME_KD, M100.G_NAME,  M100.PROD_TYPE ,M100.PROD_MAIN_MATERIAL, ZTBPLANTB.PLAN_DATE, ZTBPLANTB.D1,ZTBPLANTB.D2,ZTBPLANTB.D3,ZTBPLANTB.D4,ZTBPLANTB.D5,ZTBPLANTB.D6,ZTBPLANTB.D7,ZTBPLANTB.D8, ZTBPLANTB.D9, ZTBPLANTB.D10, ZTBPLANTB.D11, ZTBPLANTB.D12, ZTBPLANTB.D13, ZTBPLANTB.D14, ZTBPLANTB.D15,  ZTBPLANTB.REMARK  FROM ZTBPLANTB JOIN M100 ON (M100.G_CODE = ZTBPLANTB.G_CODE) JOIN M110 ON (M110.CUST_CD = ZTBPLANTB.CUST_CD) JOIN M010 ON (M010.EMPL_NO= ZTBPLANTB.EMPL_NO) ${generate_condition_get_plan(
             DATA.alltime,
             DATA.start_date,
             DATA.end_date,
@@ -9687,8 +9687,33 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.ALLTIME === false) {
+            condition += ` AND I660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
+          }
+          if (DATA.FACTORY !== 'ALL') {
+            condition += ` AND I660.FACTORY = '${DATA.FACTORY}' `;
+          }
+          if (DATA.PROD_TYPE !== 'ALL') {
+            condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
+          }
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          if (DATA.G_CODE !== '') {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+          }
+          if (DATA.PROD_REQUEST_NO !== '') {
+            condition += ` AND I660.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+          }
+          if (DATA.KD_EMPL_NAME !== '') {
+            condition += ` AND M010.EMPL_NAME LIKE '%${DATA.KD_EMPL_NAME}%'`;
+          }
+          if (DATA.CUST_NAME_KD !== '') {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          }
           let setpdQuery = `
-          SELECT CAST(I660.INS_DATE as date) AS IN_DATE,I660.FACTORY,I660.AUTO_ID,I660.INSPECT_OUTPUT_ID,I660.PACK_ID,M010.EMPL_NAME, I660.PROD_REQUEST_NO,M110.CUST_NAME_KD, I660.G_CODE, M100.G_NAME, M100.G_NAME_KD, I660.PLAN_ID,I660.IN_QTY,
+          SELECT CAST(I660.INS_DATE as date) AS IN_DATE,I660.FACTORY,I660.AUTO_ID,I660.INSPECT_OUTPUT_ID,I660.PACK_ID,M010.EMPL_NAME, I660.PROD_REQUEST_NO,M110.CUST_NAME_KD, I660.G_CODE, M100.G_NAME, M100.G_NAME_KD, M100.PROD_TYPE, I660.PLAN_ID,I660.IN_QTY,
           CASE WHEN I660.USE_YN= 'T' THEN 'PENDING' WHEN I660.USE_YN= 'Y' THEN 'TONKHO'  ELSE 'DA GIAO' END AS USE_YN
           ,I660.EMPL_GIAO,I660.EMPL_NHAN,I660.INS_DATE,I660.INS_EMPL,I660.UPD_DATE,I660.UPD_EMPL,
           CASE WHEN I660.STATUS ='N' THEN 'OK' ELSE 'BL' END AS STATUS
@@ -9698,6 +9723,60 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = I660.PROD_REQUEST_NO)
           LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD)
           LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
+          ${condition}
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadStockFull":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = " WHERE I660.USE_YN <> 'X' ";
+          if (DATA.ALLTIME === false) {
+            condition += ` AND I660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
+          }
+          if (DATA.FACTORY !== 'ALL') {
+            condition += ` AND I660.FACTORY = '${DATA.FACTORY}' `;
+          }
+          if (DATA.PROD_TYPE !== 'ALL') {
+            condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
+          }
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          if (DATA.G_CODE !== '') {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+          }
+          if (DATA.PROD_REQUEST_NO !== '') {
+            condition += ` AND I660.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+          }
+          if (DATA.KD_EMPL_NAME !== '') {
+            condition += ` AND M010.EMPL_NAME LIKE '%${DATA.KD_EMPL_NAME}%'`;
+          }
+          if (DATA.CUST_NAME_KD !== '') {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          }
+          let setpdQuery = `
+          SELECT CAST(I660.INS_DATE as date) AS IN_DATE,I660.FACTORY,I660.AUTO_ID,I660.INSPECT_OUTPUT_ID,I660.PACK_ID,M010.EMPL_NAME, I660.PROD_REQUEST_NO,M110.CUST_NAME_KD, I660.G_CODE, M100.G_NAME, M100.G_NAME_KD, M100.PROD_TYPE, I660.PLAN_ID,I660.IN_QTY,
+          CASE WHEN I660.USE_YN= 'T' THEN 'PENDING' WHEN I660.USE_YN= 'Y' THEN 'TONKHO'  ELSE 'DA GIAO' END AS USE_YN
+          ,I660.EMPL_GIAO,I660.EMPL_NHAN,I660.INS_DATE,I660.INS_EMPL,I660.UPD_DATE,I660.UPD_EMPL,
+          CASE WHEN I660.STATUS ='N' THEN 'OK' ELSE 'BL' END AS STATUS
+          ,I660.REMARK
+          FROM I660
+          LEFT JOIN M100 ON (M100.G_CODE = I660.G_CODE)
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = I660.PROD_REQUEST_NO)
+          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD)
+          LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
+          ${condition}
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -9714,16 +9793,45 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.ALLTIME === false) {
+            condition += ` AND O660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
+          }
+          if (DATA.FACTORY !== 'ALL') {
+            condition += ` AND O660.FACTORY = '${DATA.FACTORY}' `;
+          }
+          if (DATA.PROD_TYPE !== 'ALL') {
+            condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
+          }
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          if (DATA.G_CODE !== '') {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+          }
+          if (DATA.PROD_REQUEST_NO !== '') {
+            condition += ` AND O660.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+          }
+          if (DATA.KD_EMPL_NAME !== '') {
+            condition += ` AND M010.EMPL_NAME LIKE '%${DATA.KD_EMPL_NAME}%'`;
+          }
+          if (DATA.CUST_NAME_KD !== '') {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          }
+          if (DATA.OUT_TYPE !== 'ALL') {
+            condition += ` AND O660.OUT_TYPE = '${DATA.OUT_TYPE}'`;
+          }
           let setpdQuery = `
-          SELECT  O660.OUT_DATE, O660.FACTORY,O660.AUTO_ID,O660.INSPECT_OUTPUT_ID,O660.PACK_ID,M010.EMPL_NAME, O660.PROD_REQUEST_NO,O660.G_CODE,M100.G_NAME, M100.G_NAME_KD, O660.PLAN_ID,O660.CUST_CD,O660.OUT_QTY, M110.CUST_NAME_KD, 
+          SELECT  O660.OUT_DATE, O660.FACTORY,O660.AUTO_ID,O660.INSPECT_OUTPUT_ID,O660.PACK_ID,M010.EMPL_NAME, O660.PROD_REQUEST_NO,O660.G_CODE,M100.G_NAME, M100.G_NAME_KD, O660.PLAN_ID,O660.CUST_CD,O660.OUT_QTY, M100.PROD_TYPE, M110.CUST_NAME_KD, 
           CASE WHEN O660.OUT_TYPE='N' THEN 'NORMAL' WHEN O660.OUT_TYPE='F' THEN 'FREE' WHEN O660.OUT_TYPE='L' THEN 'CHANGE LOT' ELSE 'OTHER' END AS OUT_TYPE ,
-          CASE WHEN O660.USE_YN='T' THEN 'PREPARING' WHEN O660.USE_YN='Y' THEN 'PRP COMPLETED' ELSE 'COMPLETED' END AS USE_YN
+          CASE WHEN O660.USE_YN='T' THEN 'PREPARING' WHEN O660.USE_YN='Y' THEN 'PREPAIRED' ELSE 'COMPLETED' END AS USE_YN
           ,O660.INS_DATE,O660.INS_EMPL,O660.UPD_DATE,O660.UPD_EMPL,O660.STATUS,O660.REMARK,O660.AUTO_ID_IN,O660.OUT_PRT_SEQ
           FROM O660
           LEFT JOIN M100 ON (M100.G_CODE = O660.G_CODE)
           LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = O660.PROD_REQUEST_NO)
           LEFT JOIN M110 ON (M110.CUST_CD = O660.CUST_CD)
-          LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO) 
+          LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
+          ${condition}
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -9740,12 +9848,93 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.PROD_TYPE !== 'ALL') {
+            condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
+          }
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          if (DATA.G_CODE !== '') {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+          }
+
           let setpdQuery = `
-          SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD, AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
+          SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD,M100.PROD_TYPE,  AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
           (
           SELECT G_CODE, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y' GROUP BY G_CODE
           ) AS AA
           LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE)
+          ${condition}
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadSTOCKG_NAME_KD":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = " WHERE 1=1 ";          
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          
+          let setpdQuery = `
+          SELECT   AA.G_NAME_KD, AA.STOCK, AA.BLOCK_QTY,(AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
+          (
+          SELECT M100.G_NAME_KD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660  LEFT JOIN M100 ON  (M100.G_CODE = I660.G_CODE) WHERE I660.USE_YN ='Y' GROUP BY M100.G_NAME_KD
+          ) AS AA
+          ${condition}
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadSTOCK_YCSX":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.PROD_TYPE !== 'ALL') {
+            condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
+          }
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          if (DATA.G_CODE !== '') {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+          }
+          if (DATA.PROD_REQUEST_NO !== '') {
+            condition += ` AND AA.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+          }         
+          if (DATA.CUST_NAME_KD !== '') {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          }
+
+          let setpdQuery = `
+          SELECT M110.CUST_NAME_KD, AA.PROD_REQUEST_NO,M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PO_NO, M100.PROD_TYPE, AA.STOCK, AA.BLOCK_QTY,(AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
+          (
+          SELECT I660.PROD_REQUEST_NO, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660  WHERE I660.USE_YN ='Y' GROUP BY I660.PROD_REQUEST_NO
+          ) AS AA
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = AA.PROD_REQUEST_NO)
+          LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
+          LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) 
+          ${condition}
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);

@@ -10,12 +10,10 @@ var multer = require("multer");
 const fs = require("fs");
 let client_array = [];
 
-
-
 let API_PORT = parseInt(process.env.API_PORT);
 let SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
-let DRAW_PATH =process.env.DRAW_PATH;
-let EMPL_IMAGE_PATH =process.env.EMPL_IMAGE_PATH;
+let DRAW_PATH = process.env.DRAW_PATH;
+let EMPL_IMAGE_PATH = process.env.EMPL_IMAGE_PATH;
 let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
 let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
 /* let API_PORT = 5011;
@@ -25,7 +23,7 @@ let EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
 let TEMP_UPLOAD_FOLDER = "C:\\TEMP_UPLOAD_FOLDER\\";
 let DESTINATION_FOlDER = "C:\\xampp\\htdocs"; */
 
-const SELECT_SERVER=3;
+const SELECT_SERVER = 3;
 
 /* 
 if(SELECT_SERVER===1)
@@ -128,23 +126,23 @@ io.on("connection", (client) => {
     console.log("A client disconnected !");
     console.log("Connected clients: " + io.engine.clientsCount);
   });
-}); 
+});
 //const port = 5011;
 const port = 3007;
 var corsOptions = {
   origin: [
-    "http://192.168.1.22:3000", 
-    "http://cms.ddns.net:3000", 
-    "http://cms.ddns.net", 
-    "http://14.160.33.94:3000", 
-    "http://192.168.100.120", 
+    "http://192.168.1.22:3000",
+    "http://cms.ddns.net:3000",
+    "http://cms.ddns.net",
+    "http://14.160.33.94:3000",
+    "http://192.168.100.120",
     "http://localhost:3000",
     "http://64.176.197.26:80",
     "http://64.176.197.26",
     "http://localhost",
     "http://14.160.33.94",
     "http://14.160.33.94:3010",
-    "http://14.160.33.94:3030",   
+    "http://14.160.33.94:3030",
     "https://script.google.com/",
     "*",
   ],
@@ -162,7 +160,7 @@ const { existsSync } = require("fs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/", function (req, res, next) {  
+app.use("/", function (req, res, next) {
   api_module.checklogin_index(req, res, next);
 });
 app.use("/upload", function (req, res, next) {
@@ -188,7 +186,7 @@ app.post("/api", function (req, res) {
   ) {
     api_module.process_api(req, res);
   } else {
-    console.log('loi cmnr');
+    console.log("loi cmnr");
     res.send({ tk_status: "ng" });
   }
 });
@@ -196,10 +194,10 @@ app.post("/upload", upload.single("banve"), function (req, res) {
   console.log(req.body.filename);
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
         () => {
           console.log("DELETED " + req.file.originalname);
-        };
+        });
       console.log(
         "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
       );
@@ -213,11 +211,12 @@ app.post("/upload", upload.single("banve"), function (req, res) {
       const newfilename = req.body.filename;
       const draw_folder = DRAW_PATH;
       console.log("ket qua:" + existsSync(draw_folder + filename));
-      console.log(TEMP_UPLOAD_FOLDER + filename,
-        draw_folder + newfilename + ".pdf");
+      console.log(
+        TEMP_UPLOAD_FOLDER + filename,
+        draw_folder + newfilename + ".pdf"
+      );
 
       if (!existsSync(draw_folder + filename)) {
-       
         fs.copyFile(
           TEMP_UPLOAD_FOLDER + filename,
           draw_folder + newfilename + ".pdf",
@@ -251,10 +250,10 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
   console.log(req.body.filename);
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
         () => {
           console.log("DELETED " + req.file.originalname);
-        };
+        });
       console.log(
         "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
       );
@@ -280,6 +279,7 @@ app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
               });
             } else {
               fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+                console.log('loi dong 282:' + error);
                 //you can handle the error here
               });
               res.send({ tk_status: "OK", message: "Upload file thành công" });
@@ -305,10 +305,10 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
   console.log(TEMP_UPLOAD_FOLDER + req.file.originalname);
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname),
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
         () => {
           console.log("DELETED " + req.file.originalname);
-        };
+        });
       console.log(
         "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
       );
@@ -322,10 +322,10 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
       const newfilename = req.body.filename;
       const uploadfoldername = req.body.uploadfoldername;
       const newfilenamelist = req.body.newfilenamelist;
-      
-      let filenamearray= [];
-      if(newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
-      console.log('filenamearray:',filenamearray);
+
+      let filenamearray = [];
+      if (newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
+      console.log("filenamearray:", filenamearray);
 
       /* console.log(
         "ket qua:" +
@@ -345,8 +345,12 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
           });
         }
 
-        if(filenamearray.length ===0)
-        {
+        if (filenamearray.length === 0) {
+          console.log("tempfile: ", TEMP_UPLOAD_FOLDER + filename);
+          console.log(
+            "destination file: ",
+            DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename
+          );
           fs.copyFile(
             TEMP_UPLOAD_FOLDER + filename,
             DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename,
@@ -359,53 +363,45 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
               } else {
                 fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
                   //you can handle the error here
+                  console.log("Loi remove dong 364:" + error);
                 });
-                res.send({ tk_status: "OK", message: "Upload file thành công" });
+                res.send({
+                  tk_status: "OK",
+                  message: "Upload file thành công",
+                });
               }
             }
           );
-
-        }
-        else
-        {
-          let err_code='';
-          for(let i=0;i<filenamearray.length; i++)
-          {
+        } else {
+          let err_code = "";
+          for (let i = 0; i < filenamearray.length; i++) {
             fs.copyFile(
               TEMP_UPLOAD_FOLDER + filename,
               DESTINATION_FOlDER + uploadfoldername + "\\" + filenamearray[i],
               (err) => {
                 if (err) {
-                 err_code += err + '| ';
+                  err_code += err + "| ";
                 } else {
-                 
                 }
               }
             );
-
           }
-          if(err_code ==='')
-          {
+          if (err_code === "") {
             fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+              console.log("Loi dong 390:" + error);
               //res.send({ tk_status: "NG", message: "Upload file thất bại: " + error });
             });
             res.send({ tk_status: "OK", message: "Upload file thành công" });
-          }
-          else
-          {
+          } else {
             res.send({
               tk_status: "NG",
               message: "Upload file thất bại: " + err,
             });
           }
-          
-
         }
-        
-
-
       } else {
         fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+          console.log("Loi dong 404:" + error);
           //you can handle the error here
         });
         console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
