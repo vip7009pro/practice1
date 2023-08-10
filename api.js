@@ -2501,7 +2501,7 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `SELECT CUST_CD, CUST_NAME_KD, CUST_NAME,  CUST_ADDR1, TAX_NO, CUST_NUMBER,  BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,  CHARGE_EMAIL AS EMAIL, REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL FROM M110`;
+          query = `SELECT CUST_TYPE, CUST_CD, CUST_NAME_KD, CUST_NAME,  CUST_ADDR1, TAX_NO, CUST_NUMBER,  BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,  CHARGE_EMAIL AS EMAIL, REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL FROM M110`;
           //console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -2515,8 +2515,8 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");  
           let query = "";
-          query = `INSERT INTO M110 (CTR_CD, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}')`;
-          console.log(query);
+          query = `INSERT INTO M110 (CTR_CD, CUST_TYPE, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.CUST_TYPE}','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}')`;
+          //console.log(query);
           kqua = await queryDB(query);
           //console.log(kqua);
           res.send(kqua);
@@ -2529,8 +2529,8 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CUST_CD='${DATA.CUST_CD}'`;
-          console.log(query);
+          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CUST_CD='${DATA.CUST_CD}'`;
+          //console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
@@ -9937,6 +9937,48 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           ${condition}
           `;
           //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "checkcustomerpono":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT TOP 1 PO_NO FROM ZTBPOTable WHERE PO_NO LIKE '%${DATA.CHECK_PO_NO}%' ORDER BY PO_NO DESC
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "checkcustcd":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = ` `;
+          if(DATA.COMPANY_TYPE ==='KH')
+          {
+            setpdQuery = `SELECT TOP 1 CUST_CD FROM M110 WHERE SUBSTRING(M110.CUST_CD,1,2) = 'KH' ORDER BY CUST_CD DESC`;
+          }
+          else if(DATA.COMPANY_TYPE ==='NCC')
+          {
+            setpdQuery = `SELECT TOP 1 CUST_CD FROM M110 WHERE SUBSTRING(M110.CUST_CD,1,3) = 'NCC' ORDER BY CUST_CD DESC`;
+          }
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
