@@ -137,7 +137,6 @@ var corsOptions = {
     "http://cms.ddns.net:3000",
     "http://cms.ddns.net",
     "http://14.160.33.94:3000",
-    "http://192.168.100.120",
     "http://localhost:3000",
     "http://localhost",
     "http://14.160.33.94",
