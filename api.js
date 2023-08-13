@@ -2501,7 +2501,7 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `SELECT CUST_TYPE, CUST_CD, CUST_NAME_KD, CUST_NAME,  CUST_ADDR1, TAX_NO, CUST_NUMBER,  BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,  CHARGE_EMAIL AS EMAIL, REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL FROM M110`;
+          query = `SELECT CUST_TYPE, CUST_CD, CUST_NAME_KD, CUST_NAME,  CUST_ADDR1, CUST_ADDR2,CUST_ADDR3,TAX_NO, CUST_NUMBER,  BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,  CHARGE_EMAIL AS EMAIL, REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL FROM M110`;
           //console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -2529,7 +2529,7 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', CUST_ADDR2 =N'${DATA.CUST_ADDR2}',CUST_ADDR3 =N'${DATA.CUST_ADDR3}',EMAIL =N'${DATA.EMAIL}',TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CUST_CD='${DATA.CUST_CD}'`;
+          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', CUST_ADDR2 =N'${DATA.CUST_ADDR2}',CUST_ADDR3 =N'${DATA.CUST_ADDR3}',CHARGE_EMAIL =N'${DATA.EMAIL}',TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CUST_CD='${DATA.CUST_CD}'`;
           //console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
