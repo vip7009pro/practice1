@@ -190,118 +190,12 @@ app.post("/api", function (req, res) {
     res.send({ tk_status: "ng" });
   }
 });
-app.post("/upload", upload.single("banve"), function (req, res) {
-  console.log(req.body.filename);
-  if (req.coloiko === "coloi") {
-    if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
-        () => {
-          console.log("DELETED " + req.file.originalname);
-        });
-      console.log(
-        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
-      );
-      res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
-    } else {
-      res.send({ tk_status: "NG", message: "File chưa lên" });
-    }
-  } else if (req.coloiko === "kocoloi") {
-    if (req.file) {
-      const filename = req.file.originalname;
-      const newfilename = req.body.filename;
-      const draw_folder = DRAW_PATH;
-      console.log("ket qua:" + existsSync(draw_folder + filename));
-      console.log(
-        TEMP_UPLOAD_FOLDER + filename,
-        draw_folder + newfilename + ".pdf"
-      );
 
-      if (!existsSync(draw_folder + filename)) {
-        fs.copyFile(
-          TEMP_UPLOAD_FOLDER + filename,
-          draw_folder + newfilename + ".pdf",
-          (err) => {
-            if (err) {
-              res.send({
-                tk_status: "NG",
-                message: "Upload file thất bại: " + err,
-              });
-            } else {
-              fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-                //you can handle the error here
-              });
-              res.send({ tk_status: "OK", message: "Upload file thành công" });
-            }
-          }
-        );
-      } else {
-        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-          //you can handle the error here
-        });
-        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
-        res.send({ tk_status: "NG", message: "File đã tồn tại" });
-      }
-    } else {
-      res.send({ tk_status: "NG", message: "File chưa lên" });
-    }
-  }
-});
-app.post("/uploadavatar", upload.single("avatar"), function (req, res) {
-  console.log(req.body.filename);
-  if (req.coloiko === "coloi") {
-    if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
-        () => {
-          console.log("DELETED " + req.file.originalname);
-        });
-      console.log(
-        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
-      );
-      res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
-    } else {
-      res.send({ tk_status: "NG", message: "File chưa lên" });
-    }
-  } else if (req.coloiko === "kocoloi") {
-    if (req.file) {
-      const filename = req.file.originalname;
-      const newfilename = req.body.filename;
-      const draw_folder = EMPL_IMAGE_PATH;
-      console.log("ket qua:" + existsSync(draw_folder + filename));
-      if (!existsSync(draw_folder + filename)) {
-        fs.copyFile(
-          TEMP_UPLOAD_FOLDER + filename,
-          draw_folder + newfilename + ".jpg",
-          (err) => {
-            if (err) {
-              res.send({
-                tk_status: "NG",
-                message: "Upload file thất bại: " + err,
-              });
-            } else {
-              fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-                console.log('loi dong 282:' + error);
-                //you can handle the error here
-              });
-              res.send({ tk_status: "OK", message: "Upload file thành công" });
-            }
-          }
-        );
-      } else {
-        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-          //you can handle the error here
-        });
-        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
-        res.send({ tk_status: "NG", message: "File đã tồn tại" });
-      }
-    } else {
-      res.send({ tk_status: "NG", message: "File chưa lên" });
-    }
-  }
-});
 app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
   console.log("vao uploaded file thanh cong");
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);
+  //console.log('token upload',req.body.token_string);
   console.log(' ten file goc: '+ TEMP_UPLOAD_FOLDER + req.file.originalname);
   if (req.coloiko === "coloi") {
     if (req.file) {
