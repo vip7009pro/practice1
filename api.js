@@ -995,6 +995,7 @@ exports.process_api = function (req, res) {
             ////console.log(kqua);
             loginResult = kqua;
             //console.log("KET QUA LOGIN = " + loginResult);
+            
             if (loginResult != 0) {
               var token = jwt.sign({ payload: loginResult }, "nguyenvanhung", {
                 expiresIn: 3600 * 24 * 30,
@@ -5155,6 +5156,21 @@ LEFT JOIN (
           ////console.log(checkkq);
         })();
         break;
+        case "insertM100BangTinhGia":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `INSERT INTO ZTB_QUOTATION_CALC_TB (CTR_CD,G_CODE,WIDTH_OFFSET,LENGTH_OFFSET,KNIFE_UNIT,FILM_UNIT,INK_UNIT,LABOR_UNIT,DELIVERY_UNIT,DEPRECATION_UNIT,GMANAGEMENT_UNIT,M_LOSS_UNIT,G_WIDTH,G_LENGTH,G_C,G_C_R,G_LG,G_CG,G_SG_L,G_SG_R,PROD_PRINT_TIMES) VALUES ('002','${DATA.CODE_FULL_INFO.G_CODE}','${DATA.DEFAULT_DM.WIDTH_OFFSET}','${DATA.DEFAULT_DM.LENGTH_OFFSET}','${DATA.DEFAULT_DM.KNIFE_UNIT}','${DATA.DEFAULT_DM.FILM_UNIT}','${DATA.DEFAULT_DM.INK_UNIT}','${DATA.DEFAULT_DM.LABOR_UNIT}','${DATA.DEFAULT_DM.DELIVERY_UNIT}','${DATA.DEFAULT_DM.DEPRECATION_UNIT}','${DATA.DEFAULT_DM.GMANAGEMENT_UNIT}','${DATA.DEFAULT_DM.M_LOSS_UNIT}','${DATA.CODE_FULL_INFO.G_WIDTH}','${DATA.CODE_FULL_INFO.G_LENGTH}','${DATA.CODE_FULL_INFO.G_C}','${DATA.CODE_FULL_INFO.G_C_R}','${DATA.CODE_FULL_INFO.G_LG}','${DATA.CODE_FULL_INFO.G_CG}','${DATA.CODE_FULL_INFO.G_SG_L}','${DATA.CODE_FULL_INFO.G_SG_R}','${DATA.CODE_FULL_INFO.PROD_PRINT_TIMES}')`;
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+          ////console.log(checkkq);
+        })();
+        break;
       case "updateM100":
         (async () => {
           ////console.log(DATA);
@@ -5168,6 +5184,51 @@ LEFT JOIN (
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           ////console.log(checkkq);
+        })();
+        break;
+      case "updateM100BangTinhGia":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTB_QUOTATION_CALC_TB SET G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}', G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}'  WHERE G_CODE = '${DATA.G_CODE}'`;
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+          ////console.log(checkkq);
+        })();
+        break;
+      case "loadDefaultDM":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT * FROM ZTB_TBG_CONFIG2`;
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+          ////console.log(checkkq);
+        })();
+        break;
+      case "checkTBGExist":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT * FROM ZTB_QUOTATION_CALC_TB WHERE G_CODE='${DATA.G_CODE}'`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+          console.log(checkkq);
         })();
         break;
       case "getMaterialList":
@@ -9477,6 +9538,9 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             FOR bangnguon.MAINDEPTNAME IN ([RND],[DTC],[KT])
           ) AS pvtb
           `;
+          setpdQuery = `
+          SELECT ZTB_BARCODE_MANAGER.G_CODE, M100.G_NAME,  ZTB_BARCODE_MANAGER.BARCODE_STT, ZTB_BARCODE_MANAGER.BARCODE_TYPE,  ZTB_BARCODE_MANAGER.RND AS BARCODE_RND, ZTB_BARCODE_MANAGER.DTC AS BARCODE_RELI, ZTB_BARCODE_MANAGER.KT AS BARCODE_INSP, CASE WHEN RND= DTC AND DTC=KT AND RND <> null THEN 'OK' ELSE 'NG' END AS STATUS FROM ZTB_BARCODE_MANAGER LEFT JOIN M100 ON (ZTB_BARCODE_MANAGER.G_CODE = M100.G_CODE)
+          `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -9493,9 +9557,9 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-         SELECT * FROM ZTB_BARCODE_MANAGER WHERE G_CODE ='${DATA.G_CODE}'
+         SELECT * FROM ZTB_BARCODE_MANAGER WHERE G_CODE ='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
           `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -9511,22 +9575,10 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQueryrnd = `
-            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE, MAINDEPTNAME, BARCODE_CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','RND','${DATA.BARCODE_RND}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE,  RND, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','${DATA.BARCODE_RND}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
           `;
-          checkkq = await queryDB(setpdQueryrnd);
-          /* console.log(setpdQueryrnd);
-           setpdQueryrnd = `
-            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE, MAINDEPTNAME, BARCODE_CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','DTC','${DATA.BARCODE_RELI}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
-          `;
-          checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd);
-           setpdQueryrnd = `
-            INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE, MAINDEPTNAME, BARCODE_CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','KT','${DATA.BARCODE_INSP}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
-          `;         
-          checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd); */
-           //console.log(setpdQuery);
-          //console.log(checkkq);
+          console.log('setpdQueryrnd',setpdQueryrnd);
+          checkkq = await queryDB(setpdQueryrnd);          
           res.send(checkkq);
         })();
         break;
@@ -9540,22 +9592,11 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQueryrnd = `
-            UPDATE ZTB_BARCODE_MANAGER SET BARCODE_TYPE='${DATA.BARCODE_TYPE}', BARCODE_CONTENT='${DATA.BARCODE_RND}' WHERE G_CODE='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT} AND MAINDEPTNAME='RND'
+            UPDATE ZTB_BARCODE_MANAGER SET BARCODE_TYPE='${DATA.BARCODE_TYPE}', RND='${DATA.BARCODE_RND}' WHERE G_CODE='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
           `;
           checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd);
-           setpdQueryrnd = `
-           
-          `;
-          checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd);
-           setpdQueryrnd = `
-            
-          `;         
-          checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd);
-           //console.log(setpdQuery);
-          //console.log(checkkq);
+          console.log(setpdQueryrnd);          
+          
           res.send(checkkq);
         })();
         break;
@@ -10031,6 +10072,25 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let checkkq = "OK";
           let setpdQuery = `
           INSERT INTO ZTB_QUOTATION_MATERIAL (CTR_CD, Q_ID, G_CODE, M_CODE, M_NAME, OPEN_PRICE, ORIGINAL_PRICE) VALUES ('002','${DATA.Q_ID}','${DATA.G_CODE}','${DATA.M_CODE}','${DATA.M_NAME}','${DATA.OPEN_PRICE}','${DATA.ORIGINAL_PRICE}')
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadlistcodequotation":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT ZTB_QUOTATION_CALC_TB.G_CODE,M100.G_NAME, M100.G_NAME_KD, ZTB_QUOTATION_CALC_TB.WIDTH_OFFSET,ZTB_QUOTATION_CALC_TB.LENGTH_OFFSET,ZTB_QUOTATION_CALC_TB.KNIFE_UNIT,ZTB_QUOTATION_CALC_TB.FILM_UNIT,ZTB_QUOTATION_CALC_TB.INK_UNIT,ZTB_QUOTATION_CALC_TB.LABOR_UNIT,ZTB_QUOTATION_CALC_TB.DELIVERY_UNIT,ZTB_QUOTATION_CALC_TB.DEPRECATION_UNIT,ZTB_QUOTATION_CALC_TB.GMANAGEMENT_UNIT,ZTB_QUOTATION_CALC_TB.M_LOSS_UNIT,ZTB_QUOTATION_CALC_TB.G_WIDTH,ZTB_QUOTATION_CALC_TB.G_LENGTH,ZTB_QUOTATION_CALC_TB.G_C,ZTB_QUOTATION_CALC_TB.G_C_R,ZTB_QUOTATION_CALC_TB.G_LG,ZTB_QUOTATION_CALC_TB.G_CG,ZTB_QUOTATION_CALC_TB.G_SG_L,ZTB_QUOTATION_CALC_TB.G_SG_R,ZTB_QUOTATION_CALC_TB.PROD_PRINT_TIMES,ZTB_QUOTATION_CALC_TB.KNIFE_COST,ZTB_QUOTATION_CALC_TB.FILM_COST,ZTB_QUOTATION_CALC_TB.INK_COST,ZTB_QUOTATION_CALC_TB.LABOR_COST,ZTB_QUOTATION_CALC_TB.DELIVERY_COST,ZTB_QUOTATION_CALC_TB.DEPRECATION_COST,ZTB_QUOTATION_CALC_TB.GMANAGEMENT_COST,ZTB_QUOTATION_CALC_TB.MATERIAL_COST,ZTB_QUOTATION_CALC_TB.TOTAL_COST,ZTB_QUOTATION_CALC_TB.SALE_PRICE,ZTB_QUOTATION_CALC_TB.PROFIT
+FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_TB.G_CODE)          
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
