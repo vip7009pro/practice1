@@ -5,13 +5,13 @@ const { existsSync } = require("fs");
 require("dotenv").config();
 
 function removeVietnameseTones(str) {
-  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-  str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-  str = str.replace(/đ/g,"d");
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+  str = str.replace(/đ/g, "d");
   str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
   str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
   str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
@@ -25,14 +25,16 @@ function removeVietnameseTones(str) {
   str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // ˆ ̆ ̛  Â, Ê, Ă, Ơ, Ư
   // Remove extra spaces
   // Bỏ các khoảng trắng liền nhau
-  str = str.replace(/ + /g," ");
+  str = str.replace(/ + /g, " ");
   str = str.trim();
   // Remove punctuations
   // Bỏ dấu câu, kí tự đặc biệt
-  str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g," ");
+  str = str.replace(
+    /!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g,
+    " "
+  );
   return str;
 }
-
 
 function generate_condition_get_invoice(
   $inspect_time_checkvalue,
@@ -755,7 +757,7 @@ const config = {
   password: process.env.DB_PASS,
   server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
- /*  port: 5005, */
+  /*  port: 5005, */
   port: parseInt(process.env.DB_PORT),
   trustServerCertificate: true,
   requestTimeout: 300000,
@@ -837,7 +839,11 @@ exports.checklogin_index = function (req, res, next) {
     var token = req.cookies.token;
     //console.log('token= ' + token);
     //console.log('body', req);
-    if (token === undefined) token = req.body.DATA.token_string === undefined? req.body.token_string: req.body.DATA.token_string ;
+    if (token === undefined)
+      token =
+        req.body.DATA.token_string === undefined
+          ? req.body.token_string
+          : req.body.DATA.token_string;
     //console.log('req', req);
     var decoded = jwt.verify(token, "nguyenvanhung");
     //console.log(decoded);
@@ -847,17 +853,14 @@ exports.checklogin_index = function (req, res, next) {
     ////console.log('Cookie client = ' + req.cookies.token);
     req.payload_data = payload_json[0];
     ////console.log(payload_json);
-    if(payload_json[0]["WORK_STATUS_CODE"] ===0)
-    {
+    if (payload_json[0]["WORK_STATUS_CODE"] === 0) {
       req.coloiko = "coloi";
-    }
-    else
-    {
+    } else {
       req.coloiko = "kocoloi";
     }
     next();
   } catch (err) {
-    console.log("Loi check login index = " + err + ' ');
+    console.log("Loi check login index = " + err + " ");
     req.coloiko = "coloi";
     next();
   }
@@ -885,7 +888,7 @@ exports.process_api = function (req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
-   /*  if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
+  /*  if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
@@ -995,7 +998,7 @@ exports.process_api = function (req, res) {
             ////console.log(kqua);
             loginResult = kqua;
             //console.log("KET QUA LOGIN = " + loginResult);
-            
+
             if (loginResult != 0) {
               var token = jwt.sign({ payload: loginResult }, "nguyenvanhung", {
                 expiresIn: 3600 * 24 * 30,
@@ -1841,22 +1844,17 @@ exports.process_api = function (req, res) {
           let setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='${EMPL_NO}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);         
+          //console.log(checkkq);
 
-          if(checkkq.data[0].WORK_STATUS_CODE === 0)
-          {
-            res.send({ tk_status: "ng", message: 'Đã nghỉ việc' });
-          }
-          else
-          {
+          if (checkkq.data[0].WORK_STATUS_CODE === 0) {
+            res.send({ tk_status: "ng", message: "Đã nghỉ việc" });
+          } else {
             res.send({ tk_status: "ok", data: req.payload_data });
           }
-
         })();
 
         //console.log(qr['command']);
-       
-        
+
         break;
       case "pqc1_output_data":
         (async () => {
@@ -2514,7 +2512,7 @@ exports.process_api = function (req, res) {
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let startOfYear = moment().startOf("year").format("YYYY-MM-DD");  
+          let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
           query = `INSERT INTO M110 (CTR_CD, CUST_TYPE, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL,CUST_ADDR2, CUST_ADDR3, CHARGE_EMAIL) VALUES ('002','${DATA.CUST_TYPE}','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}',N'${DATA.ADDR2}',N'${DATA.ADDR3}',N'${DATA.EMAIL}')`;
           //console.log(query);
@@ -2841,7 +2839,11 @@ exports.process_api = function (req, res) {
             let checkkq = "OK";
             let setpdQuery = `INSERT INTO ZTBEMPLINFO (CTR_CD,EMPL_NO,CMS_ID,FIRST_NAME,MIDLAST_NAME,DOB,HOMETOWN,SEX_CODE,ADD_PROVINCE,ADD_DISTRICT,ADD_COMMUNE,ADD_VILLAGE,PHONE_NUMBER,WORK_START_DATE,PASSWORD,EMAIL,WORK_POSITION_CODE,WORK_SHIFT_CODE,POSITION_CODE,JOB_CODE,FACTORY_CODE,WORK_STATUS_CODE,NV_CCID) VALUES ('002',N'${DATA.EMPL_NO}' ,N'${DATA.CMS_ID}' ,N'${DATA.FIRST_NAME}' ,N'${DATA.MIDLAST_NAME}' ,N'${DATA.DOB}' ,N'${DATA.HOMETOWN}' ,N'${DATA.SEX_CODE}' ,N'${DATA.ADD_PROVINCE}' ,N'${DATA.ADD_DISTRICT}' ,N'${DATA.ADD_COMMUNE}' ,N'${DATA.ADD_VILLAGE}' ,N'${DATA.PHONE_NUMBER}' ,N'${DATA.WORK_START_DATE}' ,N'${DATA.PASSWORD}' ,N'${DATA.EMAIL}' ,N'${DATA.WORK_POSITION_CODE}' ,N'${DATA.WORK_SHIFT_CODE}' ,N'${DATA.POSITION_CODE}' ,N'${DATA.JOB_CODE}' ,N'${DATA.FACTORY_CODE}' ,N'${DATA.WORK_STATUS_CODE}',${DATA.NV_CCID})`;
             ////console.log(setpdQuery);
-            let insertoldempl = `INSERT INTO M010 (CTR_CD,EMPL_NO, EMPL_NAME, PASSWD) VALUES ('002','${DATA.EMPL_NO}','${removeVietnameseTones(DATA.MIDLAST_NAME)} ${removeVietnameseTones(DATA.FIRST_NAME)}','${DATA.PASSWORD}')`;
+            let insertoldempl = `INSERT INTO M010 (CTR_CD,EMPL_NO, EMPL_NAME, PASSWD) VALUES ('002','${
+              DATA.EMPL_NO
+            }','${removeVietnameseTones(
+              DATA.MIDLAST_NAME
+            )} ${removeVietnameseTones(DATA.FIRST_NAME)}','${DATA.PASSWORD}')`;
             console.log(insertoldempl);
             checkkq = await queryDB(insertoldempl);
             checkkq = await queryDB(setpdQuery);
@@ -4443,7 +4445,7 @@ LEFT JOIN (
             condition += ` AND Customer_ShortName <> 'CMSV' `;
           }
           condition += ` AND tbl_InputOutput.IO_Type = '${DATA.INOUT}' `;
-          let setpdQuery = `SELECT tbl_InputOutput.IO_Note,tbl_InputOutput.IO_Number, M110.CUST_NAME_KD, tbl_InputOutput.Product_MaVach AS G_CODE, M100.G_NAME, M100.G_NAME_KD, tbl_InputOutput.Customer_ShortName, tbl_InputOutput.IO_Date, CONVERT(datetime,tbl_InputOutput.IO_Time) AS INPUT_DATETIME, tbl_InputOutput.IO_Shift ,tbl_InputOutput.IO_Type, tbl_InputOutput.IO_Qty FROM tbl_InputOutput LEFT JOIN M100 ON (M100.G_CODE= tbl_InputOutput.Product_MaVach) 
+          let setpdQuery = `SELECT tbl_InputOutput.IO_Status, tbl_InputOutput.IO_Note,tbl_InputOutput.IO_Number, M110.CUST_NAME_KD, tbl_InputOutput.Product_MaVach AS G_CODE, M100.G_NAME, M100.G_NAME_KD, tbl_InputOutput.Customer_ShortName, tbl_InputOutput.IO_Date, CONVERT(datetime,tbl_InputOutput.IO_Time) AS INPUT_DATETIME, tbl_InputOutput.IO_Shift ,tbl_InputOutput.IO_Type, tbl_InputOutput.IO_Qty FROM tbl_InputOutput LEFT JOIN M100 ON (M100.G_CODE= tbl_InputOutput.Product_MaVach) 
                     LEFT JOIN tbl_Customer ON (tbl_Customer.Customer_SortName = tbl_InputOutput.Customer_ShortName)
                     LEFT JOIN M110 ON (M110.CUST_CD = tbl_Customer.CUST_CD) ${condition} ORDER BY tbl_InputOutput.IO_Time DESC`;
           //////console.log(setpdQuery);
@@ -4466,7 +4468,56 @@ LEFT JOIN (
           if (DATA.JUSTBALANCE !== false) {
             condition += `AND THANHPHAM.TONKHO >0 `;
           }
-          let setpdQuery = `SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ${condition} `;
+          let setpdQuery = `SELECT M100.G_CODE
+          ,M100.G_NAME
+          ,M100.G_NAME_KD
+          ,isnull(TONKIEM.INSPECT_BALANCE_QTY, 0) AS CHO_KIEM
+          ,isnull(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK
+          ,isnull(TONKIEM.WAIT_SORTING_RMA, 0) CHO_KIEM_RMA
+          ,isnull(TONKIEM.TOTAL_WAIT, 0) AS TONG_TON_KIEM
+          ,isnull(BTP.BTP_QTY_EA, 0) AS BTP
+          ,isnull(THANHPHAM.TONKHO, 0) AS TON_TP
+          ,isnull(THANHPHAM.XUATKHO_PD, 0) AS PENDINGXK
+          ,isnull(THANHPHAM.TONKHO_TT, 0) AS TON_TPTT
+          ,isnull(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY
+          ,(isnull(TONKIEM.TOTAL_WAIT, 0) + isnull(BTP.BTP_QTY_EA, 0) + isnull(THANHPHAM.TONKHO, 0) - isnull(tbl_Block_table2.Block_Qty, 0)) AS GRAND_TOTAL_STOCK
+        FROM M100
+        LEFT JOIN (
+          select Product_MaVach AS G_CODE, SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) AS NHAPKHO,SUM(CASE WHEN IO_type='OUT' THEN IO_Qty ELSE 0 END) AS XUATKHO,SUM(CASE WHEN IO_type='OUT' AND IO_Status= 'Pending' THEN IO_Qty ELSE 0 END) AS XUATKHO_PD,SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) -SUM(CASE WHEN IO_type='OUT' THEN IO_Qty ELSE 0 END) AS TONKHO, SUM(CASE WHEN IO_type='OUT' AND (IO_Status<> 'Pending' OR IO_Status is null) THEN IO_Qty ELSE 0 END) AS XUATKHO_TT, SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) -SUM(CASE WHEN IO_type='OUT' AND (IO_Status<> 'Pending' OR IO_Status is null)THEN IO_Qty ELSE 0 END) AS TONKHO_TT FROM tbl_InputOutput 
+        group by Product_MaVach 
+          ) AS THANHPHAM ON (THANHPHAM.G_CODE = M100.G_CODE)
+        LEFT JOIN (
+          SELECT ZTB_WAIT_INSPECT.G_CODE
+            ,M100.G_NAME
+            ,M100.G_NAME_KD
+            ,SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY
+            ,SUM(WAIT_CS_QTY) AS WAIT_CS_QTY
+            ,SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA
+            ,SUM(INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA) AS TOTAL_WAIT
+          FROM ZTB_WAIT_INSPECT
+          INNER JOIN M100 ON (M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE)
+          WHERE UPDATE_DATE = CONVERT(DATE, GETDATE())
+            AND CALAMVIEC = 'DEM'
+          GROUP BY ZTB_WAIT_INSPECT.G_CODE
+            ,M100.G_NAME
+            ,M100.G_NAME_KD
+          ) AS TONKIEM ON (THANHPHAM.G_CODE = TONKIEM.G_CODE)
+        LEFT JOIN (
+          SELECT Product_MaVach
+            ,SUM(Block_Qty) AS Block_Qty
+          FROM tbl_Block2
+          GROUP BY Product_MaVach
+          ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach = M100.G_CODE)
+        LEFT JOIN (
+          SELECT ZTB_HALF_GOODS.G_CODE
+            ,M100.G_NAME
+            ,SUM(BTP_QTY_EA) AS BTP_QTY_EA
+          FROM ZTB_HALF_GOODS
+          INNER JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE)
+          WHERE UPDATE_DATE = CONVERT(DATE, GETDATE())
+          GROUP BY ZTB_HALF_GOODS.G_CODE
+            ,M100.G_NAME
+          ) AS BTP ON (BTP.G_CODE = THANHPHAM.G_CODE) ${condition} `;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -4484,7 +4535,109 @@ LEFT JOIN (
           if (DATA.JUSTBALANCE !== false) {
             condition += `AND THANHPHAM.TONKHO >0 `;
           }
-          let setpdQuery = `SELECT M100.G_NAME_KD, SUM(isnull(TONKIEM.INSPECT_BALANCE_QTY,0)) AS CHO_KIEM, SUM(isnull(TONKIEM.WAIT_CS_QTY,0)) AS CHO_CS_CHECK,SUM(isnull(TONKIEM.WAIT_SORTING_RMA,0)) AS CHO_KIEM_RMA, SUM(isnull(TONKIEM.TOTAL_WAIT,0)) AS TONG_TON_KIEM, SUM(isnull(BTP.BTP_QTY_EA,0)) AS BTP, SUM(isnull(THANHPHAM.TONKHO,0)) AS TON_TP, SUM(isnull(tbl_Block_table2.Block_Qty,0)) AS BLOCK_QTY, SUM((isnull(TONKIEM.TOTAL_WAIT,0)) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ${condition} GROUP BY M100.G_NAME_KD`;
+          let setpdQuery = `SELECT 
+          M100.G_NAME_KD, 
+          SUM(
+            isnull(TONKIEM.INSPECT_BALANCE_QTY, 0)
+          ) AS CHO_KIEM, 
+          SUM(
+            isnull(TONKIEM.WAIT_CS_QTY, 0)
+          ) AS CHO_CS_CHECK, 
+          SUM(
+            isnull(TONKIEM.WAIT_SORTING_RMA, 0)
+          ) AS CHO_KIEM_RMA, 
+          SUM(
+            isnull(TONKIEM.TOTAL_WAIT, 0)
+          ) AS TONG_TON_KIEM, 
+          SUM(
+            isnull(BTP.BTP_QTY_EA, 0)
+          ) AS BTP, 
+          SUM(
+            isnull(THANHPHAM.TONKHO, 0)
+          ) AS TON_TP,
+           SUM(
+            isnull(THANHPHAM.XUATKHO_PD, 0)
+          ) AS PENDINGXK,
+           SUM(
+            isnull(THANHPHAM.TONKHO_TT, 0)
+          ) AS TON_TPTT,
+          SUM(
+            isnull(tbl_Block_table2.Block_Qty, 0)
+          ) AS BLOCK_QTY, 
+          SUM(
+            (
+              isnull(TONKIEM.TOTAL_WAIT, 0)
+            ) + isnull(BTP.BTP_QTY_EA, 0)+ isnull(THANHPHAM.TONKHO, 0) - isnull(tbl_Block_table2.Block_Qty, 0)
+          ) AS GRAND_TOTAL_STOCK 
+        FROM 
+          M100 
+          LEFT JOIN (
+            select Product_MaVach, SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) AS NHAPKHO,SUM(CASE WHEN IO_type='OUT' THEN IO_Qty ELSE 0 END) AS XUATKHO,SUM(CASE WHEN IO_type='OUT' AND IO_Status= 'Pending' THEN IO_Qty ELSE 0 END) AS XUATKHO_PD,SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) -SUM(CASE WHEN IO_type='OUT' THEN IO_Qty ELSE 0 END) AS TONKHO, SUM(CASE WHEN IO_type='OUT' AND (IO_Status<> 'Pending' OR IO_Status is null) THEN IO_Qty ELSE 0 END) AS XUATKHO_TT, SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) -SUM(CASE WHEN IO_type='OUT' AND (IO_Status<> 'Pending' OR IO_Status is null)THEN IO_Qty ELSE 0 END) AS TONKHO_TT FROM tbl_InputOutput 
+        group by Product_MaVach 
+          ) AS THANHPHAM ON (
+            THANHPHAM.Product_MaVach = M100.G_CODE
+          ) 
+          LEFT JOIN (
+            SELECT 
+              ZTB_WAIT_INSPECT.G_CODE, 
+              M100.G_NAME, 
+              M100.G_NAME_KD, 
+              SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, 
+              SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, 
+              SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, 
+              SUM(
+                INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA
+              ) AS TOTAL_WAIT 
+            FROM 
+              ZTB_WAIT_INSPECT 
+              JOIN M100 ON (
+                M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE
+              ) 
+            WHERE 
+              UPDATE_DATE = CONVERT(
+                date, 
+                GETDATE()
+              ) 
+              AND CALAMVIEC = 'DEM' 
+            GROUP BY 
+              ZTB_WAIT_INSPECT.G_CODE, 
+              M100.G_NAME, 
+              M100.G_NAME_KD
+          ) AS TONKIEM ON (
+            THANHPHAM.Product_MaVach = TONKIEM.G_CODE
+          ) 
+          LEFT JOIN (
+            SELECT 
+              Product_MaVach, 
+              SUM(Block_Qty) AS Block_Qty 
+            from 
+              tbl_Block2 
+            GROUP BY 
+              Product_MaVach
+          ) AS tbl_Block_table2 ON (
+            tbl_Block_table2.Product_MaVach = M100.G_CODE
+          ) 
+          LEFT JOIN (
+            SELECT 
+              ZTB_HALF_GOODS.G_CODE, 
+              M100.G_NAME, 
+              SUM(BTP_QTY_EA) AS BTP_QTY_EA 
+            FROM 
+              ZTB_HALF_GOODS 
+              JOIN M100 ON (
+                M100.G_CODE = ZTB_HALF_GOODS.G_CODE
+              ) 
+            WHERE 
+              UPDATE_DATE = CONVERT(
+                date, 
+                GETDATE()
+              ) 
+            GROUP BY 
+              ZTB_HALF_GOODS.G_CODE, 
+              M100.G_NAME
+          ) AS BTP ON (
+            BTP.G_CODE = THANHPHAM.Product_MaVach
+          ) ${condition} GROUP BY M100.G_NAME_KD`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -5156,7 +5309,7 @@ LEFT JOIN (
           ////console.log(checkkq);
         })();
         break;
-        case "insertM100BangTinhGia":
+      case "insertM100BangTinhGia":
         (async () => {
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -8811,7 +8964,15 @@ FROM
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL='${DATA.FINAL}', INS_DATE=GETDATE(), INS_EMPL='${EMPL_NO}' WHERE G_CODE='${DATA.G_CODE}' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ} AND PRICE_DATE='${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}'`;
+          let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL='${
+            DATA.FINAL
+          }', INS_DATE=GETDATE(), INS_EMPL='${EMPL_NO}' WHERE G_CODE='${
+            DATA.G_CODE
+          }' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${
+            DATA.MOQ
+          } AND PRICE_DATE='${moment
+            .utc(DATA.PRICE_DATE)
+            .format("YYYY-MM-DD")}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -9577,8 +9738,8 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let setpdQueryrnd = `
             INSERT INTO ZTB_BARCODE_MANAGER (CTR_CD, G_CODE, BARCODE_STT, BARCODE_TYPE,  RND, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.BARCODE_STT}','${DATA.BARCODE_TYPE}','${DATA.BARCODE_RND}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
           `;
-          console.log('setpdQueryrnd',setpdQueryrnd);
-          checkkq = await queryDB(setpdQueryrnd);          
+          console.log("setpdQueryrnd", setpdQueryrnd);
+          checkkq = await queryDB(setpdQueryrnd);
           res.send(checkkq);
         })();
         break;
@@ -9595,8 +9756,8 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             UPDATE ZTB_BARCODE_MANAGER SET BARCODE_TYPE='${DATA.BARCODE_TYPE}', RND='${DATA.BARCODE_RND}' WHERE G_CODE='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
           `;
           checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd);          
-          
+          console.log(setpdQueryrnd);
+
           res.send(checkkq);
         })();
         break;
@@ -9691,14 +9852,14 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
 		   WHERE  YY.FACTORY='${DATA.FACTORY}'
        ORDER BY YY.PL_DATE ASC
        `;
-       /* WHERE YY.EQ='${DATA.EQ}' AND YY.FACTORY='${DATA.FACTORY}' */
+          /* WHERE YY.EQ='${DATA.EQ}' AND YY.FACTORY='${DATA.FACTORY}' */
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "loadquanlygiaonhan":
+      case "loadquanlygiaonhan":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9719,7 +9880,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadKTP_IN":
+      case "loadKTP_IN":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9732,25 +9893,25 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           if (DATA.ALLTIME === false) {
             condition += ` AND I660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
           }
-          if (DATA.FACTORY !== 'ALL') {
+          if (DATA.FACTORY !== "ALL") {
             condition += ` AND I660.FACTORY = '${DATA.FACTORY}' `;
           }
-          if (DATA.PROD_TYPE !== 'ALL') {
+          if (DATA.PROD_TYPE !== "ALL") {
             condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
           }
-          if (DATA.G_NAME !== '') {
+          if (DATA.G_NAME !== "") {
             condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-          if (DATA.G_CODE !== '') {
+          if (DATA.G_CODE !== "") {
             condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
           }
-          if (DATA.PROD_REQUEST_NO !== '') {
+          if (DATA.PROD_REQUEST_NO !== "") {
             condition += ` AND I660.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
           }
-          if (DATA.KD_EMPL_NAME !== '') {
+          if (DATA.KD_EMPL_NAME !== "") {
             condition += ` AND M010.EMPL_NAME LIKE '%${DATA.KD_EMPL_NAME}%'`;
           }
-          if (DATA.CUST_NAME_KD !== '') {
+          if (DATA.CUST_NAME_KD !== "") {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
           }
           let setpdQuery = `
@@ -9772,7 +9933,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadStockFull":
+      case "loadStockFull":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9785,25 +9946,25 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           if (DATA.ALLTIME === false) {
             condition += ` AND I660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
           }
-          if (DATA.FACTORY !== 'ALL') {
+          if (DATA.FACTORY !== "ALL") {
             condition += ` AND I660.FACTORY = '${DATA.FACTORY}' `;
           }
-          if (DATA.PROD_TYPE !== 'ALL') {
+          if (DATA.PROD_TYPE !== "ALL") {
             condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
           }
-          if (DATA.G_NAME !== '') {
+          if (DATA.G_NAME !== "") {
             condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-          if (DATA.G_CODE !== '') {
+          if (DATA.G_CODE !== "") {
             condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
           }
-          if (DATA.PROD_REQUEST_NO !== '') {
+          if (DATA.PROD_REQUEST_NO !== "") {
             condition += ` AND I660.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
           }
-          if (DATA.KD_EMPL_NAME !== '') {
+          if (DATA.KD_EMPL_NAME !== "") {
             condition += ` AND M010.EMPL_NAME LIKE '%${DATA.KD_EMPL_NAME}%'`;
           }
-          if (DATA.CUST_NAME_KD !== '') {
+          if (DATA.CUST_NAME_KD !== "") {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
           }
           let setpdQuery = `
@@ -9825,7 +9986,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadKTP_OUT":
+      case "loadKTP_OUT":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9838,28 +9999,28 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           if (DATA.ALLTIME === false) {
             condition += ` AND O660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
           }
-          if (DATA.FACTORY !== 'ALL') {
+          if (DATA.FACTORY !== "ALL") {
             condition += ` AND O660.FACTORY = '${DATA.FACTORY}' `;
           }
-          if (DATA.PROD_TYPE !== 'ALL') {
+          if (DATA.PROD_TYPE !== "ALL") {
             condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
           }
-          if (DATA.G_NAME !== '') {
+          if (DATA.G_NAME !== "") {
             condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-          if (DATA.G_CODE !== '') {
+          if (DATA.G_CODE !== "") {
             condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
           }
-          if (DATA.PROD_REQUEST_NO !== '') {
+          if (DATA.PROD_REQUEST_NO !== "") {
             condition += ` AND O660.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
           }
-          if (DATA.KD_EMPL_NAME !== '') {
+          if (DATA.KD_EMPL_NAME !== "") {
             condition += ` AND M010.EMPL_NAME LIKE '%${DATA.KD_EMPL_NAME}%'`;
           }
-          if (DATA.CUST_NAME_KD !== '') {
+          if (DATA.CUST_NAME_KD !== "") {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
           }
-          if (DATA.OUT_TYPE !== 'ALL') {
+          if (DATA.OUT_TYPE !== "ALL") {
             condition += ` AND O660.OUT_TYPE = '${DATA.OUT_TYPE}'`;
           }
           let setpdQuery = `
@@ -9880,7 +10041,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadSTOCKG_CODE":
+      case "loadSTOCKG_CODE":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9890,13 +10051,13 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
-          if (DATA.PROD_TYPE !== 'ALL') {
+          if (DATA.PROD_TYPE !== "ALL") {
             condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
           }
-          if (DATA.G_NAME !== '') {
+          if (DATA.G_NAME !== "") {
             condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-          if (DATA.G_CODE !== '') {
+          if (DATA.G_CODE !== "") {
             condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
           }
 
@@ -9914,7 +10075,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadSTOCKG_NAME_KD":
+      case "loadSTOCKG_NAME_KD":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9923,11 +10084,11 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = " WHERE 1=1 ";          
-          if (DATA.G_NAME !== '') {
+          let condition = " WHERE 1=1 ";
+          if (DATA.G_NAME !== "") {
             condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-          
+
           let setpdQuery = `
           SELECT   AA.G_NAME_KD, AA.STOCK, AA.BLOCK_QTY,(AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
           (
@@ -9941,7 +10102,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadSTOCK_YCSX":
+      case "loadSTOCK_YCSX":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -9951,19 +10112,19 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
-          if (DATA.PROD_TYPE !== 'ALL') {
+          if (DATA.PROD_TYPE !== "ALL") {
             condition += ` AND M100.PROD_TYPE = '${DATA.PROD_TYPE}' `;
           }
-          if (DATA.G_NAME !== '') {
+          if (DATA.G_NAME !== "") {
             condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-          if (DATA.G_CODE !== '') {
+          if (DATA.G_CODE !== "") {
             condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
           }
-          if (DATA.PROD_REQUEST_NO !== '') {
+          if (DATA.PROD_REQUEST_NO !== "") {
             condition += ` AND AA.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
-          }         
-          if (DATA.CUST_NAME_KD !== '') {
+          }
+          if (DATA.CUST_NAME_KD !== "") {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
           }
 
@@ -9983,7 +10144,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "checkcustomerpono":
+      case "checkcustomerpono":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -10001,7 +10162,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "checkcustcd":
+      case "checkcustcd":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -10011,12 +10172,9 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = ` `;
-          if(DATA.COMPANY_TYPE ==='KH')
-          {
+          if (DATA.COMPANY_TYPE === "KH") {
             setpdQuery = `SELECT TOP 1 CUST_CD FROM M110 WHERE SUBSTRING(M110.CUST_CD,1,2) = 'KH' ORDER BY CUST_CD DESC`;
-          }
-          else if(DATA.COMPANY_TYPE ==='NCC')
-          {
+          } else if (DATA.COMPANY_TYPE === "NCC") {
             setpdQuery = `SELECT TOP 1 CUST_CD FROM M110 WHERE SUBSTRING(M110.CUST_CD,1,3) = 'NCC' ORDER BY CUST_CD DESC`;
           }
           console.log(setpdQuery);
@@ -10025,7 +10183,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "getlastestCODKH":
+      case "getlastestCODKH":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -10043,7 +10201,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "addCodeToQuotationTable":
+      case "addCodeToQuotationTable":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -10061,7 +10219,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "addBOMToQuotationTable":
+      case "addBOMToQuotationTable":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -10079,7 +10237,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           res.send(checkkq);
         })();
         break;
-        case "loadlistcodequotation":
+      case "loadlistcodequotation":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -10091,6 +10249,24 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let setpdQuery = `
           SELECT ZTB_QUOTATION_CALC_TB.G_CODE,M100.G_NAME, M100.G_NAME_KD, ZTB_QUOTATION_CALC_TB.WIDTH_OFFSET,ZTB_QUOTATION_CALC_TB.LENGTH_OFFSET,ZTB_QUOTATION_CALC_TB.KNIFE_UNIT,ZTB_QUOTATION_CALC_TB.FILM_UNIT,ZTB_QUOTATION_CALC_TB.INK_UNIT,ZTB_QUOTATION_CALC_TB.LABOR_UNIT,ZTB_QUOTATION_CALC_TB.DELIVERY_UNIT,ZTB_QUOTATION_CALC_TB.DEPRECATION_UNIT,ZTB_QUOTATION_CALC_TB.GMANAGEMENT_UNIT,ZTB_QUOTATION_CALC_TB.M_LOSS_UNIT,ZTB_QUOTATION_CALC_TB.G_WIDTH,ZTB_QUOTATION_CALC_TB.G_LENGTH,ZTB_QUOTATION_CALC_TB.G_C,ZTB_QUOTATION_CALC_TB.G_C_R,ZTB_QUOTATION_CALC_TB.G_LG,ZTB_QUOTATION_CALC_TB.G_CG,ZTB_QUOTATION_CALC_TB.G_SG_L,ZTB_QUOTATION_CALC_TB.G_SG_R,ZTB_QUOTATION_CALC_TB.PROD_PRINT_TIMES,ZTB_QUOTATION_CALC_TB.KNIFE_COST,ZTB_QUOTATION_CALC_TB.FILM_COST,ZTB_QUOTATION_CALC_TB.INK_COST,ZTB_QUOTATION_CALC_TB.LABOR_COST,ZTB_QUOTATION_CALC_TB.DELIVERY_COST,ZTB_QUOTATION_CALC_TB.DEPRECATION_COST,ZTB_QUOTATION_CALC_TB.GMANAGEMENT_COST,ZTB_QUOTATION_CALC_TB.MATERIAL_COST,ZTB_QUOTATION_CALC_TB.TOTAL_COST,ZTB_QUOTATION_CALC_TB.SALE_PRICE,ZTB_QUOTATION_CALC_TB.PROFIT
 FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_TB.G_CODE)          
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateGiaVLBOM2":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+              UPDATE ZTB_BOM2 SET M_CMS_PRICE=${DATA.M_CMS_PRICE}, M_SS_PRICE=${DATA.M_SS_PRICE} WHERE G_CODE ='${DATA.G_CODE}' AND M_CODE='${DATA.M_CODE}'
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
