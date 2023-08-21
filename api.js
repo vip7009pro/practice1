@@ -3769,7 +3769,7 @@ LEFT JOIN (
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let query = `SELECT CUST_CD , CUST_NAME_KD  FROM M110`;
+          let query = `SELECT DISTINCT CUST_CD , CUST_NAME_KD  FROM M110 WHERE CUST_TYPE ='KH' ORDER BY CUST_NAME_KD ASC`;
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
