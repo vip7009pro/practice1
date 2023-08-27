@@ -890,7 +890,7 @@ exports.process_api = function (req, res) {
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
   /*  if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
-  console.log(moment().format("YYYY-MM-DD hh:mm:ss") + ":" + qr["command"]);
+  console.log(moment().format("YYYY-MM-DD HH:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
     1 /* qr["command"] ==='login' || req.payload_data["EMPL_NO"]==='NHU1903' */
@@ -7640,7 +7640,183 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = `  WHERE O302.PLAN_ID is not null `;
+          let condition = `  WHERE O302.PLAN_ID is not null AND O302.LIEUQL_SX = 1`;
+          if (DATA.ALLTIME === false) {
+            condition += ` AND O302.INS_DATE BETWEEN ''${DATA.FROM_DATE}'' AND ''${DATA.TO_DATE} 23:59:59'' `;
+          }
+          if (DATA.PROD_REQUEST_NO !== "") {
+            condition += ` AND ZTB_QLSXPLAN.PROD_REQUEST_NO= '${DATA.PROD_REQUEST_NO}'`;
+          }
+          if (DATA.PLAN_ID !== "") {
+            condition += ` AND O302.PLAN_ID = '${DATA.PLAN_ID}'`;
+          }
+          if (DATA.M_CODE !== "") {
+            condition += ` AND O302.M_CODE ='${DATA.M_CODE}'`;
+          }
+          if (DATA.M_NAME !== "") {
+            condition += ` AND M090.M_NAME LIKE '%${DATA.M_NAME}%'`;
+          }
+          if (DATA.G_CODE !== "") {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+          }
+          if (DATA.G_NAME !== "") {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+          if (DATA.FACTORY !== "ALL") {
+            condition += ` AND O302.FACTORY = '${DATA.FACTORY}'`;
+          }
+          if (DATA.PLAN_EQ !== "ALL") {
+            condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2) = '${DATA.PLAN_EQ}'`;
+          }
+          let setpdQuery = `
+          DECLARE @eq_string varchar(max) = '';
+          DECLARE @eq_temp_string varchar(max) = '';
+          DECLARE @vao_eq varchar(max) = '';
+          DECLARE @temp_qty varchar(max) = '';
+          DECLARE @temp_met varchar(max) = '';
+          DECLARE @tempTable TABLE (ResultValue nvarchar(max)) DECLARE @i INT = 0;
+          DECLARE @eq_series varchar(2)
+          INSERT INTO
+            @tempTable
+          SELECT
+            DISTINCT SUBSTRING(EQ_NAME, 1, 2) AS EQ_SERIES
+          FROM
+            ZTB_SX_EQ_STATUS DECLARE ghepcursor CURSOR FOR (
+              SELECT
+                *
+              FROM
+                @tempTable
+            ) OPEN ghepcursor;
+          FETCH NEXT
+          FROM
+            ghepcursor INTO @eq_series;
+          WHILE @@FETCH_STATUS = 0 BEGIN
+          SET
+            @eq_temp_string = @eq_temp_string + 'isnull([' + @eq_series + '],0) AS ' + @eq_series + '_EA, '
+          SET
+            @eq_string = @eq_string + '[' + @eq_series + '],'
+          SET
+            @vao_eq = @vao_eq + 'CASE WHEN P500_EQ.' + @eq_series + ' is not null THEN ''Y'' ELSE ''N'' END AS VAO_' + @eq_series + ', '
+          SET
+            @temp_qty = @temp_qty + 'P501_QTY.' + @eq_series + '_EA, '
+          SET
+            @temp_met = @temp_met + 'P501_QTY.' + @eq_series + '_EA * M100.PD/(M100.G_C * M100.G_C_R)/1000 AS ' + @eq_series + '_RESULT, ' FETCH NEXT
+          FROM
+            ghepcursor INTO @eq_series;
+          END CLOSE ghepcursor;
+          DEALLOCATE ghepcursor;
+          SET
+            @temp_met = SUBSTRING(@temp_met, 1, LEN(@temp_met) -1)
+          SET
+            @temp_qty = SUBSTRING(@temp_qty, 1, LEN(@temp_qty) -1)
+          SET
+            @vao_eq = SUBSTRING(@vao_eq, 1, LEN(@vao_eq) -1)
+          SET
+            @eq_string = SUBSTRING(@eq_string, 1, LEN(@eq_string) -1)
+          SET
+            @eq_temp_string = SUBSTRING(@eq_temp_string, 1, LEN(@eq_temp_string) -1) PRINT(@eq_string) PRINT(@eq_temp_string) PRINT(@vao_eq) PRINT(@temp_qty) PRINT(@temp_met) DECLARE @query varchar(max) DECLARE @query2 varchar(max)
+          SELECT
+            @query = 'SELECT PVTB.M_LOT_NO, ' + @eq_string + ' FROM 
+          (
+          SELECT DISTINCT M_LOT_NO, SUBSTRING(EQUIPMENT_CD,1,2) AS EQ_SERIES FROM P500 
+          JOIN (SELECT DISTINCT SUBSTRING(EQ_NAME,1,2) AS EQ_SERIES from ZTB_SX_EQ_STATUS) AS EQ_TABLE ON (EQ_TABLE.EQ_SERIES =  SUBSTRING(P500.EQUIPMENT_CD,1,2)) WHERE P500.PLAN_ID is not null
+          ) AS BANGNGUON
+          PIVOT
+          (
+            MIN(BANGNGUON.EQ_SERIES)
+            FOR BANGNGUON.EQ_SERIES IN (' + @eq_string + ')
+          ) AS PVTB
+          SELECT PVTB.M_LOT_NO, ' + @eq_temp_string + '  FROM 
+          (
+          SELECT  P501.M_LOT_NO, SUBSTRING(P500.EQUIPMENT_CD,1,2) AS EQ_SERIES,SUM(isnull(P501.TEMP_QTY,0)) AS TEMP_QTY FROM P501 LEFT JOIN P500 ON (P500.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500.PROCESS_IN_NO = P501.PROCESS_IN_NO AND P500.PROCESS_IN_SEQ = P501.PROCESS_IN_SEQ) 
+          WHERE P501.PLAN_ID is not null
+          GROUP BY  P501.M_LOT_NO, SUBSTRING(P500.EQUIPMENT_CD,1,2)
+          ) AS BANGNGUON
+          PIVOT
+          (
+            SUM(BANGNGUON.TEMP_QTY)
+            FOR BANGNGUON.EQ_SERIES IN (' + @eq_string + ')
+          ) AS PVTB
+          '
+          SELECT
+            @query2 = '
+          SELECT O302.INS_DATE, O302.M_LOT_NO, O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, M100.EQ1, M100.EQ2, CASE WHEN O302.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS XUAT_KHO, 
+                              ' + @vao_eq + ', 
+                              CASE WHEN RETURN_LIEU.M_LOT_NO is not null AND  GIAONHAN.M_LOT_NO is not null THEN ''R''  WHEN RETURN_LIEU.M_LOT_NO is  null AND  GIAONHAN.M_LOT_NO is not null THEN ''Y''  ELSE ''N'' END AS CONFIRM_GIAONHAN,
+                              CASE WHEN ZTBINSPECTINPUTTB_A.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS VAO_KIEM,
+                              CASE WHEN NHATKY.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS NHATKY_KT, 
+                              CASE WHEN ZTBINSPECTOUTPUTTB_A.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS RA_KIEM,
+                              O302.ROLL_QTY, O302.OUT_CFM_QTY, (O302.ROLL_QTY * O302.OUT_CFM_QTY) AS TOTAL_OUT_QTY, 
+                              ' + @temp_met + ',
+                              isnull(NHATKY.INSPECT_TOTAL_QTY,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 AS INSPECT_TOTAL_QTY, 
+                              isnull(NHATKY.INSPECT_OK_QTY,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 AS INSPECT_OK_QTY,
+                              isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 AS INS_OUT, 
+                              M100.PD, M100.G_C * M100.G_C_R AS CAVITY, 
+                              (O302.ROLL_QTY * O302.OUT_CFM_QTY)/ M100.PD * (M100.G_C * M100.G_C_R)*1000 AS TOTAL_OUT_EA,
+                              ' + @temp_qty + ',
+                    isnull(NHATKY.INSPECT_TOTAL_QTY,0) AS INSPECT_TOTAL_EA, 
+                    isnull(NHATKY.INSPECT_OK_QTY,0) AS INSPECT_OK_EA, 
+                    isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0) AS INS_OUTPUT_EA,
+                              1-isnull(NHATKY.INSPECT_OK_QTY,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 /(O302.ROLL_QTY * O302.OUT_CFM_QTY) AS ROLL_LOSS_KT,
+                              1-isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 /(O302.ROLL_QTY * O302.OUT_CFM_QTY) AS ROLL_LOSS,
+                    ZTB_QLSXPLAN.PROD_REQUEST_NO, O302.PLAN_ID,ZTB_QLSXPLAN.PLAN_EQ, M100.G_CODE, M100.G_NAME, O302.FACTORY           
+                               FROM O302 
+                              LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM IN_KHO_SX WHERE PHANLOAI=''N'') AS IN_KHO_SX_A ON (IN_KHO_SX_A.M_LOT_NO = O302.M_LOT_NO)
+                              LEFT JOIN (
+                    SELECT PVTB.M_LOT_NO, ' + @eq_string + ' FROM 
+                      (
+                      SELECT DISTINCT M_LOT_NO, SUBSTRING(EQUIPMENT_CD,1,2) AS EQ_SERIES FROM P500 
+                      JOIN (SELECT DISTINCT SUBSTRING(EQ_NAME,1,2) AS EQ_SERIES from ZTB_SX_EQ_STATUS) AS EQ_TABLE ON (EQ_TABLE.EQ_SERIES =  SUBSTRING(P500.EQUIPMENT_CD,1,2)) WHERE P500.PLAN_ID is not null
+                      ) AS BANGNGUON
+                      PIVOT
+                      (
+                        MIN(BANGNGUON.EQ_SERIES)
+                        FOR BANGNGUON.EQ_SERIES IN (' + @eq_string + ')
+                      ) AS PVTB
+                    ) AS P500_EQ ON (P500_EQ.M_LOT_NO = O302.M_LOT_NO)
+                              LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM ZTB_GIAONHAN_M_LOT WHERE CONFIRM=''OK'' AND PHANLOAI=''N'' ) AS GIAONHAN ON (O302.M_LOT_NO = GIAONHAN.M_LOT_NO)
+                              LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM ZTB_GIAONHAN_M_LOT WHERE CONFIRM=''OK'' AND PHANLOAI=''R'' ) AS RETURN_LIEU ON (O302.M_LOT_NO = RETURN_LIEU.M_LOT_NO)
+                              LEFT JOIN (SELECT DISTINCT P501.M_LOT_NO FROM ZTBINSPECTINPUTTB LEFT JOIN P501 ON (P501.PROCESS_LOT_NO = ZTBINSPECTINPUTTB.PROCESS_LOT_NO) WHERE ZTBINSPECTINPUTTB.PLAN_ID is not null) AS ZTBINSPECTINPUTTB_A ON (O302.M_LOT_NO = ZTBINSPECTINPUTTB_A.M_LOT_NO)
+                              LEFT JOIN (SELECT  P501.M_LOT_NO, SUM(ZTBINSPECTNGTB.INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ZTBINSPECTNGTB.INSPECT_OK_QTY) AS INSPECT_OK_QTY  FROM ZTBINSPECTNGTB LEFT JOIN P501 ON (P501.PROCESS_LOT_NO = ZTBINSPECTNGTB.PROCESS_LOT_NO) WHERE ZTBINSPECTNGTB.PLAN_ID is not null GROUP BY P501.M_LOT_NO) AS NHATKY ON(NHATKY.M_LOT_NO = O302.M_LOT_NO)
+                              LEFT JOIN (SELECT  P501.M_LOT_NO, SUM(ZTBINSPECTOUTPUTTB.OUTPUT_QTY_EA) AS INS_OUTPUT_EA FROM ZTBINSPECTOUTPUTTB LEFT JOIN P501 ON (P501.PROCESS_LOT_NO = ZTBINSPECTOUTPUTTB.PROCESS_LOT_NO) WHERE ZTBINSPECTOUTPUTTB.PLAN_ID is not null GROUP BY P501.M_LOT_NO) AS ZTBINSPECTOUTPUTTB_A ON (O302.M_LOT_NO = ZTBINSPECTOUTPUTTB_A.M_LOT_NO)
+                              LEFT JOIN 
+                    (
+                      SELECT PVTB.M_LOT_NO, ' + @eq_temp_string + '  FROM 
+                      (
+                      SELECT  P501.M_LOT_NO, SUBSTRING(P500.EQUIPMENT_CD,1,2) AS EQ_SERIES,SUM(isnull(P501.TEMP_QTY,0)) AS TEMP_QTY FROM P501 LEFT JOIN P500 ON (P500.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500.PROCESS_IN_NO = P501.PROCESS_IN_NO AND P500.PROCESS_IN_SEQ = P501.PROCESS_IN_SEQ) 
+                      WHERE P501.PLAN_ID is not null
+                      GROUP BY  P501.M_LOT_NO, SUBSTRING(P500.EQUIPMENT_CD,1,2)
+                      ) AS BANGNGUON
+                      PIVOT
+                      (
+                        SUM(BANGNGUON.TEMP_QTY)
+                        FOR BANGNGUON.EQ_SERIES IN (' + @eq_string + ')
+                      ) AS PVTB
+                    ) AS P501_QTY ON (P501_QTY.M_LOT_NO = O302.M_LOT_NO)
+                              LEFT JOIN M090 ON (M090.M_CODE= O302.M_CODE)
+                              LEFT JOIN ZTB_QLSXPLAN ON (O302.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID)
+                              LEFT JOIN M100 ON (ZTB_QLSXPLAN.G_CODE = M100.G_CODE)
+                              ${condition}
+                              ORDER BY O302.INS_DATE DESC '
+            EXECUTE(@query2)
+                   
+                    `;
+          //${moment().format('YYYY-MM-DD')}
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "materialLotStatus1":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `  WHERE O302.PLAN_ID is not null AND O302.LIEUQL_SX = 1`;
           if (DATA.ALLTIME === false) {
             condition += ` AND O302.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
           }
@@ -7693,7 +7869,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
                     1-isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 /(O302.ROLL_QTY * O302.OUT_CFM_QTY) AS ROLL_LOSS,
         ZTB_QLSXPLAN.PROD_REQUEST_NO, O302.PLAN_ID,ZTB_QLSXPLAN.PLAN_EQ, M100.G_CODE, M100.G_NAME, O302.FACTORY           
                      FROM O302 
-                    JOIN (SELECT DISTINCT M_LOT_NO FROM IN_KHO_SX WHERE PHANLOAI='N') AS IN_KHO_SX_A ON (IN_KHO_SX_A.M_LOT_NO = O302.M_LOT_NO)
+                    LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM IN_KHO_SX WHERE PHANLOAI='N') AS IN_KHO_SX_A ON (IN_KHO_SX_A.M_LOT_NO = O302.M_LOT_NO)
                     LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM P500 WHERE SUBSTRING(EQUIPMENT_CD,1,2)='FR' AND PLAN_ID is not null) AS P500_FR ON (O302.M_LOT_NO = P500_FR.M_LOT_NO)
                     LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM P500 WHERE SUBSTRING(EQUIPMENT_CD,1,2)='SR' AND PLAN_ID is not null) AS P500_SR ON (O302.M_LOT_NO = P500_SR.M_LOT_NO)
                     LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM P500 WHERE SUBSTRING(EQUIPMENT_CD,1,2)='DC' AND PLAN_ID is not null) AS P500_DC ON (O302.M_LOT_NO = P500_DC.M_LOT_NO)
