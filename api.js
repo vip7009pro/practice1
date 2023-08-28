@@ -7740,7 +7740,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           '
           SELECT
             @query2 = '
-          SELECT O302.INS_DATE, O302.M_LOT_NO, O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, M100.EQ1, M100.EQ2, CASE WHEN O302.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS XUAT_KHO, 
+          SELECT O302.INS_DATE, O302.M_LOT_NO, O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, CASE WHEN O302.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS XUAT_KHO, 
                               ' + @vao_eq + ', 
                               CASE WHEN RETURN_LIEU.M_LOT_NO is not null AND  GIAONHAN.M_LOT_NO is not null THEN ''R''  WHEN RETURN_LIEU.M_LOT_NO is  null AND  GIAONHAN.M_LOT_NO is not null THEN ''Y''  ELSE ''N'' END AS CONFIRM_GIAONHAN,
                               CASE WHEN ZTBINSPECTINPUTTB_A.M_LOT_NO is not null THEN ''Y'' ELSE ''N'' END AS VAO_KIEM,
@@ -7758,7 +7758,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
                     isnull(NHATKY.INSPECT_OK_QTY,0) AS INSPECT_OK_EA, 
                     isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0) AS INS_OUTPUT_EA,
                               1-isnull(NHATKY.INSPECT_OK_QTY,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 /(O302.ROLL_QTY * O302.OUT_CFM_QTY) AS ROLL_LOSS_KT,
-                              1-isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 /(O302.ROLL_QTY * O302.OUT_CFM_QTY) AS ROLL_LOSS,
+                              1-isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 /(O302.ROLL_QTY * O302.OUT_CFM_QTY) AS ROLL_LOSS, M100.EQ1, M100.EQ2, M100.EQ3, M100.EQ4,
                     ZTB_QLSXPLAN.PROD_REQUEST_NO, O302.PLAN_ID,ZTB_QLSXPLAN.PLAN_EQ, M100.G_CODE, M100.G_NAME, O302.FACTORY           
                                FROM O302 
                               LEFT JOIN (SELECT DISTINCT M_LOT_NO FROM IN_KHO_SX WHERE PHANLOAI=''N'') AS IN_KHO_SX_A ON (IN_KHO_SX_A.M_LOT_NO = O302.M_LOT_NO)
@@ -8498,7 +8498,17 @@ AS JUDGEMENT
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT FACTORY, SUBSTRING(EQ_NAME,1,2) AS EQ_NAME, COUNT(SUBSTRING(EQ_NAME,1,2)) AS EQ_QTY FROM ZTB_SX_EQ_STATUS WHERE EQ_ACTIVE ='OK'  GROUP BY FACTORY, SUBSTRING(EQ_NAME,1,2) ORDER BY FACTORY ASC, EQ_NAME ASC`;
+          let condition = ` WHERE EQ_ACTIVE ='OK'  `;
+          if(DATA.FACTORY !=='ALL')
+          {
+            condition += ` AND FACTORY='${DATA.FACTORY}'`
+          }
+          if(DATA.EQ_NAME !=='ALL')
+          {
+            condition += ` AND SUBSTRING(EQ_NAME,1,2)='${DATA.EQ_NAME}'`
+          }
+          
+          let setpdQuery = `SELECT FACTORY, SUBSTRING(EQ_NAME,1,2) AS EQ_NAME, COUNT(SUBSTRING(EQ_NAME,1,2)) AS EQ_QTY FROM ZTB_SX_EQ_STATUS  ${condition}  GROUP BY FACTORY, SUBSTRING(EQ_NAME,1,2)  ORDER BY FACTORY ASC, EQ_NAME ASC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
