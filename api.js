@@ -3978,7 +3978,150 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `SELECT AMAZONTB.PROD_REQUEST_NO AS DAUPAMZ, PLANTABLE.PROD_REQUEST_NO AS DACHITHI, M100.G_NAME_KD, P400.PO_NO,  P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL,M100.DESCR, M100.PDBV, M100.PDBV_EMPL,M100.PDBV_DATE,M100.G_NAME, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD,M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE, ( CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY ,0)- isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA,0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,P400.YCSX_PENDING,  P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, (P400.TKHO_TDYCSX+ P400.BTP_TDYCSX+ P400.CK_TDYCSX-  P400.BLOCK_TDYCSX) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1,P400.W2,P400.W3,P400.W4,P400.W5,P400.W6,P400.W7,P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN (SELECT DISTINCT PROD_REQUEST_NO FROM AMAZONE_DATA) AS AMAZONTB ON (AMAZONTB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO) LEFT JOIN (SELECT DISTINCT PROD_REQUEST_NO FROM ZTB_QLSXPLAN) AS PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
+          let setpdQuery = `SELECT
+          AMAZONTB.PROD_REQUEST_NO AS DAUPAMZ,
+          PLANTABLE.PROD_REQUEST_NO AS DACHITHI,
+          M100.G_NAME_KD,
+          P400.PO_NO,
+          P400.G_CODE,
+          M100.PROD_TYPE,
+          M100.PROD_MAIN_MATERIAL,
+          M100.DESCR,
+          M100.PDBV,
+          M100.PDBV_EMPL,
+          M100.PDBV_DATE,
+          M100.G_NAME,
+          M010.EMPL_NAME,
+          M010.EMPL_NO,
+          M110.CUST_NAME_KD,
+          M110.CUST_CD,
+          P400.PROD_REQUEST_NO,
+          P400.PROD_REQUEST_DATE,
+          P400.PROD_REQUEST_QTY,
+          isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0) AS LOT_TOTAL_INPUT_QTY_EA,
+          isnull(INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+          isnull(INSPECT_BALANCE_TB.INSPECT_BALANCE, 0) AS INSPECT_BALANCE,
+          (
+              CASE
+                  WHEN P400.YCSX_PENDING = 1 THEN (
+                      isnull(P400.PROD_REQUEST_QTY, 0) - isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0)
+                  )
+                  WHEN P400.YCSX_PENDING = 0 THEN 0
+              END
+          ) AS SHORTAGE_YCSX,
+          CASE WHEN (P400.YCSX_PENDING =0 OR isnull(INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY) THEN 0 ELSE 1 END AS YCSX_PENDING,   
+          P400.CODE_55 AS PHAN_LOAI,
+          P400.REMK AS REMARK,
+          P400.PO_TDYCSX,
+          (
+              P400.TKHO_TDYCSX + P400.BTP_TDYCSX + P400.CK_TDYCSX - P400.BLOCK_TDYCSX
+          ) AS TOTAL_TKHO_TDYCSX,
+          P400.TKHO_TDYCSX,
+          P400.BTP_TDYCSX,
+          P400.CK_TDYCSX,
+          P400.BLOCK_TDYCSX,
+          P400.FCST_TDYCSX,
+          P400.W1,
+          P400.W2,
+          P400.W3,
+          P400.W4,
+          P400.W5,
+          P400.W6,
+          P400.W7,
+          P400.W8,
+          P400.PDUYET,
+          P400.CODE_50 AS LOAIXH,
+          M100.BANVE,
+          M100.NO_INSPECTION
+      FROM
+          P400
+          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
+          LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO)
+          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD)
+          LEFT JOIN (
+              SELECT
+                  M010.EMPL_NAME,
+                  M110.CUST_NAME_KD,
+                  M100.G_CODE,
+                  M100.G_NAME,
+                  P400.PROD_REQUEST_NO,
+                  P400.PROD_REQUEST_QTY,
+                  INOUT.LOT_TOTAL_INPUT_QTY_EA,
+                  INOUT.LOT_TOTAL_OUTPUT_QTY_EA,
+                  INOUT.INSPECT_BALANCE
+              FROM
+                  (
+                      SELECT
+                          P400.PROD_REQUEST_NO,
+                          SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA,
+                          SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA,
+                          SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE
+                      FROM
+                          (
+                              SELECT
+                                  AA.PROCESS_LOT_NO,
+                                  AA.LOT_TOTAL_QTY_KG,
+                                  AA.LOT_TOTAL_INPUT_QTY_EA,
+                                  isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+                                  (
+                                      AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0)
+                                  ) AS INSPECT_BALANCE
+                              FROM
+                                  (
+                                      SELECT
+                                          PROCESS_LOT_NO,
+                                          SUM(INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA,
+                                          SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG
+                                      FROM
+                                          ZTBINSPECTINPUTTB
+                                      GROUP BY
+                                          PROCESS_LOT_NO
+                                  ) AS AA
+                                  LEFT JOIN (
+                                      SELECT
+                                          PROCESS_LOT_NO,
+                                          SUM(OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA
+                                      FROM
+                                          ZTBINSPECTOUTPUTTB
+                                      GROUP BY
+                                          PROCESS_LOT_NO
+                                  ) AS BB ON (AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO)
+                          ) AS CC
+                          LEFT JOIN P501 ON (CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO)
+                          LEFT JOIN (
+                              SELECT
+                                  DISTINCT PROD_REQUEST_NO,
+                                  PROCESS_IN_DATE,
+                                  PROCESS_IN_NO
+                              FROM
+                                  P500
+                          ) AS P500_A ON (
+                              P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE
+                              AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO
+                          )
+                          LEFT JOIN P400 ON (P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                      GROUP BY
+                          P400.PROD_REQUEST_NO
+                  ) AS INOUT
+                  LEFT JOIN P400 ON (INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                  LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD)
+                  LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
+                  LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO)
+          ) AS INSPECT_BALANCE_TB ON (
+              INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO
+          )
+          LEFT JOIN (
+              SELECT
+                  DISTINCT PROD_REQUEST_NO
+              FROM
+                  AMAZONE_DATA
+          ) AS AMAZONTB ON (AMAZONTB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN (
+              SELECT
+                  DISTINCT PROD_REQUEST_NO
+              FROM
+                  ZTB_QLSXPLAN
+          ) AS PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
             DATA.alltime,
             DATA.start_date,
             DATA.end_date,
@@ -4004,7 +4147,306 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `SELECT M100.FACTORY, M100.Setting1, M100.Setting2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1, M100.LOSS_SETTING2, M100.NOTE, M100.UPH1, M100.UPH2, M100.Step3, M100.Step4, M100.EQ3, M100.EQ4, M100.UPH3, M100.UPH4, M100.Setting3, M100.Setting4, M100.LOSS_SX3, M100.LOSS_SX4, M100.LOSS_SETTING3, M100.LOSS_SETTING4, P400.G_CODE, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, M100.DESCR, M100.PDBV, M100.PDBV_EMPL, M100.PDBV_DATE, M100.G_NAME,M100.G_NAME_KD, M010.EMPL_NAME, M010.EMPL_NO, M110.CUST_NAME_KD, M110.CUST_CD, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, ( CASE WHEN P400.YCSX_PENDING = 1 THEN ( isnull(P400.PROD_REQUEST_QTY, 0)- isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) ) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX, P400.YCSX_PENDING, P400.CODE_55 AS PHAN_LOAI, P400.REMK AS REMARK, P400.PO_TDYCSX, ( P400.TKHO_TDYCSX + P400.BTP_TDYCSX + P400.CK_TDYCSX - P400.BLOCK_TDYCSX ) AS TOTAL_TKHO_TDYCSX, P400.TKHO_TDYCSX, P400.BTP_TDYCSX, P400.CK_TDYCSX, P400.BLOCK_TDYCSX, P400.FCST_TDYCSX, P400.W1, P400.W2, P400.W3, P400.W4, P400.W5, P400.W6, P400.W7, P400.W8, P400.PDUYET, P400.CODE_50 AS LOAIXH, M100.BANVE, M100.NO_INSPECTION, isnull(PO_TON.PO_BALANCE, 0) AS PO_BALANCE, M100.EQ1, M100.EQ2, isnull(AA.CD1,0) AS CD1, isnull(AA.CD2,0) AS CD2, isnull(AA.CD3,0) AS CD3, isnull(AA.CD4,0) AS CD4, isnull(BB.CD_IN, 0) AS CD_IN, isnull(BB.CD_DIECUT, 0) AS CD_DIECUT, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0 ) AS LOT_TOTAL_INPUT_QTY_EA, isnull( INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0 ) AS LOT_TOTAL_OUTPUT_QTY_EA, CASE WHEN ( NOT(M100.EQ1 <> 'NA' AND M100.EQ1 <>'NO' AND M100.EQ1 <>'' AND M100.EQ1 is not null) ) THEN 0 ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD1, 0) END AS TON_CD1, CASE WHEN (NOT (M100.EQ2 <> 'NA' AND M100.EQ2 <>'NO' AND M100.EQ2 <>'' AND M100.EQ2 is not null) ) THEN 0 ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD2, 0) END AS TON_CD2, CASE WHEN ( NOT (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null) ) THEN 0 ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD3, 0) END AS TON_CD3, CASE WHEN (NOT (M100.EQ4 <> 'NA' AND M100.EQ4 <>'NO' AND M100.EQ4 <>'' AND M100.EQ4 is not null) ) THEN 0 ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD4, 0) END AS TON_CD4, isnull( INSPECT_BALANCE_TB.INSPECT_BALANCE, 0 ) AS INSPECT_BALANCE FROM P400 LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) LEFT JOIN ( SELECT M010.EMPL_NAME, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, INOUT.LOT_TOTAL_INPUT_QTY_EA, INOUT.LOT_TOTAL_OUTPUT_QTY_EA, INOUT.INSPECT_BALANCE FROM ( SELECT P400.PROD_REQUEST_NO, SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA, SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA, SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE FROM ( SELECT AA.PROCESS_LOT_NO, AA.LOT_TOTAL_QTY_KG, AA.LOT_TOTAL_INPUT_QTY_EA, isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA, ( AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) ) AS INSPECT_BALANCE FROM ( SELECT PROCESS_LOT_NO, SUM(INPUT_QTY_EA) As LOT_TOTAL_INPUT_QTY_EA, SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG FROM ZTBINSPECTINPUTTB GROUP BY PROCESS_LOT_NO ) AS AA LEFT JOIN ( SELECT PROCESS_LOT_NO, SUM(OUTPUT_QTY_EA) As LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROCESS_LOT_NO ) AS BB ON ( AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO ) ) AS CC LEFT JOIN P501 ON ( CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO ) LEFT JOIN ( SELECT DISTINCT PROD_REQUEST_NO, PROCESS_IN_DATE, PROCESS_IN_NO FROM P500 ) AS P500_A ON ( P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO ) LEFT JOIN P400 ON ( P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) GROUP BY P400.PROD_REQUEST_NO ) AS INOUT LEFT JOIN P400 ON ( INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD) LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO) ) AS INSPECT_BALANCE_TB ON ( INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO ) LEFT JOIN ( SELECT AA.G_CODE, ( SUM(ZTBPOTable.PO_QTY)- SUM(AA.TotalDelivered) ) As PO_BALANCE FROM ( SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull( SUM(ZTBDelivery.DELIVERY_QTY), 0 ) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON ( ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO ) GROUP BY ZTBPOTable.CTR_CD, ZTBPOTable.EMPL_NO, ZTBPOTable.G_CODE, ZTBPOTable.CUST_CD, ZTBPOTable.PO_NO ) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO ) GROUP BY AA.G_CODE ) AS PO_TON ON(P400.G_CODE = PO_TON.G_CODE) LEFT JOIN ( SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1], 0) AS CD1, isnull(PVTB.[2], 0) AS CD2, isnull(PVTB.[3], 0) AS CD3, isnull(PVTB.[4], 0) AS CD4 FROM ( SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM( isnull(SX_RESULT, 0) ) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON ( ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID ) WHERE ZTB_QLSXPLAN.STEP = 0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER ) AS PV PIVOT ( SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1], [2], [3], [4]) ) AS PVTB ) AS AA ON ( P400.PROD_REQUEST_NO = AA.PROD_REQUEST_NO ) LEFT JOIN ( SELECT PVTB.PROD_REQUEST_NO, PVTB.[IN] AS CD_IN, PVTB.[DIECUT] AS CD_DIECUT FROM ( SELECT PROD_REQUEST_NO, CASE WHEN ( SUBSTRING(PLAN_EQ, 1, 2)= 'FR' OR SUBSTRING(PLAN_EQ, 1, 2)= 'SR' ) THEN 'IN' ELSE 'DIECUT' END AS PROCESS_NAME, SUM(KETQUASX) AS KETQUASX FROM ZTB_QLSXPLAN WHERE STEP = 0 GROUP BY PROD_REQUEST_NO, CASE WHEN ( SUBSTRING(PLAN_EQ, 1, 2)= 'FR' OR SUBSTRING(PLAN_EQ, 1, 2)= 'SR' ) THEN 'IN' ELSE 'DIECUT' END ) AS PV PIVOT ( SUM(PV.KETQUASX) FOR PV.PROCESS_NAME IN ([IN], [DIECUT]) ) AS PVTB ) AS BB ON ( P400.PROD_REQUEST_NO = BB.PROD_REQUEST_NO ) ${generate_condition_get_ycsx(
+          let setpdQuery = `SELECT
+          M100.FACTORY,
+          M100.Setting1,
+          M100.Setting2,
+          M100.Step1,
+          M100.Step2,
+          M100.LOSS_SX1,
+          M100.LOSS_SX2,
+          M100.LOSS_SETTING1,
+          M100.LOSS_SETTING2,
+          M100.NOTE,
+          M100.UPH1,
+          M100.UPH2,
+          M100.Step3,
+          M100.Step4,
+          M100.EQ3,
+          M100.EQ4,
+          M100.UPH3,
+          M100.UPH4,
+          M100.Setting3,
+          M100.Setting4,
+          M100.LOSS_SX3,
+          M100.LOSS_SX4,
+          M100.LOSS_SETTING3,
+          M100.LOSS_SETTING4,
+          P400.G_CODE,
+          M100.PROD_TYPE,
+          M100.PROD_MAIN_MATERIAL,
+          M100.DESCR,
+          M100.PDBV,
+          M100.PDBV_EMPL,
+          M100.PDBV_DATE,
+          M100.G_NAME,
+          M100.G_NAME_KD,
+          M010.EMPL_NAME,
+          M010.EMPL_NO,
+          M110.CUST_NAME_KD,
+          M110.CUST_CD,
+          P400.PROD_REQUEST_NO,
+          P400.PROD_REQUEST_DATE,
+          P400.PROD_REQUEST_QTY,
+          (
+              CASE
+                  WHEN P400.YCSX_PENDING = 1 THEN (
+                      isnull(P400.PROD_REQUEST_QTY, 0) - isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0)
+                  )
+                  WHEN P400.YCSX_PENDING = 0 THEN 0
+              END
+          ) AS SHORTAGE_YCSX,
+          CASE WHEN (P400.YCSX_PENDING =0 OR isnull(INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY) THEN 0 ELSE 1 END AS YCSX_PENDING,
+          P400.CODE_55 AS PHAN_LOAI,
+          P400.REMK AS REMARK,
+          P400.PO_TDYCSX,
+          (
+              P400.TKHO_TDYCSX + P400.BTP_TDYCSX + P400.CK_TDYCSX - P400.BLOCK_TDYCSX
+          ) AS TOTAL_TKHO_TDYCSX,
+          P400.TKHO_TDYCSX,
+          P400.BTP_TDYCSX,
+          P400.CK_TDYCSX,
+          P400.BLOCK_TDYCSX,
+          P400.FCST_TDYCSX,
+          P400.W1,
+          P400.W2,
+          P400.W3,
+          P400.W4,
+          P400.W5,
+          P400.W6,
+          P400.W7,
+          P400.W8,
+          P400.PDUYET,
+          P400.CODE_50 AS LOAIXH,
+          M100.BANVE,
+          M100.NO_INSPECTION,
+          isnull(PO_TON.PO_BALANCE, 0) AS PO_BALANCE,
+          M100.EQ1,
+          M100.EQ2,
+          isnull(AA.CD1, 0) AS CD1,
+          isnull(AA.CD2, 0) AS CD2,
+          isnull(AA.CD3, 0) AS CD3,
+          isnull(AA.CD4, 0) AS CD4,
+          isnull(BB.CD_IN, 0) AS CD_IN,
+          isnull(BB.CD_DIECUT, 0) AS CD_DIECUT,
+          isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0) AS LOT_TOTAL_INPUT_QTY_EA,
+          isnull(INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+          CASE
+              WHEN (
+                  NOT(
+                      M100.EQ1 <> 'NA'
+                      AND M100.EQ1 <> 'NO'
+                      AND M100.EQ1 <> ''
+                      AND M100.EQ1 IS NOT NULL
+                  )
+              ) THEN 0
+              ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD1, 0)
+          END AS TON_CD1,
+          CASE
+              WHEN (
+                  NOT (
+                      M100.EQ2 <> 'NA'
+                      AND M100.EQ2 <> 'NO'
+                      AND M100.EQ2 <> ''
+                      AND M100.EQ2 IS NOT NULL
+                  )
+              ) THEN 0
+              ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD2, 0)
+          END AS TON_CD2,
+          CASE
+              WHEN (
+                  NOT (
+                      M100.EQ3 <> 'NA'
+                      AND M100.EQ3 <> 'NO'
+                      AND M100.EQ3 <> ''
+                      AND M100.EQ3 IS NOT NULL
+                  )
+              ) THEN 0
+              ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD3, 0)
+          END AS TON_CD3,
+          CASE
+              WHEN (
+                  NOT (
+                      M100.EQ4 <> 'NA'
+                      AND M100.EQ4 <> 'NO'
+                      AND M100.EQ4 <> ''
+                      AND M100.EQ4 IS NOT NULL
+                  )
+              ) THEN 0
+              ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD4, 0)
+          END AS TON_CD4,
+          isnull(INSPECT_BALANCE_TB.INSPECT_BALANCE, 0) AS INSPECT_BALANCE
+      FROM
+          P400
+          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
+          LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO)
+          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD)
+          LEFT JOIN (
+              SELECT
+                  M010.EMPL_NAME,
+                  M110.CUST_NAME_KD,
+                  M100.G_CODE,
+                  M100.G_NAME,
+                  P400.PROD_REQUEST_NO,
+                  P400.PROD_REQUEST_QTY,
+                  INOUT.LOT_TOTAL_INPUT_QTY_EA,
+                  INOUT.LOT_TOTAL_OUTPUT_QTY_EA,
+                  INOUT.INSPECT_BALANCE
+              FROM
+                  (
+                      SELECT
+                          P400.PROD_REQUEST_NO,
+                          SUM(CC.LOT_TOTAL_INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA,
+                          SUM(CC.LOT_TOTAL_OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA,
+                          SUM(CC.INSPECT_BALANCE) AS INSPECT_BALANCE
+                      FROM
+                          (
+                              SELECT
+                                  AA.PROCESS_LOT_NO,
+                                  AA.LOT_TOTAL_QTY_KG,
+                                  AA.LOT_TOTAL_INPUT_QTY_EA,
+                                  isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+                                  (
+                                      AA.LOT_TOTAL_INPUT_QTY_EA - isnull(BB.LOT_TOTAL_OUTPUT_QTY_EA, 0)
+                                  ) AS INSPECT_BALANCE
+                              FROM
+                                  (
+                                      SELECT
+                                          PROCESS_LOT_NO,
+                                          SUM(INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA,
+                                          SUM(INPUT_QTY_KG) AS LOT_TOTAL_QTY_KG
+                                      FROM
+                                          ZTBINSPECTINPUTTB
+                                      GROUP BY
+                                          PROCESS_LOT_NO
+                                  ) AS AA
+                                  LEFT JOIN (
+                                      SELECT
+                                          PROCESS_LOT_NO,
+                                          SUM(OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA
+                                      FROM
+                                          ZTBINSPECTOUTPUTTB
+                                      GROUP BY
+                                          PROCESS_LOT_NO
+                                  ) AS BB ON (AA.PROCESS_LOT_NO = BB.PROCESS_LOT_NO)
+                          ) AS CC
+                          LEFT JOIN P501 ON (CC.PROCESS_LOT_NO = P501.PROCESS_LOT_NO)
+                          LEFT JOIN (
+                              SELECT
+                                  DISTINCT PROD_REQUEST_NO,
+                                  PROCESS_IN_DATE,
+                                  PROCESS_IN_NO
+                              FROM
+                                  P500
+                          ) AS P500_A ON (
+                              P500_A.PROCESS_IN_DATE = P501.PROCESS_IN_DATE
+                              AND P500_A.PROCESS_IN_NO = P501.PROCESS_IN_NO
+                          )
+                          LEFT JOIN P400 ON (P500_A.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                      GROUP BY
+                          P400.PROD_REQUEST_NO
+                  ) AS INOUT
+                  LEFT JOIN P400 ON (INOUT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                  LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD)
+                  LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
+                  LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO)
+          ) AS INSPECT_BALANCE_TB ON (
+              INSPECT_BALANCE_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO
+          )
+          LEFT JOIN (
+              SELECT
+                  AA.G_CODE,
+                  (SUM(ZTBPOTable.PO_QTY) - SUM(AA.TotalDelivered)) AS PO_BALANCE
+              FROM
+                  (
+                      SELECT
+                          ZTBPOTable.EMPL_NO,
+                          ZTBPOTable.CUST_CD,
+                          ZTBPOTable.G_CODE,
+                          ZTBPOTable.PO_NO,
+                          isnull(SUM(ZTBDelivery.DELIVERY_QTY), 0) AS TotalDelivered
+                      FROM
+                          ZTBPOTable
+                          LEFT JOIN ZTBDelivery ON (
+                              ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD
+                              AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD
+                              AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE
+                              AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
+                          )
+                      GROUP BY
+                          ZTBPOTable.CTR_CD,
+                          ZTBPOTable.EMPL_NO,
+                          ZTBPOTable.G_CODE,
+                          ZTBPOTable.CUST_CD,
+                          ZTBPOTable.PO_NO
+                  ) AS AA
+                  JOIN ZTBPOTable ON (
+                      AA.CUST_CD = ZTBPOTable.CUST_CD
+                      AND AA.G_CODE = ZTBPOTable.G_CODE
+                      AND AA.PO_NO = ZTBPOTable.PO_NO
+                  )
+              GROUP BY
+                  AA.G_CODE
+          ) AS PO_TON ON(P400.G_CODE = PO_TON.G_CODE)
+          LEFT JOIN (
+              SELECT
+                  PVTB.PROD_REQUEST_NO,
+                  isnull(PVTB.[1], 0) AS CD1,
+                  isnull(PVTB.[2], 0) AS CD2,
+                  isnull(PVTB.[3], 0) AS CD3,
+                  isnull(PVTB.[4], 0) AS CD4
+              FROM
+                  (
+                      SELECT
+                          ZTB_QLSXPLAN.PROD_REQUEST_NO,
+                          ZTB_QLSXPLAN.PROCESS_NUMBER,
+                          SUM(isnull(SX_RESULT, 0)) AS KETQUASX
+                      FROM
+                          ZTB_SX_RESULT
+                          LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID)
+                      WHERE
+                          ZTB_QLSXPLAN.STEP = 0
+                      GROUP BY
+                          ZTB_QLSXPLAN.PROD_REQUEST_NO,
+                          ZTB_QLSXPLAN.PROCESS_NUMBER
+                  ) AS PV PIVOT (
+                      SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1], [2], [3], [4])
+                  ) AS PVTB
+          ) AS AA ON (P400.PROD_REQUEST_NO = AA.PROD_REQUEST_NO)
+          LEFT JOIN (
+              SELECT
+                  PVTB.PROD_REQUEST_NO,
+                  PVTB.[IN] AS CD_IN,
+                  PVTB.[DIECUT] AS CD_DIECUT
+              FROM
+                  (
+                      SELECT
+                          PROD_REQUEST_NO,
+                          CASE
+                              WHEN (
+                                  SUBSTRING(PLAN_EQ, 1, 2) = 'FR'
+                                  OR SUBSTRING(PLAN_EQ, 1, 2) = 'SR'
+                              ) THEN 'IN'
+                              ELSE 'DIECUT'
+                          END AS PROCESS_NAME,
+                          SUM(KETQUASX) AS KETQUASX
+                      FROM
+                          ZTB_QLSXPLAN
+                      WHERE
+                          STEP = 0
+                      GROUP BY
+                          PROD_REQUEST_NO,
+                          CASE
+                              WHEN (
+                                  SUBSTRING(PLAN_EQ, 1, 2) = 'FR'
+                                  OR SUBSTRING(PLAN_EQ, 1, 2) = 'SR'
+                              ) THEN 'IN'
+                              ELSE 'DIECUT'
+                          END
+                  ) AS PV PIVOT (
+                      SUM(PV.KETQUASX) FOR PV.PROCESS_NAME IN ([IN], [DIECUT])
+                  ) AS PVTB
+          ) AS BB ON (P400.PROD_REQUEST_NO = BB.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
             DATA.alltime,
             DATA.start_date,
             DATA.end_date,
