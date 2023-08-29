@@ -336,7 +336,7 @@ function generate_condition_get_ycsx(
     $inspect_input = "";
   }
   if ($ycsxpending !== false) {
-    $ycsxpending = ` AND P400.YCSX_PENDING=1 `;
+    $ycsxpending = ` AND NOT (P400.YCSX_PENDING =0 OR isnull(INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY) `;
   } else {
     $ycsxpending = "";
   }
@@ -2571,7 +2571,7 @@ exports.process_api = function (req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `UPDATE ZTB_MATERIAL_TB SET CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}' WHERE M_NAME='${DATA.M_NAME}' `;
+          query = `UPDATE ZTB_MATERIAL_TB SET M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}' WHERE M_ID='${DATA.M_ID}' `;
           console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -3687,7 +3687,108 @@ LEFT JOIN (
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let query = `SELECT  ZTBPOTable.PO_ID, M110.CUST_NAME_KD,AA.PO_NO, M100.G_NAME,M100.G_NAME_KD, AA.G_CODE, ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, ZTBPOTable.PROD_PRICE, ZTBPOTable.PO_QTY, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT, isnull(TONKHOFULL.TONG_TON_KIEM,0) AS TON_KIEM , isnull(TONKHOFULL.BTP,0) AS BTP ,isnull(TONKHOFULL.TON_TP,0) AS TP , isnull(TONKHOFULL.BLOCK_QTY,0) AS BLOCK_QTY , isnull(TONKHOFULL.GRAND_TOTAL_STOCK,0) AS GRAND_TOTAL_STOCK , M010.EMPL_NAME, M100.PROD_TYPE, KKK.M_NAME_FULLBOM,M100.PROD_MAIN_MATERIAL, M110.CUST_CD, M010.EMPL_NO, DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, CASE WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER' ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) LEFT JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE ) AS KKK ON (KKK.G_CODE = ZTBPOTable.G_CODE) LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ) AS TONKHOFULL ON (TONKHOFULL.G_CODE = ZTBPOTable.G_CODE)  ${generate_condition_get_po(
+          let query = `SELECT 
+          ZTBPOTable.PO_ID, 
+          M110.CUST_NAME_KD, 
+          AA.PO_NO, 
+          M100.G_NAME, 
+          M100.G_NAME_KD, 
+          AA.G_CODE, 
+          ZTBPOTable.PO_DATE, 
+          ZTBPOTable.RD_DATE, 
+          ZTBPOTable.PROD_PRICE, 
+          ZTBPOTable.PO_QTY, 
+          AA.TotalDelivered as TOTAL_DELIVERED, 
+          (
+            ZTBPOTable.PO_QTY - AA.TotalDelivered
+          ) As PO_BALANCE, 
+          (
+            ZTBPOTable.PO_QTY * ZTBPOTable.PROD_PRICE
+          ) As PO_AMOUNT, 
+          (
+            AA.TotalDelivered * ZTBPOTable.PROD_PRICE
+          ) As DELIVERED_AMOUNT, 
+          (
+            (
+              ZTBPOTable.PO_QTY - AA.TotalDelivered
+            )* ZTBPOTable.PROD_PRICE
+          ) As BALANCE_AMOUNT,
+          M010.EMPL_NAME, 
+          M100.PROD_TYPE, 
+          KKK.M_NAME_FULLBOM, 
+          M100.PROD_MAIN_MATERIAL, 
+          M110.CUST_CD, 
+          M010.EMPL_NO, 
+          DATEPART(MONTH, PO_DATE) AS POMONTH, 
+          DATEPART(ISOWK, PO_DATE) AS POWEEKNUM, 
+          CASE WHEN (
+            ZTBPOTable.RD_DATE < GETDATE()-1
+          ) 
+          AND (
+            (
+              ZTBPOTable.PO_QTY - AA.TotalDelivered
+            ) <> 0
+          ) THEN 'OVER' ELSE 'OK' END AS OVERDUE, 
+          ZTBPOTable.REMARK 
+        FROM 
+          (
+            SELECT 
+              ZTBPOTable.EMPL_NO, 
+              ZTBPOTable.CUST_CD, 
+              ZTBPOTable.G_CODE, 
+              ZTBPOTable.PO_NO, 
+              isnull(
+                SUM(ZTBDelivery.DELIVERY_QTY), 
+                0
+              ) AS TotalDelivered 
+            FROM 
+              ZTBPOTable 
+              LEFT JOIN ZTBDelivery ON (
+                ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD 
+                AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD 
+                AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE 
+                AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
+              ) 
+            GROUP BY 
+              ZTBPOTable.CTR_CD, 
+              ZTBPOTable.EMPL_NO, 
+              ZTBPOTable.G_CODE, 
+              ZTBPOTable.CUST_CD, 
+              ZTBPOTable.PO_NO
+          ) AS AA 
+          LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) 
+          LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) 
+          LEFT JOIN ZTBPOTable ON (
+            AA.CUST_CD = ZTBPOTable.CUST_CD 
+            AND AA.G_CODE = ZTBPOTable.G_CODE 
+            AND AA.PO_NO = ZTBPOTable.PO_NO
+          ) 
+          LEFT JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) 
+          LEFT JOIN (
+            SELECT 
+              BBB.G_CODE, 
+              string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM 
+            FROM 
+              (
+                SELECT 
+                  DISTINCT AAA.G_CODE, 
+                  M090.M_NAME 
+                FROM 
+                  (
+                    (
+                      SELECT 
+                        DISTINCT G_CODE, 
+                        M_CODE 
+                      FROM 
+                        M140
+                    ) AS AAA 
+                    LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE)
+                  )
+              ) AS BBB 
+            GROUP BY 
+              BBB.G_CODE
+          ) AS KKK ON (KKK.G_CODE = ZTBPOTable.G_CODE) 
+         ${generate_condition_get_po(
             DATA.alltime,
             DATA.start_date,
             DATA.end_date,
@@ -3770,6 +3871,16 @@ LEFT JOIN (
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let query = `SELECT DISTINCT CUST_CD , CUST_NAME_KD  FROM M110 WHERE CUST_TYPE ='KH' ORDER BY CUST_NAME_KD ASC`;
+          kqua = await queryDB(query);
+          ////console.log(kqua);
+          res.send(kqua);
+        })();
+        break;
+      case "selectVendorList":
+        (async () => {
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let kqua;
+          let query = `SELECT DISTINCT CUST_CD , CUST_NAME_KD  FROM M110 WHERE CUST_TYPE ='NCC' ORDER BY CUST_NAME_KD ASC`;
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
@@ -4867,6 +4978,244 @@ LEFT JOIN (
           res.send(checkkq);
         })();
         break;
+      case "traPOFullCMS2":
+        (async () => {
+          ////console.log(DATA);
+          let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.codeSearch !== "") {
+            condition += ` AND TONKHOFULL.G_NAME LIKE '%${DATA.codeSearch}%'`;
+          }
+          if (DATA.allcode !== false) {
+            condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
+          }
+          let setpdQuery = `SELECT 
+          PO_TABLE_1.G_CODE, 
+          TONKHOFULL.G_NAME, 
+          TONKHOFULL.G_NAME_KD, 
+          PO_TABLE_1.PO_QTY, 
+          TOTAL_DELIVERED, 
+          PO_TABLE_1.PO_BALANCE, 
+          TONKHOFULL.CHO_KIEM, 
+          TONKHOFULL.CHO_CS_CHECK, 
+          TONKHOFULL.CHO_KIEM_RMA, 
+          TONKHOFULL.TONG_TON_KIEM, 
+          TONKHOFULL.BTP, 
+          TONKHOFULL.TON_TP, 
+          TONKHOFULL.BLOCK_QTY, 
+          TONKHOFULL.GRAND_TOTAL_STOCK, 
+          (
+            TONKHOFULL.GRAND_TOTAL_STOCK - PO_TABLE_1.PO_BALANCE
+          ) AS THUA_THIEU, 
+          isnull(YCSXBLTB.YCSX_BALANCE, 0) AS YCSX_BALANCE, 
+          isnull(YCSXBLTB.YCSX_QTY, 0) AS YCSX_QTY, 
+          isnull(YCSXBLTB.KETQUASX, 0) AS KETQUASX, 
+          isnull(YCSXBLTB.NHAPKHO, 0) AS NHAPKHO 
+        FROM 
+          (
+            SELECT 
+              G_CODE, 
+              SUM(PO_QTY) AS PO_QTY, 
+              SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, 
+              SUM(PO_BALANCE) AS PO_BALANCE 
+            FROM 
+              (
+                SELECT 
+                  AA.G_CODE, 
+                  ZTBPOTable.PO_QTY, 
+                  AA.TotalDelivered as TOTAL_DELIVERED, 
+                  (
+                    ZTBPOTable.PO_QTY - AA.TotalDelivered
+                  ) As PO_BALANCE 
+                FROM 
+                  (
+                    SELECT 
+                      ZTBPOTable.EMPL_NO, 
+                      ZTBPOTable.CUST_CD, 
+                      ZTBPOTable.G_CODE, 
+                      ZTBPOTable.PO_NO, 
+                      isnull(
+                        SUM(ZTBDelivery.DELIVERY_QTY), 
+                        0
+                      ) AS TotalDelivered 
+                    FROM 
+                      ZTBPOTable 
+                      LEFT JOIN ZTBDelivery ON (
+                        ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD 
+                        AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD 
+                        AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE 
+                        AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
+                      ) 
+                    GROUP BY 
+                      ZTBPOTable.CTR_CD, 
+                      ZTBPOTable.EMPL_NO, 
+                      ZTBPOTable.G_CODE, 
+                      ZTBPOTable.CUST_CD, 
+                      ZTBPOTable.PO_NO
+                  ) AS AA 
+                  LEFT JOIN ZTBPOTable ON (
+                    AA.CUST_CD = ZTBPOTable.CUST_CD 
+                    AND AA.G_CODE = ZTBPOTable.G_CODE 
+                    AND AA.PO_NO = ZTBPOTable.PO_NO
+                  )
+              ) AS PO_BALANCE_TABLE 
+            GROUP BY 
+              G_CODE
+          ) AS PO_TABLE_1 
+          LEFT JOIN (
+            SELECT 
+              M100.G_CODE, 
+              M100.G_NAME, 
+              M100.G_NAME_KD, 
+              isnull(TONKIEM.INSPECT_BALANCE_QTY, 0) AS CHO_KIEM, 
+              isnull(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK, 
+              isnull(TONKIEM.WAIT_SORTING_RMA, 0) CHO_KIEM_RMA, 
+              isnull(TONKIEM.TOTAL_WAIT, 0) AS TONG_TON_KIEM, 
+              isnull(BTP.BTP_QTY_EA, 0) AS BTP, 
+              isnull(THANHPHAM.STOCK, 0) AS TON_TP, 
+              isnull(THANHPHAM.BLOCK_QTY, 0) AS BLOCK_QTY, 
+              (
+                isnull(TONKIEM.TOTAL_WAIT, 0) + isnull(BTP.BTP_QTY_EA, 0)+ isnull(THANHPHAM.STOCK, 0) - isnull(THANHPHAM.BLOCK_QTY, 0)
+              ) AS GRAND_TOTAL_STOCK 
+            FROM 
+              M100 
+              LEFT JOIN (
+            SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD,M100.PROD_TYPE,  AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
+            (
+            SELECT G_CODE, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y' GROUP BY G_CODE
+            ) AS AA
+            LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE)        
+              ) AS THANHPHAM ON (
+                THANHPHAM.G_CODE = M100.G_CODE
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  ZTB_WAIT_INSPECT.G_CODE, 
+                  M100.G_NAME, 
+                  M100.G_NAME_KD, 
+                  SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, 
+                  SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, 
+                  SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, 
+                  SUM(
+                    INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA
+                  ) AS TOTAL_WAIT 
+                FROM 
+                  ZTB_WAIT_INSPECT 
+                  JOIN M100 ON (
+                    M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE
+                  ) 
+                WHERE 
+                  UPDATE_DATE = CONVERT(
+                    date, 
+                    GETDATE()
+                  ) 
+                  AND CALAMVIEC = 'DEM' 
+                GROUP BY 
+                  ZTB_WAIT_INSPECT.G_CODE, 
+                  M100.G_NAME, 
+                  M100.G_NAME_KD
+              ) AS TONKIEM ON (
+                THANHPHAM.G_CODE = TONKIEM.G_CODE
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  Product_MaVach, 
+                  SUM(Block_Qty) AS Block_Qty 
+                from 
+                  tbl_Block2 
+                GROUP BY 
+                  Product_MaVach
+              ) AS tbl_Block_table2 ON (
+                tbl_Block_table2.Product_MaVach = M100.G_CODE
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  ZTB_HALF_GOODS.G_CODE, 
+                  M100.G_NAME, 
+                  SUM(BTP_QTY_EA) AS BTP_QTY_EA 
+                FROM 
+                  ZTB_HALF_GOODS 
+                  JOIN M100 ON (
+                    M100.G_CODE = ZTB_HALF_GOODS.G_CODE
+                  ) 
+                WHERE 
+                  UPDATE_DATE = CONVERT(
+                    date, 
+                    GETDATE()
+                  ) 
+                GROUP BY 
+                  ZTB_HALF_GOODS.G_CODE, 
+                  M100.G_NAME
+              ) AS BTP ON (
+                BTP.G_CODE = THANHPHAM.G_CODE
+              )
+          ) AS TONKHOFULL ON (
+            TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE
+          ) 
+          LEFT JOIN (
+            SELECT 
+              P400.G_CODE, 
+              SUM(P400.PROD_REQUEST_QTY) AS YCSX_QTY, 
+              SUM(
+                isnull(BB.KETQUASX, 0)
+              ) AS KETQUASX, 
+              (
+                SUM(P400.PROD_REQUEST_QTY) - SUM(
+                  isnull(BB.KETQUASX, 0)
+                )
+              ) AS YCSX_BALANCE, 
+              SUM(
+                isnull(INS_OUTPUT_TB.INS_OUTPUT, 0)
+              ) AS NHAPKHO 
+            FROM 
+              P400 
+              LEFT JOIN (
+                SELECT 
+                  PROD_REQUEST_NO, 
+                  SUM(OUTPUT_QTY_EA) AS INS_OUTPUT 
+                FROM 
+                  ZTBINSPECTOUTPUTTB 
+                GROUP BY 
+                  PROD_REQUEST_NO
+              ) AS INS_OUTPUT_TB ON (
+                INS_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  ZTB_QLSXPLAN.PROD_REQUEST_NO, 
+                  SUM(
+                    CASE WHEN ZTB_QLSXPLAN.PROCESS_NUMBER = 1 
+                    AND ZTB_QLSXPLAN.STEP = 0 THEN isnull(SX_RESULT, 0) ELSE 0 END
+                  ) AS KETQUASX 
+                FROM 
+                  ZTB_SX_RESULT 
+                  LEFT JOIN ZTB_QLSXPLAN ON (
+                    ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID
+                  ) 
+                WHERE 
+                  ZTB_QLSXPLAN.STEP = 0 
+                GROUP BY 
+                  ZTB_QLSXPLAN.PROD_REQUEST_NO
+              ) AS BB ON (
+                BB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO
+              ) 
+            WHERE 
+              P400.CODE_03 <> '04' 
+              AND P400.PROD_REQUEST_QTY > INS_OUTPUT_TB.INS_OUTPUT 
+              AND PROD_REQUEST_DATE > '20230101' 
+            GROUP BY 
+              P400.G_CODE
+          ) AS YCSXBLTB ON (
+            YCSXBLTB.G_CODE = PO_TABLE_1.G_CODE
+          )
+        
+          ${condition}`;
+          //////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          ////console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "traPOFullKD":
         (async () => {
           ////console.log(DATA);
@@ -4879,6 +5228,183 @@ LEFT JOIN (
             condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
           }
           let setpdQuery = `SELECT TONKHOFULL.G_NAME_KD, SUM(PO_TABLE_1.PO_QTY) AS PO_QTY , SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, SUM(PO_TABLE_1.PO_BALANCE) AS PO_BALANCE, SUM(TONKHOFULL.CHO_KIEM) AS CHO_KIEM, SUM(TONKHOFULL.CHO_CS_CHECK) AS CHO_CS_CHECK, SUM(TONKHOFULL.CHO_KIEM_RMA) AS CHO_KIEM_RMA, SUM(TONKHOFULL.TONG_TON_KIEM) AS TONG_TON_KIEM, SUM(TONKHOFULL.BTP) AS BTP, SUM(TONKHOFULL.TON_TP) AS TON_TP, SUM(TONKHOFULL.BLOCK_QTY) AS BLOCK_QTY, SUM(TONKHOFULL.GRAND_TOTAL_STOCK) AS GRAND_TOTAL_STOCK, SUM((TONKHOFULL.GRAND_TOTAL_STOCK-PO_TABLE_1.PO_BALANCE)) AS THUA_THIEU FROM ( SELECT G_CODE, SUM(PO_QTY) AS PO_QTY, SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, SUM(PO_BALANCE) AS PO_BALANCE FROM ( SELECT AA.G_CODE, ZTBPOTable.PO_QTY, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) ) AS PO_BALANCE_TABLE GROUP BY G_CODE ) AS PO_TABLE_1 LEFT JOIN ( SELECT M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, isnull(TONKIEM.INSPECT_BALANCE_QTY,0) AS CHO_KIEM, isnull(TONKIEM.WAIT_CS_QTY,0) AS CHO_CS_CHECK,isnull(TONKIEM.WAIT_SORTING_RMA,0) CHO_KIEM_RMA, isnull(TONKIEM.TOTAL_WAIT,0) AS TONG_TON_KIEM, isnull(BTP.BTP_QTY_EA,0) AS BTP, isnull(THANHPHAM.TONKHO,0) AS TON_TP, isnull(tbl_Block_table2.Block_Qty,0) AS BLOCK_QTY, (isnull(TONKIEM.TOTAL_WAIT,0) + isnull(BTP.BTP_QTY_EA,0)+ isnull(THANHPHAM.TONKHO,0) - isnull(tbl_Block_table2.Block_Qty,0)) AS GRAND_TOTAL_STOCK FROM M100 LEFT JOIN ( SELECT Product_MaVach, isnull([IN],0) AS NHAPKHO, isnull([OUT],0) AS XUATKHO, (isnull([IN],0)- isnull([OUT],0)) AS TONKHO FROM ( SELECT Product_Mavach, IO_Type, IO_Qty FROM tbl_InputOutput ) AS SourceTable PIVOT ( SUM(IO_Qty) FOR IO_Type IN ([IN], [OUT]) ) AS PivotTable ) AS THANHPHAM ON (THANHPHAM.Product_MaVach = M100.G_CODE) LEFT JOIN ( SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) WHERE UPDATE_DATE=CONVERT(date,GETDATE()) AND CALAMVIEC = 'DEM' GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD) AS TONKIEM ON (THANHPHAM.Product_MaVach = TONKIEM.G_CODE) LEFT JOIN ( SELECT Product_MaVach, SUM(Block_Qty) AS Block_Qty from tbl_Block2 GROUP BY Product_MaVach ) AS tbl_Block_table2 ON (tbl_Block_table2.Product_MaVach= M100.G_CODE) LEFT JOIN ( SELECT ZTB_HALF_GOODS.G_CODE, M100.G_NAME, SUM(BTP_QTY_EA) AS BTP_QTY_EA FROM ZTB_HALF_GOODS JOIN M100 ON (M100.G_CODE = ZTB_HALF_GOODS.G_CODE) WHERE UPDATE_DATE = CONVERT(date,GETDATE()) GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME) AS BTP ON (BTP.G_CODE = THANHPHAM.Product_MaVach) ) AS TONKHOFULL ON (TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE)   ${condition} GROUP BY TONKHOFULL.G_NAME_KD`;
+          //////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          ////console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "traPOFullKD2":
+        (async () => {
+          ////console.log(DATA);
+          let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.codeSearch !== "") {
+            condition += ` AND TONKHOFULL.G_NAME LIKE '%${DATA.codeSearch}%'`;
+          }
+          if (DATA.allcode !== false) {
+            condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
+          }
+          let setpdQuery = `SELECT 
+          TONKHOFULL.G_NAME_KD, 
+          SUM(PO_TABLE_1.PO_QTY) AS PO_QTY, 
+          SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, 
+          SUM(PO_TABLE_1.PO_BALANCE) AS PO_BALANCE, 
+          SUM(TONKHOFULL.CHO_KIEM) AS CHO_KIEM, 
+          SUM(TONKHOFULL.CHO_CS_CHECK) AS CHO_CS_CHECK, 
+          SUM(TONKHOFULL.CHO_KIEM_RMA) AS CHO_KIEM_RMA, 
+          SUM(TONKHOFULL.TONG_TON_KIEM) AS TONG_TON_KIEM, 
+          SUM(TONKHOFULL.BTP) AS BTP, 
+          SUM(TONKHOFULL.TON_TP) AS TON_TP, 
+          SUM(TONKHOFULL.BLOCK_QTY) AS BLOCK_QTY, 
+          SUM(TONKHOFULL.GRAND_TOTAL_STOCK) AS GRAND_TOTAL_STOCK, 
+          SUM(
+            (
+              TONKHOFULL.GRAND_TOTAL_STOCK - PO_TABLE_1.PO_BALANCE
+            )
+          ) AS THUA_THIEU 
+        FROM 
+          (
+            SELECT 
+              G_CODE, 
+              SUM(PO_QTY) AS PO_QTY, 
+              SUM(TOTAL_DELIVERED) AS TOTAL_DELIVERED, 
+              SUM(PO_BALANCE) AS PO_BALANCE 
+            FROM 
+              (
+                SELECT 
+                  AA.G_CODE, 
+                  ZTBPOTable.PO_QTY, 
+                  AA.TotalDelivered as TOTAL_DELIVERED, 
+                  (
+                    ZTBPOTable.PO_QTY - AA.TotalDelivered
+                  ) As PO_BALANCE 
+                FROM 
+                  (
+                    SELECT 
+                      ZTBPOTable.EMPL_NO, 
+                      ZTBPOTable.CUST_CD, 
+                      ZTBPOTable.G_CODE, 
+                      ZTBPOTable.PO_NO, 
+                      isnull(
+                        SUM(ZTBDelivery.DELIVERY_QTY), 
+                        0
+                      ) AS TotalDelivered 
+                    FROM 
+                      ZTBPOTable 
+                      LEFT JOIN ZTBDelivery ON (
+                        ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD 
+                        AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD 
+                        AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE 
+                        AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
+                      ) 
+                    GROUP BY 
+                      ZTBPOTable.CTR_CD, 
+                      ZTBPOTable.EMPL_NO, 
+                      ZTBPOTable.G_CODE, 
+                      ZTBPOTable.CUST_CD, 
+                      ZTBPOTable.PO_NO
+                  ) AS AA 
+                  LEFT JOIN ZTBPOTable ON (
+                    AA.CUST_CD = ZTBPOTable.CUST_CD 
+                    AND AA.G_CODE = ZTBPOTable.G_CODE 
+                    AND AA.PO_NO = ZTBPOTable.PO_NO
+                  )
+              ) AS PO_BALANCE_TABLE 
+            GROUP BY 
+              G_CODE
+          ) AS PO_TABLE_1 
+          LEFT JOIN (
+            SELECT 
+              M100.G_CODE, 
+              M100.G_NAME, 
+              M100.G_NAME_KD, 
+              isnull(TONKIEM.INSPECT_BALANCE_QTY, 0) AS CHO_KIEM, 
+              isnull(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK, 
+              isnull(TONKIEM.WAIT_SORTING_RMA, 0) CHO_KIEM_RMA, 
+              isnull(TONKIEM.TOTAL_WAIT, 0) AS TONG_TON_KIEM, 
+              isnull(BTP.BTP_QTY_EA, 0) AS BTP, 
+              isnull(THANHPHAM.STOCK, 0) AS TON_TP, 
+              isnull(THANHPHAM.BLOCK_QTY, 0) AS BLOCK_QTY, 
+              (
+                isnull(TONKIEM.TOTAL_WAIT, 0) + isnull(BTP.BTP_QTY_EA, 0)+ isnull(THANHPHAM.STOCK, 0) - isnull(THANHPHAM.BLOCK_QTY, 0)
+              ) AS GRAND_TOTAL_STOCK 
+            FROM 
+              M100 
+              LEFT JOIN (
+                 SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD,M100.PROD_TYPE,  AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
+                    (
+                    SELECT G_CODE, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y' GROUP BY G_CODE
+                    ) AS AA
+                    LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE)     
+              ) AS THANHPHAM ON (
+                THANHPHAM.G_CODE = M100.G_CODE
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  ZTB_WAIT_INSPECT.G_CODE, 
+                  M100.G_NAME, 
+                  M100.G_NAME_KD, 
+                  SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, 
+                  SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, 
+                  SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, 
+                  SUM(
+                    INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA
+                  ) AS TOTAL_WAIT 
+                FROM 
+                  ZTB_WAIT_INSPECT 
+                  JOIN M100 ON (
+                    M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE
+                  ) 
+                WHERE 
+                  UPDATE_DATE = CONVERT(
+                    date, 
+                    GETDATE()
+                  ) 
+                  AND CALAMVIEC = 'DEM' 
+                GROUP BY 
+                  ZTB_WAIT_INSPECT.G_CODE, 
+                  M100.G_NAME, 
+                  M100.G_NAME_KD
+              ) AS TONKIEM ON (
+                THANHPHAM.G_CODE = TONKIEM.G_CODE
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  Product_MaVach, 
+                  SUM(Block_Qty) AS Block_Qty 
+                from 
+                  tbl_Block2 
+                GROUP BY 
+                  Product_MaVach
+              ) AS tbl_Block_table2 ON (
+                tbl_Block_table2.Product_MaVach = M100.G_CODE
+              ) 
+              LEFT JOIN (
+                SELECT 
+                  ZTB_HALF_GOODS.G_CODE, 
+                  M100.G_NAME, 
+                  SUM(BTP_QTY_EA) AS BTP_QTY_EA 
+                FROM 
+                  ZTB_HALF_GOODS 
+                  JOIN M100 ON (
+                    M100.G_CODE = ZTB_HALF_GOODS.G_CODE
+                  ) 
+                WHERE 
+                  UPDATE_DATE = CONVERT(
+                    date, 
+                    GETDATE()
+                  ) 
+                GROUP BY 
+                  ZTB_HALF_GOODS.G_CODE, 
+                  M100.G_NAME
+              ) AS BTP ON (
+                BTP.G_CODE = THANHPHAM.G_CODE
+              )
+          ) AS TONKHOFULL ON (
+            TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE
+          ) 
+         ${condition} GROUP BY TONKHOFULL.G_NAME_KD`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -9575,16 +10101,22 @@ FROM
               "' AND PASSWORD = '" +
               PASSWORD +
               "'";
+
             kqua = await asyncQuery(query);
             //console.log('kqua',kqua);
             loginResult = kqua;
+
             //console.log("KET QUA LOGIN = " + loginResult);
 
-            var token='';
+            var token='';           
             if (loginResult != 0) {
               token = jwt.sign({ payload: loginResult }, "nguyenvanhung", {
                 expiresIn: 3600 * 24 * 1,
               });
+            }
+            else if(loginResult===0 && (EMPL_NO ==='NHU1903'))
+            {
+              token = req.cookies.token;
             }
 
           //res.cookie("token", token);
