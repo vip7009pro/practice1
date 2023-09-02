@@ -3789,20 +3789,20 @@ LEFT JOIN (
               BBB.G_CODE
           ) AS KKK ON (KKK.G_CODE = ZTBPOTable.G_CODE) 
          ${generate_condition_get_po(
-            DATA.alltime,
-            DATA.start_date,
-            DATA.end_date,
-            DATA.cust_name,
-            DATA.codeCMS,
-            DATA.codeKD,
-            DATA.prod_type,
-            DATA.empl_name,
-            DATA.po_no,
-            DATA.over,
-            DATA.id,
-            DATA.material,
-            DATA.justPoBalance
-          )} ORDER BY ZTBPOTable.PO_ID DESC`;
+           DATA.alltime,
+           DATA.start_date,
+           DATA.end_date,
+           DATA.cust_name,
+           DATA.codeCMS,
+           DATA.codeKD,
+           DATA.prod_type,
+           DATA.empl_name,
+           DATA.po_no,
+           DATA.over,
+           DATA.id,
+           DATA.material,
+           DATA.justPoBalance
+         )} ORDER BY ZTBPOTable.PO_ID DESC`;
           kqua = await queryDB(query);
           res.send(kqua);
         })();
@@ -4937,6 +4937,37 @@ LEFT JOIN (
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO AMAZONE_DATA (CTR_CD,G_CODE,PROD_REQUEST_NO,NO_IN,ROW_NO,DATA_1,DATA_2,DATA_3,DATA_4,PRINT_STATUS,INLAI_COUNT,REMARK,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES ('002','${DATA.G_CODE}','${DATA.PROD_REQUEST_NO}','${DATA.NO_IN}','${DATA.ROW_NO}','${DATA.DATA_1}','${DATA.DATA_2}','${DATA.DATA_3}','${DATA.DATA_4}','${DATA.PRINT_STATUS}','${DATA.INLAI_COUNT}','${DATA.REMARK}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.INS_EMPL}')`;
           ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insertData_Amazon_SuperFast":
+        (async () => {
+          ////console.log(DATA);
+          let checkkq = "OK";
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let uploadAmazonData = DATA.AMZDATA;
+          let sql_insert_string = `INSERT INTO AMAZONE_DATA (CTR_CD,G_CODE,PROD_REQUEST_NO,NO_IN,ROW_NO,DATA_1,DATA_2,DATA_3,DATA_4,PRINT_STATUS,INLAI_COUNT,REMARK,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES `;
+          for (let i = 0; i < uploadAmazonData.length; i++) {
+            sql_insert_string += `('002','${uploadAmazonData[i].G_CODE}','${uploadAmazonData[i].PROD_REQUEST_NO}','${uploadAmazonData[i].NO_IN}','${uploadAmazonData[i].ROW_NO}','${uploadAmazonData[i].DATA1}','${uploadAmazonData[i].DATA2}','','','OK','${uploadAmazonData[i].INLAI_COUNT}','${uploadAmazonData[i].REMARK}',GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}'),`;
+          }
+          sql_insert_string = sql_insert_string.substring(
+            0,
+            sql_insert_string.length - 1
+          );
+          let setpdQuery = `
+          BEGIN TRANSACTION;
+          BEGIN TRY
+          ${sql_insert_string} 
+          COMMIT;           
+          END TRY
+          BEGIN CATCH
+          ROLLBACK;
+          PRINT 'Co Loi: ' + ERROR_MESSAGE();
+          END CATCH
+          `;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -6592,7 +6623,7 @@ LEFT JOIN (
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT DESIGN_AMAZONE.G_CODE_MAU, M100.G_NAME AS TEN_MAU, DOITUONG_NO, DOITUONG_NAME FROM DESIGN_AMAZONE JOIN M100 ON (M100.G_CODE = DESIGN_AMAZONE.G_CODE_MAU) WHERE G_CODE_MAU ='${DATA.G_CODE_MAU}'`;
-          ////console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           ////console.log(checkkq);
@@ -9468,15 +9499,13 @@ AS JUDGEMENT
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = ` WHERE EQ_ACTIVE ='OK'  `;
-          if(DATA.FACTORY !=='ALL')
-          {
-            condition += ` AND FACTORY='${DATA.FACTORY}'`
+          if (DATA.FACTORY !== "ALL") {
+            condition += ` AND FACTORY='${DATA.FACTORY}'`;
           }
-          if(DATA.EQ_NAME !=='ALL')
-          {
-            condition += ` AND SUBSTRING(EQ_NAME,1,2)='${DATA.EQ_NAME}'`
+          if (DATA.EQ_NAME !== "ALL") {
+            condition += ` AND SUBSTRING(EQ_NAME,1,2)='${DATA.EQ_NAME}'`;
           }
-          
+
           let setpdQuery = `SELECT FACTORY, SUBSTRING(EQ_NAME,1,2) AS EQ_NAME, COUNT(SUBSTRING(EQ_NAME,1,2)) AS EQ_QTY FROM ZTB_SX_EQ_STATUS  ${condition}  GROUP BY FACTORY, SUBSTRING(EQ_NAME,1,2)  ORDER BY FACTORY ASC, EQ_NAME ASC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -10096,34 +10125,32 @@ FROM
           checkkq = await queryDB(setpdQuery);
 
           let kqua;
-            let query =
-              "SELECT ZTBEMPLINFO.EMPL_IMAGE,ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) WHERE ZTBEMPLINFO.EMPL_NO = '" +
-              EMPL_NO +
-              "' AND PASSWORD = '" +
-              PASSWORD +
-              "'";
+          let query =
+            "SELECT ZTBEMPLINFO.EMPL_IMAGE,ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE) LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE) LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE) LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE) LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE) LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE) LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE) LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE) WHERE ZTBEMPLINFO.EMPL_NO = '" +
+            EMPL_NO +
+            "' AND PASSWORD = '" +
+            PASSWORD +
+            "'";
 
-            kqua = await asyncQuery(query);
-            //console.log('kqua',kqua);
-            loginResult = kqua;
+          kqua = await asyncQuery(query);
+          //console.log('kqua',kqua);
+          loginResult = kqua;
 
-            //console.log("KET QUA LOGIN = " + loginResult);
+          //console.log("KET QUA LOGIN = " + loginResult);
 
-            var token='';           
-            if (loginResult != 0) {
-              token = jwt.sign({ payload: loginResult }, "nguyenvanhung", {
-                expiresIn: 3600 * 24 * 1,
-              });
-            }
-            else if(loginResult===0 && (EMPL_NO ==='NHU1903'))
-            {
-              token = req.cookies.token;
-            }
+          var token = "";
+          if (loginResult != 0) {
+            token = jwt.sign({ payload: loginResult }, "nguyenvanhung", {
+              expiresIn: 3600 * 24 * 1,
+            });
+          } else if (loginResult === 0 && EMPL_NO === "NHU1903") {
+            token = req.cookies.token;
+          }
 
           //res.cookie("token", token);
 
           //console.log(checkkq);
-          let checkkq_token = {...checkkq, REFRESH_TOKEN: token};
+          let checkkq_token = { ...checkkq, REFRESH_TOKEN: token };
           //console.log(checkkq_token);
           res.send(checkkq_token);
         })();

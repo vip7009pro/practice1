@@ -130,7 +130,7 @@ io.on("connection", (client) => {
 //const port = 5011;
 const port = 3007;
 var corsOptions = {
-  origin: [    
+  origin: [
     "http://222.252.1.63",
     "http://222.252.1.63:3000",
     "http://192.168.1.22:3000",
@@ -156,8 +156,8 @@ app.set("view engine", "ejs");
 var bodyParser = require("body-parser");
 const { Socket } = require("socket.io");
 const { existsSync } = require("fs");
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "25mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
 app.use("/", function (req, res, next) {
   api_module.checklogin_index(req, res, next);
@@ -195,13 +195,12 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);
   //console.log('token upload',req.body.token_string);
-  console.log(' ten file goc: '+ TEMP_UPLOAD_FOLDER + req.file.originalname);
+  console.log(" ten file goc: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname,
-        () => {
-          console.log("DELETED " + req.file.originalname);
-        });
+      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, () => {
+        console.log("DELETED " + req.file.originalname);
+      });
       console.log(
         "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
       );
