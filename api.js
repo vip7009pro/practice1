@@ -3860,7 +3860,7 @@ LEFT JOIN (
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let query = `SELECT G_CODE , G_NAME, PROD_LAST_PRICE, USE_YN FROM M100`;
+          let query = `SELECT G_CODE , G_NAME, G_NAME_KD, PROD_LAST_PRICE, USE_YN FROM M100`;
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
