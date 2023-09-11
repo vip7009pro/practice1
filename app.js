@@ -131,6 +131,8 @@ io.on("connection", (client) => {
 const port = 3007;
 var corsOptions = {
   origin: [
+    "http://192.168.1.2",
+    "http://192.168.1.136:3010",
     "http://222.252.1.63",
     "http://222.252.1.63:3000",
     "http://192.168.1.22:3000",

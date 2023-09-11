@@ -35,7 +35,6 @@ function removeVietnameseTones(str) {
   );
   return str;
 }
-
 function generate_condition_get_invoice(
   $inspect_time_checkvalue,
   $start_date,
@@ -1845,7 +1844,7 @@ exports.process_api = function (req, res) {
           let setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='${EMPL_NO}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
+          console.log(checkkq);
 
           if (checkkq.data[0].WORK_STATUS_CODE === 0) {
             res.send({ tk_status: "ng", message: "Đã nghỉ việc" });
