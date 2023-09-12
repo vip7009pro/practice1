@@ -309,3 +309,6 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
 app.listen(API_PORT, function () {
   console.log("App dang nghe port " + API_PORT);
 });
+
+var clients = [];
+
