@@ -3,7 +3,7 @@ var jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { existsSync } = require("fs");
 require("dotenv").config();
-
+///s
 function removeVietnameseTones(str) {
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
   str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
