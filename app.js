@@ -111,7 +111,7 @@ io.on("connection", (client) => {
     if (!client_array.includes(data)) client_array.push(data);
     //io.sockets.emit("login", client_array);
     io.sockets.emit("login", data + "da dang nhap");
-    //console.log(client_array);
+    console.log(client_array);
     console.log(data + " da dang nhap");
   });
   client.on("logout", (data) => {
