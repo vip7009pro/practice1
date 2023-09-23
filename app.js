@@ -16,44 +16,6 @@ let DRAW_PATH = process.env.DRAW_PATH;
 let EMPL_IMAGE_PATH = process.env.EMPL_IMAGE_PATH;
 let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
 let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
-/* let API_PORT = 5011;
-let SOCKET_PORT = 3005;
-let DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
-let EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
-let TEMP_UPLOAD_FOLDER = "C:\\TEMP_UPLOAD_FOLDER\\";
-let DESTINATION_FOlDER = "C:\\xampp\\htdocs"; */
-
-const SELECT_SERVER = 3;
-
-/* 
-if(SELECT_SERVER===1)
-{
-  API_PORT = 3007;
-  SOCKET_PORT = 3005;
-  DRAW_PATH = "D:\\xampp\\htdocs\\banve\\";
-  EMPL_IMAGE_PATH = "D:\\xampp\\htdocs\\Picture_NS\\";
-  TEMP_UPLOAD_FOLDER = "D:\\TEMP_UPLOAD_FOLDER\\";
-  DESTINATION_FOlDER = "D:\\UPLOADFILES\\";
-}
-else if(SELECT_SERVER===3)
-{
-  API_PORT = 3007;
-  SOCKET_PORT = 3005;
-  DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
-  EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
-  TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
-  DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
-}
-else
-{
-  API_PORT = 5011;
-  SOCKET_PORT = 3005;
-  //SOCKET_PORT = 5012;
-  DRAW_PATH ='C:\\xampp\\htdocs\\banve\\';
-  EMPL_IMAGE_PATH ='C:\\xampp\\htdocs\\Picture_NS\\';
-  TEMP_UPLOAD_FOLDER = "C:\\xampp\\TEMP_UPLOAD_FOLDER\\";
-  DESTINATION_FOlDER = "C:\\xampp\\htdocs\\";
-} */
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -164,11 +126,8 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 app.use("/", function (req, res, next) {
   api_module.checklogin_index(req, res, next);
 });
-app.use("/upload", function (req, res, next) {
-  api_module.checklogin_index(req, res, next);
-});
 app.use("/uploadfile", function (req, res, next) {
-  api_module.checklogin_index(req, res, next);
+  api_module.checklogin_index_update(req, res, next);
 });
 app.use("/login", function (req, res, next) {
   api_module.checklogin_login(req, res, next);

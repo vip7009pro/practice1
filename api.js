@@ -837,12 +837,13 @@ exports.checklogin_index = function (req, res, next) {
     ////console.log("token client la: " + req.cookies.token);
     var token = req.cookies.token;
     //console.log('token= ' + token);
-    //console.log('body', req);
+    //console.log("req", req);
     if (token === undefined)
       token =
         req.body.DATA.token_string === undefined
           ? req.body.token_string
           : req.body.DATA.token_string;
+
     //console.log('req', req);
     var decoded = jwt.verify(token, "nguyenvanhung");
     //console.log(decoded);
@@ -858,6 +859,17 @@ exports.checklogin_index = function (req, res, next) {
     } else {
       req.coloiko = "kocoloi";
     }
+    next();
+  } catch (err) {
+    console.log("Loi check login index = " + err + " ");
+    req.coloiko = "coloi";
+    next();
+  }
+};
+exports.checklogin_index_update = function (req, res, next) {
+  ////console.log("bam login ma cung loi?");
+  try {
+    req.coloiko = "kocoloi";
     next();
   } catch (err) {
     console.log("Loi check login index = " + err + " ");
@@ -6857,7 +6869,7 @@ LEFT JOIN (
             condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2)='${DATA.MACHINE}'`;
           }
           condition += ` AND ZTB_QLSXPLAN.PLAN_DATE='${DATA.PLAN_DATE}'`;
-          let setpdQuery = `SELECT ZTB_QLSXPLAN.XUATDAOFILM, ZTB_QLSXPLAN.EQ_STATUS, ZTB_QLSXPLAN.MAIN_MATERIAL, ZTB_QLSXPLAN.INT_TEM, ZTB_QLSXPLAN.CHOTBC, ZTB_QLSXPLAN.DKXL,ZTB_QLSXPLAN.NEXT_PLAN_ID, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.PLAN_ORDER, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE,ZTB_QLSXPLAN.PROD_REQUEST_NO,ZTB_QLSXPLAN.PLAN_QTY,ZTB_QLSXPLAN.PLAN_EQ,ZTB_QLSXPLAN.PLAN_FACTORY,ZTB_QLSXPLAN.PLAN_LEADTIME,ZTB_QLSXPLAN.INS_EMPL,ZTB_QLSXPLAN.INS_DATE,ZTB_QLSXPLAN.UPD_EMPL,ZTB_QLSXPLAN.UPD_DATE, M100.G_CODE, M100.G_NAME, M100.PD, (M100.G_C*M100.G_C_R) AS CAVITY, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(BB.CD1,0) AS CD1, isnull(BB.CD2,0) AS CD2, BB.CD3, BB.CD4,
+          let setpdQuery = `SELECT ZTB_QLSXPLAN.REQ_DF ,ZTB_QLSXPLAN.XUATDAOFILM, ZTB_QLSXPLAN.EQ_STATUS, ZTB_QLSXPLAN.MAIN_MATERIAL, ZTB_QLSXPLAN.INT_TEM, ZTB_QLSXPLAN.CHOTBC, ZTB_QLSXPLAN.DKXL,ZTB_QLSXPLAN.NEXT_PLAN_ID, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.PLAN_ORDER, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE,ZTB_QLSXPLAN.PROD_REQUEST_NO,ZTB_QLSXPLAN.PLAN_QTY,ZTB_QLSXPLAN.PLAN_EQ,ZTB_QLSXPLAN.PLAN_FACTORY,ZTB_QLSXPLAN.PLAN_LEADTIME,ZTB_QLSXPLAN.INS_EMPL,ZTB_QLSXPLAN.INS_DATE,ZTB_QLSXPLAN.UPD_EMPL,ZTB_QLSXPLAN.UPD_DATE, M100.G_CODE, M100.G_NAME, M100.PD, (M100.G_C*M100.G_C_R) AS CAVITY, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(BB.CD1,0) AS CD1, isnull(BB.CD2,0) AS CD2, BB.CD3, BB.CD4,
           CASE WHEN ( NOT(M100.EQ1 <> 'NA' AND M100.EQ1 <>'NO' AND M100.EQ1 <>'' AND M100.EQ1 is not null)) THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD1,0) END AS TON_CD1,
           CASE WHEN  (NOT (M100.EQ2 <> 'NA' AND M100.EQ2 <>'NO' AND M100.EQ2 <>'' AND M100.EQ2 is not null)) THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD2,0) END AS TON_CD2,
           CASE WHEN  (NOT (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null)) THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD3,0) END AS TON_CD3,
@@ -6882,6 +6894,7 @@ LEFT JOIN (
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
+
           ////console.log(checkkq);
         })();
         break;
@@ -6996,7 +7009,7 @@ LEFT JOIN (
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO ZTB_QLSXPLAN (CTR_CD,PLAN_ID,PLAN_DATE,PROD_REQUEST_NO,PLAN_QTY,PLAN_EQ,PLAN_FACTORY,PLAN_LEADTIME,STEP,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE,PLAN_ORDER, G_CODE, PROCESS_NUMBER, NEXT_PLAN_ID) VALUES('002','${DATA.PLAN_ID}','${DATA.PLAN_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.PLAN_QTY}','${DATA.PLAN_EQ}','${DATA.PLAN_FACTORY}','${DATA.PLAN_LEADTIME}','${DATA.STEP}','${EMPL_NO}',GETDATE(),'${EMPL_NO}',GETDATE(),'${DATA.PLAN_ORDER}', '${DATA.G_CODE}','${DATA.PROCESS_NUMBER}','${DATA.NEXT_PLAN_ID}')`;
+          let setpdQuery = `INSERT INTO ZTB_QLSXPLAN (CTR_CD,PLAN_ID,PLAN_DATE,PROD_REQUEST_NO,PLAN_QTY,PLAN_EQ,PLAN_FACTORY,PLAN_LEADTIME,STEP,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE,PLAN_ORDER, G_CODE, PROCESS_NUMBER, NEXT_PLAN_ID, REQ_DF) VALUES('002','${DATA.PLAN_ID}','${DATA.PLAN_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.PLAN_QTY}','${DATA.PLAN_EQ}','${DATA.PLAN_FACTORY}','${DATA.PLAN_LEADTIME}','${DATA.STEP}','${EMPL_NO}',GETDATE(),'${EMPL_NO}',GETDATE(),'${DATA.PLAN_ORDER}', '${DATA.G_CODE}','${DATA.PROCESS_NUMBER}','${DATA.NEXT_PLAN_ID}','R')`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -11606,6 +11619,30 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `UPDATE ZBTVERTABLE SET VERWEB=${DATA.WEB_VER}`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updatePlanOrder":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `MERGE INTO ZTB_QLSXPLAN
+          USING
+          (
+          SELECT PLAN_ID, PLAN_DATE, PLAN_EQ, PLAN_ORDER, ROW_NUMBER() OVER (PARTITION BY PLAN_DATE, PLAN_EQ ORDER BY PLAN_ORDER ASC) AS STT  FROM ZTB_QLSXPLAN
+          ) AS BANGNGUON
+          ON BANGNGUON.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID
+          WHEN MATCHED THEN
+          UPDATE
+          SET ZTB_QLSXPLAN.PLAN_ORDER = BANGNGUON.STT;`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
