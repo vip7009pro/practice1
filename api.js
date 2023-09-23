@@ -4122,6 +4122,10 @@ LEFT JOIN (
           P400.PROD_REQUEST_QTY,
           isnull(INSPECT_BALANCE_TB.LOT_TOTAL_INPUT_QTY_EA, 0) AS LOT_TOTAL_INPUT_QTY_EA,
           isnull(INSPECT_BALANCE_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+		  isnull(WH_TABLE.INPUT_QTY,0) AS INPUT_QTY,
+		  isnull(WH_TABLE.OUTPUT_QTY,0) AS OUTPUT_QTY,
+		  isnull(WH_TABLE.STOCK,0) AS STOCK,
+		  isnull(WH_TABLE.BLOCK_QTY,0) AS BLOCK_QTY,		 
           isnull(INSPECT_BALANCE_TB.INSPECT_BALANCE, 0) AS INSPECT_BALANCE,
           (
               CASE
@@ -4243,21 +4247,24 @@ LEFT JOIN (
                   DISTINCT PROD_REQUEST_NO
               FROM
                   ZTB_QLSXPLAN
-          ) AS PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
-            DATA.alltime,
-            DATA.start_date,
-            DATA.end_date,
-            DATA.cust_name,
-            DATA.codeCMS,
-            DATA.codeKD,
-            DATA.prod_type,
-            DATA.empl_name,
-            DATA.phanloai,
-            DATA.ycsx_pending,
-            DATA.prod_request_no,
-            DATA.material,
-            DATA.inspect_inputcheck
-          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          ) AS PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+		  LEFT JOIN (
+		  SELECT I660.PROD_REQUEST_NO, SUM(I660.IN_QTY) AS INPUT_QTY, SUM(CASE WHEN STATUS='N' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY, SUM(CASE WHEN I660.USE_YN <> 'Y' THEN I660.IN_QTY ELSE 0 END) AS OUTPUT_QTY FROM I660  GROUP BY I660.PROD_REQUEST_NO
+		  ) AS WH_TABLE ON (WH_TABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
+        DATA.alltime,
+        DATA.start_date,
+        DATA.end_date,
+        DATA.cust_name,
+        DATA.codeCMS,
+        DATA.codeKD,
+        DATA.prod_type,
+        DATA.empl_name,
+        DATA.phanloai,
+        DATA.ycsx_pending,
+        DATA.prod_request_no,
+        DATA.material,
+        DATA.inspect_inputcheck
+      )} ORDER BY P400.PROD_REQUEST_NO DESC`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -5158,18 +5165,7 @@ LEFT JOIN (
                   M100.G_NAME_KD
               ) AS TONKIEM ON (
                 THANHPHAM.G_CODE = TONKIEM.G_CODE
-              ) 
-              LEFT JOIN (
-                SELECT 
-                  Product_MaVach, 
-                  SUM(Block_Qty) AS Block_Qty 
-                from 
-                  tbl_Block2 
-                GROUP BY 
-                  Product_MaVach
-              ) AS tbl_Block_table2 ON (
-                tbl_Block_table2.Product_MaVach = M100.G_CODE
-              ) 
+              )             
               LEFT JOIN (
                 SELECT 
                   ZTB_HALF_GOODS.G_CODE, 
@@ -5250,7 +5246,7 @@ LEFT JOIN (
           ) AS YCSXBLTB ON (
             YCSXBLTB.G_CODE = PO_TABLE_1.G_CODE
           )
-        
+
           ${condition}`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -5410,18 +5406,7 @@ LEFT JOIN (
                   M100.G_NAME_KD
               ) AS TONKIEM ON (
                 THANHPHAM.G_CODE = TONKIEM.G_CODE
-              ) 
-              LEFT JOIN (
-                SELECT 
-                  Product_MaVach, 
-                  SUM(Block_Qty) AS Block_Qty 
-                from 
-                  tbl_Block2 
-                GROUP BY 
-                  Product_MaVach
-              ) AS tbl_Block_table2 ON (
-                tbl_Block_table2.Product_MaVach = M100.G_CODE
-              ) 
+              )                
               LEFT JOIN (
                 SELECT 
                   ZTB_HALF_GOODS.G_CODE, 
@@ -5445,7 +5430,7 @@ LEFT JOIN (
               )
           ) AS TONKHOFULL ON (
             TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE
-          ) 
+          )
          ${condition} GROUP BY TONKHOFULL.G_NAME_KD`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
