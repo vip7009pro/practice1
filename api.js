@@ -8689,25 +8689,25 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
             condition += ` AND O302.INS_DATE BETWEEN ''${DATA.FROM_DATE}'' AND ''${DATA.TO_DATE} 23:59:59'' `;
           }
           if (DATA.PROD_REQUEST_NO !== "") {
-            condition += ` AND ZTB_QLSXPLAN.PROD_REQUEST_NO= '${DATA.PROD_REQUEST_NO}'`;
+            condition += ` AND ZTB_QLSXPLAN.PROD_REQUEST_NO= ''${DATA.PROD_REQUEST_NO}''`;
           }
           if (DATA.PLAN_ID !== "") {
-            condition += ` AND O302.PLAN_ID = '${DATA.PLAN_ID}'`;
+            condition += ` AND O302.PLAN_ID = ''${DATA.PLAN_ID}''`;
           }
           if (DATA.M_CODE !== "") {
-            condition += ` AND O302.M_CODE ='${DATA.M_CODE}'`;
+            condition += ` AND O302.M_CODE =''${DATA.M_CODE}''`;
           }
           if (DATA.M_NAME !== "") {
-            condition += ` AND M090.M_NAME LIKE '%${DATA.M_NAME}%'`;
+            condition += ` AND M090.M_NAME LIKE ''%${DATA.M_NAME}%''`;
           }
           if (DATA.G_CODE !== "") {
-            condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+            condition += ` AND M100.G_CODE = ''${DATA.G_CODE}''`;
           }
           if (DATA.G_NAME !== "") {
-            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+            condition += ` AND M100.G_NAME LIKE ''%${DATA.G_NAME}%''`;
           }
           if (DATA.FACTORY !== "ALL") {
-            condition += ` AND O302.FACTORY = '${DATA.FACTORY}'`;
+            condition += ` AND O302.FACTORY = ''${DATA.FACTORY}''`;
           }
           if (DATA.PLAN_EQ !== "ALL") {
             condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2) = '${DATA.PLAN_EQ}'`;
