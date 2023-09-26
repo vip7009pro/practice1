@@ -3317,7 +3317,7 @@ exports.process_api = function (req, res) {
                 $vitrilamviec +
                 "' ORDER BY OFF_ID DESC";
             }
-            console.log(query);
+            //console.log(query);
             kqua = await queryDB(query);
             // //console.log(kqua);
             res.send(kqua);
@@ -4404,7 +4404,8 @@ LEFT JOIN (
               ) THEN 0
               ELSE P400.PROD_REQUEST_QTY - isnull(AA.CD4, 0)
           END AS TON_CD4,
-          isnull(INSPECT_BALANCE_TB.INSPECT_BALANCE, 0) AS INSPECT_BALANCE
+          isnull(INSPECT_BALANCE_TB.INSPECT_BALANCE, 0) AS INSPECT_BALANCE,
+          PLANTABLE.PROD_REQUEST_NO AS DACHITHI
       FROM
           P400
           LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
@@ -4575,21 +4576,28 @@ LEFT JOIN (
                   ) AS PV PIVOT (
                       SUM(PV.KETQUASX) FOR PV.PROCESS_NAME IN ([IN], [DIECUT])
                   ) AS PVTB
-          ) AS BB ON (P400.PROD_REQUEST_NO = BB.PROD_REQUEST_NO) ${generate_condition_get_ycsx(
-            DATA.alltime,
-            DATA.start_date,
-            DATA.end_date,
-            DATA.cust_name,
-            DATA.codeCMS,
-            DATA.codeKD,
-            DATA.prod_type,
-            DATA.empl_name,
-            DATA.phanloai,
-            DATA.ycsx_pending,
-            DATA.prod_request_no,
-            DATA.material,
-            DATA.inspect_inputcheck
-          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          ) AS BB ON (P400.PROD_REQUEST_NO = BB.PROD_REQUEST_NO)
+          LEFT JOIN (
+            SELECT
+                DISTINCT PROD_REQUEST_NO
+            FROM
+                ZTB_QLSXPLAN
+        ) AS PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+         ${generate_condition_get_ycsx(
+           DATA.alltime,
+           DATA.start_date,
+           DATA.end_date,
+           DATA.cust_name,
+           DATA.codeCMS,
+           DATA.codeKD,
+           DATA.prod_type,
+           DATA.empl_name,
+           DATA.phanloai,
+           DATA.ycsx_pending,
+           DATA.prod_request_no,
+           DATA.material,
+           DATA.inspect_inputcheck
+         )} ORDER BY P400.PROD_REQUEST_NO DESC`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -6261,7 +6269,7 @@ LEFT JOIN (
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
-          console.log(checkkq);
+          //console.log(checkkq);
         })();
         break;
       case "getbomgia":
@@ -6797,7 +6805,7 @@ LEFT JOIN (
             )   
       WHERE ZTBEMPLINFOA.WORK_STATUS_CODE =1
       ) AS EMPL_LIST
-      GROUP BY EMPL_LIST.MAINDEPTNAME`;
+      GROUP BY EMPL_LIST.MAINDEPTNAME ORDER BY COUNT(EMPL_LIST.EMPL_NO) DESC`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
@@ -10124,6 +10132,14 @@ AS JUDGEMENT
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD,EMPL_NO, APPLY_DATE, ON_OFF,CURRENT_TEAM,MCC,CURRENT_CA) 
+          SELECT ZTBEMPLINFO.CTR_CD, ZTBEMPLINFO.EMPL_NO,  CAST(GETDATE() as date) AS CHECK_DATE, 1 AS ON_OFF, ZTBEMPLINFO.WORK_SHIFT_CODE AS CURRENT_TEAM, 'Y' AS MCC , ZTBEMPLINFO.CALV  AS CURRENT_CA
+FROM  
+           ZTBEMPLINFO JOIN
+           (SELECT DISTINCT CHECK_DATE, NV_CCID FROM C001 WHERE CHECK_DATE = CAST(GETDATE() as date)) AS CC 
+           ON (CC.NV_CCID = ZTBEMPLINFO.NV_CCID)		   
+           WHERE NOT EXISTS 
+           (SELECT EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO AND DATEPART(ISO_WEEK, GETDATE()) = ZTBEMPLINFO.CURRENT_WEEK)`;
+          /* let setpdQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD,EMPL_NO, APPLY_DATE, ON_OFF,CURRENT_TEAM,MCC,CURRENT_CA) 
           SELECT ZTBEMPLINFO.CTR_CD, ZTBEMPLINFO.EMPL_NO,  CAST(GETDATE() as date) AS CHECK_DATE, 1 AS ON_OFF, ZTBEMPLINFO.WORK_SHIFT_CODE AS CURRENT_TEAM, 'Y' AS MCC ,  CASE WHEN ZTBEMPLINFO.WORK_SHIFT_CODE =0 THEN 0  WHEN  ZTBEMPLINFO.WORK_SHIFT_CODE =3 THEN 0 ELSE CASE WHEN DATETABLE.DAYSHIFT= ZTBEMPLINFO.WORK_SHIFT_CODE THEN 1 ELSE 2 END END AS CURRENT_CA
 FROM  
            ZTBEMPLINFO JOIN
@@ -10131,7 +10147,7 @@ FROM
            ON (CC.NV_CCID = ZTBEMPLINFO.NV_CCID)
        LEFT JOIN DATETABLE ON (DATETABLE.DATE_COLUMN=CAST(GETDATE() as date))
            WHERE NOT EXISTS 
-           (SELECT EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO)`;
+           (SELECT EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO)`; */
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
