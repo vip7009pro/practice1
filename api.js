@@ -2006,37 +2006,26 @@ exports.process_api = function (req, res) {
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTBPQC1TABLE (CTR_CD,PROCESS_LOT_NO,LINEQC_PIC,PROD_PIC,PROD_LEADER,STEPS,CAVITY,SETTING_OK_TIME,FACTORY,REMARK,INS_DATE,REMARK2,PROD_REQUEST_NO,G_CODE,PLAN_ID,PROCESS_NUMBER,LINE_NO) VALUES('002','${DATA.PROCESS_LOT_NO}','${DATA.LINEQC_PIC}','${DATA.PROD_PIC}','${DATA.PROD_LEADER}','${DATA.STEPS}','${DATA.CAVITY}','${DATA.SETTING_OK_TIME}','${DATA.FACTORY}','${DATA.REMARK}',GETDATE(),'${DATA.REMARK}','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}','${DATA.PLAN_ID}','${DATA.PROCESS_NUMBER}','${DATA.LINE_NO}')`;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-      case "insert_sample_qty_pqc1":
+      case "updatepqc1sampleqty":
         (async () => {
-          let checkkq = "";
-          let errflag = "OK";
-          for (let i = 0; i < DATA.length; i++) {
-            let setpdQuery =
-              "UPDATE ZTBPQC1TABLE SET INSPECT_SAMPLE_QTY=" +
-              DATA[i].INSPECT_SAMPLE_QTY +
-              " WHERE PQC1_ID=" +
-              DATA[i].PQC1_ID;
-            ////console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            if (checkkq.tk_status == "NG") {
-              errflag = "NG";
-            }
-          }
-          //console.log(errflag);
-          if (errflag == "NG") {
-            res.send({
-              tk_status: errflag,
-              message: "Có lỗi gì đó trong quá trình update",
-            });
-          } else {
-            res.send({ tk_status: "OK", message: "Update data thành công !" });
-          }
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTBPQC1TABLE SET INSPECT_SAMPLE_QTY=${DATA.INSPECT_SAMPLE_QTY} WHERE PQC1_ID=${DATA.PQC1_ID}`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
         })();
         break;
       case "getpqc1id":
@@ -4101,6 +4090,8 @@ LEFT JOIN (
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `SELECT
+          P400.DELIVERY_DT,
+          P400.PL_HANG,
           AMAZONTB.PROD_REQUEST_NO AS DAUPAMZ,
           PLANTABLE.PROD_REQUEST_NO AS DACHITHI,
           M100.G_NAME_KD,
@@ -4693,7 +4684,7 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO) VALUES ('002','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}')`;
+          let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO, PL_HANG) VALUES ('002','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}','${DATA.PHANLOAI}')`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -4928,7 +4919,7 @@ LEFT JOIN (
         (async () => {
           //////console.log(DATA);
           let checkkq = "OK";
-          let setpdQuery = `SELECT TOP 1 * FROM AMAZONE_DATA WHERE NO_IN='${DATA.NO_IN}' `;
+          let setpdQuery = `SELECT TOP 1 * FROM AMAZONE_DATA WHERE NO_IN='${DATA.NO_IN}' OR PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -5961,7 +5952,25 @@ LEFT JOIN (
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT  ZTBPQC1TABLE.PQC1_ID,ZTBPQC1TABLE.PLAN_ID,CONCAT(datepart(YEAR,ZTBPQC1TABLE.SETTING_OK_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC1TABLE.SETTING_OK_TIME))) AS YEAR_WEEK, ZTBPQC1TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_DATE,ZTBPQC1TABLE.PROCESS_LOT_NO,M100.G_NAME,M100.G_NAME_KD,ZTBPQC1TABLE.LINEQC_PIC AS LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.FACTORY,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,M100.PROD_LAST_PRICE,(M100.PROD_LAST_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT, ZTBPQC1TABLE.CNDB_ENCODES, ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE, ZTBPQC3TABLE.PQC3_ID, ZTBPQC3TABLE.OCCURR_TIME, ZTBPQC3TABLE.INSPECT_QTY, ZTBPQC3TABLE.DEFECT_QTY, ZTBPQC3TABLE.DEFECT_PHENOMENON
+          /* let setpdQuery = `SELECT  ZTBPQC1TABLE.PQC1_ID,ZTBPQC1TABLE.PLAN_ID,CONCAT(datepart(YEAR,ZTBPQC1TABLE.SETTING_OK_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC1TABLE.SETTING_OK_TIME))) AS YEAR_WEEK, ZTBPQC1TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_DATE,ZTBPQC1TABLE.PROCESS_LOT_NO,M100.G_NAME,M100.G_NAME_KD,ZTBPQC1TABLE.LINEQC_PIC AS LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.FACTORY,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,M100.PROD_LAST_PRICE,(M100.PROD_LAST_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT, ZTBPQC1TABLE.CNDB_ENCODES, ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE
+          FROM
+          ZTBPQC1TABLE
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC1TABLE.PROD_REQUEST_NO)
+          LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC1TABLE.G_CODE)
+                       ${generate_condition_pqc1(
+                         DATA.ALLTIME,
+                         DATA.FROM_DATE,
+                         DATA.TO_DATE,
+                         DATA.CUST_NAME,
+                         DATA.G_CODE,
+                         DATA.G_NAME,
+                         DATA.PROD_REQUEST_NO,
+                         DATA.PROCESS_LOT_NO,
+                         DATA.ID,
+                         DATA.FACTORY
+                       )} 
+                       ORDER BY ZTBPQC1TABLE.PQC1_ID DESC`; */
+           let setpdQuery = `SELECT  ZTBPQC1TABLE.FACTORY, ZTBPQC1TABLE.PQC1_ID,ZTBPQC1TABLE.PLAN_ID, ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY, CONCAT(datepart(YEAR,ZTBPQC1TABLE.SETTING_OK_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC1TABLE.SETTING_OK_TIME))) AS YEAR_WEEK,ZTBPQC1TABLE.PROCESS_LOT_NO,M100.G_NAME,M100.G_NAME_KD,ZTBPQC1TABLE.LINEQC_PIC AS LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,M100.PROD_LAST_PRICE,(M100.PROD_LAST_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT, ZTBPQC1TABLE.CNDB_ENCODES, ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE, ZTBPQC3TABLE.PQC3_ID, ZTBPQC3TABLE.OCCURR_TIME, ZTBPQC3TABLE.INSPECT_QTY, ZTBPQC3TABLE.DEFECT_QTY, ZTBPQC3TABLE.DEFECT_PHENOMENON,  ZTBPQC1TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_DATE
                         FROM
                        ZTBPQC1TABLE
                        LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC1TABLE.PROD_REQUEST_NO)
@@ -11653,6 +11662,22 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           WHEN MATCHED THEN
           UPDATE
           SET ZTB_QLSXPLAN.PLAN_ORDER = BANGNGUON.STT;`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkGNAMEKDExist":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT TOP 1 * FROM M100 WHERE  G_NAME_KD='${DATA.G_NAME_KD}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
