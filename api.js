@@ -292,7 +292,8 @@ function generate_condition_get_ycsx(
   $ycsxpending,
   $prod_request_no,
   $material,
-  $inspect_input
+  $inspect_input,
+  $phanloaihang
 ) {
   $condition = " WHERE 1=1 ";
   $temp_start_date = moment($start_date).format("YYYYMMDD");
@@ -350,6 +351,14 @@ function generate_condition_get_ycsx(
       $phan_loai = "";
     }
   }
+  if($phanloaihang !=='ALL')
+  {
+    $phanloaihang = ` AND P400.PL_HANG='${$phanloaihang}'`;
+  }
+  else
+  {
+    $phanloaihang ='';
+  }
   $condition =
     $condition +
     $inspect_time_checkvalue +
@@ -362,7 +371,9 @@ function generate_condition_get_ycsx(
     $inspect_input +
     $phan_loai +
     $prod_request_no +
-    $ycsxpending;
+    $ycsxpending +
+    $phanloaihang;
+    
   return $condition;
 }
 function generate_condition_get_inspection_input(
@@ -4242,9 +4253,10 @@ LEFT JOIN (
             DATA.ycsx_pending,
             DATA.prod_request_no,
             DATA.material,
-            DATA.inspect_inputcheck
+            DATA.inspect_inputcheck,
+            DATA.phanloaihang
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
-          //////console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
@@ -4575,9 +4587,10 @@ LEFT JOIN (
             DATA.ycsx_pending,
             DATA.prod_request_no,
             DATA.material,
-            DATA.inspect_inputcheck
+            DATA.inspect_inputcheck,
+            DATA.phanloaihang
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
-          //////console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
