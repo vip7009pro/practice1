@@ -351,7 +351,7 @@ function generate_condition_get_ycsx(
       $phan_loai = "";
     }
   }
-  if($phanloaihang !=='ALL')
+  if($phanloaihang !=='ALL' &&  $phanloaihang !==undefined)
   {
     $phanloaihang = ` AND P400.PL_HANG='${$phanloaihang}'`;
   }
@@ -4590,7 +4590,7 @@ LEFT JOIN (
             DATA.inspect_inputcheck,
             DATA.phanloaihang
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
