@@ -4592,7 +4592,7 @@ LEFT JOIN (
             DATA.inspect_inputcheck,
             DATA.phanloaihang
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
