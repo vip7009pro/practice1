@@ -769,8 +769,8 @@ const config = {
   database: process.env.DB_NAME,
   /*  port: 5005, */
   port: parseInt(process.env.DB_PORT),
-  trustServerCertificate: true,
-  requestTimeout: 300000,
+  trustServerCertificate: true, 
+  requestTimeout: 300000,    
 };
 function isNumber(str) {
   return /^[0-9]+$/.test(str) && str.length == 4;
@@ -825,8 +825,10 @@ function asyncQuery(queryString) {
 const queryDB = async (query) => {
   let kq = "";
   try {
-    await sql.connect(config);
-    const result = await sql.query(query);
+    await sql.connect(config);    
+    //await sql.connect('Server=192.168.1.2,5005;Database=CMS_VINA;User Id=sa;Password=*11021201$; MultipleActiveResultSets=True; Encrypt=false');   
+    const result = await sql.query(query);   
+    
     if (result.rowsAffected[0] > 0) {
       if (result.recordset) {
         kq = { tk_status: "OK", data: result.recordset };
@@ -1863,9 +1865,9 @@ exports.process_api = function (req, res) {
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='${EMPL_NO}'`;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          console.log('ketqua check login',checkkq);
           if (checkkq.data[0].WORK_STATUS_CODE === 0) {
             res.send({ tk_status: "ng", message: "Đã nghỉ việc" });
           } else {
@@ -10906,7 +10908,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO PROD_PRICE_TABLE (CTR_CD, CUST_CD, G_CODE, PRICE_DATE, MOQ, PROD_PRICE, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, REMARK, FINAL, CURRENCY, RATE) 
-          VALUES ('002','${DATA.CUST_CD}','${DATA.G_CODE}','${DATA.PRICE_DATE}','${DATA.MOQ}','${DATA.PROD_PRICE}',GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}','${DATA.REMARK}','N','USD', 1)`;
+          VALUES ('002','${DATA.CUST_CD}','${DATA.G_CODE}','${DATA.PRICE_DATE}','${DATA.MOQ}','${DATA.PROD_PRICE}',GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}',N'${DATA.REMARK}','N','USD', 1)`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -10924,7 +10926,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let checkkq = "OK";
           let setpdQuery = `
           INSERT INTO PROD_PRICE_TABLE
-          SELECT '002' AS CTR_CD, AA.CUST_CD, AA.G_CODE, AA.PRICE_DATE, AA.MOQ, AA.PROD_PRICE, GETDATE() AS INS_DATE,'${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE,'${EMPL_NO}' AS UPD_EMPL, 'AUTO' AS REMARK, 'N' AS FINAL, 'USD' AS CURRENCY, null as RATE  FROM 
+          SELECT '002' AS CTR_CD, AA.CUST_CD, AA.G_CODE, AA.PRICE_DATE, AA.MOQ, AA.PROD_PRICE, GETDATE() AS INS_DATE,'${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE,'${EMPL_NO}' AS UPD_EMPL, 'AUTO' AS REMARK, 'N' AS FINAL, 'USD' AS CURRENCY, null as RATE FROM 
           (
           SELECT XX.G_CODE, XX.CUST_CD, XX.MOQ, XX.PRICE_DATE, MIN(XX.PROD_PRICE) AS PROD_PRICE FROM 
           (
@@ -10936,7 +10938,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           SELECT G_CODE, CUST_CD,   MOQ, PROD_PRICE, PRICE_DATE FROM PROD_PRICE_TABLE
           ) AS BB
           ON (AA.G_CODE = BB.G_CODE AND AA.CUST_CD = BB.CUST_CD AND AA.MOQ = BB.MOQ AND AA.PROD_PRICE = BB.PROD_PRICE  AND AA.PRICE_DATE = BB.PRICE_DATE)
-          WHERE  BB.G_CODE is null`;
+          WHERE  NOT EXISTS (SELECT G_CODE, CUST_CD,   MOQ, PROD_PRICE, PRICE_DATE FROM PROD_PRICE_TABLE WHERE PROD_PRICE_TABLE.G_CODE = AA.G_CODE AND PROD_PRICE_TABLE.CUST_CD = AA.CUST_CD AND PROD_PRICE_TABLE.PRICE_DATE = AA.PRICE_DATE AND PROD_PRICE_TABLE.MOQ = AA.MOQ) `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);

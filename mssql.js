@@ -5,9 +5,9 @@ const config = {
     password: process.env.DB_PASS,    
     server: process.env.DB_SERVER,
     database: process.env.DB_NAME,
-    port: 5005,
+    port: parseInt(process.env.DB_PORT),
     trustServerCertificate: true,
-    requestTimeout: 300000
+    requestTimeout: 10000,     
 };
 
 
@@ -15,6 +15,7 @@ const queryDB = async (query) => {
     let kq = "";
     try {
       await sql.connect(config);
+      //await sql.connect('Server=192.168.1.2,5005;Database=CMS_VINA;User Id=sa;Password=*11021201$; MultipleActiveResultSets=True; Encrypt=false');      
       const result = await sql.query(query);
       if (result.rowsAffected[0] > 0) {
         if (result.recordset) {
@@ -29,14 +30,15 @@ const queryDB = async (query) => {
       ////console.log(err);
       kq = { tk_status: "NG", message: err + " " };
     }
-    return kq;
+    return kq;    
   };
 
 
   (async () => {
-    let setpdQuery = `SELECT TOP 1 * FROM M100`;
+    let setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='NHU1903'`;
+    setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='NHU1903'`;
     console.log(setpdQuery);
     checkkq = await queryDB(setpdQuery);
-    console.log(checkkq); 
+    console.log(checkkq);     
   })();
 
