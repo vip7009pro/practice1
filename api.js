@@ -770,8 +770,18 @@ const config = {
   /*  port: 5005, */
   port: parseInt(process.env.DB_PORT),
   trustServerCertificate: true, 
-  requestTimeout: 300000,    
+  requestTimeout: 300000,   
+  /* pool: {
+    max: 1000, // Số lượng kết nối tối đa trong pool
+    min: 0,  // Số lượng kết nối tối thiểu trong pool
+    idleTimeoutMillis: 300000 // Thời gian tối đa mà một kết nối có thể ở trong pool trước khi nó bị giải phóng
+  }  */  
 };
+
+exports.openConnection = function() {
+   sql.connect(config);   
+}
+
 function isNumber(str) {
   return /^[0-9]+$/.test(str) && str.length == 4;
 }
@@ -825,7 +835,7 @@ function asyncQuery(queryString) {
 const queryDB = async (query) => {
   let kq = "";
   try {
-    await sql.connect(config);    
+    //await sql.connect(config);    
     //await sql.connect('Server=192.168.1.2,5005;Database=CMS_VINA;User Id=sa;Password=*11021201$; MultipleActiveResultSets=True; Encrypt=false');   
     const result = await sql.query(query);   
     
@@ -842,8 +852,10 @@ const queryDB = async (query) => {
     ////console.log(err);
     kq = { tk_status: "NG", message: err + " " };
   }
+  
   return kq;
 };
+
 exports.checklogin_index = function (req, res, next) {
   ////console.log("bam login ma cung loi?");
   try {
@@ -907,7 +919,7 @@ exports.checklogin_login = function (req, res, next) {
     next();
   }
 };
-exports.process_api = function (req, res) {
+exports.process_api = function async (req, res) {
   ////console.log(req.files.file);
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;

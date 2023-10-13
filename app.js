@@ -112,6 +112,9 @@ var corsOptions = {
   optionsSuccessStatus: 200,
   credentials: true,
 };
+
+api_module.openConnection();
+
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.static(__dirname + "/public"));
