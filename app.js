@@ -117,11 +117,11 @@ api_module.openConnection();
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use(express.static(__dirname + "/public"));
+/* app.use(express.static(__dirname + "/public"));
 app.set("views", "./views");
-app.set("view engine", "ejs");
+app.set("view engine", "ejs"); */
 var bodyParser = require("body-parser");
-const { Socket } = require("socket.io");
+/* const { Socket } = require("socket.io"); */
 const { existsSync } = require("fs");
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
@@ -271,5 +271,3 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
 app.listen(API_PORT, function () {
   console.log("App dang nghe port " + API_PORT);
 });
-
-var clients = [];

@@ -248,19 +248,17 @@ function generate_condition_get_po(
     $po_no = " AND ZTBPOTable.PO_NO =  '" + $po_no + "'";
   }
   if ($over != "") {
-    $over =
-      "AND (CASE WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER' ELSE 'OK' END) LIKE '%" +
-      $over +
-      "%' ";
+    $over = "" ;
   }
   if ($id != "") {
-    $id = "AND PO_ID=" + $id;
+    $id = "AND ZTBPOTable.PO_ID=" + $id;
   }
   if ($material != "") {
     $material = "AND M100.PROD_MAIN_MATERIAL LIKE '%" + $material + "%' ";
   }
   if ($justPoBalance != false) {
-    $justPoBalance = "AND (ZTBPOTable.PO_QTY - AA.TotalDelivered) <>0";
+    //$justPoBalance = "AND (ZTBPOTable.PO_QTY - AA.TotalDelivered) <>0";
+    $justPoBalance = "AND POTB.PO_BALANCE <>0";
   } else {
     $justPoBalance = "";
   }
@@ -848,6 +846,7 @@ const queryDB = async (query) => {
     } else {
       kq = { tk_status: "NG", message: "Không có dòng dữ liệu nào" };
     }
+    //await sql.close();
   } catch (err) {
     ////console.log(err);
     kq = { tk_status: "NG", message: err + " " };
@@ -924,7 +923,7 @@ exports.process_api = function async (req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
-  /*  if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
+   /* if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD HH:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
@@ -3700,7 +3699,68 @@ LEFT JOIN (
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let query = `SELECT 
+          let query = `WITH ZTBDLVR AS 
+          (SELECT CUST_CD, G_CODE, PO_NO, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CUST_CD, G_CODE, PO_NO),
+          POTB AS
+          (
+          SELECT ZTBPOTable.G_CODE, ZTBPOTable.CUST_CD, ZTBPOTable.PO_NO,ZTBPOTable.PO_QTY, isnull(ZTBDLVR.DELIVERY_QTY,0) AS DELIVERY_QTY, (ZTBPOTable.PO_QTY-isnull(ZTBDLVR.DELIVERY_QTY,0)) AS PO_BALANCE FROM ZTBPOTable LEFT JOIN ZTBDLVR ON (ZTBPOTable.G_CODE = ZTBDLVR.G_CODE AND ZTBPOTable.CUST_CD = ZTBDLVR.CUST_CD AND ZTBPOTable.PO_NO = ZTBDLVR.PO_NO)
+          ),
+          FULLBOM AS 
+          (
+          SELECT 
+                        BBB.G_CODE, 
+                        string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM 
+                      FROM 
+                        (
+                          SELECT 
+                            DISTINCT AAA.G_CODE, 
+                            M090.M_NAME 
+                          FROM 
+                            (
+                              (
+                                SELECT 
+                                  DISTINCT G_CODE, 
+                                  M_CODE 
+                                FROM 
+                                  M140
+                              ) AS AAA 
+                              LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE)
+                            )
+                        ) AS BBB 
+                      GROUP BY 
+                        BBB.G_CODE
+          )
+          
+          
+          SELECT ZTBPOTable.PO_ID, M110.CUST_NAME_KD,  ZTBPOTable.PO_NO, M100.G_NAME, M100.G_NAME_KD, ZTBPOTable.G_CODE,    ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, ZTBPOTable.PROD_PRICE, POTB.PO_QTY, POTB.DELIVERY_QTY AS TOTAL_DELIVERED, POTB.PO_BALANCE, (ZTBPOTable.PROD_PRICE*POTB.PO_QTY) AS PO_AMOUNT, (ZTBPOTable.PROD_PRICE*POTB.DELIVERY_QTY) AS DELIVERED_AMOUNT, (ZTBPOTable.PROD_PRICE*POTB.PO_BALANCE) AS BALANCE_AMOUNT, M010.EMPL_NAME,M100.PROD_TYPE, FULLBOM.M_NAME_FULLBOM, M100.PROD_MAIN_MATERIAL, ZTBPOTable.CUST_CD,ZTBPOTable.EMPL_NO,DATEPART(MONTH, PO_DATE) AS POMONTH, DATEPART(ISOWK, PO_DATE) AS POWEEKNUM, CASE WHEN (
+                      ZTBPOTable.RD_DATE < GETDATE()-1
+                    ) 
+                    AND (
+                      POTB.PO_BALANCE <> 0
+                    ) THEN 'OVER' ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK
+          FROM ZTBPOTable 
+          LEFT JOIN POTB ON ZTBPOTable.G_CODE = POTB.G_CODE AND ZTBPOTable.CUST_CD = POTB.CUST_CD AND ZTBPOTable.PO_NO = POTB.PO_NO
+          LEFT JOIN M100 ON M100.G_CODE = ZTBPOTable.G_CODE
+          LEFT JOIN M110 ON M110.CUST_CD = ZTBPOTable.CUST_CD
+          LEFT JOIN M010 ON M010.EMPL_NO = ZTBPOTable.EMPL_NO
+          LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE
+          
+         ${generate_condition_get_po(
+            DATA.alltime,
+            DATA.start_date,
+            DATA.end_date,
+            DATA.cust_name,
+            DATA.codeCMS,
+            DATA.codeKD,
+            DATA.prod_type,
+            DATA.empl_name,
+            DATA.po_no,
+            DATA.over,
+            DATA.id,
+            DATA.material,
+            DATA.justPoBalance
+          )} ORDER BY ZTBPOTable.PO_ID DESC`;
+          /* let query = `SELECT 
           ZTBPOTable.PO_ID, 
           M110.CUST_NAME_KD, 
           AA.PO_NO, 
@@ -3815,7 +3875,7 @@ LEFT JOIN (
             DATA.id,
             DATA.material,
             DATA.justPoBalance
-          )} ORDER BY ZTBPOTable.PO_ID DESC`;
+          )} ORDER BY ZTBPOTable.PO_ID DESC`; */
           kqua = await queryDB(query);
           res.send(kqua);
         })();
@@ -4102,7 +4162,100 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `SELECT
+          let setpdQuery = `WITH 
+          AMAZONTB AS
+          ( SELECT DISTINCT PROD_REQUEST_NO FROM AMAZONE_DATA),
+          PLANTABLE AS 
+          (SELECT DISTINCT PROD_REQUEST_NO FROM ZTB_QLSXPLAN),
+          INSPECT_INPUT_TB AS 
+          (
+          SELECT PROD_REQUEST_NO, SUM(INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA FROM ZTBINSPECTINPUTTB GROUP BY PROD_REQUEST_NO
+          ),
+          INSPECT_OUTPUT_TB AS 
+          (
+          SELECT PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO
+          ),
+          WH_TABLE AS 
+          (SELECT I660.PROD_REQUEST_NO, SUM(I660.IN_QTY) AS INPUT_QTY, SUM(CASE WHEN STATUS='N' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY, SUM(CASE WHEN I660.USE_YN <> 'Y' THEN I660.IN_QTY ELSE 0 END) AS OUTPUT_QTY FROM I660  GROUP BY I660.PROD_REQUEST_NO)
+          SELECT 
+          P400.DELIVERY_DT,
+                    P400.PL_HANG,
+                    CASE WHEN AMAZONTB.PROD_REQUEST_NO is not null THEN '1' END AS DAUPAMZ,
+                    PLANTABLE.PROD_REQUEST_NO AS DACHITHI,
+                    M100.G_NAME_KD,
+                    P400.PO_NO,
+                    P400.G_CODE,
+                    M100.PROD_TYPE,
+                    M100.PROD_MAIN_MATERIAL,
+                    M100.DESCR,
+                    M100.PDBV,
+                    M100.PDBV_EMPL,
+                    M100.PDBV_DATE,
+                    M100.G_NAME,
+                    M010.EMPL_NAME,
+                    M010.EMPL_NO,
+                    M110.CUST_NAME_KD,
+                    M110.CUST_CD,
+                    P400.PROD_REQUEST_NO,
+                    P400.PROD_REQUEST_DATE,
+                    P400.PROD_REQUEST_QTY,		  
+                    isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) AS LOT_TOTAL_INPUT_QTY_EA,
+                    isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+                isnull(WH_TABLE.INPUT_QTY,0) AS INPUT_QTY,
+                isnull(WH_TABLE.OUTPUT_QTY,0) AS OUTPUT_QTY,
+                isnull(WH_TABLE.STOCK,0) AS STOCK,
+                isnull(WH_TABLE.BLOCK_QTY,0) AS BLOCK_QTY,	
+                 isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) - isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS INSPECT_BALANCE,
+                  (CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY, 0) - isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) ) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,
+                CASE WHEN (P400.YCSX_PENDING =0 OR isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY) THEN 0 ELSE 1 END AS YCSX_PENDING,
+                P400.CODE_55 AS PHAN_LOAI,
+                    P400.REMK AS REMARK,
+                    P400.PO_TDYCSX,
+                    (
+                        P400.TKHO_TDYCSX + P400.BTP_TDYCSX + P400.CK_TDYCSX - P400.BLOCK_TDYCSX
+                    ) AS TOTAL_TKHO_TDYCSX,
+                    P400.TKHO_TDYCSX,
+                    P400.BTP_TDYCSX,
+                    P400.CK_TDYCSX,
+                    P400.BLOCK_TDYCSX,
+                    P400.FCST_TDYCSX,
+                    P400.W1,
+                    P400.W2,
+                    P400.W3,
+                    P400.W4,
+                    P400.W5,
+                    P400.W6,
+                    P400.W7,
+                    P400.W8,
+                    P400.PDUYET,
+                    P400.CODE_50 AS LOAIXH,
+                    M100.BANVE,
+                    M100.NO_INSPECTION
+          FROM P400
+          LEFT JOIN AMAZONTB ON (AMAZONTB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN  INSPECT_INPUT_TB ON (INSPECT_INPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN INSPECT_OUTPUT_TB ON (INSPECT_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN WH_TABLE ON (WH_TABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
+          LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
+          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) ${generate_condition_get_ycsx(
+            DATA.alltime,
+            DATA.start_date,
+            DATA.end_date,
+            DATA.cust_name,
+            DATA.codeCMS,
+            DATA.codeKD,
+            DATA.prod_type,
+            DATA.empl_name,
+            DATA.phanloai,
+            DATA.ycsx_pending,
+            DATA.prod_request_no,
+            DATA.material,
+            DATA.inspect_inputcheck,
+            DATA.phanloaihang
+          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          /* let setpdQuery = `SELECT
           P400.DELIVERY_DT,
           P400.PL_HANG,
           AMAZONTB.PROD_REQUEST_NO AS DAUPAMZ,
@@ -4269,7 +4422,7 @@ LEFT JOIN (
             DATA.material,
             DATA.inspect_inputcheck,
             DATA.phanloaihang
-          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          )} ORDER BY P400.PROD_REQUEST_NO DESC`; */
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -9908,8 +10061,9 @@ AS JUDGEMENT
           EQ1 DESC 
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
+          //checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
+          checkkq = {tk_status:'NG', message:' tam thoi dung'}
           res.send(checkkq);
         })();
         break;
@@ -9953,8 +10107,10 @@ AS JUDGEMENT
             ) AS YCSXCAPATB
             ORDER BY YCSXCAPATB.LEATIME1 DESC, YCSXCAPATB.LEATIME2 DESC`;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
+          //checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
+          
+          checkkq = {tk_status:'NG', message:' tam thoi dung'}
           res.send(checkkq);
         })();
         break;
@@ -10890,7 +11046,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             ${condition}
             ORDER BY M100.G_CODE ASC, PROD_PRICE_TABLE.MOQ DESC, PROD_PRICE_TABLE.PRICE_DATE ASC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -11545,7 +11701,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           SELECT M110.CUST_CD, M110.CUST_NAME_KD, ZTB_QUOTATION_CALC_TB.G_CODE,M100.G_NAME, M100.G_NAME_KD, ZTB_QUOTATION_CALC_TB.WIDTH_OFFSET,ZTB_QUOTATION_CALC_TB.LENGTH_OFFSET,ZTB_QUOTATION_CALC_TB.KNIFE_UNIT,ZTB_QUOTATION_CALC_TB.FILM_UNIT,ZTB_QUOTATION_CALC_TB.INK_UNIT,ZTB_QUOTATION_CALC_TB.LABOR_UNIT,ZTB_QUOTATION_CALC_TB.DELIVERY_UNIT,ZTB_QUOTATION_CALC_TB.DEPRECATION_UNIT,ZTB_QUOTATION_CALC_TB.GMANAGEMENT_UNIT,ZTB_QUOTATION_CALC_TB.M_LOSS_UNIT,ZTB_QUOTATION_CALC_TB.G_WIDTH,ZTB_QUOTATION_CALC_TB.G_LENGTH,ZTB_QUOTATION_CALC_TB.G_C,ZTB_QUOTATION_CALC_TB.G_C_R,ZTB_QUOTATION_CALC_TB.G_LG,ZTB_QUOTATION_CALC_TB.G_CG,ZTB_QUOTATION_CALC_TB.G_SG_L,ZTB_QUOTATION_CALC_TB.G_SG_R,ZTB_QUOTATION_CALC_TB.PROD_PRINT_TIMES,ZTB_QUOTATION_CALC_TB.KNIFE_COST,ZTB_QUOTATION_CALC_TB.FILM_COST,ZTB_QUOTATION_CALC_TB.INK_COST,ZTB_QUOTATION_CALC_TB.LABOR_COST,ZTB_QUOTATION_CALC_TB.DELIVERY_COST,ZTB_QUOTATION_CALC_TB.DEPRECATION_COST,ZTB_QUOTATION_CALC_TB.GMANAGEMENT_COST,ZTB_QUOTATION_CALC_TB.MATERIAL_COST,ZTB_QUOTATION_CALC_TB.TOTAL_COST,ZTB_QUOTATION_CALC_TB.SALE_PRICE,ZTB_QUOTATION_CALC_TB.PROFIT
 FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_TB.G_CODE) LEFT JOIN M110 ON (M110.CUST_CD = M100.CUST_CD)        
           `;
-          console.log(setpdQuery);
+          ///console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
