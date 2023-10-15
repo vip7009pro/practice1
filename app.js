@@ -89,10 +89,10 @@ io.on("connection", (client) => {
     console.log("Connected clients: " + io.engine.clientsCount);
   });
 });
-//const port = 5011;
-const port = 3007;
+
 var corsOptions = {
   origin: [
+    "http://192.168.1.192",
     "http://192.168.1.2",
     "http://192.168.1.136:3010",
     "http://222.252.1.63",
