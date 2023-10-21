@@ -6109,24 +6109,32 @@ LEFT JOIN (
         (async () => {
           //////console.log(DATA);
           let checkkq = "OK";
-          let setpdQuery = ` SELECT * FROM ( SELECT TOP 8 AA.PO_YEAR, AA.PO_WEEK, CONCAT(AA.PO_YEAR,'_', AA.PO_WEEK) AS YEAR_WEEK, isnull(AA.RUNNING_PO_QTY,0) AS RUNNING_PO_QTY, isnull(BB.RUNNING_DEL_QTY,0) AS RUNNING_DEL_QTY, (isnull(AA.RUNNING_PO_QTY,0)-isnull(BB.RUNNING_DEL_QTY,0)) AS RUNNING_PO_BALANCE FROM 
-                    (
-                    SELECT XX.PO_YEAR, XX.PO_WEEK, SUM(CAST(XX.WEEKLY_PO_QTY AS Float)) OVER(ORDER BY XX.PO_YEAR ASC, XX.PO_WEEK ASC) AS RUNNING_PO_QTY FROM 
-                    (
-                    SELECT DISTINCT YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,2,PO_DATE)) As PO_WEEK, 
-                    SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_QTY
-                    FROM ZTBPOTable
-                    ) AS XX
-                    ) AS AA
-                    LEFT JOIN 
-                    (
-                    SELECT XX.DEL_YEAR, XX.DEL_WEEK, SUM(CAST(XX.WEEKLY_DEL_QTY AS Float)) OVER(ORDER BY XX.DEL_YEAR ASC, XX.DEL_WEEK ASC) AS RUNNING_DEL_QTY FROM 
-                    (
-                    SELECT DISTINCT YEAR(DELIVERY_DATE) AS DEL_YEAR,DATEPART( ISOWK, DATEADD(day,2,DELIVERY_DATE)) As DEL_WEEK, 
-                    SUM(ZTBDelivery.DELIVERY_QTY) OVER(PARTITION BY YEAR(DELIVERY_DATE),DATEPART(ISOWK, DATEADD(day,2,DELIVERY_DATE))) AS WEEKLY_DEL_QTY
-                    FROM ZTBDelivery
-                    ) AS XX
-                    ) AS BB
+          let setpdQuery = ` SELECT * FROM ( SELECT TOP 8 AA.PO_YEAR, AA.PO_WEEK, CONCAT(AA.PO_YEAR,'_', AA.PO_WEEK) AS YEAR_WEEK, isnull(AA.RUNNING_PO_QTY,0) AS RUNNING_PO_QTY, isnull(BB.RUNNING_DEL_QTY,0) AS RUNNING_DEL_QTY, (isnull(AA.RUNNING_PO_QTY,0)-isnull(BB.RUNNING_DEL_QTY,0)) AS RUNNING_PO_BALANCE, isnull(AA.RUNNING_PO_AMOUNT,0) AS RUNNING_PO_AMOUNT, isnull(BB.RUNNING_DEL_AMOUNT,0) AS RUNNING_DEL_AMOUNT, (isnull(AA.RUNNING_PO_AMOUNT,0)-isnull(BB.RUNNING_DEL_AMOUNT,0)) AS RUNNING_BALANCE_AMOUNT
+
+          FROM 
+          (
+          SELECT XX.PO_YEAR, XX.PO_WEEK, SUM(CAST(XX.WEEKLY_PO_QTY AS Float)) OVER(ORDER BY XX.PO_YEAR ASC, XX.PO_WEEK ASC) AS RUNNING_PO_QTY,
+          SUM(CAST(XX.WEEKLY_PO_AMOUNT AS Float)) OVER(ORDER BY XX.PO_YEAR ASC, XX.PO_WEEK ASC) AS RUNNING_PO_AMOUNT
+          FROM 
+          (
+          SELECT DISTINCT YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,2,PO_DATE)) As PO_WEEK, 
+          SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_QTY,
+          SUM(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_AMOUNT
+          FROM ZTBPOTable
+          ) AS XX
+          ) AS AA
+          LEFT JOIN 
+          (
+          SELECT XX.DEL_YEAR, XX.DEL_WEEK, SUM(CAST(XX.WEEKLY_DEL_QTY AS Float)) OVER(ORDER BY XX.DEL_YEAR ASC, XX.DEL_WEEK ASC) AS RUNNING_DEL_QTY,
+          SUM(CAST(XX.WEEKLY_DEL_AMOUNT AS Float)) OVER(ORDER BY XX.DEL_YEAR ASC, XX.DEL_WEEK ASC) AS RUNNING_DEL_AMOUNT
+          FROM 
+          (
+          SELECT DISTINCT YEAR(DELIVERY_DATE) AS DEL_YEAR,DATEPART( ISOWK, DATEADD(day,2,DELIVERY_DATE)) As DEL_WEEK, 
+          SUM(ZTBDelivery.DELIVERY_QTY) OVER(PARTITION BY YEAR(DELIVERY_DATE),DATEPART(ISOWK, DATEADD(day,2,DELIVERY_DATE))) AS WEEKLY_DEL_QTY,
+          SUM(ZTBDelivery.DELIVERY_QTY* ZTBPOTable.PROD_PRICE) OVER(PARTITION BY YEAR(DELIVERY_DATE),DATEPART(ISOWK, DATEADD(day,2,DELIVERY_DATE))) AS WEEKLY_DEL_AMOUNT
+          FROM ZTBDelivery LEFT JOIN ZTBPOTable ON (ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO)
+          ) AS XX
+          ) AS BB
                     ON (AA.PO_WEEK = BB.DEL_WEEK AND AA.PO_YEAR = BB.DEL_YEAR) WHERE PO_YEAR='${DATA.YEAR}'
                     ORDER BY PO_YEAR ASC, PO_WEEK DESC) AS BB ORDER BY BB.PO_WEEK ASC `;
           ////console.log(setpdQuery);
@@ -6168,7 +6176,8 @@ LEFT JOIN (
           //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT * FROM (SELECT DISTINCT  TOP 8 YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,2,PO_DATE)) As PO_WEEK, CONCAT(YEAR(PO_DATE),'_', DATEPART( ISOWK, DATEADD(day,2,PO_DATE))) AS YEAR_WEEK ,
-                    SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_QTY
+                    SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_QTY,
+                    SUM(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,2,PO_DATE))) AS WEEKLY_PO_AMOUNT
                     FROM ZTBPOTable
                     WHERE YEAR(PO_DATE)='${DATA.YEAR}'
                     ORDER BY YEAR(PO_DATE) ASC ,DATEPART( ISOWK, DATEADD(day,2,PO_DATE)) DESC) AS AA ORDER BY AA.PO_WEEK ASC`;
@@ -10043,7 +10052,45 @@ AS JUDGEMENT
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT 
+          let setpdQuery = `
+          WITH ZTBDLVR AS 
+          (SELECT CUST_CD, G_CODE, PO_NO, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CUST_CD, G_CODE, PO_NO),
+          POTB AS
+          (
+          SELECT ZTBPOTable.G_CODE, SUM((ZTBPOTable.PO_QTY-isnull(ZTBDLVR.DELIVERY_QTY,0))) AS PO_BALANCE FROM ZTBPOTable LEFT JOIN ZTBDLVR ON (ZTBPOTable.G_CODE = ZTBDLVR.G_CODE AND ZTBPOTable.CUST_CD = ZTBDLVR.CUST_CD AND ZTBPOTable.PO_NO = ZTBDLVR.PO_NO) GROUP BY ZTBPOTable.G_CODE
+          ),
+          THANHPHAM AS
+          (
+                    select Product_MaVach AS G_CODE, SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) AS NHAPKHO,SUM(CASE WHEN IO_type='OUT' THEN IO_Qty ELSE 0 END) AS XUATKHO,SUM(CASE WHEN IO_type='OUT' AND IO_Status= 'Pending' THEN IO_Qty ELSE 0 END) AS XUATKHO_PD,SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) -SUM(CASE WHEN IO_type='OUT' THEN IO_Qty ELSE 0 END) AS TONKHO, SUM(CASE WHEN IO_type='OUT' AND (IO_Status<> 'Pending' OR IO_Status is null) THEN IO_Qty ELSE 0 END) AS XUATKHO_TT, SUM(CASE WHEN IO_type='IN' THEN IO_Qty ELSE 0 END) -SUM(CASE WHEN IO_type='OUT' AND (IO_Status<> 'Pending' OR IO_Status is null)THEN IO_Qty ELSE 0 END) AS TONKHO_TT FROM tbl_InputOutput 
+                  group by Product_MaVach 
+          ),
+          FN_BALANCETB AS
+          (
+            SELECT POTB.G_CODE, CASE WHEN POTB.PO_BALANCE-THANHPHAM.TONKHO >0 THEN POTB.PO_BALANCE-THANHPHAM.TONKHO ELSE 0 END AS FNBL  FROM POTB 
+            LEFT JOIN THANHPHAM  ON (POTB.G_CODE = THANHPHAM.G_CODE)
+            WHERE  POTB.PO_BALANCE <>0
+          ),
+          LEADTIMETB AS
+          (
+          SELECT FN_BALANCETB.FNBL, M100.EQ1, M100.EQ2, 
+          CASE WHEN M100.EQ1 IN ('FR','SR','DC', 'ED') THEN FN_BALANCETB.FNBL/M100.UPH1 *60*M100.Step1 + M100.Setting1 ELSE 0 END AS LT1,
+          CASE WHEN M100.EQ2 IN ('FR','SR','DC', 'ED') THEN FN_BALANCETB.FNBL/M100.UPH2 *60*M100.Step2 + M100.Setting2 ELSE 0 END AS LT2
+          FROM FN_BALANCETB
+          LEFT JOIN M100 ON (M100.G_CODE = FN_BALANCETB.G_CODE)
+          WHERE FNBL <>0 AND M100.UPH1<>0  AND  M100.EQ1 IN ('FR','SR','DC', 'ED') AND  ((M100.EQ2 IN ('FR','SR','DC', 'ED') AND M100.UPH2 <>0) OR NOT (M100.EQ2 IN ('FR','SR','DC', 'ED')))
+          ),
+          LT1TB AS
+          (
+            SELECT EQ1 AS EQ_NAME, SUM(LT1) AS LEADTIME FROM LEADTIMETB GROUP BY EQ1
+          ),
+          LT2TB AS
+          (
+            SELECT EQ2 AS EQ_NAME, SUM(LT2) AS LEADTIME FROM LEADTIMETB GROUP BY EQ2
+          )
+          SELECT LT1TB.EQ_NAME, (LT1TB.LEADTIME + LT2TB.LEADTIME) AS YCSX_BALANCE FROM LT1TB LEFT JOIN LT2TB ON (LT1TB.EQ_NAME = LT2TB.EQ_NAME)
+          ORDER BY LT1TB.EQ_NAME DESC
+          `;
+          /* let setpdQuery = `SELECT 
           EQ1 AS EQ_NAME, 
           (isnull(LEADTIME1, 0) + isnull(LEADTIME2, 0))*1.2 AS YCSX_BALANCE 
         FROM 
@@ -10275,11 +10322,11 @@ AS JUDGEMENT
           ) AS LTCD2 ON (LTCD1.EQ1 = LTCD2.EQ2) 
         ORDER BY 
           EQ1 DESC 
-          `;
+          `; */
           //console.log(setpdQuery);
-          //checkkq = await queryDB(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
-          checkkq = {tk_status:'NG', message:' tam thoi dung'}
+          //checkkq = {tk_status:'NG', message:' tam thoi dung'}
           res.send(checkkq);
         })();
         break;
@@ -12045,6 +12092,47 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+      case "loadxuatkhopo":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `WITH WH_OUT_TB AS
+          (
+           SELECT  O660.OUT_DATE, O660.G_CODE,O660.CUST_CD,O660.OUT_QTY,  P400.PO_NO,
+                    CASE WHEN O660.OUT_TYPE='N' THEN 'NORMAL' WHEN O660.OUT_TYPE='F' THEN 'FREE' WHEN O660.OUT_TYPE='L' THEN 'CHANGE LOT' ELSE 'OTHER' END AS OUT_TYPE ,
+                    CASE WHEN O660.USE_YN='T' THEN 'PREPARING' WHEN O660.USE_YN='Y' THEN 'PREPAIRED' ELSE 'COMPLETED' END AS USE_YN         
+                    FROM O660          
+                    LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = O660.PROD_REQUEST_NO)
+          ),
+          XUATKHOPO AS
+          (
+          SELECT OUT_DATE, G_CODE, CUST_CD, PO_NO, SUM(OUT_QTY) AS OUT_QTY FROM WH_OUT_TB
+          WHERE OUT_TYPE ='NORMAL' AND USE_YN ='COMPLETED'
+          GROUP BY G_CODE, CUST_CD, PO_NO, OUT_DATE
+          ),
+          ZTBDLVR AS 
+          (SELECT CUST_CD, G_CODE, PO_NO, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CUST_CD, G_CODE, PO_NO),
+          POTB AS
+          (
+          SELECT ZTBPOTable.G_CODE, ZTBPOTable.CUST_CD, ZTBPOTable.PO_NO,ZTBPOTable.PO_QTY, isnull(ZTBDLVR.DELIVERY_QTY,0) AS DELIVERY_QTY, (ZTBPOTable.PO_QTY-isnull(ZTBDLVR.DELIVERY_QTY,0)) AS PO_BALANCE FROM ZTBPOTable LEFT JOIN ZTBDLVR ON (ZTBPOTable.G_CODE = ZTBDLVR.G_CODE AND ZTBPOTable.CUST_CD = ZTBDLVR.CUST_CD AND ZTBPOTable.PO_NO = ZTBDLVR.PO_NO)
+          )
+          SELECT M110.CUST_CD, M110.CUST_NAME_KD, XUATKHOPO.G_CODE, M100.G_NAME_KD, M100.G_NAME,CAST(XUATKHOPO.OUT_DATE AS DATE) AS OUT_DATE , XUATKHOPO.PO_NO, POTB.PO_QTY, POTB.DELIVERY_QTY, POTB.PO_BALANCE, XUATKHOPO.OUT_QTY AS THISDAY_OUT_QTY, CASE WHEN POTB.PO_BALANCE is null THEN 'NG- KO CO PO' ELSE CASE WHEN XUATKHOPO.OUT_QTY > POTB.PO_BALANCE THEN 'NG- GIAO NHIEU HON PO BALANCE' ELSE  'OK' END END AS CHECKSTATUS FROM XUATKHOPO 
+          LEFT JOIN POTB ON (XUATKHOPO.CUST_CD = POTB.CUST_CD AND XUATKHOPO.G_CODE = POTB.G_CODE AND XUATKHOPO.PO_NO = POTB.PO_NO)
+          LEFT JOIN M100 ON (XUATKHOPO.G_CODE = M100.G_CODE)
+          LEFT JOIN M110 ON (XUATKHOPO.CUST_CD = M110.CUST_CD)
+          WHERE XUATKHOPO.OUT_DATE = '${DATA.OUT_DATE}'
+          ORDER BY OUT_DATE  DESC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "getlastestPQC3_ID":
         (async () => {
           let DATA = qr["DATA"];
@@ -12055,6 +12143,358 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT MAX(PQC3_ID) AS PQC3_ID FROM ZTBPQC3TABLE`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "customerpobalancebyprodtype_new":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `WITH ZTBDLVR AS 
+          (SELECT CUST_CD, G_CODE, PO_NO, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CUST_CD, G_CODE, PO_NO),
+          POTB AS
+          (
+          SELECT M110.CUST_NAME_KD, M100.PROD_TYPE, SUM((ZTBPOTable.PO_QTY-isnull(ZTBDLVR.DELIVERY_QTY,0))) AS PO_BALANCE,  SUM((ZTBPOTable.PO_QTY-isnull(ZTBDLVR.DELIVERY_QTY,0))* ZTBPOTable.PROD_PRICE) AS BALANCE_AMOUNT  FROM ZTBPOTable 
+          LEFT JOIN ZTBDLVR ON (ZTBPOTable.G_CODE = ZTBDLVR.G_CODE AND ZTBPOTable.CUST_CD = ZTBDLVR.CUST_CD AND ZTBPOTable.PO_NO = ZTBDLVR.PO_NO)
+          LEFT JOIN M100 ON M100.G_CODE = ZTBPOTable.G_CODE
+          LEFT JOIN M110 ON M110.CUST_CD = ZTBPOTable.CUST_CD
+          GROUP BY M110.CUST_NAME_KD, M100.PROD_TYPE
+          ),
+          BLQTYTB AS
+          (
+          SELECT * FROM
+          (SELECT POTB.CUST_NAME_KD, POTB.PROD_TYPE, POTB.PO_BALANCE FROM POTB)
+          AS srctb
+          PIVOT
+          (
+            SUM(srctb.PO_BALANCE) FOR srctb.PROD_TYPE IN ([TSP],[LABEL],[UV],[OLED],[TAPE],[RIBBON],[SPT])
+          ) AS PVTB
+          ),
+          BLAMOUNTTB AS
+          (
+          SELECT * FROM
+          (SELECT POTB.CUST_NAME_KD, POTB.PROD_TYPE, POTB.BALANCE_AMOUNT FROM POTB)
+          AS srctb
+          PIVOT
+          (
+            SUM(srctb.BALANCE_AMOUNT) FOR srctb.PROD_TYPE IN ([TSP],[LABEL],[UV],[OLED],[TAPE],[RIBBON],[SPT])
+          ) AS PVTB
+          ),
+          FN1TB AS 
+          (
+          SELECT AA.CUST_NAME_KD, 
+          (SUM(AA.TSP_QTY) + SUM(AA.LABEL_QTY) + SUM(AA.UV_QTY) + SUM(AA.OLED_QTY) + SUM(AA.TAPE_QTY) + SUM(AA.RIBBON_QTY) + SUM(AA.SPT_QTY)) AS TOTAL_QTY, 
+          (SUM(AA.TSP_AMOUNT) + SUM(AA.LABEL_AMOUNT) + SUM(AA.UV_AMOUNT) + SUM(AA.OLED_AMOUNT) + SUM(AA.TAPE_AMOUNT) + SUM(AA.RIBBON_AMOUNT) + SUM(AA.SPT_AMOUNT)) AS TOTAL_AMOUNT, 
+          
+          SUM(AA.TSP_QTY) AS TSP_QTY, SUM(AA.LABEL_QTY) AS LABEL_QTY, SUM(AA.UV_QTY) AS UV_QTY, SUM(AA.OLED_QTY) AS OLED_QTY, SUM(AA.TAPE_QTY) AS TAPE_QTY, SUM(AA.RIBBON_QTY) AS RIBBON_QTY,SUM(AA.SPT_QTY) AS SPT_QTY, SUM(AA.TSP_AMOUNT) AS TSP_AMOUNT, SUM(AA.LABEL_AMOUNT) AS LABEL_AMOUNT, SUM(AA.UV_AMOUNT) AS UV_AMOUNT, SUM(AA.OLED_AMOUNT) AS OLED_AMOUNT, SUM(AA.TAPE_AMOUNT) AS TAPE_AMOUNT, SUM(AA.RIBBON_AMOUNT) AS RIBBON_AMOUNT, SUM(AA.SPT_AMOUNT) AS SPT_AMOUNT FROM 
+          (SELECT'TOTAL' AS CUST_NAME_KD, isnull(BLQTYTB.TSP,0) AS TSP_QTY, isnull(BLQTYTB.LABEL,0) AS LABEL_QTY, isnull(BLQTYTB.UV,0) AS UV_QTY, isnull(BLQTYTB.OLED,0) AS OLED_QTY, isnull(BLQTYTB.TAPE,0) AS TAPE_QTY, isnull(BLQTYTB.RIBBON,0) AS RIBBON_QTY, isnull(BLQTYTB.SPT,0) AS SPT_QTY, isnull(BLAMOUNTTB.TSP,0) AS TSP_AMOUNT, isnull(BLAMOUNTTB.LABEL,0) AS LABEL_AMOUNT, isnull(BLAMOUNTTB.UV,0) AS UV_AMOUNT, isnull(BLAMOUNTTB.OLED,0) AS OLED_AMOUNT, isnull(BLAMOUNTTB.TAPE,0) AS TAPE_AMOUNT, isnull(BLAMOUNTTB.RIBBON,0) AS RIBBON_AMOUNT, isnull(BLAMOUNTTB.SPT,0) AS SPT_AMOUNT
+          FROM BLQTYTB LEFT JOIN BLAMOUNTTB ON (BLQTYTB.CUST_NAME_KD = BLAMOUNTTB.CUST_NAME_KD)
+          ) AS AA GROUP BY AA.CUST_NAME_KD
+          UNION ALL
+          SELECT BLQTYTB.CUST_NAME_KD,
+           (isnull(BLQTYTB.TSP,0)+ isnull(BLQTYTB.LABEL,0)+ isnull(BLQTYTB.UV,0) + isnull(BLQTYTB.OLED,0) + isnull(BLQTYTB.TAPE,0)+ isnull(BLQTYTB.RIBBON,0) + isnull(BLQTYTB.SPT,0)) AS TOTAL_QTY, 
+           (isnull(BLAMOUNTTB.TSP,0)+ isnull(BLAMOUNTTB.LABEL,0)+ isnull(BLAMOUNTTB.UV,0)+ isnull(BLAMOUNTTB.OLED,0)+isnull(BLAMOUNTTB.TAPE,0) + isnull(BLAMOUNTTB.RIBBON,0) + isnull(BLAMOUNTTB.SPT,0)) AS TOTAL_AMOUNT,
+          isnull(BLQTYTB.TSP,0) AS TSP_QTY, isnull(BLQTYTB.LABEL,0) AS LABEL_QTY, isnull(BLQTYTB.UV,0) AS UV_QTY, isnull(BLQTYTB.OLED,0) AS OLED_QTY, isnull(BLQTYTB.TAPE,0) AS TAPE_QTY, isnull(BLQTYTB.RIBBON,0) AS RIBBON_QTY, isnull(BLQTYTB.SPT,0) AS SPT_QTY, isnull(BLAMOUNTTB.TSP,0) AS TSP_AMOUNT, isnull(BLAMOUNTTB.LABEL,0) AS LABEL_AMOUNT, isnull(BLAMOUNTTB.UV,0) AS UV_AMOUNT, isnull(BLAMOUNTTB.OLED,0) AS OLED_AMOUNT, isnull(BLAMOUNTTB.TAPE,0) AS TAPE_AMOUNT, isnull(BLAMOUNTTB.RIBBON,0) AS RIBBON_AMOUNT, isnull(BLAMOUNTTB.SPT,0) AS SPT_AMOUNT
+          FROM BLQTYTB LEFT JOIN BLAMOUNTTB ON (BLQTYTB.CUST_NAME_KD = BLAMOUNTTB.CUST_NAME_KD)
+          )
+          SELECT * FROM FN1TB
+          WHERE TOTAL_QTY <>0
+          ORDER BY TOTAL_AMOUNT DESC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "getDailyClosingKD":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          DECLARE @startdate date DECLARE @enddate date DECLARE @tempdate date 
+          SET 
+            @startdate = '${DATA.FROM_DATE}' 
+          SET 
+            @enddate = '${DATA.TO_DATE}' 
+          SET 
+            @tempdate = @startdate DECLARE @string varchar(max) DECLARE @string2 varchar(max) DECLARE @string3 varchar(max) DECLARE @countdate int 
+          SET 
+            @countdate = 0 
+          SET 
+            @string = '' 
+          SET 
+            @string2 = '' 
+          SET 
+            @string3 = '' WHILE @tempdate <= @enddate BEGIN
+          SET 
+            @countdate = (
+              SElECT 
+                COUNT(DELIVERY_DATE) AS tempdate 
+              FROM 
+                ZTBDelivery 
+              WHERE 
+                DELIVERY_DATE = @tempdate
+            ) IF (@countdate <> 0) 
+          SELECT 
+            @string = @string + ' isnull([' + CAST(
+              @tempdate AS varchar(max)
+            ) + '],0) AS [' + CAST(
+              @tempdate AS varchar(max)
+            ) + '],' 
+          SET 
+            @tempdate = DATEADD(D, 1, @tempdate) END 
+          SELECT 
+            @string = left(
+              @string, 
+              len(@string) -1
+            ) 
+          SET 
+            @tempdate = @startdate WHILE @tempdate <= @enddate BEGIN 
+          SELECT 
+            @string2 = @string2 + '[' + CAST(
+              @tempdate AS varchar(max)
+            ) + '],' 
+          SET 
+            @tempdate = DATEADD(D, 1, @tempdate) END 
+          SELECT 
+            @string2 = left(
+              @string2, 
+              len(@string2) -1
+            ) 
+          SET 
+            @tempdate = @startdate WHILE @tempdate <= @enddate BEGIN 
+          SELECT 
+            @string3 = @string3 + 'isnull([' + CAST(
+              @tempdate AS varchar(max)
+            ) + '],0) +' 
+          SET 
+            @tempdate = DATEADD(D, 1, @tempdate) END 
+          SELECT 
+            @string3 = left(
+              @string3, 
+              len(@string3) -1
+            ) DECLARE @cols varchar(max) 
+          SELECT 
+            @cols = (
+              SELECT 
+                DISTINCT DELIVERY_DATE 
+              FROM 
+                ZTBDelivery 
+              WHERE 
+                DELIVERY_DATE BETWEEN + @startdate 
+                AND @enddate 
+              ORDER BY 
+                DELIVERY_DATE ASC for xml path('')
+            ) 
+          select 
+            @cols = replace(@cols, '<DELIVERY_DATE>', '[') 
+          select 
+            @cols = replace(@cols, '</DELIVERY_DATE>', '],') 
+          select 
+            @cols = left(
+              @cols, 
+              len(@cols) -1
+            ) DECLARE @cols2 varchar(max) 
+          SELECT 
+            @cols2 = (
+              SELECT 
+                DISTINCT DELIVERY_DATE 
+              FROM 
+                ZTBDelivery 
+              WHERE 
+                DELIVERY_DATE BETWEEN @startdate 
+                AND @enddate 
+              ORDER BY 
+                DELIVERY_DATE ASC for xml path('')
+            ) 
+          select 
+            @cols2 = replace(
+              @cols2, '<DELIVERY_DATE>', 'isnull(['
+            ) 
+          select 
+            @cols2 = replace(
+              @cols2, '</DELIVERY_DATE>', '],0) AS D, '
+            ) 
+          select 
+            @cols2 = left(
+              @cols2, 
+              len(@cols2) -1
+            ) DECLARE @cols3 varchar(max) 
+          SELECT 
+            @cols3 = (
+              SELECT 
+                DISTINCT DELIVERY_DATE 
+              FROM 
+                ZTBDelivery 
+              WHERE 
+                DELIVERY_DATE BETWEEN @startdate 
+                AND @enddate 
+              ORDER BY 
+                DELIVERY_DATE ASC for xml path('')
+            ) 
+          select 
+            @cols3 = replace(
+              @cols3, '<DELIVERY_DATE>', 'isnull(['
+            ) 
+          select 
+            @cols3 = replace(
+              @cols3, '</DELIVERY_DATE>', '],0) +'
+            ) 
+          select 
+            @cols3 = left(
+              @cols3, 
+              len(@cols3) -1
+            ) 
+		  declare @query varchar(max) 
+          select 
+            @query = '
+			select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select ''TOTAL'' AS CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD  ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
+			UNION ALL
+			select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select XX.CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD  ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
+			
+			
+			WHERE (' + @cols3 + ') <>0 ORDER BY DELIVERED_AMOUNT DESC;' 
+            print(@query)
+            execute(@query)
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "getWeeklyClosingKD":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          DECLARE @startdate date 
+          DECLARE @enddate date 
+          DECLARE @tempdate date 
+          DECLARE @startweek int, @endweek int, @tempweek int
+
+          SET   @startdate = '${DATA.FROM_DATE}' 
+          SET   @enddate = '${DATA.TO_DATE}'
+          SET   @startweek = DATEPART(ISOWK, @startdate)
+          SET   @endweek = DATEPART(ISOWK, @enddate)
+
+          IF(@startweek > @endweek) 
+          SET @startweek =1 
+          SET   @tempweek = @startweek
+          print(@startweek)
+          print(@endweek)
+
+          SET   @tempdate = @startdate DECLARE @string varchar(max) DECLARE @string2 varchar(max) DECLARE @string3 varchar(max) DECLARE @countdate int 
+          SET   @countdate = 0 
+          SET   @string = '' 
+          SET   @string2 = '' 
+          SET   @string3 = '' 
+          WHILE @tempweek <= @endweek
+          BEGIN 
+            SELECT 
+              @string = @string + ' isnull([' + CAST(@tempweek as varchar(max)) + '],0) AS W' + CAST(@tempweek as varchar(max)) + ',' 
+            SET @tempweek = @tempweek + 1
+          END 
+          SELECT   @string = left(@string,len(@string) -1)
+
+          print(@string)
+
+          SET @tempweek = @startweek 
+          WHILE @tempweek <= @endweek 
+          BEGIN 
+            SELECT @string2 = @string2 + '[' + CAST(@tempweek AS varchar(max)) + '],' 
+            SET @tempweek = @tempweek + 1 
+          END 
+          SELECT @string2 = left(@string2,len(@string2) -1) 
+          print(@string2);
+
+          SET @tempweek = @startweek 
+          WHILE @tempweek <= @endweek 
+          BEGIN 
+            SELECT @string3 = @string3 + 'isnull([' + CAST(@tempweek AS varchar(max)) + '],0)+' 
+            SET @tempweek = @tempweek + 1 
+          END 
+          SELECT @string3 = left(@string3,len(@string3) -1) 
+          print(@string3);
+
+
+
+          declare @query varchar(max) 
+          select 
+            @query = '
+            WITH XX AS
+          (SELECT 
+            ZTBDelivery.G_CODE,
+            M010.EMPL_NAME, 
+            M110.CUST_NAME_KD, 
+            ZTBDelivery.DELIVERY_DATE, 
+            M100.PROD_MAIN_MATERIAL, 		  
+            ZTBDelivery.DELIVERY_QTY, 
+            ZTBPOTable.PROD_PRICE,
+            ZTBDelivery.PO_NO, 
+            (
+            ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY
+            ) As DELIVERED_AMOUNT,
+            M100.PROD_TYPE, 
+            DATEPART(
+            MONTH, ZTBDelivery.DELIVERY_DATE
+            ) AS DELMONTH, 
+            DATEPART(
+            ISOWK, ZTBDelivery.DELIVERY_DATE
+            ) AS DELWEEKNUM         
+            FROM 
+            ZTBDelivery 
+            JOIN ZTBPOTable ON (
+            ZTBDelivery.G_CODE = ZTBPOTable.G_CODE 
+            AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD 
+            AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
+            ) 
+            JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO 
+            JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE 
+            JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD
+            WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '''+CAST(@startdate as varchar(max))+''' AND '''+ CAST(@enddate as varchar(max))+'''
+          )
+
+          SELECT PVTB.CUST_NAME_KD, isnull(('+@string3+'),0) AS TOTAL_AMOUNT, '+@string + ' FROM 
+          ( 
+          SELECT ''TOTAL'' AS CUST_NAME_KD, isnull(XX.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, XX.DELWEEKNUM FROM XX
+          ) AS bangnguon
+          PIVOT
+          (
+            SUM(bangnguon.DELIVERED_AMOUNT) FOR bangnguon.DELWEEKNUM IN ('+@string2+')
+          ) as PVTB
+          UNION ALL
+          SELECT PVTB.CUST_NAME_KD, isnull(('+@string3+'),0) AS TOTAL_AMOUNT, '+@string + ' FROM 
+          ( 
+          SELECT XX.CUST_NAME_KD, isnull(XX.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, XX.DELWEEKNUM FROM XX
+          ) AS bangnguon
+          PIVOT
+          (
+            SUM(bangnguon.DELIVERED_AMOUNT) FOR bangnguon.DELWEEKNUM IN ('+@string2+')
+          ) as PVTB
+          ORDER BY TOTAL_AMOUNT DESC
+            ' 
+          print(@query)
+          execute(@query)
+            `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);

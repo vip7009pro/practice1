@@ -8,6 +8,7 @@ var compression = require("compression");
 const fileupload = require("express-fileupload");
 var multer = require("multer");
 const fs = require("fs");
+
 let client_array = [];
 
 let API_PORT = parseInt(process.env.API_PORT);
@@ -16,6 +17,24 @@ let DRAW_PATH = process.env.DRAW_PATH;
 let EMPL_IMAGE_PATH = process.env.EMPL_IMAGE_PATH;
 let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
 let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
+
+/* const url ='https://drive.google.com/uc?export=download&id=10dJDjoOhkW9aFkim2f0-TeUTLiptcA7i';
+const checkNetWorkERP = async (company)=> {
+  let kq;
+  let data = await axios.get(url).then((response)=>{
+    //console.log(response.data);
+     response.data;
+    company_array= response.data.split(',')
+    kq = company_array.indexOf(company) > -1;
+  }).catch((error)=> {
+      console.log(error);
+  });
+  console.log('ketqua',kq);
+} */
+//checkNetWorkERP('PVN');
+/* let checkNW_ERP_LOOP = setInterval(()=> {
+  checkNetWorkERP('PVN');
+},5000) */
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -100,7 +119,7 @@ var corsOptions = {
     "http://192.168.1.22:3000",
     "http://cms.ddns.net:3000",
     "http://cms.ddns.net",
-    "http://14.160.33.94:3000",
+    "http://14.160.33.94:3001",
     "http://localhost:3000",
     "http://localhost",
     "http://14.160.33.94",
