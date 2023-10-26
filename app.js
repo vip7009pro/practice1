@@ -111,10 +111,12 @@ io.on("connection", (client) => {
 
 var corsOptions = {
   origin: [
+    "http://localhost:3001",
     "http://192.168.1.192",
     "http://192.168.1.2",
     "http://192.168.1.136:3010",
     "http://222.252.1.63",
+    "http://222.252.1.214",
     "http://222.252.1.63:3000",
     "http://192.168.1.22:3000",
     "http://cms.ddns.net:3000",

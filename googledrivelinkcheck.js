@@ -1,48 +1,54 @@
-const { google } = require('googleapis');
-const fs = require('fs');
+const axios = require('axios');
+const moment = require("moment");
+const fetch =require('node-fetch');
 
-// Thông tin xác thực
-const credentials = require('path/to/your/credentials.json');
-const token = require('path/to/your/token.json');
-
-// ID của tệp tin trên Google Drive
-const fileId = 'your_file_id_here';
-
-// Tạo client từ thông tin xác thực
-const client = new google.auth.OAuth2(
-  credentials.installed.client_id,
-  credentials.installed.client_secret,
-  credentials.installed.redirect_uris[0]
-);
-
-client.setCredentials(token);
-
-// Tạo API Google Drive
-const drive = google.drive({ version: 'v3', auth: client });
-
-// Kiểm tra sự tồn tại của tệp tin
-async function checkFileExistence(fileId) {
-  try {
-    const response = await drive.files.get({ fileId });
-    return true; // Tệp tin tồn tại
-  } catch (error) {
-    if (error.response && error.response.status === 404) {
-      return false; // Tệp tin không tồn tại
-    } else {
-      throw error;
+let CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec'
+/* axios.get(CURRENT_API_URL)
+  .then((response) => {
+    //console.log(response.data)
+    let resp = response.data;
+    //console.log(resp)
+    let fil = resp.filter((e) => e[0] === 'PVN')
+    console.log(fil[0][1]);
+    let now =moment();
+    let exp_date = moment(fil[0][1])
+  
+    if(now >= exp_date) {
+      console.log('het han');
     }
-  }
-}
-
-// Sử dụng ví dụ:
-checkFileExistence(fileId)
-  .then(exists => {
-    if (exists) {
-      console.log('Tệp tin tồn tại trên Google Drive.');
-    } else {
-      console.log('Tệp tin không tồn tại trên Google Drive.');
+    else {
+      console.log('con han')
     }
+    
   })
-  .catch(error => {
-    console.error('Lỗi khi kiểm tra tệp tin:', error);
-  });
+  .catch((e) => {
+  }) 
+ */
+
+
+
+  let asfunction = async () => {
+    await fetch(CURRENT_API_URL)    
+    .then(res => res.json())
+    .then(body => {
+      let resp = body;
+    //console.log(resp)
+    let fil = resp.filter((e) => e[0] === 'PVN')
+    console.log(fil[0][1]);
+    let now =moment();
+    let exp_date = moment(fil[0][1])
+  
+    if(now >= exp_date) {
+      console.log('het han');
+    }
+    else {
+      console.log('con han')
+    }
+ 
+    });
+
+
+  }
+   
+
+asfunction();

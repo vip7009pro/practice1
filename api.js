@@ -3,29 +3,9 @@ var jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { existsSync } = require("fs");
 const fs = require("fs");
-/* 
-const logFilePath = 'ERP.log';
-const logStream = fs.createWriteStream(logFilePath, { flags: 'a' }); // 'a' means append
-
-function writeToLogAndConsole(message) {
-  const timestamp = moment.utc().format('YYYY-MM-DD HH:mm:ss');
-  const logMessage = `${timestamp} - ${message}\n`;
-
-  // Write to the log file
-  logStream.write(logMessage);
-
-  // Log to the console using the original console.log method
-  originalConsoleLog(logMessage);
-}
-
-// Store the original console.log method
-const originalConsoleLog = console.log;
-
-// Override console.log with our custom function
-console.log = writeToLogAndConsole;
- */
 require("dotenv").config();
-///s
+const fetch =require('node-fetch');
+let CURRENT_API_URL ='https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec'
 function removeVietnameseTones(str) {
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
   str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
@@ -393,7 +373,6 @@ function generate_condition_get_ycsx(
     $prod_request_no +
     $ycsxpending +
     $phanloaihang;
-    
   return $condition;
 }
 function generate_condition_get_inspection_input(
@@ -787,21 +766,13 @@ const config = {
   password: process.env.DB_PASS,
   server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
-  /*  port: 5005, */
   port: parseInt(process.env.DB_PORT),
   trustServerCertificate: true, 
-  requestTimeout: 300000,   
-  /* pool: {
-    max: 1000, // Số lượng kết nối tối đa trong pool
-    min: 0,  // Số lượng kết nối tối thiểu trong pool
-    idleTimeoutMillis: 300000 // Thời gian tối đa mà một kết nối có thể ở trong pool trước khi nó bị giải phóng
-  }  */  
+  requestTimeout: 300000, 
 };
-
 exports.openConnection = function() {
    sql.connect(config);   
 }
-
 function isNumber(str) {
   return /^[0-9]+$/.test(str) && str.length == 4;
 }
@@ -858,7 +829,6 @@ const queryDB = async (query) => {
     //await sql.connect(config);    
     //await sql.connect('Server=192.168.1.2,5005;Database=CMS_VINA;User Id=sa;Password=*11021201$; MultipleActiveResultSets=True; Encrypt=false');   
     const result = await sql.query(query);   
-    
     if (result.rowsAffected[0] > 0) {
       if (result.recordset) {
         kq = { tk_status: "OK", data: result.recordset };
@@ -873,10 +843,8 @@ const queryDB = async (query) => {
     ////console.log(err);
     kq = { tk_status: "NG", message: err + " " };
   }
-  
   return kq;
 };
-
 exports.checklogin_index = function (req, res, next) {
   ////console.log("bam login ma cung loi?");
   try {
@@ -3752,8 +3720,6 @@ LEFT JOIN (
                       GROUP BY 
                         BBB.G_CODE
           )
-          
-          
           SELECT ZTBPOTable.PO_ID, M110.CUST_NAME_KD,  ZTBPOTable.PO_NO, M100.G_NAME, M100.G_NAME_KD, ZTBPOTable.G_CODE,    ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, ZTBPOTable.PROD_PRICE, POTB.PO_QTY, POTB.DELIVERY_QTY AS TOTAL_DELIVERED, POTB.PO_BALANCE, (ZTBPOTable.PROD_PRICE*POTB.PO_QTY) AS PO_AMOUNT, (ZTBPOTable.PROD_PRICE*POTB.DELIVERY_QTY) AS DELIVERED_AMOUNT, (ZTBPOTable.PROD_PRICE*POTB.PO_BALANCE) AS BALANCE_AMOUNT, M010.EMPL_NAME,M100.PROD_TYPE, FULLBOM.M_NAME_FULLBOM, M100.PROD_MAIN_MATERIAL, ZTBPOTable.CUST_CD,ZTBPOTable.EMPL_NO,DATEPART(MONTH, PO_DATE) AS POMONTH, DATEPART(ISOWK, PO_DATE) AS POWEEKNUM, CASE WHEN (
                       ZTBPOTable.RD_DATE < GETDATE()-1
                     ) 
@@ -3766,7 +3732,6 @@ LEFT JOIN (
           LEFT JOIN M110 ON M110.CUST_CD = ZTBPOTable.CUST_CD
           LEFT JOIN M010 ON M010.EMPL_NO = ZTBPOTable.EMPL_NO
           LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE
-          
          ${generate_condition_get_po(
             DATA.alltime,
             DATA.start_date,
@@ -4611,7 +4576,6 @@ LEFT JOIN (
                     END AS TON_CD4,
                     isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) - isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS INSPECT_BALANCE,
                     PLANTABLE.PROD_REQUEST_NO AS DACHITHI
-          
           FROM P400
           LEFT JOIN M100 ON (M100.G_CODE =P400.G_CODE)
           LEFT JOIN M010 ON (M010.EMPL_NO= P400.EMPL_NO)
@@ -4622,7 +4586,6 @@ LEFT JOIN (
           LEFT JOIN INSPECT_OUTPUT_TB ON (INSPECT_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
           LEFT JOIN PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
           LEFT JOIN AMAZONTB ON (AMAZONTB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
-          
          ${generate_condition_get_ycsx(
             DATA.alltime,
             DATA.start_date,
@@ -6110,7 +6073,6 @@ LEFT JOIN (
           //////console.log(DATA);
           let checkkq = "OK";
           let setpdQuery = ` SELECT * FROM ( SELECT TOP 8 AA.PO_YEAR, AA.PO_WEEK, CONCAT(AA.PO_YEAR,'_', AA.PO_WEEK) AS YEAR_WEEK, isnull(AA.RUNNING_PO_QTY,0) AS RUNNING_PO_QTY, isnull(BB.RUNNING_DEL_QTY,0) AS RUNNING_DEL_QTY, (isnull(AA.RUNNING_PO_QTY,0)-isnull(BB.RUNNING_DEL_QTY,0)) AS RUNNING_PO_BALANCE, isnull(AA.RUNNING_PO_AMOUNT,0) AS RUNNING_PO_AMOUNT, isnull(BB.RUNNING_DEL_AMOUNT,0) AS RUNNING_DEL_AMOUNT, (isnull(AA.RUNNING_PO_AMOUNT,0)-isnull(BB.RUNNING_DEL_AMOUNT,0)) AS RUNNING_BALANCE_AMOUNT
-
           FROM 
           (
           SELECT XX.PO_YEAR, XX.PO_WEEK, SUM(CAST(XX.WEEKLY_PO_QTY AS Float)) OVER(ORDER BY XX.PO_YEAR ASC, XX.PO_WEEK ASC) AS RUNNING_PO_QTY,
@@ -9195,7 +9157,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
                               isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0)* M100.PD/(M100.G_C * M100.G_C_R)/1000 AS INS_OUT, 
                               M100.PD, M100.G_C * M100.G_C_R AS CAVITY, 
                               (O302.ROLL_QTY * O302.OUT_CFM_QTY)/ M100.PD * (M100.G_C * M100.G_C_R)*1000 AS TOTAL_OUT_EA,
-                              ' + @temp_qty + ',
+                              ' + @temp_qty + ',                  
                     isnull(NHATKY.INSPECT_TOTAL_QTY,0) AS INSPECT_TOTAL_EA, 
                     isnull(NHATKY.INSPECT_OK_QTY,0) AS INSPECT_OK_EA, 
                     isnull(ZTBINSPECTOUTPUTTB_A.INS_OUTPUT_EA,0) AS INS_OUTPUT_EA,
@@ -9880,7 +9842,7 @@ AS JUDGEMENT
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT  (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) WHERE ZTBPOTable.G_CODE='${DATA.G_CODE}' AND ZTBPOTable.CUST_CD='${DATA.CUST_CD}' AND ZTBPOTable.PO_NO='${DATA.PO_NO}'`;
+          let setpdQuery = `SELECT  ZTBPOTable.PO_QTY, AA.TotalDelivered AS DELIVERED_QTY, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) WHERE ZTBPOTable.G_CODE='${DATA.G_CODE}' AND ZTBPOTable.CUST_CD='${DATA.CUST_CD}' AND ZTBPOTable.PO_NO='${DATA.PO_NO}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -10372,7 +10334,6 @@ AS JUDGEMENT
           //console.log(setpdQuery);
           //checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
-          
           checkkq = {tk_status:'NG', message:' tam thoi dung'}
           res.send(checkkq);
         })();
@@ -12149,6 +12110,99 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+      case "loadMaterialByPO":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition  =` WHERE AA.PO_BALANCE <> 0  AND (M100.G_C*M100.G_C_R)<>0`;
+          if(DATA.SHORTAGE_ONLY ===true)
+          condition +=` AND  CAST((AA.PO_BALANCE*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000) AS bigint) > 0`;
+          if(DATA.NEWPO === true)
+          condition +=` AND AA.DELIVERY_QTY =0`
+          let condition2 = ``;
+          if(DATA.ALLTIME !== true)
+          {
+            condition2 +=` WHERE ZTBPOTable.PO_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'`
+          }
+          let setpdQuery = `
+          SELECT M110.CUST_CD, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME_KD, ZTB_BOM2.M_CODE, M090.M_NAME, M090.WIDTH_CD, AA.PO_NO, AA.PO_QTY, AA.DELIVERY_QTY, AA.PO_BALANCE, M100.PD,M100.G_C AS CAVITY_COT, M100.G_C_R AS CAVITY_HANG,M100.G_C *M100.G_C_R AS CAVITY, CAST((AA.PO_BALANCE*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000)
+          AS bigint) AS NEED_M_QTY  FROM 
+          (
+          SELECT ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, ZTBPOTable.PO_QTY, isnull(DELI.DELIVERY_QTY,0) AS DELIVERY_QTY,  (ZTBPOTable.PO_QTY- isnull(DELI.DELIVERY_QTY,0)) AS PO_BALANCE FROM ZTBPOTable  LEFT JOIN
+          (SELECT CUST_CD, G_CODE, PO_NO, SUM(isnull(ZTBDelivery.DELIVERY_QTY,0)) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CUST_CD, G_CODE, PO_NO) AS DELI
+          ON(ZTBPOTable.CUST_CD = DELI.CUST_CD  AND ZTBPOTable.G_CODE = DELI.G_CODE AND ZTBPOTable.PO_NO = DELI.PO_NO)
+          ${condition2}
+          ) AS AA
+          LEFT JOIN  ZTB_BOM2 ON (AA.G_CODE = ZTB_BOM2.G_CODE)
+          LEFT JOIN M100 ON (AA.G_CODE = M100.G_CODE)
+          LEFT JOIN M110 ON (M110.CUST_CD = AA.CUST_CD)
+          LEFT JOIN M090 ON (ZTB_BOM2.M_CODE = M090.M_CODE)
+          ${condition}
+          ORDER BY CAST((AA.PO_BALANCE*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000*1.0)
+          AS bigint) DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadMaterialMRPALL":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition  =` WHERE AA.PO_BALANCE <> 0  AND (M100.G_C*M100.G_C_R)<>0`;
+          if(DATA.SHORTAGE_ONLY ===true)
+          condition +=` AND  CAST((AA.PO_BALANCE*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000) AS bigint) > 0`;
+          if(DATA.NEWPO === true)
+          condition +=` AND AA.DELIVERY_QTY =0`
+          let condition2 = ``
+          if(DATA.SHORTAGE_ONLY === true)
+          condition2 = ` WHERE ((M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) - CC.NEED_M_QTY) < 0`
+          let condition3 = ``;
+          if(DATA.ALLTIME !== true)
+          {
+            condition3 +=` WHERE ZTBPOTable.PO_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'`
+          }
+          let setpdQuery = `
+          SELECT CC.M_CODE, M090.M_NAME, M090.WIDTH_CD, CC.NEED_M_QTY, (M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) AS STOCK_M, (M090.HOLDING_CFM_NM1 + M090.HOLDING_CFM_NM2) AS HOLDING_M, ((M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) - CC.NEED_M_QTY) AS M_SHORTAGE FROM 
+          (
+          SELECT BB.M_CODE, SUM(BB.NEED_M_QTY) AS NEED_M_QTY FROM 
+          (
+          SELECT  ZTB_BOM2.M_CODE, AA.PO_NO, AA.PO_QTY, AA.DELIVERY_QTY, AA.PO_BALANCE, M100.PD,M100.G_C AS CAVITY_COT, M100.G_C_R AS CAVITY_HANG, CAST((AA.PO_BALANCE*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000)
+          AS bigint) AS NEED_M_QTY FROM 
+          (
+          SELECT ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, ZTBPOTable.PO_QTY, isnull(DELI.DELIVERY_QTY,0) AS DELIVERY_QTY,  (ZTBPOTable.PO_QTY- isnull(DELI.DELIVERY_QTY,0)) AS PO_BALANCE FROM ZTBPOTable  LEFT JOIN
+          (SELECT CUST_CD, G_CODE, PO_NO, SUM(isnull(ZTBDelivery.DELIVERY_QTY,0)) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CUST_CD, G_CODE, PO_NO) AS DELI
+          ON(ZTBPOTable.CUST_CD = DELI.CUST_CD  AND ZTBPOTable.G_CODE = DELI.G_CODE AND ZTBPOTable.PO_NO = DELI.PO_NO)
+          ${condition3}
+          ) AS AA
+          LEFT JOIN  ZTB_BOM2 ON (AA.G_CODE = ZTB_BOM2.G_CODE)
+          LEFT JOIN M100 ON (AA.G_CODE = M100.G_CODE)
+          ${condition}
+          ) AS BB
+          GROUP BY BB.M_CODE
+          ) AS CC
+          LEFT JOIN M090 ON (M090.M_CODE = CC.M_CODE)
+          ${condition2}
+          ORDER BY ((M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) - CC.NEED_M_QTY) ASC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "customerpobalancebyprodtype_new":
         (async () => {
           let DATA = qr["DATA"];
@@ -12193,7 +12247,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SELECT AA.CUST_NAME_KD, 
           (SUM(AA.TSP_QTY) + SUM(AA.LABEL_QTY) + SUM(AA.UV_QTY) + SUM(AA.OLED_QTY) + SUM(AA.TAPE_QTY) + SUM(AA.RIBBON_QTY) + SUM(AA.SPT_QTY)) AS TOTAL_QTY, 
           (SUM(AA.TSP_AMOUNT) + SUM(AA.LABEL_AMOUNT) + SUM(AA.UV_AMOUNT) + SUM(AA.OLED_AMOUNT) + SUM(AA.TAPE_AMOUNT) + SUM(AA.RIBBON_AMOUNT) + SUM(AA.SPT_AMOUNT)) AS TOTAL_AMOUNT, 
-          
           SUM(AA.TSP_QTY) AS TSP_QTY, SUM(AA.LABEL_QTY) AS LABEL_QTY, SUM(AA.UV_QTY) AS UV_QTY, SUM(AA.OLED_QTY) AS OLED_QTY, SUM(AA.TAPE_QTY) AS TAPE_QTY, SUM(AA.RIBBON_QTY) AS RIBBON_QTY,SUM(AA.SPT_QTY) AS SPT_QTY, SUM(AA.TSP_AMOUNT) AS TSP_AMOUNT, SUM(AA.LABEL_AMOUNT) AS LABEL_AMOUNT, SUM(AA.UV_AMOUNT) AS UV_AMOUNT, SUM(AA.OLED_AMOUNT) AS OLED_AMOUNT, SUM(AA.TAPE_AMOUNT) AS TAPE_AMOUNT, SUM(AA.RIBBON_AMOUNT) AS RIBBON_AMOUNT, SUM(AA.SPT_AMOUNT) AS SPT_AMOUNT FROM 
           (SELECT'TOTAL' AS CUST_NAME_KD, isnull(BLQTYTB.TSP,0) AS TSP_QTY, isnull(BLQTYTB.LABEL,0) AS LABEL_QTY, isnull(BLQTYTB.UV,0) AS UV_QTY, isnull(BLQTYTB.OLED,0) AS OLED_QTY, isnull(BLQTYTB.TAPE,0) AS TAPE_QTY, isnull(BLQTYTB.RIBBON,0) AS RIBBON_QTY, isnull(BLQTYTB.SPT,0) AS SPT_QTY, isnull(BLAMOUNTTB.TSP,0) AS TSP_AMOUNT, isnull(BLAMOUNTTB.LABEL,0) AS LABEL_AMOUNT, isnull(BLAMOUNTTB.UV,0) AS UV_AMOUNT, isnull(BLAMOUNTTB.OLED,0) AS OLED_AMOUNT, isnull(BLAMOUNTTB.TAPE,0) AS TAPE_AMOUNT, isnull(BLAMOUNTTB.RIBBON,0) AS RIBBON_AMOUNT, isnull(BLAMOUNTTB.SPT,0) AS SPT_AMOUNT
           FROM BLQTYTB LEFT JOIN BLAMOUNTTB ON (BLQTYTB.CUST_NAME_KD = BLAMOUNTTB.CUST_NAME_KD)
@@ -12364,8 +12417,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
 			select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select ''TOTAL'' AS CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD  ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
 			UNION ALL
 			select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select XX.CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD  ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
-			
-			
 			WHERE (' + @cols3 + ') <>0 ORDER BY DELIVERED_AMOUNT DESC;' 
             print(@query)
             execute(@query)
@@ -12390,18 +12441,15 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           DECLARE @enddate date 
           DECLARE @tempdate date 
           DECLARE @startweek int, @endweek int, @tempweek int
-
           SET   @startdate = '${DATA.FROM_DATE}' 
           SET   @enddate = '${DATA.TO_DATE}'
           SET   @startweek = DATEPART(ISOWK, @startdate)
           SET   @endweek = DATEPART(ISOWK, @enddate)
-
           IF(@startweek > @endweek) 
           SET @startweek =1 
           SET   @tempweek = @startweek
           print(@startweek)
           print(@endweek)
-
           SET   @tempdate = @startdate DECLARE @string varchar(max) DECLARE @string2 varchar(max) DECLARE @string3 varchar(max) DECLARE @countdate int 
           SET   @countdate = 0 
           SET   @string = '' 
@@ -12414,9 +12462,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             SET @tempweek = @tempweek + 1
           END 
           SELECT   @string = left(@string,len(@string) -1)
-
           print(@string)
-
           SET @tempweek = @startweek 
           WHILE @tempweek <= @endweek 
           BEGIN 
@@ -12425,7 +12471,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           END 
           SELECT @string2 = left(@string2,len(@string2) -1) 
           print(@string2);
-
           SET @tempweek = @startweek 
           WHILE @tempweek <= @endweek 
           BEGIN 
@@ -12434,9 +12479,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           END 
           SELECT @string3 = left(@string3,len(@string3) -1) 
           print(@string3);
-
-
-
           declare @query varchar(max) 
           select 
             @query = '
@@ -12472,7 +12514,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD
             WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '''+CAST(@startdate as varchar(max))+''' AND '''+ CAST(@enddate as varchar(max))+'''
           )
-
           SELECT PVTB.CUST_NAME_KD, isnull(('+@string3+'),0) AS TOTAL_AMOUNT, '+@string + ' FROM 
           ( 
           SELECT ''TOTAL'' AS CUST_NAME_KD, isnull(XX.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, XX.DELWEEKNUM FROM XX
@@ -12501,6 +12542,44 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+      case "checkLicense":
+      (async () => {
+        let DATA = qr["DATA"];
+        //console.log(DATA);
+        let EMPL_NO = req.payload_data["EMPL_NO"];
+        let JOB_NAME = req.payload_data["JOB_NAME"];
+        let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+        let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+        let checkkq = "OK";
+        let setpdQuery = ``;        
+        //console.log(setpdQuery);  
+       fetch(CURRENT_API_URL)    
+      .then(res => res.json())
+      .then(body => {
+          let resp = body;
+          let fil = resp.filter((e)=> e[0]===DATA.COMPANY)          
+          if(fil.length=0)
+          {            
+            res.send({tk_status:'NG', message:'Chưa có license !'});
+          }
+          else
+          {      
+            let fil = resp.filter((e)=> e[0]===DATA.COMPANY)
+            let now =moment();
+            let exp_date = moment(fil[0][1]);
+            if(now >= exp_date) {
+              res.send({tk_status:'NG', message: 'Hết hạn sử dụng'});              
+            }
+            else {
+              res.send({tk_status:'OK', message: 'Còn hạn sử dụng'});
+            }            
+          }         
+        })
+        .catch((e)=> {
+          res.send({tk_status:'NG', message:'Kiểm tra license thất bại !' + e});
+        })
+      })();
+      break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
