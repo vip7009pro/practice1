@@ -12581,6 +12581,97 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
         })
       })();
       break;
+      case "getInspectionWorstTable":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = ``;
+          if(DATA.WORSTBY ==='AMOUNT')
+          condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_AMOUNT as bigint)) DESC`
+          if(DATA.WORSTBY ==='QTY')
+          condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) DESC`
+
+          let condition2 = ``;
+          if(DATA.NG_TYPE !=='ALL')
+          {
+            condition2 +=` AND ERROR_TABLE.ERR_TYPE ='${DATA.NG_TYPE}'`
+          }
+          else
+          {
+            condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P')`;
+          }
+
+          let setpdQuery = `
+          WITH INSPECTION_DATA_DOC AS
+          (
+          SELECT CAST(ZTBINSPECTNGTB.INSPECT_START_TIME as date) AS INSPECT_DATE, DATEPART(year, ZTBINSPECTNGTB.INSPECT_START_TIME) AS YEAR_NUM, DATEPART(ISO_WEEK, ZTBINSPECTNGTB.INSPECT_START_TIME) AS WEEK_NUM,
+          ZTBINSPECTNGTB.INSPECT_TOTAL_QTY, ZTBINSPECTNGTB.INSPECT_OK_QTY, ZTBINSPECTNGTB2.NG_QTY, (ZTBINSPECTNGTB2.NG_QTY * M100.PROD_LAST_PRICE)  AS NG_AMOUNT, ZTBINSPECTNGTB2.ERR_CODE
+          FROM ZTBINSPECTNGTB2
+          LEFT JOIN ZTBINSPECTNGTB ON (ZTBINSPECTNGTB2.INSPECT_ID = ZTBINSPECTNGTB.INSPECT_ID)
+          LEFT JOIN M100 ON (M100.G_CODE = ZTBINSPECTNGTB.G_CODE)
+          )
+          SELECT ERROR_TABLE.ERR_CODE, ERROR_TABLE.ERR_NAME_VN, ERROR_TABLE.ERR_NAME_KR, SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) AS NG_QTY, SUM(NG_AMOUNT) AS NG_AMOUNT FROM INSPECTION_DATA_DOC 
+          LEFT JOIN ERROR_TABLE ON (ERROR_TABLE.ERR_CODE = INSPECTION_DATA_DOC.ERR_CODE)
+          WHERE INSPECT_DATE  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}' ${condition2}
+          GROUP BY ERROR_TABLE.ERR_CODE, ERROR_TABLE.ERR_NAME_VN, ERROR_TABLE.ERR_NAME_KR
+          ${condition}`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "getInspectionWorstByCode":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = ``;
+          if(DATA.WORSTBY ==='AMOUNT')
+          condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_AMOUNT as bigint)) DESC`
+          if(DATA.WORSTBY ==='QTY')
+          condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) DESC`
+
+          let condition2 = ``;
+          if(DATA.NG_TYPE !=='ALL')
+          {
+            condition2 +=` AND ERROR_TABLE.ERR_TYPE ='${DATA.NG_TYPE}'`
+          }
+          else
+          {
+            condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P') `;
+          }
+
+          let setpdQuery = `
+          WITH INSPECTION_DATA_DOC AS
+          (
+          SELECT CAST(ZTBINSPECTNGTB.INSPECT_START_TIME as date) AS INSPECT_DATE, DATEPART(year, ZTBINSPECTNGTB.INSPECT_START_TIME) AS YEAR_NUM, DATEPART(ISO_WEEK, ZTBINSPECTNGTB.INSPECT_START_TIME) AS WEEK_NUM,
+          ZTBINSPECTNGTB.INSPECT_TOTAL_QTY, M100.G_NAME_KD, ZTBINSPECTNGTB.INSPECT_OK_QTY, ZTBINSPECTNGTB2.NG_QTY, (ZTBINSPECTNGTB2.NG_QTY * M100.PROD_LAST_PRICE)  AS NG_AMOUNT, ZTBINSPECTNGTB2.ERR_CODE
+          FROM ZTBINSPECTNGTB2
+          LEFT JOIN ZTBINSPECTNGTB ON (ZTBINSPECTNGTB2.INSPECT_ID = ZTBINSPECTNGTB.INSPECT_ID)
+          LEFT JOIN M100 ON (M100.G_CODE = ZTBINSPECTNGTB.G_CODE)
+          WHERE ZTBINSPECTNGTB2.ERR_CODE='${DATA.ERR_CODE}'
+          )
+          SELECT INSPECTION_DATA_DOC.G_NAME_KD,SUM(CAST(INSPECTION_DATA_DOC.INSPECT_TOTAL_QTY as bigint)) AS INSPECT_TOTAL_QTY, SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) AS NG_QTY, SUM(NG_AMOUNT) AS NG_AMOUNT FROM INSPECTION_DATA_DOC 
+          LEFT JOIN ERROR_TABLE ON (ERROR_TABLE.ERR_CODE = INSPECTION_DATA_DOC.ERR_CODE)
+          WHERE INSPECT_DATE  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}' ${condition2} AND INSPECTION_DATA_DOC.NG_AMOUNT <> 0
+          GROUP BY INSPECTION_DATA_DOC.G_NAME_KD
+          ${condition}`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
