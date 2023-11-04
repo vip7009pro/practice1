@@ -1037,6 +1037,7 @@ exports.process_api = function async (req, res) {
               //console.log('login thanh cong');
             } else {
               res.send({ tk_status: "ng", token_content: token });
+              console.log({ tk_status: "ng", token_content: token });
               //console.log('login that bai');
             }
           })();
