@@ -967,7 +967,7 @@ exports.process_api = function async (req, res) {
               });
               //console.log('login thanh cong');
             } else {
-              res.send({ tk_status: "ng", token_content: token });
+              res.send({ tk_status: "ng", token_content: token, message:"Tên đăng nhập hoặc mật khẩu sai" });
               //console.log('login that bai');
             }
           })();
