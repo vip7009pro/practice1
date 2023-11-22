@@ -19,24 +19,6 @@ let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
 let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
 let DESTINATION_55FOlDER = process.env.DESTINATION_55FOlDER;
 
-/* const url ='https://drive.google.com/uc?export=download&id=10dJDjoOhkW9aFkim2f0-TeUTLiptcA7i';
-const checkNetWorkERP = async (company)=> {
-  let kq;
-  let data = await axios.get(url).then((response)=>{
-    //console.log(response.data);
-     response.data;
-    company_array= response.data.split(',')
-    kq = company_array.indexOf(company) > -1;
-  }).catch((error)=> {
-      console.log(error);
-  });
-  console.log('ketqua',kq);
-} */
-//checkNetWorkERP('PVN');
-/* let checkNW_ERP_LOOP = setInterval(()=> {
-  checkNetWorkERP('PVN');
-},5000) */
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, TEMP_UPLOAD_FOLDER);
