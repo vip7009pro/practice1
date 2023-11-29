@@ -913,7 +913,7 @@ exports.process_api = function async (req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
-   if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']);
+   /* if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD HH:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
@@ -6324,7 +6324,7 @@ LEFT JOIN (
             DATA.FACTORY
           )} 
                        ORDER BY ZTBPQC1TABLE.PQC1_ID DESC`;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           ////console.log(checkkq);
