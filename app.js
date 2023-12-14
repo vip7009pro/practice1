@@ -8,9 +8,7 @@ var compression = require("compression");
 const fileupload = require("express-fileupload");
 var multer = require("multer");
 const fs = require("fs");
-
 let client_array = [];
-
 let API_PORT = parseInt(process.env.API_PORT);
 let SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
 let DRAW_PATH = process.env.DRAW_PATH;
