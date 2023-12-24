@@ -69,6 +69,10 @@ io.on("connection", (client) => {
     //console.log(client_array);
     console.log(data);
   });
+  client.on("online_list", (data) => {
+    io.sockets.emit("online_list", data);   
+    console.log(data);
+  });
   client.on("login", (data) => {
     if (!client_array.includes(data)) client_array.push(data);
     //io.sockets.emit("login", client_array);
