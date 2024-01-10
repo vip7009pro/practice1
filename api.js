@@ -5162,6 +5162,8 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
+          /* let USE_YN = DATA.YCSX_PENDING===1?'N':'Y';
+          let setpdQuery = `UPDATE P400 SET YCSX_PENDING='${DATA.YCSX_PENDING}', USE_YN='${USE_YN}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`; */
           let setpdQuery = `UPDATE P400 SET YCSX_PENDING='${DATA.YCSX_PENDING}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
