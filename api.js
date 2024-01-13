@@ -11214,6 +11214,47 @@ FROM
           res.send(checkkq);
         })();
         break;
+        case "updategia":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+            let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL='${DATA.FINAL
+              }', PROD_PRICE=${DATA.PROD_PRICE}, MOQ = ${DATA.MOQ}, PRICE_DATE = '${DATA.PRICE_DATE}', INS_DATE=GETDATE(), INS_EMPL='${EMPL_NO}' WHERE G_CODE='${DATA.G_CODE
+              }' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ
+              } AND PRICE_DATE='${moment
+                .utc(DATA.PRICE_DATE)
+                .format("YYYY-MM-DD")}'`;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+          case "deletegia":
+            (async () => {
+              let DATA = qr["DATA"];
+              //console.log(DATA);
+              let EMPL_NO = req.payload_data["EMPL_NO"];
+              let JOB_NAME = req.payload_data["JOB_NAME"];
+              let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+              let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+              let checkkq = "OK";
+              let setpdQuery = `DELETE FROM PROD_PRICE_TABLE WHERE G_CODE='${DATA.G_CODE
+                }' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ
+                } AND PRICE_DATE='${moment
+                  .utc(DATA.PRICE_DATE)
+                  .format("YYYY-MM-DD")}'`;
+              //console.log(setpdQuery);
+              checkkq = await queryDB(setpdQuery);
+              //console.log(checkkq);
+              res.send(checkkq);
+            })();
+            break;
       case "mobile_checkProcessLotNo":
         (async () => {
           let DATA = qr["DATA"];
