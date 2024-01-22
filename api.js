@@ -11873,7 +11873,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             ${condition}
             ORDER BY M100.G_CODE ASC, PROD_PRICE_TABLE.MOQ DESC, PROD_PRICE_TABLE.PRICE_DATE ASC
             `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -13841,6 +13841,38 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             WHERE ZTBINSPECTION_PATROL.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'
             ORDER BY ZTBINSPECTION_PATROL.OCCURR_TIME DESC        
             `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);                  
+          })();                                                           
+          break;    
+        case "loadWebSetting":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";              
+            let setpdQuery = `SELECT * FROM ZTB_WEB_SETTING`;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);                  
+          })();                                                           
+          break;    
+        case "checkYcsxStatus":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";              
+            let setpdQuery = `SELECT P400.USE_YN FROM ZTB_QLSXPLAN LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO WHERE PLAN_ID='${DATA.PLAN_ID}'`;
             //console.log(setpdQuery);
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
