@@ -17,6 +17,10 @@ let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
 let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
 let DESTINATION_55FOlDER = process.env.DESTINATION_55FOlDER;
 
+var SSL_PRIVATE_KEY  = process.env.SSL_PRIVATE_KEY;
+var SSL_CERTIFICATE = process.env.SSL_CERTIFICATE;
+var SSL_CA_BUNDLE = process.env.SSL_CA_BUNDLE;
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, TEMP_UPLOAD_FOLDER);
@@ -47,18 +51,36 @@ app.use(
 );
 console.log("user  =" + process.env.DB_USER);
 console.log("server  =" + process.env.DB_SERVER);
+
+var privateKey, certificate, ca_bundle;
+
+try {
+  privateKey  = fs.readFileSync(SSL_PRIVATE_KEY, 'utf8');
+  certificate = fs.readFileSync(SSL_CERTIFICATE, 'utf8');
+  ca_bundle = fs.readFileSync(SSL_CA_BUNDLE, 'utf8');
+} catch (err) {
+  if (err.code === 'ENOENT') {
+    console.error('SSL File not found!');
+  } else {
+    // Xử lý các loại ngoại lệ khác nếu cần
+    console.error('Error reading SSL file:', err.message);
+  }
+}
+
+var credentials = {key: privateKey, cert: certificate, ca:ca_bundle };
+
 const server = require("http").createServer(app);
+const server_s = require("https").createServer(credentials, app);
+
 const io = require("socket.io")(server, {
   cors: {
     origin: "*",
   },
 });
-server.listen(SOCKET_PORT);
-console.log("Socket server listening on port " + SOCKET_PORT);
-//server.listen(5012);
+
 io.on("connection", (client) => {
   console.log("A client connected");
-  console.log("Connected clients: " + io.engine.clientsCount);
+  console.log("IO: Connected clients: " + io.engine.clientsCount);
   client.on("send", (data) => {
     io.sockets.emit("send", data);
     //console.log(data);
@@ -98,8 +120,60 @@ io.on("connection", (client) => {
   });
 });
 
+const ios = require("socket.io")(server_s, {
+  cors: {
+    origin: "*",
+  },
+});
+
+ios.on("connection", (client) => {
+  console.log("A client connected");
+  console.log("IOS: Connected clients: " + ios.engine.clientsCount);
+  client.on("send", (data) => {
+    ios.sockets.emit("send", data);
+    //console.log(data);
+  });
+  client.on("notification", (data) => {
+    ios.sockets.emit("notification", data);
+    client_array.push(data);
+    //console.log(client_array);
+    console.log(data);
+  });
+  client.on("online_list", (data) => {
+    ios.sockets.emit("online_list", data);   
+    console.log(data);
+  });
+  client.on("setWebVer", (data) => {
+    ios.sockets.emit("setWebVer", data);   
+    console.log(data);
+  });
+  client.on("login", (data) => {
+    if (!client_array.includes(data)) client_array.push(data);
+    //ios.sockets.emit("login", client_array);
+    ios.sockets.emit("login", data + "da dang nhap");
+    //console.log(client_array);
+    console.log(data + " da dang nhap");
+  });
+  client.on("logout", (data) => {
+    if (client_array.indexOf(data) > -1)
+      client_array.splice(client_array.indexOf(data), 1);
+    ios.sockets.emit("logout", client_array);
+    //console.log(client_array);
+    console.log(data + " da dang xuat");
+  });
+  client.on("disconnect", (data) => {
+    console.log(data);
+    console.log("A client disconnected !");
+    console.log("Connected clients: IOS: " + ios.engine.clientsCount);
+  });
+});
 var corsOptions = {
   origin: [
+    "https://cms.ddns.net:3004",
+    "http://cms.ddns.net:3010",
+    "https://cms.ddns.net:3010",
+    "https://cms.ddns.net:3001",
+    "https://cms.ddns.net",
     "http://localhost:3001",
     "http://192.168.1.192",
     "http://192.168.1.2",
@@ -109,6 +183,7 @@ var corsOptions = {
     "http://222.252.1.63:3000",
     "http://192.168.1.22:3000",
     "http://cms.ddns.net:3000",
+    "http://cms.ddns.net:3010",
     "http://cms.ddns.net",
     "http://14.160.33.94:3001",
     "http://localhost:3000",
@@ -116,7 +191,7 @@ var corsOptions = {
     "http://14.160.33.94",
     "http://14.160.33.94:3010",
     "http://14.160.33.94:3030",
-    "https://script.google.com/",
+    "https://script.google.com",
     "*",
   ],
   optionsSuccessStatus: 200,
@@ -151,6 +226,8 @@ app.use("/login2", function (req, res, next) {
   api_module.checklogin_login(req, res, next);
 });
 app.post("/api", function (req, res) {
+  const clientIpV4 = req.ip.split(':').pop(); 
+  console.log('Client IP: ' + clientIpV4);
   //api_module.process_api(req,res);
   var qr = req.body;
   if (
@@ -379,6 +456,9 @@ app.post("/uploadfilechecksheet", upload2.single("uploadedfile"), function (req,
     }
   }
 });
-app.listen(API_PORT, function () {
+server.listen(API_PORT);
+server_s.listen(SOCKET_PORT);
+console.log("Server listening on  " + API_PORT +  "/" + SOCKET_PORT);
+/* app.listen(API_PORT, function () {
   console.log("App dang nghe port " + API_PORT);
-});
+}); */
