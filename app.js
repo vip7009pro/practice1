@@ -226,8 +226,8 @@ app.use("/login2", function (req, res, next) {
   api_module.checklogin_login(req, res, next);
 });
 app.post("/api", function (req, res) {
-  const clientIpV4 = req.ip.split(':').pop(); 
-  console.log('Client IP: ' + clientIpV4);
+  //const clientIpV4 = req.ip.split(':').pop(); 
+  //console.log('Client IP: ' + clientIpV4);
   //api_module.process_api(req,res);
   var qr = req.body;
   if (
