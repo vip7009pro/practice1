@@ -103,15 +103,15 @@ io.on("connection", (client) => {
     if (!client_array.includes(data)) client_array.push(data);
     //io.sockets.emit("login", client_array);
     io.sockets.emit("login", data + "da dang nhap");
-    //console.log(client_array);
+    console.log(client_array);
     console.log(data + " da dang nhap");
   });
   client.on("logout", (data) => {
     if (client_array.indexOf(data) > -1)
       client_array.splice(client_array.indexOf(data), 1);
-    io.sockets.emit("logout", client_array);
-    //console.log(client_array);
+    io.sockets.emit("logout", client_array);    
     console.log(data + " da dang xuat");
+    console.log(client_array);
   });
   client.on("disconnect", (data) => {
     console.log(data);
@@ -119,13 +119,11 @@ io.on("connection", (client) => {
     console.log("Connected clients: " + io.engine.clientsCount);
   });
 });
-
 const ios = require("socket.io")(server_s, {
   cors: {
     origin: "*",
   },
 });
-
 ios.on("connection", (client) => {
   console.log("A client connected");
   console.log("IOS: Connected clients: " + ios.engine.clientsCount);
