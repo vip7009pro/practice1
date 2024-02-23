@@ -95,7 +95,7 @@ function generate_condition_get_invoice(
     $product_type +
     $empl_name +
     $po_no +
-    $material+
+    $material +
     $invoice_no;
   return $condition;
 }
