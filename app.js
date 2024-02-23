@@ -457,6 +457,3 @@ app.post("/uploadfilechecksheet", upload2.single("uploadedfile"), function (req,
 server.listen(API_PORT);
 server_s.listen(SOCKET_PORT);
 console.log("Server listening on  " + API_PORT +  "/" + SOCKET_PORT);
-/* app.listen(API_PORT, function () {
-  console.log("App dang nghe port " + API_PORT);
-}); */
