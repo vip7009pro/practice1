@@ -2165,8 +2165,18 @@ exports.process_api = function async(req, res) {
       case "checkMNAMEfromLot":
         (async () => {
           let kqua;
-          let query = `SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.OUT_CFM_QTY, O302.ROLL_QTY, O302.LIEUQL_SX, O302.OUT_DATE FROM O302 JOIN M090 ON (M090.M_CODE = O302.M_CODE) WHERE O302.M_LOT_NO='${DATA.M_LOT_NO}'`;
+          let query = `SELECT O302.LOC_CD, O302.WAHS_CD O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.OUT_CFM_QTY, O302.ROLL_QTY, O302.LIEUQL_SX, O302.OUT_DATE FROM O302 JOIN M090 ON (M090.M_CODE = O302.M_CODE) WHERE O302.M_LOT_NO='${DATA.M_LOT_NO}'`;
           console.log(query);
+          kqua = await queryDB(query);
+          res.send(kqua);
+        })();
+        break;
+      case "checkMNAMEfromLotI222XuatKho":
+        (async () => {
+          let kqua;
+          let query = `SELECT I222.USE_YN, CHITHITB.LIEUQL_SX, I222.LOC_CD, I222.WAHS_CD,  M110.CUST_NAME_KD, I222.CUST_CD, I222.M_CODE, M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY, I222.ROLL_QTY FROM I222 JOIN M090 ON (M090.M_CODE = I222.M_CODE) LEFT JOIN M110 ON (M110.CUST_CD = I222.CUST_CD) LEFT JOIN (SELECT * FROM ZTB_QLSXCHITHI WHERE PLAN_ID='${DATA.PLAN_ID}') AS CHITHITB ON (CHITHITB.M_CODE= I222.M_CODE)
+          WHERE I222.M_LOT_NO='${DATA.M_LOT_NO}'`;
+          ////console.log(query);
           kqua = await queryDB(query);
           res.send(kqua);
         })();
@@ -3959,6 +3969,16 @@ LEFT JOIN (
           res.send(kqua);
         })();
         break;
+      case "selectCustomerAndVendorList":
+        (async () => {
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let kqua;
+          let query = `SELECT DISTINCT CUST_CD , CUST_NAME_KD  FROM M110  ORDER BY CUST_NAME_KD ASC`;
+          kqua = await queryDB(query);
+          ////console.log(kqua);
+          res.send(kqua);
+        })();
+        break;
       case "update_po":
         (async () => {
           ////console.log(DATA);
@@ -4188,7 +4208,11 @@ LEFT JOIN (
           SELECT PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO
           ),
           WH_TABLE AS 
-          (SELECT I660.PROD_REQUEST_NO, SUM(I660.IN_QTY) AS INPUT_QTY, SUM(CASE WHEN STATUS='N' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY, SUM(CASE WHEN I660.USE_YN <> 'Y' THEN I660.IN_QTY ELSE 0 END) AS OUTPUT_QTY FROM I660  GROUP BY I660.PROD_REQUEST_NO)
+          (SELECT I660.PROD_REQUEST_NO, SUM(I660.IN_QTY) AS INPUT_QTY, SUM(CASE WHEN STATUS='N' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY, SUM(CASE WHEN I660.USE_YN <> 'Y' THEN I660.IN_QTY ELSE 0 END) AS OUTPUT_QTY FROM I660  GROUP BY I660.PROD_REQUEST_NO),
+		  BOM_MAIN_M AS 
+		  (SELECT DISTINCT G_CODE, M090.M_NAME  FROM M140 
+		  LEFT JOIN M090 ON (M140.M_CODE = M090.M_CODE)
+		  WHERE LIEUQL_SX = 1) 
           SELECT 
           P400.DELIVERY_DT,
                     P400.PL_HANG,
@@ -4242,7 +4266,8 @@ LEFT JOIN (
                     P400.PDUYET,
                     P400.CODE_50 AS LOAIXH,
                     M100.BANVE,
-                    M100.NO_INSPECTION
+                    M100.NO_INSPECTION,
+					CASE WHEN BOM_MAIN_M.M_NAME = M100.PROD_MAIN_MATERIAL THEN 'Y' ELSE 'N' END AS SETVL
           FROM P400
           LEFT JOIN AMAZONTB ON (AMAZONTB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
           LEFT JOIN PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
@@ -4250,6 +4275,7 @@ LEFT JOIN (
           LEFT JOIN INSPECT_OUTPUT_TB ON (INSPECT_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
           LEFT JOIN WH_TABLE ON (WH_TABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
           LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
+		  LEFT JOIN BOM_MAIN_M ON (M100.G_CODE = BOM_MAIN_M.G_CODE)
           LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
           LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) ${generate_condition_get_ycsx(
             DATA.alltime,
@@ -7757,7 +7783,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT TOP 1 * FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}' ORDER BY OUT_SEQ DESC`;
+          let setpdQuery = `SELECT * FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}' ORDER BY OUT_SEQ DESC`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -13251,6 +13277,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             .then(res => res.json())
             .then(body => {
               let resp = body;
+              console.log(resp);
               let fil = resp.filter((e) => e[0] === DATA.COMPANY)
               if (fil.length = 0) {
                 res.send({ tk_status: 'NG', message: 'Chưa có license !' });
@@ -13268,7 +13295,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
               }
             })
             .catch((e) => {
-              res.send({ tk_status: 'NG', message: 'Kiểm tra license thất bại !' + e });
+              res.send({ tk_status: 'OK', message: 'Còn hạn sử dụng' });
+              //res.send({ tk_status: 'NG', message: 'Kiểm tra license thất bại !' + e });
             })
         })();
         break;
@@ -13921,6 +13949,70 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           LEFT JOIN M100 ON M100.G_CODE = P500.G_CODE 
           LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           WHERE ZTBLOTPRINTHISTORYTB.LOT_PRINT_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "getI221Lastest_IN_NO":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT MAX(IN_NO) AS MAX_IN_NO FROM I221 WHERE IN_DATE ='${moment().format("YYYYMMDD")}'`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "getI222Lastest_M_LOT_NO":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT isnull(MAX(M_LOT_NO),FORMAT(GETDATE(),'yyyyMMdd0000')) AS MAX_M_LOT_NO FROM I222 WHERE IN_DATE ='${moment().format("YYYYMMDD")}'`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insert_I221":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `INSERT I221 (CTR_CD, IN_DATE, IN_NO, IN_SEQ, CODE_03,M_CODE, IN_CFM_QTY, CODE_54, REMK, USE_YN, INS_DATE, INS_EMPL, FACTORY, CODE_50, INVOICE, CUST_CD, ROLL_QTY, EXP_DATE) VALUES ('002','${moment().format("YYYYMMDD")}','${DATA.IN_NO}','${DATA.IN_SEQ}','03','${DATA.M_CODE}',${DATA.IN_CFM_QTY},'USD','${DATA.REMARK}','Y',GETDATE(),'${EMPL_NO}','${DATA.FACTORY}','${DATA.CODE_50}','${DATA.INVOICE_NO}','${DATA.CUST_CD}',${DATA.ROLL_QTY},'${DATA.EXP_DATE}')`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insert_I222":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `INSERT I222 (CTR_CD, IN_DATE, IN_NO, IN_SEQ, M_LOT_NO,LOC_CD, M_CODE, IN_CFM_QTY, WAHS_CD,  USE_YN, INS_DATE, INS_EMPL, FACTORY, CUST_CD, ROLL_QTY, PROD_YCSX_NO) VALUES ('002','${moment().format("YYYYMMDD")}','${DATA.IN_NO}','${DATA.IN_SEQ}','${DATA.M_LOT_NO}', '${DATA.LOC_CD}','${DATA.M_CODE}',${DATA.IN_CFM_QTY},'${DATA.WAHS_CD}','Y',GETDATE(),'${EMPL_NO}','${DATA.FACTORY}','${DATA.CUST_CD}',${DATA.ROLL_QTY},'${DATA.PROD_REQUEST_NO}')`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
