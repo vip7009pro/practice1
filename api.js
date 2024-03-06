@@ -8337,17 +8337,27 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE 1=1`
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+          }          
+          
+          if(DATA.codeArray.length ===1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+
           let setpdQuery = `SELECT CAST(INSPECT_START_TIME as date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM 
                     ZTBINSPECTNGTB 
                     ${condition}
                     GROUP BY CAST(INSPECT_START_TIME as date) 
                     ORDER BY CAST(INSPECT_START_TIME as date) DESC`;
           //${moment().format('YYYY-MM-DD')}
-          ////console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
         })();
@@ -8360,11 +8370,11 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE 1=1 AND  YEAR(INSPECT_START_TIME) ='${moment().format("YYYY")}' `
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
-          let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM,  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME)) AS WEEK_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
+          let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_',  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))) AS YEAR_WEEK, YEAR(INSPECT_START_TIME) AS YEAR_NUM,  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME)) AS WEEK_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
                     ${condition}
                     GROUP BY YEAR(INSPECT_START_TIME), DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))
                     ORDER BY YEAR(INSPECT_START_TIME) DESC, DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))  DESC`;
@@ -8382,14 +8392,14 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE 1=1 AND  YEAR(INSPECT_START_TIME) ='${moment().format("YYYY")}' `
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
-          let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM, MONTH(INSPECT_START_TIME) AS MONTH_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
+          let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_', MONTH(INSPECT_START_TIME)) AS YEAR_MONTH, YEAR(INSPECT_START_TIME) AS YEAR_NUM, MONTH(INSPECT_START_TIME) AS MONTH_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
                    ${condition}
                     GROUP BY YEAR(INSPECT_START_TIME), MONTH(INSPECT_START_TIME)
-                    ORDER BY YEAR(INSPECT_START_TIME) DESC, MONTH(INSPECT_START_TIME) ASC`;
+                    ORDER BY YEAR(INSPECT_START_TIME) DESC, MONTH(INSPECT_START_TIME) DESC`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -8408,6 +8418,16 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
+
+        if(DATA.codeArray.length ===1) {
+                    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+                  }
+                  else if(DATA.codeArray.length >1) {
+                    let codeString = ``;
+                    let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+                    condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+                  }
+
           let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM,  SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
                    ${condition}
                     GROUP BY YEAR(INSPECT_START_TIME)
@@ -13325,6 +13345,19 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           else {
             condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P')`;
           }
+
+          let condition3 = ``;
+          if(DATA.codeArray.length ===1) {
+            condition3 += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition3 +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+
+
+
           let setpdQuery = `
           WITH INSPECTION_DATA_DOC AS
           (
@@ -13333,6 +13366,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           FROM ZTBINSPECTNGTB2
           LEFT JOIN ZTBINSPECTNGTB ON (ZTBINSPECTNGTB2.INSPECT_ID = ZTBINSPECTNGTB.INSPECT_ID)
           LEFT JOIN M100 ON (M100.G_CODE = ZTBINSPECTNGTB.G_CODE)
+          ${condition3}
           )
           SELECT ERROR_TABLE.ERR_CODE, ERROR_TABLE.ERR_NAME_VN, ERROR_TABLE.ERR_NAME_KR, SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) AS NG_QTY, SUM(NG_AMOUNT) AS NG_AMOUNT FROM INSPECTION_DATA_DOC 
           LEFT JOIN ERROR_TABLE ON (ERROR_TABLE.ERR_CODE = INSPECTION_DATA_DOC.ERR_CODE)
@@ -13366,6 +13400,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           else {
             condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P') `;
           }
+
+          let condition3 = ``;
+          if(DATA.codeArray.length ===1) {
+            condition3 += ` AND INSPECTION_DATA_DOC.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition3 +=` AND INSPECTION_DATA_DOC.G_CODE IN (${codeArStr})`;
+          }
+
+
           let setpdQuery = `
           WITH INSPECTION_DATA_DOC AS
           (
@@ -13378,7 +13424,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           )
           SELECT INSPECTION_DATA_DOC.G_CODE, INSPECTION_DATA_DOC.G_NAME_KD,SUM(CAST(INSPECTION_DATA_DOC.INSPECT_TOTAL_QTY as bigint)) AS INSPECT_TOTAL_QTY, SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) AS NG_QTY, SUM(NG_AMOUNT) AS NG_AMOUNT FROM INSPECTION_DATA_DOC 
           LEFT JOIN ERROR_TABLE ON (ERROR_TABLE.ERR_CODE = INSPECTION_DATA_DOC.ERR_CODE)
-          WHERE INSPECT_DATE  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}' ${condition2} AND INSPECTION_DATA_DOC.NG_AMOUNT <> 0
+          WHERE INSPECT_DATE  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}' ${condition2} AND INSPECTION_DATA_DOC.NG_AMOUNT <> 0 ${condition3}
           GROUP BY INSPECTION_DATA_DOC.G_CODE, INSPECTION_DATA_DOC.G_NAME_KD
           ${condition}`;
           //console.log(setpdQuery);
@@ -13396,10 +13442,168 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition  = ``;
+          if(DATA.codeArray.length ===1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
           let setpdQuery = `
-          SELECT SUM(INSPECT_TOTAL_QTY) AS ISP_TT_QTY, SUM(INSPECT_OK_QTY) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY
-          FROM ZTBINSPECTNGTB
-          WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
+          SELECT SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint))) AS M_NG_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
+                    FROM ZTBINSPECTNGTB
+                LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+          WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "dailyFcost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition  = ``;
+          if(DATA.codeArray.length ===1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
+          SELECT CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE) AS INSPECT_DATE, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint))) AS M_NG_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
+                    FROM ZTBINSPECTNGTB
+                LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+          WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
+          GROUP BY CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE)
+				ORDER BY CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE) DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "weeklyFcost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition  = ``;
+          if(DATA.codeArray.length ===1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
+          SELECT CONCAT(YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),'_',DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME)) AS INSPECT_YW, YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR,DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_WEEK, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint))) AS M_NG_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
+                    FROM ZTBINSPECTNGTB
+                LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+          WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
+          GROUP BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME)
+				ORDER BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME)DESC ,DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME) DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "monthlyFcost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition  = ``;
+          if(DATA.codeArray.length ===1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
+          SELECT CONCAT(YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),'_',MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME)) AS INSPECT_YM, YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR,MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_MONTH, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint))) AS M_NG_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
+                    FROM ZTBINSPECTNGTB
+                LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+          WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
+          GROUP BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME)
+				ORDER BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME)DESC ,MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME) DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "annuallyFcost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition  = ``;
+          if(DATA.codeArray.length ===1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if(DATA.codeArray.length >1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
+          SELECT YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint))) AS M_NG_AMOUNT,
+          SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
+                    FROM ZTBINSPECTNGTB
+                LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+          WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
+          GROUP BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME)
+				ORDER BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) DESC
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -13621,7 +13825,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN isnull(P501_A.TEMP_QTY,0) ELSE 0 END AS OUTPUT_EA ,
           isnull(INSP_INPUT_TB.INSP_INPUT,0) AS INSPECT_INPUT,
           isnull(INSP_NK_TB.INSPECT_TOTAL_QTY,0) AS INSPECT_TT_QTY,
-          P500.REMARK, ZTB_SX_RESULT.PD, ZTB_SX_RESULT.CAVITY, ZTB_QLSXPLAN.STEP, P500.PR_NB, PROCESS_TB.MAX_PROCESS_NUMBER, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN 1 ELSE 0 END AS LAST_PROCESS  FROM P500
+          P500.REMARK, ZTB_SX_RESULT.PD, ZTB_SX_RESULT.CAVITY, ZTB_QLSXPLAN.STEP, P500.PR_NB, PROCESS_TB.MAX_PROCESS_NUMBER, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN 1 ELSE 0 END AS LAST_PROCESS,
+          (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) * M090.WIDTH_CD*1.0/1000 AS USED_SQM, 
+		      (isnull(P500.PR_NG,0) +isnull(P500.SETTING_MET,0)) * M090.WIDTH_CD*1.0/1000 AS LOSS_SQM 
+          FROM P500
           LEFT JOIN ZTB_SX_RESULT ON (P500.PLAN_ID = ZTB_SX_RESULT.PLAN_ID)
           LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = P500.PLAN_ID)
           LEFT JOIN P501_A ON (P501_A.PLAN_ID = P500.PLAN_ID AND P501_A.M_LOT_NO = P500.M_LOT_NO)
