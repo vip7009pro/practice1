@@ -13655,7 +13655,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let setpdQuery = `
           UPDATE  ZTBPQC1TABLE SET IMG_${DATA.STT}= 'Y' WHERE PLAN_ID='${DATA.PLAN_ID}' 
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
