@@ -4037,7 +4037,7 @@ LEFT JOIN (
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `UPDATE ZTBDelivery SET INVOICE_NO='${DATA.INVOICE_NO}' WHERE DELIVERY_ID=${DATA.DELIVERY_ID}`;
-          //////console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -14792,6 +14792,467 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
               COUNT(CF_ID) FOR FACTOR IN ([C],[K])
             )as pvtb
             ORDER BY pvtb.CONFIRM_YEAR DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csConfirmDataByCustomer":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+            }
+  
+            let setpdQuery = `
+            WITH CS_DATA AS
+            (
+            SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+                      FROM CS_CONFIRM_TABLE
+                      LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                  ${condition}
+            )
+            SELECT CUST_NAME_KD, COUNT(CONFIRM_ID) AS  TOTAL FROM CS_DATA GROUP BY CUST_NAME_KD
+            ORDER BY  COUNT(CONFIRM_ID) DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csConfirmDataByPIC":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+            }
+  
+            let setpdQuery = `
+            WITH CS_DATA AS
+            (
+            SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+                      FROM CS_CONFIRM_TABLE
+                      LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                  ${condition}
+            )
+            SELECT EMPL_NAME, COUNT(CONFIRM_ID) AS  TOTAL FROM CS_DATA GROUP BY EMPL_NAME
+            ORDER BY  COUNT(CONFIRM_ID) DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csdailyreduceamount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+            }
+  
+            let setpdQuery = `
+            WITH CS_DATA AS
+            (
+            SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+                      FROM CS_CONFIRM_TABLE
+                      LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                  ${condition}
+            )
+            SELECT CONFIRM_DATE, SUM(REDUCE_AMOUNT) AS REDUCE_AMOUNT FROM CS_DATA GROUP BY CONFIRM_DATE
+            ORDER BY CONFIRM_DATE DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csweeklyreduceamount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+            }
+  
+            let setpdQuery = `
+            WITH CS_DATA AS
+            (
+            SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+                      FROM CS_CONFIRM_TABLE
+                      LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                  ${condition}
+            )
+            SELECT CONCAT(YEAR(CONFIRM_DATE),'_', DATEPART(ISO_WEEK, CONFIRM_DATE)) AS CONFIRM_YW, YEAR(CONFIRM_DATE) AS CONFIRM_YEAR,DATEPART(ISO_WEEK, CONFIRM_DATE) AS CONFIRM_WEEK, SUM(REDUCE_AMOUNT) AS REDUCE_AMOUNT FROM CS_DATA GROUP BY YEAR(CONFIRM_DATE) , DATEPART(ISO_WEEK, CONFIRM_DATE)
+            ORDER BY YEAR(CONFIRM_DATE) DESC, DATEPART(ISO_WEEK, CONFIRM_DATE)  DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csmonthlyreduceamount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+            }
+  
+            let setpdQuery = `
+            WITH CS_DATA AS
+            (
+            SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+                      FROM CS_CONFIRM_TABLE
+                      LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                  ${condition}
+            )
+            SELECT CONCAT(YEAR(CONFIRM_DATE),'_', DATEPART(MONTH, CONFIRM_DATE)) AS CONFIRM_YM, YEAR(CONFIRM_DATE) AS CONFIRM_YEAR,DATEPART(MONTH, CONFIRM_DATE) AS CONFIRM_MONTH, SUM(REDUCE_AMOUNT) AS REDUCE_AMOUNT FROM CS_DATA GROUP BY YEAR(CONFIRM_DATE) , MONTH(CONFIRM_DATE)
+            ORDER BY YEAR(CONFIRM_DATE) DESC, MONTH(CONFIRM_DATE)  DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csyearlyreduceamount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+            }
+  
+            let setpdQuery = `
+            WITH CS_DATA AS
+            (
+            SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+                      FROM CS_CONFIRM_TABLE
+                      LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                 ${condition}
+            )
+            SELECT YEAR(CONFIRM_DATE) AS CONFIRM_YEAR, SUM(REDUCE_AMOUNT) AS REDUCE_AMOUNT FROM CS_DATA GROUP BY YEAR(CONFIRM_DATE)
+            ORDER BY YEAR(CONFIRM_DATE) DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csdailyRMAAmount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+            }
+              
+            let setpdQuery = `
+            WITH RMA_DATA AS
+            (
+            SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
+            isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0) AS RMA_QTY,
+                      M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_RMA_TABLE.RETURN_QTY) AS RETURN_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_OK_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_NG_AMOUNT,
+                  (isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0)) * M100.PROD_LAST_PRICE AS RMA_AMOUNT,          M100.G_NAME,M100.PROD_TYPE,M100.PROD_MODEL,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CS_EMPL_NO,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M110.CUST_NAME_KD
+                      FROM CS_RMA_TABLE
+                      LEFT JOIN (SELECT RMA_ID, SUM(SORTING_OK_QTY) AS SORTING_OK_QTY FROM CS_SORTING_TABLE GROUP  BY RMA_ID) AS SORTING_TB ON (CS_RMA_TABLE.RMA_ID=SORTING_TB.RMA_ID)
+                      LEFT JOIN (SELECT RMA_ID, SUM(RMA_DELIVERY_QTY) AS RMA_DELIVERY_QTY FROM CS_RMA_DELIVERY GROUP BY RMA_ID) AS DELIV_TB ON (CS_RMA_TABLE.RMA_ID=DELIV_TB.RMA_ID)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_RMA_TABLE.G_CODE)
+                      LEFT JOIN CS_CONFIRM_TABLE ON (CS_RMA_TABLE.CONFIRM_ID = CS_CONFIRM_TABLE.CONFIRM_ID)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                      ${condition}
+            ),
+            RMA_PVTB AS
+            (
+            SELECT pvtb.RETURN_DATE AS RT_DATE, CASE WHEN isnull(pvtb.HT,0) < 0 THEN  0 ELSE isnull(pvtb.HT,0) END AS HT, CASE WHEN isnull(pvtb.CD,0) < 0 THEN  0 ELSE isnull(pvtb.CD,0) END AS CD, CASE WHEN isnull(pvtb.MD,0) < 0 THEN  0 ELSE isnull(pvtb.MD,0) END AS MD
+            FROM 
+            (SELECT RETURN_DATE, RMA_TYPE, RMA_AMOUNT FROM RMA_DATA) AS src
+            PIVOT 
+            (
+              SUM(RMA_AMOUNT) FOR RMA_TYPE IN ([HT],[CD],[MD])
+            ) as pvtb
+            ) 
+            SELECT * FROM RMA_PVTB
+            ORDER BY RT_DATE DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csweeklyRMAAmount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+            }
+
+            let setpdQuery = `
+            WITH RMA_DATA AS
+            (
+            SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
+            isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0) AS RMA_QTY,
+                      M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_RMA_TABLE.RETURN_QTY) AS RETURN_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_OK_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_NG_AMOUNT,
+                  (isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0)) * M100.PROD_LAST_PRICE AS RMA_AMOUNT,          M100.G_NAME,M100.PROD_TYPE,M100.PROD_MODEL,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CS_EMPL_NO,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M110.CUST_NAME_KD
+                      FROM CS_RMA_TABLE
+                      LEFT JOIN (SELECT RMA_ID, SUM(SORTING_OK_QTY) AS SORTING_OK_QTY FROM CS_SORTING_TABLE GROUP  BY RMA_ID) AS SORTING_TB ON (CS_RMA_TABLE.RMA_ID=SORTING_TB.RMA_ID)
+                      LEFT JOIN (SELECT RMA_ID, SUM(RMA_DELIVERY_QTY) AS RMA_DELIVERY_QTY FROM CS_RMA_DELIVERY GROUP BY RMA_ID) AS DELIV_TB ON (CS_RMA_TABLE.RMA_ID=DELIV_TB.RMA_ID)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_RMA_TABLE.G_CODE)
+                      LEFT JOIN CS_CONFIRM_TABLE ON (CS_RMA_TABLE.CONFIRM_ID = CS_CONFIRM_TABLE.CONFIRM_ID)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                      ${condition}
+            ),
+            RMA_PVTB AS
+            (
+            SELECT pvtb.RETURN_DATE AS RT_DATE, CASE WHEN isnull(pvtb.HT,0) < 0 THEN  0 ELSE isnull(pvtb.HT,0) END AS HT, CASE WHEN isnull(pvtb.CD,0) < 0 THEN  0 ELSE isnull(pvtb.CD,0) END AS CD, CASE WHEN isnull(pvtb.MD,0) < 0 THEN  0 ELSE isnull(pvtb.MD,0) END AS MD
+            FROM 
+            (SELECT RETURN_DATE, RMA_TYPE, RMA_AMOUNT FROM RMA_DATA) AS src
+            PIVOT 
+            (
+              SUM(RMA_AMOUNT) FOR RMA_TYPE IN ([HT],[CD],[MD])
+            ) as pvtb
+            ) 
+            SELECT CONCAT(YEAR(RT_DATE), '_',DATEPART(ISO_WEEK, RT_DATE)) AS RT_YW, YEAR(RT_DATE) AS RT_YEAR, DATEPART(ISO_WEEK, RT_DATE) AS RT_WEEK, SUM(HT) AS HT, SUM(MD) AS MD, SUM(CD) AS CD FROM RMA_PVTB
+            GROUP BY YEAR(RT_DATE), DATEPART(ISO_WEEK, RT_DATE)
+            ORDER BY YEAR(RT_DATE) DESC, DATEPART(ISO_WEEK, RT_DATE) DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csmonthlyRMAAmount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+            }
+
+            let setpdQuery = `
+            WITH RMA_DATA AS
+            (
+            SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
+            isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0) AS RMA_QTY,
+                      M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_RMA_TABLE.RETURN_QTY) AS RETURN_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_OK_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_NG_AMOUNT,
+                  (isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0)) * M100.PROD_LAST_PRICE AS RMA_AMOUNT,          M100.G_NAME,M100.PROD_TYPE,M100.PROD_MODEL,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CS_EMPL_NO,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M110.CUST_NAME_KD
+                      FROM CS_RMA_TABLE
+                      LEFT JOIN (SELECT RMA_ID, SUM(SORTING_OK_QTY) AS SORTING_OK_QTY FROM CS_SORTING_TABLE GROUP  BY RMA_ID) AS SORTING_TB ON (CS_RMA_TABLE.RMA_ID=SORTING_TB.RMA_ID)
+                      LEFT JOIN (SELECT RMA_ID, SUM(RMA_DELIVERY_QTY) AS RMA_DELIVERY_QTY FROM CS_RMA_DELIVERY GROUP BY RMA_ID) AS DELIV_TB ON (CS_RMA_TABLE.RMA_ID=DELIV_TB.RMA_ID)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_RMA_TABLE.G_CODE)
+                      LEFT JOIN CS_CONFIRM_TABLE ON (CS_RMA_TABLE.CONFIRM_ID = CS_CONFIRM_TABLE.CONFIRM_ID)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                      ${condition}
+            ),
+            RMA_PVTB AS
+            (
+            SELECT pvtb.RETURN_DATE AS RT_DATE, CASE WHEN isnull(pvtb.HT,0) < 0 THEN  0 ELSE isnull(pvtb.HT,0) END AS HT, CASE WHEN isnull(pvtb.CD,0) < 0 THEN  0 ELSE isnull(pvtb.CD,0) END AS CD, CASE WHEN isnull(pvtb.MD,0) < 0 THEN  0 ELSE isnull(pvtb.MD,0) END AS MD
+            FROM 
+            (SELECT RETURN_DATE, RMA_TYPE, RMA_AMOUNT FROM RMA_DATA) AS src
+            PIVOT 
+            (
+              SUM(RMA_AMOUNT) FOR RMA_TYPE IN ([HT],[CD],[MD])
+            ) as pvtb
+            ) 
+            SELECT CONCAT(YEAR(RT_DATE), '_',MONTH(RT_DATE)) AS RT_YM, YEAR(RT_DATE) AS RT_YEAR, MONTH(RT_DATE) AS RT_MONTH, SUM(HT) AS HT, SUM(MD) AS MD, SUM(CD) AS CD FROM RMA_PVTB
+            GROUP BY YEAR(RT_DATE), MONTH(RT_DATE)
+            ORDER BY YEAR(RT_DATE) DESC, MONTH(RT_DATE) DESC
+            `;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+        case "csyearlyRMAAmount":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+  
+            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+            if(DATA.codeArray.length ===1) {
+              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+            }
+            else if(DATA.codeArray.length >1) {
+              let codeString = ``;
+              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
+              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+            }
+
+            let setpdQuery = `
+            WITH RMA_DATA AS
+            (
+            SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
+            isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0) AS RMA_QTY,
+                      M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_RMA_TABLE.RETURN_QTY) AS RETURN_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_OK_AMOUNT,
+                      (M100.PROD_LAST_PRICE*isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0)) AS SORTING_NG_AMOUNT,
+                  (isnull(DELIV_TB.RMA_DELIVERY_QTY,0)-isnull(SORTING_TB.SORTING_OK_QTY,0)) * M100.PROD_LAST_PRICE AS RMA_AMOUNT,          M100.G_NAME,M100.PROD_TYPE,M100.PROD_MODEL,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CS_EMPL_NO,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M110.CUST_NAME_KD
+                      FROM CS_RMA_TABLE
+                      LEFT JOIN (SELECT RMA_ID, SUM(SORTING_OK_QTY) AS SORTING_OK_QTY FROM CS_SORTING_TABLE GROUP  BY RMA_ID) AS SORTING_TB ON (CS_RMA_TABLE.RMA_ID=SORTING_TB.RMA_ID)
+                      LEFT JOIN (SELECT RMA_ID, SUM(RMA_DELIVERY_QTY) AS RMA_DELIVERY_QTY FROM CS_RMA_DELIVERY GROUP BY RMA_ID) AS DELIV_TB ON (CS_RMA_TABLE.RMA_ID=DELIV_TB.RMA_ID)
+                      LEFT JOIN M100 ON (M100.G_CODE = CS_RMA_TABLE.G_CODE)
+                      LEFT JOIN CS_CONFIRM_TABLE ON (CS_RMA_TABLE.CONFIRM_ID = CS_CONFIRM_TABLE.CONFIRM_ID)
+                      LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)
+                      ${condition}
+            ),
+            RMA_PVTB AS
+            (
+            SELECT pvtb.RETURN_DATE AS RT_DATE, CASE WHEN isnull(pvtb.HT,0) < 0 THEN  0 ELSE isnull(pvtb.HT,0) END AS HT, CASE WHEN isnull(pvtb.CD,0) < 0 THEN  0 ELSE isnull(pvtb.CD,0) END AS CD, CASE WHEN isnull(pvtb.MD,0) < 0 THEN  0 ELSE isnull(pvtb.MD,0) END AS MD
+            FROM 
+            (SELECT RETURN_DATE, RMA_TYPE, RMA_AMOUNT FROM RMA_DATA) AS src
+            PIVOT 
+            (
+              SUM(RMA_AMOUNT) FOR RMA_TYPE IN ([HT],[CD],[MD])
+            ) as pvtb
+            ) 
+            SELECT YEAR(RT_DATE) AS RT_YEAR, SUM(HT) AS HT, SUM(MD) AS MD, SUM(CD) AS CD FROM RMA_PVTB
+            GROUP BY YEAR(RT_DATE)
+            ORDER BY YEAR(RT_DATE) DESC
             `;
             //console.log(setpdQuery);
             checkkq = await queryDB(setpdQuery);

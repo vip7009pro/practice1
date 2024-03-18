@@ -456,4 +456,7 @@ app.post("/uploadfilechecksheet", upload2.single("uploadedfile"), function (req,
 });
 server.listen(API_PORT);
 server_s.listen(SOCKET_PORT);
+process.on('uncaughtException', function (error) {
+  console.log("loi cmnr: " + error);
+}); 
 console.log("Server listening on  " + API_PORT +  "/" + SOCKET_PORT);
