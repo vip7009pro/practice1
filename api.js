@@ -6410,11 +6410,12 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
                          DATA.FACTORY
                        )} 
                        ORDER BY ZTBPQC1TABLE.PQC1_ID DESC`; */
-          let setpdQuery = `SELECT  ZTBPQC1TABLE.FACTORY, ZTBPQC1TABLE.PQC1_ID,ZTBPQC1TABLE.PLAN_ID, ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY, CONCAT(datepart(YEAR,ZTBPQC1TABLE.SETTING_OK_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC1TABLE.SETTING_OK_TIME))) AS YEAR_WEEK,ZTBPQC1TABLE.PROCESS_LOT_NO,M100.G_NAME,M100.G_NAME_KD,ZTBPQC1TABLE.LINEQC_PIC AS LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,M100.PROD_LAST_PRICE,(M100.PROD_LAST_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT, ZTBPQC1TABLE.CNDB_ENCODES, ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE, ZTBPQC3TABLE.PQC3_ID, ZTBPQC3TABLE.OCCURR_TIME, ZTBPQC3TABLE.INSPECT_QTY, ZTBPQC3TABLE.DEFECT_QTY, ZTBPQC3TABLE.DEFECT_PHENOMENON,  ZTBPQC1TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_DATE, ZTBPQC1TABLE.IMG_1,ZTBPQC1TABLE.IMG_2,ZTBPQC1TABLE.IMG_3
+          let setpdQuery = `SELECT  M110.CUST_NAME_KD, ZTBPQC1TABLE.FACTORY, ZTBPQC1TABLE.PQC1_ID,ZTBPQC1TABLE.PLAN_ID, ZTBPQC1TABLE.SETTING_OK_TIME,ZTBPQC1TABLE.INSPECT_SAMPLE_QTY, CONCAT(datepart(YEAR,ZTBPQC1TABLE.SETTING_OK_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC1TABLE.SETTING_OK_TIME))) AS YEAR_WEEK,ZTBPQC1TABLE.PROCESS_LOT_NO,M100.G_NAME,M100.G_NAME_KD,ZTBPQC1TABLE.LINEQC_PIC AS LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC1TABLE.STEPS,ZTBPQC1TABLE.CAVITY,M100.PROD_LAST_PRICE,(M100.PROD_LAST_PRICE*ZTBPQC1TABLE.INSPECT_SAMPLE_QTY) AS SAMPLE_AMOUNT, ZTBPQC1TABLE.CNDB_ENCODES, ZTBPQC1TABLE.REMARK,ZTBPQC1TABLE.INS_DATE,ZTBPQC1TABLE.UPD_DATE, ZTBPQC3TABLE.PQC3_ID, ZTBPQC3TABLE.OCCURR_TIME, ZTBPQC3TABLE.INSPECT_QTY, ZTBPQC3TABLE.DEFECT_QTY, ZTBPQC3TABLE.DEFECT_PHENOMENON,  ZTBPQC1TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_DATE, ZTBPQC1TABLE.IMG_1,ZTBPQC1TABLE.IMG_2,ZTBPQC1TABLE.IMG_3
                         FROM
                        ZTBPQC1TABLE
                        LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC1TABLE.PROD_REQUEST_NO)
                        LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC1TABLE.G_CODE)
+                       LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD)
                        LEFT JOIN  ZTBPQC3TABLE  ON (ZTBPQC1TABLE.PQC1_ID= ZTBPQC3TABLE.PQC1_ID)
                        ${generate_condition_pqc1(
             DATA.ALLTIME,
@@ -6442,7 +6443,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT M110.CUST_NAME_KD, CONCAT(datepart(YEAR,ZTBPQC3TABLE.OCCURR_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC3TABLE.OCCURR_TIME))) AS YEAR_WEEK,ZTBPQC3TABLE.PQC3_ID,ZTBPQC3TABLE.PQC1_ID,ZTBPQC1TABLE.FACTORY,ZTBPQC3TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,ZTBPQC3TABLE.PROCESS_LOT_NO,ZTBPQC3TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,M100.PROD_LAST_PRICE,ZTBPQC3TABLE.LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC3TABLE.OCCURR_TIME,ZTBPQC3TABLE.INSPECT_QTY,ZTBPQC3TABLE.DEFECT_QTY,(ZTBPQC3TABLE.DEFECT_QTY *M100.PROD_LAST_PRICE ) AS DEFECT_AMOUNT,ZTBPQC3TABLE.DEFECT_PHENOMENON,ZTBPQC3TABLE.DEFECT_IMAGE_LINK,ZTBPQC3TABLE.REMARK,ZTBPQC3TABLE.WORST5,ZTBPQC3TABLE.WORST5_MONTH, ZTBPQC3TABLE.ERR_CODE
+          let setpdQuery = `SELECT M110.CUST_NAME_KD, CONCAT(datepart(YEAR,ZTBPQC3TABLE.OCCURR_TIME),'_',datepart(ISO_WEEK,DATEADD(day,2,ZTBPQC3TABLE.OCCURR_TIME))) AS YEAR_WEEK,ZTBPQC3TABLE.PQC3_ID,ZTBPQC3TABLE.PQC1_ID,ZTBPQC1TABLE.FACTORY,ZTBPQC3TABLE.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,ZTBPQC3TABLE.PROCESS_LOT_NO,ZTBPQC3TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,M100.PROD_LAST_PRICE,ZTBPQC3TABLE.LINEQC_PIC,ZTBPQC1TABLE.PROD_PIC,ZTBPQC1TABLE.PROD_LEADER,ZTBPQC1TABLE.LINE_NO,ZTBPQC3TABLE.OCCURR_TIME,ZTBPQC3TABLE.INSPECT_QTY,ZTBPQC3TABLE.DEFECT_QTY,(ZTBPQC3TABLE.DEFECT_QTY *M100.PROD_LAST_PRICE ) AS DEFECT_AMOUNT,ZTBPQC3TABLE.DEFECT_PHENOMENON,ZTBPQC3TABLE.DEFECT_IMAGE_LINK,ZTBPQC3TABLE.REMARK,ZTBPQC3TABLE.WORST5,ZTBPQC3TABLE.WORST5_MONTH, ZTBPQC3TABLE.ERR_CODE, ZTBPQC3TABLE.NG_NHAN, ZTBPQC3TABLE.DOI_SACH, ZTBPQC3TABLE.STATUS
                         FROM ZTBPQC3TABLE 
                        LEFT JOIN ZTBPQC1TABLE ON (ZTBPQC3TABLE.PQC1_ID = ZTBPQC1TABLE.PQC1_ID)
                        LEFT JOIN M100 ON (M100.G_CODE = ZTBPQC3TABLE.G_CODE)
@@ -8337,22 +8338,26 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
-          }          
-          
-          if(DATA.codeArray.length ===1) {
+          }
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `SELECT CAST(INSPECT_START_TIME as date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM 
                     ZTBINSPECTNGTB 
+                    LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
                     ${condition}
                     GROUP BY CAST(INSPECT_START_TIME as date) 
                     ORDER BY CAST(INSPECT_START_TIME as date) DESC`;
@@ -8370,11 +8375,27 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
+
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
+
           let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_',  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))) AS YEAR_WEEK, YEAR(INSPECT_START_TIME) AS YEAR_NUM,  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME)) AS WEEK_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
                     ${condition}
                     GROUP BY YEAR(INSPECT_START_TIME), DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))
                     ORDER BY YEAR(INSPECT_START_TIME) DESC, DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))  DESC`;
@@ -8392,11 +8413,25 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_', MONTH(INSPECT_START_TIME)) AS YEAR_MONTH, YEAR(INSPECT_START_TIME) AS YEAR_NUM, MONTH(INSPECT_START_TIME) AS MONTH_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
                    ${condition}
                     GROUP BY YEAR(INSPECT_START_TIME), MONTH(INSPECT_START_TIME)
                     ORDER BY YEAR(INSPECT_START_TIME) DESC, MONTH(INSPECT_START_TIME) DESC`;
@@ -8414,21 +8449,26 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE 1=1`
+          let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
-
-        if(DATA.codeArray.length ===1) {
-                    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-                  }
-                  else if(DATA.codeArray.length >1) {
-                    let codeString = ``;
-                    let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-                    condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
-                  }
-
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += `
+             AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM,  SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+          LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
                    ${condition}
                     GROUP BY YEAR(INSPECT_START_TIME)
                     ORDER BY YEAR(INSPECT_START_TIME) ASC`;
@@ -8474,16 +8514,13 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           if (DATA.PLAN_EQ !== "ALL") {
             condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2)= '${DATA.PLAN_EQ}'`;
           }
-          if(DATA.TRUSAMPLE) {
+          if (DATA.TRUSAMPLE) {
             condition += ` AND P400.CODE_55 <> '04'`;
           }
           let setpdQuery = `            
           WITH 
 SD_LIEU AS
 (
-
-
-
 SELECT 
       isnull(
         isnull(
@@ -8547,9 +8584,6 @@ SELECT
         AA.PLAN_ID_SUDUNG = WAREHOUSE_OUT.PLAN_ID_INPUT 
         AND AA.M_NAME = WAREHOUSE_OUT.M_NAME
       )	 
-	 
-
-
 ), INSPECT_INPUT_TABLE AS 
 ( SELECT 
       PLAN_ID, 
@@ -8757,7 +8791,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           if (DATA.M_NAME !== "") {
             condition += ` AND SD_LIEU.M_NAME LIKE '%${DATA.M_NAME}%'`;
           }
-          if(DATA.TRUSAMPLE) {
+          if (DATA.TRUSAMPLE) {
             condition += ` AND P400.CODE_55 <> '04'`;
           }
           let setpdQuery = `
@@ -13359,19 +13393,19 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           else {
             condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P')`;
           }
-
-          let condition3 = ``;
-          if(DATA.codeArray.length ===1) {
+          let condition3 = `WHERE 1=1 `;
+          if (DATA.codeArray.length === 1) {
             condition3 += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition3 +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition3 += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-
-
-
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition3 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
           WITH INSPECTION_DATA_DOC AS
           (
@@ -13380,6 +13414,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           FROM ZTBINSPECTNGTB2
           LEFT JOIN ZTBINSPECTNGTB ON (ZTBINSPECTNGTB2.INSPECT_ID = ZTBINSPECTNGTB.INSPECT_ID)
           LEFT JOIN M100 ON (M100.G_CODE = ZTBINSPECTNGTB.G_CODE)
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           ${condition3}
           )
           SELECT ERROR_TABLE.ERR_CODE, ERROR_TABLE.ERR_NAME_VN, ERROR_TABLE.ERR_NAME_KR, SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) AS NG_QTY, SUM(NG_AMOUNT) AS NG_AMOUNT FROM INSPECTION_DATA_DOC 
@@ -13414,18 +13450,20 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           else {
             condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P') `;
           }
-
           let condition3 = ``;
-          if(DATA.codeArray.length ===1) {
+          if (DATA.codeArray.length === 1) {
             condition3 += ` AND INSPECTION_DATA_DOC.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition3 +=` AND INSPECTION_DATA_DOC.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition3 += ` AND INSPECTION_DATA_DOC.G_CODE IN (${codeArStr})`;
           }
-
-
+          let condition4= `WHERE ZTBINSPECTNGTB2.ERR_CODE='${DATA.ERR_CODE}' `;
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition4 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
           WITH INSPECTION_DATA_DOC AS
           (
@@ -13434,7 +13472,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           FROM ZTBINSPECTNGTB2
           LEFT JOIN ZTBINSPECTNGTB ON (ZTBINSPECTNGTB2.INSPECT_ID = ZTBINSPECTNGTB.INSPECT_ID)
           LEFT JOIN M100 ON (M100.G_CODE = ZTBINSPECTNGTB.G_CODE)
-          WHERE ZTBINSPECTNGTB2.ERR_CODE='${DATA.ERR_CODE}'
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+          LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
+          ${condition4}          
           )
           SELECT INSPECTION_DATA_DOC.G_CODE, INSPECTION_DATA_DOC.G_NAME_KD,SUM(CAST(INSPECTION_DATA_DOC.INSPECT_TOTAL_QTY as bigint)) AS INSPECT_TOTAL_QTY, SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) AS NG_QTY, SUM(NG_AMOUNT) AS NG_AMOUNT FROM INSPECTION_DATA_DOC 
           LEFT JOIN ERROR_TABLE ON (ERROR_TABLE.ERR_CODE = INSPECTION_DATA_DOC.ERR_CODE)
@@ -13456,14 +13496,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = ``;
-          if(DATA.codeArray.length ===1) {
+          let condition = ``;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           SELECT SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -13473,6 +13517,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
                     FROM ZTBINSPECTNGTB
                 LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+                LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
           `;
           //console.log(setpdQuery);
@@ -13490,14 +13536,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = `WHERE 1=1 `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE 1=1 `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           WITH PQC_DATA AS
@@ -13505,6 +13555,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SELECT CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YW, CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', MONTH(ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YM, CAST(ZTBPQC1TABLE.SETTING_OK_TIME as date)  AS SETTING_DATE, YEAR(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_YEAR, MONTH(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_MONTH, DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_WEEK,   ZTBPQC1TABLE.PQC1_ID, PQC3_ID, isnull(M100.PROD_LAST_PRICE,0) * isnull(ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,0) AS INSPECT_AMOUNT FROM ZTBPQC1TABLE 
           LEFT JOIN ZTBPQC3TABLE ON (ZTBPQC1TABLE.PQC1_ID = ZTBPQC3TABLE.PQC1_ID)
           LEFT JOIN M100 ON M100.G_CODE = ZTBPQC1TABLE.G_CODE
+          LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
           ${condition}
           )
           SELECT COUNT(PQC1_ID) AS TOTAL_LOT, COUNT(PQC3_ID) AS NG_LOT,COUNT(PQC3_ID)*1.0/COUNT(PQC1_ID) AS NG_RATE, SUM(INSPECT_AMOUNT) AS  INSPECT_AMOUNT FROM PQC_DATA
@@ -13525,14 +13576,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = ``;
-          if(DATA.codeArray.length ===1) {
+          let condition = ``;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           SELECT CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE) AS INSPECT_DATE, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -13542,6 +13597,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
                     FROM ZTBINSPECTNGTB
                 LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+                LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
           GROUP BY CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE)
 				ORDER BY CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE) DESC
@@ -13561,14 +13618,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = ``;
-          if(DATA.codeArray.length ===1) {
+          let condition = ``;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           SELECT CONCAT(YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),'_',DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME)) AS INSPECT_YW, YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR,DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_WEEK, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -13578,6 +13639,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
                     FROM ZTBINSPECTNGTB
                 LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+                LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
           GROUP BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME)
 				ORDER BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME)DESC ,DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME) DESC
@@ -13597,14 +13660,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = ``;
-          if(DATA.codeArray.length ===1) {
+          let condition = ``;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           SELECT CONCAT(YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),'_',MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME)) AS INSPECT_YM, YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR,MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_MONTH, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -13614,6 +13681,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
                     FROM ZTBINSPECTNGTB
                 LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+                LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
           GROUP BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME)
 				ORDER BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME)DESC ,MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME) DESC
@@ -13633,14 +13702,18 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = ``;
-          if(DATA.codeArray.length ===1) {
+          let condition = ``;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           SELECT YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -13650,6 +13723,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SUM(isnull(M100.PROD_LAST_PRICE,0) * (CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint))) AS P_NG_AMOUNT
                     FROM ZTBINSPECTNGTB
                 LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTNGTB.G_CODE
+                LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           WHERE INSPECT_START_TIME  BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' ${condition}
           GROUP BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME)
 				ORDER BY YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) DESC
@@ -14325,22 +14400,22 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = `WHERE 1=1 `;
-          if(!DATA.ALLTIME) {
+          if (!DATA.ALLTIME) {
             condition += ` AND AA.OUT_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
           }
-          if(DATA.G_CODE!=='') {
+          if (DATA.G_CODE !== '') {
             condition += `AND AA.G_CODE='${DATA.G_CODE}'`
           }
-          if(DATA.G_NAME!=='') {
+          if (DATA.G_NAME !== '') {
             condition += `AND AA.G_NAME LIKE'%${DATA.G_NAME}%'`
           }
-          if(DATA.CUST_NAME_KD!=='') {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += `AND AA.CUST_NAME_KD LIKE'%${DATA.CUST_NAME_KD}%'`
           }
-          else 
-          if(DATA.CAPBU === false) {
-            condition += `AND  AA.CUST_NAME_KD <>'CMSV'`
-          }
+          else
+            if (DATA.CAPBU === false) {
+              condition += `AND  AA.CUST_NAME_KD <>'CMSV'`
+            }
           let setpdQuery = `SELECT * FROM 
           (
           SELECT  tbl_Bxout.Product_MaVach AS G_CODE, M100.G_NAME,M100.G_NAME_KD, M100.PROD_MODEL, tbl_Bxout.OutID,M110.CUST_NAME_KD, tbl_Bxout.Customer_SortName, CAST(tbl_Bxout.Time as date) as OUT_DATE,tbl_Bxout.Time AS OUT_DATETIME,isnull(tbl_Bxin.Qty*tbl_Bxin.Qty_KTID, tbl_Bxout.Qty_OutID*tbl_Bxout.Qty) AS Out_Qty,
@@ -14378,7 +14453,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
-        case "dailyDefectTrending":
+      case "dailyDefectTrending":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14387,30 +14462,36 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = `WHERE ZTBINSPECTNGTB.INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE ZTBINSPECTNGTB.INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           SELECT CAST(INSPECT_DATETIME AS date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY , SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY , SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS INSPECT_NG_QTY,
           SUM(ERR1) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR1,SUM(ERR2) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR2,SUM(ERR3) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR3,SUM(ERR4) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR4,SUM(ERR5) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR5,SUM(ERR6) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR6,SUM(ERR7) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR7,SUM(ERR8) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR8,SUM(ERR9) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR9,SUM(ERR10) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR10,SUM(ERR11) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR11,SUM(ERR12) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR12,SUM(ERR13) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR13,SUM(ERR14) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR14,SUM(ERR15) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR15,SUM(ERR16) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR16,SUM(ERR17) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR17,SUM(ERR18) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR18,SUM(ERR19) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR19,SUM(ERR20) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR20,SUM(ERR21) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR21,SUM(ERR22) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR22,SUM(ERR23) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR23,SUM(ERR24) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR24,SUM(ERR25) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR25,SUM(ERR26) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR26,SUM(ERR27) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR27,SUM(ERR28) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR28,SUM(ERR29) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR29,SUM(ERR30) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR30,SUM(ERR31) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR31,SUM(ERR32) *1000000.0/ SUM(INSPECT_TOTAL_QTY) AS ERR32
           FROM ZTBINSPECTNGTB 
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+                    LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           ${condition}
           GROUP BY CAST(INSPECT_DATETIME AS date)
           ORDER BY CAST(INSPECT_DATETIME AS date) DESC
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "dailyPQCDefectTrending":
+      case "dailyPQCDefectTrending":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14419,23 +14500,27 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition  = `WHERE ERR_CODE is not null AND OCCURR_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE ERR_CODE is not null AND OCCURR_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBPQC3TABLE.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBPQC3TABLE.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBPQC3TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
           WITH PQC3_DATA AS
           (
           SELECT CAST(OCCURR_TIME AS date) AS OCCURR_TIME, ERR_CODE, SUM(INSPECT_QTY) AS INSPECT_QTY, SUM(DEFECT_QTY) AS DEFECT_QTY, SUM(DEFECT_QTY)*1.0/ SUM(INSPECT_QTY) AS NG_RATE FROM ZTBPQC3TABLE 
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBPQC3TABLE.PROD_REQUEST_NO
+          LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
           ${condition}
-
           GROUP BY CAST(OCCURR_TIME AS date), ERR_CODE
-
           )
           SELECT INSPECT_DATE,isnull([ERR1],0) AS ERR1,isnull([ERR2],0) AS ERR2,isnull([ERR3],0) AS ERR3,isnull([ERR4],0) AS ERR4,isnull([ERR5],0) AS ERR5,isnull([ERR6],0) AS ERR6,isnull([ERR7],0) AS ERR7,isnull([ERR8],0) AS ERR8,isnull([ERR9],0) AS ERR9,isnull([ERR10],0) AS ERR10,isnull([ERR11],0) AS ERR11,isnull([ERR12],0) AS ERR12,isnull([ERR13],0) AS ERR13,isnull([ERR14],0) AS ERR14,isnull([ERR15],0) AS ERR15,isnull([ERR16],0) AS ERR16,isnull([ERR17],0) AS ERR17,isnull([ERR18],0) AS ERR18,isnull([ERR19],0) AS ERR19,isnull([ERR20],0) AS ERR20,isnull([ERR21],0) AS ERR21,isnull([ERR22],0) AS ERR22,isnull([ERR23],0) AS ERR23,isnull([ERR24],0) AS ERR24,isnull([ERR25],0) AS ERR25,isnull([ERR26],0) AS ERR26,isnull([ERR27],0) AS ERR27,isnull([ERR28],0) AS ERR28,isnull([ERR29],0) AS ERR29,isnull([ERR30],0) AS ERR30,isnull([ERR31],0) AS ERR31,isnull([ERR32],0) AS ERR32
  FROM 
@@ -14446,13 +14531,13 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           ) as pvtb
           ORDER BY pvtb.INSPECT_DATE DESC
           `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "loadInspectionPatrol":
+      case "loadInspectionPatrol":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14461,7 +14546,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-                    
           let setpdQuery = `
           SELECT ZTBINSPECTION_PATROL.INS_PATROL_ID, ZTBINSPECTION_PATROL.PROD_REQUEST_NO, ZTBINSPECTION_PATROL.PLAN_ID, ZTBINSPECTION_PATROL.PROCESS_LOT_NO, ZTBINSPECTION_PATROL.G_CODE, ZTBINSPECTION_PATROL.ERR_CODE, ZTBINSPECTION_PATROL.INSPECT_QTY, ZTBINSPECTION_PATROL.DEFECT_QTY, ZTBINSPECTION_PATROL.DEFECT_PHENOMENON, ZTBINSPECTION_PATROL.LINEQC_PIC, ZTBINSPECTION_PATROL.INSP_PIC, ZTBINSPECTION_PATROL.PROD_PIC, ZTBINSPECTION_PATROL.INS_DATE, ZTBINSPECTION_PATROL.PHANLOAI, ZTBINSPECTION_PATROL.REMARK, ZTBINSPECTION_PATROL.OCCURR_TIME, ZTBINSPECTION_PATROL.LABEL_ID, ZTBINSPECTION_PATROL.EQUIPMENT_CD, ZTBINSPECTION_PATROL.CUST_CD, ZTBINSPECTION_PATROL.FACTORY, M100.G_NAME, M100.G_NAME_KD, M110.CUST_NAME_KD FROM ZTBINSPECTION_PATROL
           LEFT JOIN M100 ON M100.G_CODE= ZTBINSPECTION_PATROL.G_CODE
@@ -14473,7 +14557,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
-        case "pqcdailyppm":
+      case "pqcdailyppm":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14482,23 +14566,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-
-          let condition  = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
           WITH PQC_DATA AS
           (
             SELECT CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YW, CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', MONTH(ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YM, CAST(ZTBPQC1TABLE.SETTING_OK_TIME as date)  AS SETTING_DATE, YEAR(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_YEAR, MONTH(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_MONTH, DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_WEEK,   ZTBPQC1TABLE.PQC1_ID, PQC3_ID, isnull(M100.PROD_LAST_PRICE,0) * isnull(ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,0) AS INSPECT_AMOUNT FROM ZTBPQC1TABLE 
             LEFT JOIN ZTBPQC3TABLE ON (ZTBPQC1TABLE.PQC1_ID = ZTBPQC3TABLE.PQC1_ID)
             LEFT JOIN M100 ON M100.G_CODE = ZTBPQC1TABLE.G_CODE
+            LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
           ${condition}
           )
           SELECT SETTING_DATE, COUNT(PQC1_ID) AS TOTAL_LOT, COUNT(PQC3_ID) AS NG_LOT,COUNT(PQC3_ID)*1.0/COUNT(PQC1_ID) AS NG_RATE,  SUM(INSPECT_AMOUNT) AS  INSPECT_AMOUNT FROM PQC_DATA 
@@ -14511,7 +14598,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
-        case "pqcweeklyppm":
+      case "pqcweeklyppm":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14520,23 +14607,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-
-          let condition  = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
           WITH PQC_DATA AS
           (
             SELECT CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YW, CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', MONTH(ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YM, CAST(ZTBPQC1TABLE.SETTING_OK_TIME as date)  AS SETTING_DATE, YEAR(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_YEAR, MONTH(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_MONTH, DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_WEEK,   ZTBPQC1TABLE.PQC1_ID, PQC3_ID, isnull(M100.PROD_LAST_PRICE,0) * isnull(ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,0) AS INSPECT_AMOUNT FROM ZTBPQC1TABLE 
             LEFT JOIN ZTBPQC3TABLE ON (ZTBPQC1TABLE.PQC1_ID = ZTBPQC3TABLE.PQC1_ID)
             LEFT JOIN M100 ON M100.G_CODE = ZTBPQC1TABLE.G_CODE
+            LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
           ${condition}
           )
           SELECT CONCAT(SETTING_YEAR, '_', SETTING_WEEK) AS SETTING_YW, SETTING_YEAR, SETTING_WEEK, COUNT(PQC1_ID) AS TOTAL_LOT, COUNT(PQC3_ID) AS NG_LOT, COUNT(PQC3_ID)*1.0/COUNT(PQC1_ID) AS NG_RATE, SUM(INSPECT_AMOUNT) AS  INSPECT_AMOUNT FROM PQC_DATA GROUP BY SETTING_YEAR, SETTING_WEEK 
@@ -14548,7 +14638,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
-        case "pqcmonthlyppm":
+      case "pqcmonthlyppm":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14557,23 +14647,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-
-          let condition  = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
           WITH PQC_DATA AS
           (
           SELECT CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YW, CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', MONTH(ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YM, CAST(ZTBPQC1TABLE.SETTING_OK_TIME as date)  AS SETTING_DATE, YEAR(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_YEAR, MONTH(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_MONTH, DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_WEEK,   ZTBPQC1TABLE.PQC1_ID, PQC3_ID, isnull(M100.PROD_LAST_PRICE,0) * isnull(ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,0) AS INSPECT_AMOUNT FROM ZTBPQC1TABLE 
           LEFT JOIN ZTBPQC3TABLE ON (ZTBPQC1TABLE.PQC1_ID = ZTBPQC3TABLE.PQC1_ID)
           LEFT JOIN M100 ON M100.G_CODE = ZTBPQC1TABLE.G_CODE
+          LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
           ${condition}
           )
           SELECT CONCAT(SETTING_YEAR, '_', SETTING_MONTH) AS SETTING_YM, SETTING_YEAR, SETTING_MONTH, COUNT(PQC1_ID) AS TOTAL_LOT, COUNT(PQC3_ID) AS NG_LOT, COUNT(PQC3_ID)*1.0/COUNT(PQC1_ID) AS NG_RATE, SUM(INSPECT_AMOUNT) AS  INSPECT_AMOUNT FROM PQC_DATA GROUP BY SETTING_YEAR, SETTING_MONTH
@@ -14585,7 +14678,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
-        case "pqcyearlyppm":
+      case "pqcyearlyppm":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -14594,23 +14687,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-
-          let condition  = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.codeArray.length ===1) {
+          let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
           }
-          else if(DATA.codeArray.length >1) {
+          else if (DATA.codeArray.length > 1) {
             let codeString = ``;
-            let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-            condition +=` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
           WITH PQC_DATA AS
           (
           SELECT CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YW, CONCAT(YEAR(ZTBPQC1TABLE.SETTING_OK_TIME),'_', MONTH(ZTBPQC1TABLE.SETTING_OK_TIME)) AS SETTING_YM, CAST(ZTBPQC1TABLE.SETTING_OK_TIME as date)  AS SETTING_DATE, YEAR(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_YEAR, MONTH(ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_MONTH, DATEPART(ISO_WEEK, ZTBPQC1TABLE.SETTING_OK_TIME) AS SETTING_WEEK,   ZTBPQC1TABLE.PQC1_ID, PQC3_ID, isnull(M100.PROD_LAST_PRICE,0) * isnull(ZTBPQC1TABLE.INSPECT_SAMPLE_QTY,0) AS INSPECT_AMOUNT FROM ZTBPQC1TABLE 
           LEFT JOIN ZTBPQC3TABLE ON (ZTBPQC1TABLE.PQC1_ID = ZTBPQC3TABLE.PQC1_ID)
           LEFT JOIN M100 ON M100.G_CODE = ZTBPQC1TABLE.G_CODE
+          LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
           ${condition}
           )
           SELECT SETTING_YEAR,  COUNT(PQC1_ID) AS TOTAL_LOT, COUNT(PQC3_ID) AS NG_LOT, COUNT(PQC3_ID)*1.0/COUNT(PQC1_ID) AS NG_RATE, SUM(INSPECT_AMOUNT) AS  INSPECT_AMOUNT FROM PQC_DATA GROUP BY SETTING_YEAR
@@ -14622,27 +14718,25 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
-        case "csdailyconfirmdata":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let setpdQuery = `
+      case "csdailyconfirmdata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14651,7 +14745,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
                       LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
                       LEFT JOIN M110 ON (M110.CUST_CD = CS_CONFIRM_TABLE.CUST_CD)		
                       ${condition}  
-                      
             )
             SELECT * FROM
             (SELECT CONFIRM_DATE, FACTOR, CONFIRM_ID AS CF_ID FROM CS_DATA) as src
@@ -14661,33 +14754,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             )as pvtb
             ORDER BY CONFIRM_DATE DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csweeklyconfirmdata":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csweeklyconfirmdata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14705,33 +14796,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             )as pvtb
             ORDER BY pvtb.CONFIRM_YEAR DESC, pvtb.CONFIRM_WEEK DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csmonthlyconfirmdata":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csmonthlyconfirmdata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14749,33 +14838,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             )as pvtb
             ORDER BY pvtb.CONFIRM_YEAR DESC, pvtb.CONFIRM_MONTH DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csyearlyconfirmdata":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csyearlyconfirmdata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14793,33 +14880,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             )as pvtb
             ORDER BY pvtb.CONFIRM_YEAR DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csConfirmDataByCustomer":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csConfirmDataByCustomer":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14832,33 +14917,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             SELECT CUST_NAME_KD, COUNT(CONFIRM_ID) AS  TOTAL FROM CS_DATA GROUP BY CUST_NAME_KD
             ORDER BY  COUNT(CONFIRM_ID) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csConfirmDataByPIC":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csConfirmDataByPIC":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14871,43 +14954,40 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             SELECT EMPL_NAME, COUNT(CONFIRM_ID) AS  TOTAL FROM CS_DATA GROUP BY EMPL_NAME
             ORDER BY  COUNT(CONFIRM_ID) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csdailyreduceamount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
-            if(DATA.codeArray.length ===1) {
-              condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition2 +=` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csdailyreduceamount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+          if (DATA.codeArray.length === 1) {
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -14938,43 +15018,40 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             WHERE DATETABLE.DATE_COLUMN BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
             ORDER BY DATETABLE.DATE_COLUMN DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csweeklyreduceamount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
-            if(DATA.codeArray.length ===1) {
-              condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition2 +=` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csweeklyreduceamount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+          if (DATA.codeArray.length === 1) {
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -15007,43 +15084,40 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             GROUP BY CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN)), YEAR(DATETABLE.DATE_COLUMN), DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN)
             ORDER BY YEAR(DATETABLE.DATE_COLUMN) DESC, DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csmonthlyreduceamount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
-            if(DATA.codeArray.length ===1) {
-              condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition2 +=` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csmonthlyreduceamount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+          if (DATA.codeArray.length === 1) {
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -15076,43 +15150,40 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             GROUP BY CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', MONTH(DATETABLE.DATE_COLUMN)), YEAR(DATETABLE.DATE_COLUMN), MONTH(DATETABLE.DATE_COLUMN)
             ORDER BY YEAR(DATETABLE.DATE_COLUMN) DESC, MONTH(DATETABLE.DATE_COLUMN) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csyearlyreduceamount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
-            }
-  
-            let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
-            if(DATA.codeArray.length ===1) {
-              condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition2 +=` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csyearlyreduceamount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+          if (DATA.codeArray.length === 1) {
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH CS_DATA AS
             (
             SELECT CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
@@ -15145,33 +15216,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             GROUP BY YEAR(DATETABLE.DATE_COLUMN)
             ORDER BY YEAR(DATETABLE.DATE_COLUMN) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csdailyRMAAmount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
-            }
-              
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csdailyRMAAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH RMA_DATA AS
             (
             SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
@@ -15201,33 +15270,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             SELECT * FROM RMA_PVTB
             ORDER BY RT_DATE DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csweeklyRMAAmount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csweeklyRMAAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH RMA_DATA AS
             (
             SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
@@ -15258,33 +15325,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             GROUP BY YEAR(RT_DATE), DATEPART(ISO_WEEK, RT_DATE)
             ORDER BY YEAR(RT_DATE) DESC, DATEPART(ISO_WEEK, RT_DATE) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csmonthlyRMAAmount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csmonthlyRMAAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH RMA_DATA AS
             (
             SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
@@ -15315,33 +15380,31 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             GROUP BY YEAR(RT_DATE), MONTH(RT_DATE)
             ORDER BY YEAR(RT_DATE) DESC, MONTH(RT_DATE) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
-        case "csyearlyRMAAmount":
-          (async () => {
-            let DATA = qr["DATA"];
-            //console.log(DATA);
-            let EMPL_NO = req.payload_data["EMPL_NO"];
-            let JOB_NAME = req.payload_data["JOB_NAME"];
-            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-            let checkkq = "OK";
-  
-            let condition  = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
-            if(DATA.codeArray.length ===1) {
-              condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-            }
-            else if(DATA.codeArray.length >1) {
-              let codeString = ``;
-              let codeArStr = DATA.codeArray.map((ele, index)=> `'${ele}'`).join(",");
-              condition +=` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
-            }
-
-            let setpdQuery = `
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csyearlyRMAAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.codeArray.length === 1) {
+            condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
+          }
+          else if (DATA.codeArray.length > 1) {
+            let codeString = ``;
+            let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
+            condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          let setpdQuery = `
             WITH RMA_DATA AS
             (
             SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
@@ -15372,12 +15435,142 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             GROUP BY YEAR(RT_DATE)
             ORDER BY YEAR(RT_DATE) DESC
             `;
-            //console.log(setpdQuery);
-            checkkq = await queryDB(setpdQuery);
-            //console.log(checkkq);
-            res.send(checkkq);
-          })();
-          break;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csdailyTaxiAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            WITH TAXI_DATA  AS
+            (
+            SELECT CS_TAXI_TABLE.TAXI_ID, CS_TAXI_TABLE.CONFIRM_ID, CS_TAXI_TABLE.SA_ID, CS_TAXI_TABLE.CHIEU, CS_TAXI_TABLE.CONG_VIEC, CS_TAXI_TABLE.TAXI_DATE, CS_TAXI_TABLE.TAXI_SHIFT, CS_TAXI_TABLE.CS_EMPL_NO, M110.CUST_NAME_KD AS DIEM_DI, M110_A.CUST_NAME_KD AS DIEM_DEN, CS_TAXI_TABLE.TAXI_AMOUNT, CS_TAXI_TABLE.TRANSPORTATION, CS_TAXI_TABLE.TAXI_REMARK,CS_TAXI_TABLE.INS_DATETIME  FROM CS_TAXI_TABLE
+            LEFT JOIN M110 ON M110.CUST_CD = CS_TAXI_TABLE.DEPARTURE
+            LEFT JOIN (SELECT * FROM  M110) AS M110_A ON M110_A.CUST_CD = CS_TAXI_TABLE.ARRIVAL
+            )
+            SELECT DATETABLE.DATE_COLUMN AS TAXI_DATE, SUM(isnull(TAXI_DATA.TAXI_AMOUNT,0))*1.0/23100 AS TAXI_AMOUNT  FROM DATETABLE 
+            LEFT JOIN TAXI_DATA ON DATETABLE.DATE_COLUMN = TAXI_DATA.TAXI_DATE
+            WHERE  DATETABLE.DATE_COLUMN BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
+            GROUP BY DATETABLE.DATE_COLUMN
+            ORDER BY DATETABLE.DATE_COLUMN DESC
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csweeklyTaxiAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            WITH TAXI_DATA  AS
+            (
+            SELECT CS_TAXI_TABLE.TAXI_ID, CS_TAXI_TABLE.CONFIRM_ID, CS_TAXI_TABLE.SA_ID, CS_TAXI_TABLE.CHIEU, CS_TAXI_TABLE.CONG_VIEC, CS_TAXI_TABLE.TAXI_DATE, CS_TAXI_TABLE.TAXI_SHIFT, CS_TAXI_TABLE.CS_EMPL_NO, M110.CUST_NAME_KD AS DIEM_DI, M110_A.CUST_NAME_KD AS DIEM_DEN, CS_TAXI_TABLE.TAXI_AMOUNT, CS_TAXI_TABLE.TRANSPORTATION, CS_TAXI_TABLE.TAXI_REMARK,CS_TAXI_TABLE.INS_DATETIME  FROM CS_TAXI_TABLE
+                      LEFT JOIN M110 ON M110.CUST_CD = CS_TAXI_TABLE.DEPARTURE
+                      LEFT JOIN (SELECT * FROM  M110) AS M110_A ON M110_A.CUST_CD = CS_TAXI_TABLE.ARRIVAL
+            )
+            SELECT CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN)) AS TAXI_YW, YEAR(DATETABLE.DATE_COLUMN) AS TAXI_YEAR,DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN) AS TAXI_WEEK,   SUM(isnull(TAXI_DATA.TAXI_AMOUNT,0))*1.0/23100 AS TAXI_AMOUNT  FROM DATETABLE 
+            LEFT JOIN TAXI_DATA ON DATETABLE.DATE_COLUMN = TAXI_DATA.TAXI_DATE
+            WHERE  DATETABLE.DATE_COLUMN BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
+            GROUP BY CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN)), YEAR(DATETABLE.DATE_COLUMN) ,DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN)
+            ORDER BY YEAR(DATETABLE.DATE_COLUMN) DESC ,DATEPART(ISO_WEEK, DATETABLE.DATE_COLUMN) DESC
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csmonthlyTaxiAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            WITH TAXI_DATA  AS
+            (
+            SELECT CS_TAXI_TABLE.TAXI_ID, CS_TAXI_TABLE.CONFIRM_ID, CS_TAXI_TABLE.SA_ID, CS_TAXI_TABLE.CHIEU, CS_TAXI_TABLE.CONG_VIEC, CS_TAXI_TABLE.TAXI_DATE, CS_TAXI_TABLE.TAXI_SHIFT, CS_TAXI_TABLE.CS_EMPL_NO, M110.CUST_NAME_KD AS DIEM_DI, M110_A.CUST_NAME_KD AS DIEM_DEN, CS_TAXI_TABLE.TAXI_AMOUNT, CS_TAXI_TABLE.TRANSPORTATION, CS_TAXI_TABLE.TAXI_REMARK,CS_TAXI_TABLE.INS_DATETIME  FROM CS_TAXI_TABLE
+                      LEFT JOIN M110 ON M110.CUST_CD = CS_TAXI_TABLE.DEPARTURE
+                      LEFT JOIN (SELECT * FROM  M110) AS M110_A ON M110_A.CUST_CD = CS_TAXI_TABLE.ARRIVAL
+            )
+            SELECT CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', MONTH(DATETABLE.DATE_COLUMN)) AS TAXI_YW, YEAR(DATETABLE.DATE_COLUMN) AS TAXI_YEAR,MONTH(DATETABLE.DATE_COLUMN) AS TAXI_WEEK,   SUM(isnull(TAXI_DATA.TAXI_AMOUNT,0))*1.0/23100 AS TAXI_AMOUNT  FROM DATETABLE 
+            LEFT JOIN TAXI_DATA ON DATETABLE.DATE_COLUMN = TAXI_DATA.TAXI_DATE
+            WHERE  DATETABLE.DATE_COLUMN BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
+            GROUP BY CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', MONTH(DATETABLE.DATE_COLUMN)), YEAR(DATETABLE.DATE_COLUMN) ,MONTH(DATETABLE.DATE_COLUMN)
+            ORDER BY YEAR(DATETABLE.DATE_COLUMN) DESC, MONTH(DATETABLE.DATE_COLUMN) DESC
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "csyearlyTaxiAmount":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            WITH TAXI_DATA  AS
+            (
+            SELECT CS_TAXI_TABLE.TAXI_ID, CS_TAXI_TABLE.CONFIRM_ID, CS_TAXI_TABLE.SA_ID, CS_TAXI_TABLE.CHIEU, CS_TAXI_TABLE.CONG_VIEC, CS_TAXI_TABLE.TAXI_DATE, CS_TAXI_TABLE.TAXI_SHIFT, CS_TAXI_TABLE.CS_EMPL_NO, M110.CUST_NAME_KD AS DIEM_DI, M110_A.CUST_NAME_KD AS DIEM_DEN, CS_TAXI_TABLE.TAXI_AMOUNT, CS_TAXI_TABLE.TRANSPORTATION, CS_TAXI_TABLE.TAXI_REMARK,CS_TAXI_TABLE.INS_DATETIME  FROM CS_TAXI_TABLE
+                      LEFT JOIN M110 ON M110.CUST_CD = CS_TAXI_TABLE.DEPARTURE
+                      LEFT JOIN (SELECT * FROM  M110) AS M110_A ON M110_A.CUST_CD = CS_TAXI_TABLE.ARRIVAL
+            )
+            SELECT YEAR(DATETABLE.DATE_COLUMN) AS TAXI_YEAR, SUM(isnull(TAXI_DATA.TAXI_AMOUNT,0))*1.0/23100 AS TAXI_AMOUNT  FROM DATETABLE 
+            LEFT JOIN TAXI_DATA ON DATETABLE.DATE_COLUMN = TAXI_DATA.TAXI_DATE
+            WHERE  DATETABLE.DATE_COLUMN BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
+            GROUP BY YEAR(DATETABLE.DATE_COLUMN)
+            ORDER BY YEAR(DATETABLE.DATE_COLUMN) DESC
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updatenndspqc":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE ZTBPQC3TABLE SET NG_NHAN=N'${DATA.NG_NHAN}', DOI_SACH=N'${DATA.DOI_SACH}' WHERE  PQC3_ID=${DATA.PQC3_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
