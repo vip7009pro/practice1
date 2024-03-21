@@ -14736,6 +14736,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH CS_DATA AS
             (
@@ -14777,6 +14781,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH CS_DATA AS
@@ -14820,6 +14828,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH CS_DATA AS
             (
@@ -14861,6 +14873,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH CS_DATA AS
@@ -14904,6 +14920,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH CS_DATA AS
             (
@@ -14940,6 +14960,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH CS_DATA AS
@@ -14986,6 +15010,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH CS_DATA AS
@@ -15050,6 +15078,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH CS_DATA AS
@@ -15117,6 +15149,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH CS_DATA AS
             (
@@ -15183,6 +15219,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH CS_DATA AS
             (
@@ -15240,6 +15280,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH RMA_DATA AS
             (
@@ -15293,6 +15337,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH RMA_DATA AS
@@ -15349,6 +15397,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
           }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+          }
           let setpdQuery = `
             WITH RMA_DATA AS
             (
@@ -15403,6 +15455,10 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeString = ``;
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
+          }
+          if(DATA.CUST_NAME_KD !=='')
+          {
+            condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
             WITH RMA_DATA AS
@@ -15513,7 +15569,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
                       LEFT JOIN M110 ON M110.CUST_CD = CS_TAXI_TABLE.DEPARTURE
                       LEFT JOIN (SELECT * FROM  M110) AS M110_A ON M110_A.CUST_CD = CS_TAXI_TABLE.ARRIVAL
             )
-            SELECT CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', MONTH(DATETABLE.DATE_COLUMN)) AS TAXI_YW, YEAR(DATETABLE.DATE_COLUMN) AS TAXI_YEAR,MONTH(DATETABLE.DATE_COLUMN) AS TAXI_WEEK,   SUM(isnull(TAXI_DATA.TAXI_AMOUNT,0))*1.0/23100 AS TAXI_AMOUNT  FROM DATETABLE 
+            SELECT CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', MONTH(DATETABLE.DATE_COLUMN)) AS TAXI_YM, YEAR(DATETABLE.DATE_COLUMN) AS TAXI_YEAR,MONTH(DATETABLE.DATE_COLUMN) AS TAXI_MONTH,   SUM(isnull(TAXI_DATA.TAXI_AMOUNT,0))*1.0/23100 AS TAXI_AMOUNT  FROM DATETABLE 
             LEFT JOIN TAXI_DATA ON DATETABLE.DATE_COLUMN = TAXI_DATA.TAXI_DATE
             WHERE  DATETABLE.DATE_COLUMN BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'
             GROUP BY CONCAT(YEAR(DATETABLE.DATE_COLUMN),'_', MONTH(DATETABLE.DATE_COLUMN)), YEAR(DATETABLE.DATE_COLUMN) ,MONTH(DATETABLE.DATE_COLUMN)
