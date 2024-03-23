@@ -6187,7 +6187,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
             ORDER BY PO_YEAR ASC, PO_WEEK DESC
           ) AS BB 
           ORDER BY BB.PO_YEAR DESC, BB.PO_WEEK DESC`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
@@ -9463,7 +9463,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           if (DATA.PROD_REQUEST_NO !== '') condition += ` AND CS_CONFIRM_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`
           if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           let setpdQuery = ` 
-          SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT
+          SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT, DS_VN, DS_KR, NG_NHAN, DOI_SACH
           FROM CS_CONFIRM_TABLE
           LEFT JOIN M010 ON (M010.EMPL_NO = CS_CONFIRM_TABLE.CS_EMPL_NO)
           LEFT JOIN M100 ON (M100.G_CODE = CS_CONFIRM_TABLE.G_CODE)
@@ -15622,6 +15622,177 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             UPDATE ZTBPQC3TABLE SET NG_NHAN=N'${DATA.NG_NHAN}', DOI_SACH=N'${DATA.DOI_SACH}' WHERE  PQC3_ID=${DATA.PQC3_ID}
             `;
           console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updatenndscs":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE CS_CONFIRM_TABLE SET NG_NHAN=N'${DATA.NG_NHAN}', DOI_SACH=N'${DATA.DOI_SACH}' WHERE  CONFIRM_ID=${DATA.CONFIRM_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateCSImageStatus":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE CS_CONFIRM_TABLE SET LINK='Y' WHERE  CONFIRM_ID=${DATA.CONFIRM_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateCSDoiSachVNStatus":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE CS_CONFIRM_TABLE SET DS_VN='Y' WHERE  CONFIRM_ID=${DATA.CONFIRM_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateCSDoiSachKRStatus":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE CS_CONFIRM_TABLE SET DS_KR='Y' WHERE  CONFIRM_ID=${DATA.CONFIRM_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadMonthlyRevenueByCustomer":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
+          DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
+          
+          DECLARE @CurrentDate DATE = @StartDate;
+          DECLARE @str1 VARCHAR(MAX) = '';
+          
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str1 =  @str1 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) + ';
+              SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+          END
+          
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
+          
+          SET @CurrentDate = @StartDate;
+          DECLARE @str2 VARCHAR(MAX) = '';
+          
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str2 =  @str2 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) AS [' + FORMAT(@CurrentDate, 'yyyy_MM') + '], ';
+              SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+          END
+          
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
+          
+          SET @CurrentDate = @StartDate;
+          DECLARE @str3 VARCHAR(MAX) = '';
+          
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str3 =  @str3 + '[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
+              SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+          END
+          
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
+          
+          declare @query varchar(max) 
+          select 
+          @query = '
+          WITH ZTBDLVR AS 
+          (
+            SELECT M110.CUST_NAME_KD,ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT	
+            FROM ZTBDelivery 
+            LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE)	
+            LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+          ),
+          DL2TB AS
+          (
+          SELECT CUST_NAME_KD, CONCAT(YEAR(DELIVERY_DATE),''_'', FORMAT(DELIVERY_DATE,''MM'')) AS DL_YM, YEAR(DELIVERY_DATE) AS DL_YEAR, FORMAT(DELIVERY_DATE,''MM'') AS DL_MONTH, DELIVERED_AMOUNT FROM ZTBDLVR
+          ), 
+          B1 as
+          (
+            SELECT pvtb.CUST_NAME_KD, (+ ' + @str1 + ') AS TOTAL, '+ @str2 +' FROM 
+            (
+            SELECT CUST_NAME_KD, DL_YM, DELIVERED_AMOUNT FROM DL2TB)
+            AS src
+            PIVOT
+            (
+            SUM(DELIVERED_AMOUNT) FOR DL_YM IN ('+@str3+')
+            ) as pvtb
+            WHERE (' +@str1+') <> 0
+          ),
+          B2 as
+          (
+            SELECT ''TOTAL'' AS CUST_NAME_KD, (+ ' + @str1 + ') AS TOTAL, '+ @str2 +' FROM 
+            (
+            SELECT DL_YM, DELIVERED_AMOUNT FROM DL2TB)
+            AS src
+            PIVOT
+            (
+            SUM(DELIVERED_AMOUNT) FOR DL_YM IN ('+@str3+')
+            ) as pvtb
+            WHERE (' +@str1+') <> 0
+          )
+          SELECT * FROM B2 UNION ALL SELECT * FROM B1
+          ORDER BY TOTAL DESC
+          '			
+          print(@query)
+          execute(@query)
+            `;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
