@@ -7028,7 +7028,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let setpdQuery = `SELECT * FROM DESIGN_AMAZONE WHERE DESIGN_AMAZONE.G_CODE_MAU='${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;

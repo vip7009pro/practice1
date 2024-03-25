@@ -80,14 +80,21 @@ const io = require("socket.io")(server, {
 
 io.on("connection", (client) => {
   console.log("A client connected");
+  console.log('Array', client_array)
   console.log("IO: Connected clients: " + io.engine.clientsCount);
   client.on("send", (data) => {
     io.sockets.emit("send", data);
     //console.log(data);
   });
+  io.sockets.emit("request_check_online",{check:'online'});
+
+  client.on("respond_check_online", (data) => {
+    if (!client_array.includes(data)) client_array.push(data);
+    //console.log('response check',data);
+  });
   client.on("notification", (data) => {
     io.sockets.emit("notification", data);
-    client_array.push(data);
+    //client_array.push(data);
     //console.log(client_array);
     console.log(data);
   });
@@ -109,14 +116,15 @@ io.on("connection", (client) => {
   client.on("logout", (data) => {
     if (client_array.indexOf(data) > -1)
       client_array.splice(client_array.indexOf(data), 1);
-    io.sockets.emit("logout", client_array);    
+    io.sockets.emit("logout", client_array); 
     console.log(data + " da dang xuat");
     console.log(client_array);
   });
   client.on("disconnect", (data) => {
     console.log(data);
-    console.log("A client disconnected !");
+    console.log("A client disconnected !");    
     console.log("Connected clients: " + io.engine.clientsCount);
+    
   });
 });
 const ios = require("socket.io")(server_s, {
@@ -127,13 +135,19 @@ const ios = require("socket.io")(server_s, {
 ios.on("connection", (client) => {
   console.log("A client connected");
   console.log("IOS: Connected clients: " + ios.engine.clientsCount);
+  ios.sockets.emit("request_check_online",{check:'online'});
+
+  client.on("respond_check_online", (data) => {
+    if (!client_array.includes(data)) client_array.push(data);
+    //console.log('response check',data);
+  });
   client.on("send", (data) => {
     ios.sockets.emit("send", data);
     //console.log(data);
   });
   client.on("notification", (data) => {
     ios.sockets.emit("notification", data);
-    client_array.push(data);
+    //client_array.push(data);
     //console.log(client_array);
     console.log(data);
   });
@@ -155,7 +169,7 @@ ios.on("connection", (client) => {
   client.on("logout", (data) => {
     if (client_array.indexOf(data) > -1)
       client_array.splice(client_array.indexOf(data), 1);
-    ios.sockets.emit("logout", client_array);
+    ios.sockets.emit("logout", client_array);    
     //console.log(client_array);
     console.log(data + " da dang xuat");
   });
