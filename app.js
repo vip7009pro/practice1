@@ -80,10 +80,14 @@ const io = require("socket.io")(server, {
 
 io.on("connection", (client) => {
   console.log("A client connected");
-  console.log('Array', client_array)
+  //console.log('Array', client_array)
   console.log("IO: Connected clients: " + io.engine.clientsCount);
   client.on("send", (data) => {
     io.sockets.emit("send", data);
+    //console.log(data);
+  });
+  client.on("changeServer", (data) => {
+    io.sockets.emit("changeServer", data);
     //console.log(data);
   });
   io.sockets.emit("request_check_online",{check:'online'});
@@ -134,7 +138,7 @@ const ios = require("socket.io")(server_s, {
 });
 ios.on("connection", (client) => {
   console.log("A client connected");
-  console.log("IOS: Connected clients: " + ios.engine.clientsCount);
+  //console.log("IOS: Connected clients: " + ios.engine.clientsCount);
   ios.sockets.emit("request_check_online",{check:'online'});
 
   client.on("respond_check_online", (data) => {
@@ -143,6 +147,10 @@ ios.on("connection", (client) => {
   });
   client.on("send", (data) => {
     ios.sockets.emit("send", data);
+    //console.log(data);
+  });
+  client.on("changeServer", (data) => {
+    io.sockets.emit("changeServer", data);
     //console.log(data);
   });
   client.on("notification", (data) => {
