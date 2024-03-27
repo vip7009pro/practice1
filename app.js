@@ -90,20 +90,22 @@ io.on("connection", (client) => {
     io.sockets.emit("changeServer", data);
     //console.log(data);
   });
-  io.sockets.emit("request_check_online",{check:'online'});
+  io.sockets.emit("request_check_online2",{check:'online'});
+  io.sockets.emit("online_list", client_array);  
 
   client.on("respond_check_online", (data) => {
-    if (!client_array.includes(data)) client_array.push(data);
+    //if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
+    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
     //console.log('response check',data);
   });
   client.on("notification", (data) => {
     io.sockets.emit("notification", data);
     //client_array.push(data);
-    //console.log(client_array);
+    ////console.log(client_array);
     console.log(data);
   });
   client.on("online_list", (data) => {
-    io.sockets.emit("online_list", data);   
+    //io.sockets.emit("online_list", data);   
     console.log(data);
   });
   client.on("setWebVer", (data) => {
@@ -111,24 +113,27 @@ io.on("connection", (client) => {
     console.log(data);
   });
   client.on("login", (data) => {
-    if (!client_array.includes(data)) client_array.push(data);
-    //io.sockets.emit("login", client_array);
+    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
+    io.sockets.emit("online_list", client_array);   
     io.sockets.emit("login", data + "da dang nhap");
-    console.log(client_array);
+    //console.log(client_array);
     console.log(data + " da dang nhap");
   });
   client.on("logout", (data) => {
-    if (client_array.indexOf(data) > -1)
-      client_array.splice(client_array.indexOf(data), 1);
-    io.sockets.emit("logout", client_array); 
+    //if (client_array.indexOf(data) > -1) client_array.splice(client_array.indexOf(data), 1);
+    client_array = client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO);
+    //console.log([...client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO)])
+    //io.sockets.emit("logout", client_array); 
+    io.sockets.emit("online_list", client_array);  
     console.log(data + " da dang xuat");
-    console.log(client_array);
+    //console.log(client_array);
   });
   client.on("disconnect", (data) => {
     console.log(data);
     console.log("A client disconnected !");    
     console.log("Connected clients: " + io.engine.clientsCount);
-    
+    io.sockets.emit("request_check_online2",{check:'online'});    
+    io.sockets.emit("online_list", client_array);
   });
 });
 const ios = require("socket.io")(server_s, {
@@ -139,10 +144,10 @@ const ios = require("socket.io")(server_s, {
 ios.on("connection", (client) => {
   console.log("A client connected");
   //console.log("IOS: Connected clients: " + ios.engine.clientsCount);
-  ios.sockets.emit("request_check_online",{check:'online'});
+  ios.sockets.emit("request_check_online2",{check:'online'});
 
   client.on("respond_check_online", (data) => {
-    if (!client_array.includes(data)) client_array.push(data);
+    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
     //console.log('response check',data);
   });
   client.on("send", (data) => {
@@ -156,11 +161,11 @@ ios.on("connection", (client) => {
   client.on("notification", (data) => {
     ios.sockets.emit("notification", data);
     //client_array.push(data);
-    //console.log(client_array);
+    ////console.log(client_array);
     console.log(data);
   });
   client.on("online_list", (data) => {
-    ios.sockets.emit("online_list", data);   
+    //ios.sockets.emit("online_list", data);   
     console.log(data);
   });
   client.on("setWebVer", (data) => {
@@ -168,23 +173,26 @@ ios.on("connection", (client) => {
     console.log(data);
   });
   client.on("login", (data) => {
-    if (!client_array.includes(data)) client_array.push(data);
-    //ios.sockets.emit("login", client_array);
+    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
+    io.sockets.emit("online_list", client_array);   
     ios.sockets.emit("login", data + "da dang nhap");
-    //console.log(client_array);
+    ////console.log(client_array);
     console.log(data + " da dang nhap");
   });
   client.on("logout", (data) => {
-    if (client_array.indexOf(data) > -1)
-      client_array.splice(client_array.indexOf(data), 1);
+    //if (client_array.indexOf(data) > -1) client_array.splice(client_array.indexOf(data), 1);
+    client_array = client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO);
     ios.sockets.emit("logout", client_array);    
-    //console.log(client_array);
+    ////console.log(client_array);
+    io.sockets.emit("online_list", client_array);
     console.log(data + " da dang xuat");
   });
   client.on("disconnect", (data) => {
     console.log(data);
     console.log("A client disconnected !");
     console.log("Connected clients: IOS: " + ios.engine.clientsCount);
+    ios.sockets.emit("request_check_online2",{check:'online'});
+    io.sockets.emit("online_list", client_array);
   });
 });
 var corsOptions = {
