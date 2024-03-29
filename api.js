@@ -13229,102 +13229,139 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           console.log(DATA.TO_DATE);
           let checkkq = "OK";
           let setpdQuery = `
-          DECLARE @startdate date 
-          DECLARE @enddate date 
-          DECLARE @tempdate date 
-          DECLARE @startweek int, @endweek int, @tempweek int
-          SET   @startdate = '${DATA.FROM_DATE}' 
-          SET   @enddate = '${DATA.TO_DATE}'
-          SET   @startweek = DATEPART(ISOWK, @startdate)
-          SET   @endweek = DATEPART(ISOWK, @enddate)
-          IF(@startweek > @endweek) 
-          SET @startweek =1 
-          SET   @tempweek = @startweek
-          print(@startweek)
-          print(@endweek)
-          SET   @tempdate = @startdate DECLARE @string varchar(max) DECLARE @string2 varchar(max) DECLARE @string3 varchar(max) DECLARE @countdate int 
-          SET   @countdate = 0 
-          SET   @string = '' 
-          SET   @string2 = '' 
-          SET   @string3 = '' 
-          WHILE @tempweek <= @endweek
-          BEGIN 
-            SELECT 
-              @string = @string + ' isnull([' + CAST(@tempweek as varchar(max)) + '],0) AS W' + CAST(@tempweek as varchar(max)) + ',' 
-            SET @tempweek = @tempweek + 1
-          END 
-          SELECT   @string = left(@string,len(@string) -1)
-          print(@string)
-          SET @tempweek = @startweek 
-          WHILE @tempweek <= @endweek 
-          BEGIN 
-            SELECT @string2 = @string2 + '[' + CAST(@tempweek AS varchar(max)) + '],' 
-            SET @tempweek = @tempweek + 1 
-          END 
-          SELECT @string2 = left(@string2,len(@string2) -1) 
-          print(@string2);
-          SET @tempweek = @startweek 
-          WHILE @tempweek <= @endweek 
-          BEGIN 
-            SELECT @string3 = @string3 + 'isnull([' + CAST(@tempweek AS varchar(max)) + '],0)+' 
-            SET @tempweek = @tempweek + 1 
-          END 
-          SELECT @string3 = left(@string3,len(@string3) -1) 
-          print(@string3);
+          DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
+          DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
+
+          DECLARE @CurrentDate DATE = @StartDate;
+          DECLARE @str1 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str1 =  @str1 + 'ISNULL([' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate)) + '],0) + ';
+              SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
+          END
+
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
+
+          SET @CurrentDate = @StartDate;
+          DECLARE @str2 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str2 =  @str2 + 'ISNULL([' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate)) + '],0) AS [' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate)) + '], ';
+              SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
+          END
+
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
+
+          SET @CurrentDate = @StartDate;
+          DECLARE @str3 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str3 =  @str3 + '[' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'], ';
+              SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
+          END
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
+
+
+          SET @CurrentDate = @StartDate;
+          DECLARE @str4 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str4 =  @str4 + 'B5.[' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'], ';
+              SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
+          END
+
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str4 = LEFT( @str4, LEN( @str4) - 1);
+
+
+
+          SET @CurrentDate = @StartDate;
+          DECLARE @str5 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str5 =  @str5 + 'B6.[' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'] AS [' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'_QTY], ';
+              SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
+          END
+
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str5 = LEFT( @str5, LEN( @str5) - 1);
+
+
           declare @query varchar(max) 
           select 
-            @query = '
-            WITH XX AS
-          (SELECT 
-            ZTBDelivery.G_CODE,
-            M010.EMPL_NAME, 
-            M110.CUST_NAME_KD, 
-            ZTBDelivery.DELIVERY_DATE, 
-            M100.PROD_MAIN_MATERIAL, 		  
-            ZTBDelivery.DELIVERY_QTY, 
-            ZTBPOTable.PROD_PRICE,
-            ZTBDelivery.PO_NO, 
+          @query = '
+          WITH ZTBDLVR AS 
+          (
+          SELECT M110.CUST_NAME_KD,ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT	
+          FROM ZTBDelivery 
+          LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE)	
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+          ),
+          DL2TB AS
+          (
+          SELECT CUST_NAME_KD, CONCAT(YEAR(DELIVERY_DATE),''_'', DATEPART(WEEK,DELIVERY_DATE)) AS DL_YW, YEAR(DELIVERY_DATE) AS DL_YEAR, DATEPART(WEEK,DELIVERY_DATE) AS DL_WEEK, DELIVERED_AMOUNT, DELIVERY_QTY FROM ZTBDLVR
+          ), 
+          B1 as
+          (
+            SELECT pvtb.CUST_NAME_KD, (+ ' + @str1 + ') AS TOTAL, '+ @str2 +' FROM 
             (
-            ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY
-            ) As DELIVERED_AMOUNT,
-            M100.PROD_TYPE, 
-            DATEPART(
-            MONTH, ZTBDelivery.DELIVERY_DATE
-            ) AS DELMONTH, 
-            DATEPART(
-            ISOWK, ZTBDelivery.DELIVERY_DATE
-            ) AS DELWEEKNUM         
-            FROM 
-            ZTBDelivery 
-            JOIN ZTBPOTable ON (
-            ZTBDelivery.G_CODE = ZTBPOTable.G_CODE 
-            AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD 
-            AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
-            ) 
-            JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO 
-            JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE 
-            JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD
-            WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '''+CAST(@startdate as varchar(max))+''' AND '''+ CAST(@enddate as varchar(max))+'''
-          )
-          SELECT PVTB.CUST_NAME_KD, isnull(('+@string3+'),0) AS TOTAL_AMOUNT, '+@string + ' FROM 
-          ( 
-          SELECT ''TOTAL'' AS CUST_NAME_KD, isnull(XX.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, XX.DELWEEKNUM FROM XX
-          ) AS bangnguon
+            SELECT CUST_NAME_KD, DL_YW, DELIVERED_AMOUNT FROM DL2TB)
+            AS src
+            PIVOT
+            (
+            SUM(DELIVERED_AMOUNT) FOR DL_YW IN ('+@str3+')
+            ) as pvtb
+            WHERE (' +@str1+') <> 0
+          ),
+          B2 as
+          (
+            SELECT ''TOTAL'' AS CUST_NAME_KD, (+ ' + @str1 + ') AS TOTAL, '+ @str2 +' FROM 
+            (
+            SELECT DL_YW, DELIVERED_AMOUNT FROM DL2TB)
+            AS src
+            PIVOT
+            (
+            SUM(DELIVERED_AMOUNT) FOR DL_YW IN ('+@str3+')
+            ) as pvtb
+            WHERE (' +@str1+') <> 0
+          ), 
+          B3 as
+          (
+          SELECT pvtb.CUST_NAME_KD, ('+ @str1 +' ) AS TOTAL, '+ @str2 +' FROM 
+          (
+          SELECT CUST_NAME_KD, DL_YW, DELIVERY_QTY FROM DL2TB)
+          AS src
           PIVOT
           (
-            SUM(bangnguon.DELIVERED_AMOUNT) FOR bangnguon.DELWEEKNUM IN ('+@string2+')
-          ) as PVTB
-          UNION ALL
-          SELECT PVTB.CUST_NAME_KD, isnull(('+@string3+'),0) AS TOTAL_AMOUNT, '+@string + ' FROM 
-          ( 
-          SELECT XX.CUST_NAME_KD, isnull(XX.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, XX.DELWEEKNUM FROM XX
-          ) AS bangnguon
+          SUM(DELIVERY_QTY) FOR DL_YW IN ('+@str3+')
+          ) as pvtb
+          WHERE  (' +@str1+') <> 0
+          ),
+          B4 as
+          (
+          SELECT ''TOTAL'' AS CUST_NAME_KD, ('+ @str1 +') AS TOTAL, '+ @str2 +' FROM 
+          (
+          SELECT DL_YW, DELIVERY_QTY FROM DL2TB)
+          AS src
           PIVOT
           (
-            SUM(bangnguon.DELIVERED_AMOUNT) FOR bangnguon.DELWEEKNUM IN ('+@string2+')
-          ) as PVTB
-          ORDER BY TOTAL_AMOUNT DESC
-            ' 
+          SUM(DELIVERY_QTY) FOR DL_YW IN ('+@str3+')
+          ) as pvtb
+          WHERE  (' +@str1+') <> 0
+          ),
+          B5 AS (SELECT * FROM B2 UNION ALL SELECT * FROM B1),
+          B6 AS (SELECT * FROM B4 UNION ALL SELECT * FROM B3)
+          SELECT B5.CUST_NAME_KD, B5.TOTAL AS TOTAL_AMOUNT, '+@str4+', B6.TOTAL AS TOTAL_QTY, '+@str5+'  FROM B5 LEFT JOIN B6 ON (B5.CUST_NAME_KD = B6.CUST_NAME_KD)
+          ORDER BY B5.TOTAL DESC
+          '
           print(@query)
           execute(@query)
             `;
@@ -15714,53 +15751,81 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           
           DECLARE @CurrentDate DATE = @StartDate;
           DECLARE @str1 VARCHAR(MAX) = '';
-          
+
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str1 =  @str1 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) + ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-          
+
           -- Xóa dấu phẩy cuối cùng
           SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
-          
+
           SET @CurrentDate = @StartDate;
           DECLARE @str2 VARCHAR(MAX) = '';
-          
+
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str2 =  @str2 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) AS [' + FORMAT(@CurrentDate, 'yyyy_MM') + '], ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-          
+
           -- Xóa dấu phẩy cuối cùng
           SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
-          
+
           SET @CurrentDate = @StartDate;
           DECLARE @str3 VARCHAR(MAX) = '';
-          
+
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str3 =  @str3 + '[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-          
           -- Xóa dấu phẩy cuối cùng
           SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
-          
+
+
+          SET @CurrentDate = @StartDate;
+          DECLARE @str4 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str4 =  @str4 + 'B5.[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
+              SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+          END
+
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str4 = LEFT( @str4, LEN( @str4) - 1);
+
+
+
+          SET @CurrentDate = @StartDate;
+          DECLARE @str5 VARCHAR(MAX) = '';
+
+          WHILE @CurrentDate <= @EndDate
+          BEGIN
+              SET  @str5 =  @str5 + 'B6.[' + FORMAT(@CurrentDate, 'yyyy_MM')+'] AS [' + FORMAT(@CurrentDate, 'yyyy_MM')+'_QTY], ';
+              SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+          END
+
+          -- Xóa dấu phẩy cuối cùng
+          SET  @str5 = LEFT( @str5, LEN( @str5) - 1);
+
+
+
           declare @query varchar(max) 
           select 
           @query = '
           WITH ZTBDLVR AS 
           (
-            SELECT M110.CUST_NAME_KD,ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT	
-            FROM ZTBDelivery 
-            LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE)	
-            LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+          SELECT M110.CUST_NAME_KD,ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT	
+          FROM ZTBDelivery 
+          LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE)	
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
           ),
           DL2TB AS
           (
-          SELECT CUST_NAME_KD, CONCAT(YEAR(DELIVERY_DATE),''_'', FORMAT(DELIVERY_DATE,''MM'')) AS DL_YM, YEAR(DELIVERY_DATE) AS DL_YEAR, FORMAT(DELIVERY_DATE,''MM'') AS DL_MONTH, DELIVERED_AMOUNT FROM ZTBDLVR
+          SELECT CUST_NAME_KD, CONCAT(YEAR(DELIVERY_DATE),''_'', FORMAT(DELIVERY_DATE,''MM'')) AS DL_YM, YEAR(DELIVERY_DATE) AS DL_YEAR, FORMAT(DELIVERY_DATE,''MM'') AS DL_MONTH, DELIVERED_AMOUNT, DELIVERY_QTY FROM ZTBDLVR
           ), 
           B1 as
           (
@@ -15785,10 +15850,36 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             SUM(DELIVERED_AMOUNT) FOR DL_YM IN ('+@str3+')
             ) as pvtb
             WHERE (' +@str1+') <> 0
-          )
-          SELECT * FROM B2 UNION ALL SELECT * FROM B1
-          ORDER BY TOTAL DESC
-          '			
+          ), 
+          B3 as
+          (
+          SELECT pvtb.CUST_NAME_KD, ('+ @str1 +' ) AS TOTAL, '+ @str2 +' FROM 
+          (
+          SELECT CUST_NAME_KD, DL_YM, DELIVERY_QTY FROM DL2TB)
+          AS src
+          PIVOT
+          (
+          SUM(DELIVERY_QTY) FOR DL_YM IN ('+@str3+')
+          ) as pvtb
+          WHERE  (' +@str1+') <> 0
+          ),
+          B4 as
+          (
+          SELECT ''TOTAL'' AS CUST_NAME_KD, ('+ @str1 +') AS TOTAL, '+ @str2 +' FROM 
+          (
+          SELECT DL_YM, DELIVERY_QTY FROM DL2TB)
+          AS src
+          PIVOT
+          (
+          SUM(DELIVERY_QTY) FOR DL_YM IN ('+@str3+')
+          ) as pvtb
+          WHERE  (' +@str1+') <> 0
+          ),
+          B5 AS (SELECT * FROM B2 UNION ALL SELECT * FROM B1),
+          B6 AS (SELECT * FROM B4 UNION ALL SELECT * FROM B3)
+          SELECT B5.CUST_NAME_KD, B5.TOTAL AS TOTAL_AMOUNT, '+@str4+', B6.TOTAL AS TOTAL_QTY, '+@str5+'  FROM B5 LEFT JOIN B6 ON (B5.CUST_NAME_KD = B6.CUST_NAME_KD)
+          ORDER BY B5.TOTAL DESC
+          '
           print(@query)
           execute(@query)
             `;

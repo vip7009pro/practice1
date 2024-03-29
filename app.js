@@ -16,11 +16,9 @@ let EMPL_IMAGE_PATH = process.env.EMPL_IMAGE_PATH;
 let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
 let DESTINATION_FOlDER = process.env.DESTINATION_FOlDER;
 let DESTINATION_55FOlDER = process.env.DESTINATION_55FOlDER;
-
-var SSL_PRIVATE_KEY  = process.env.SSL_PRIVATE_KEY;
+var SSL_PRIVATE_KEY = process.env.SSL_PRIVATE_KEY;
 var SSL_CERTIFICATE = process.env.SSL_CERTIFICATE;
 var SSL_CA_BUNDLE = process.env.SSL_CA_BUNDLE;
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, TEMP_UPLOAD_FOLDER);
@@ -30,9 +28,7 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
-
 const upload = multer({ storage: storage });
-
 const storage2 = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, TEMP_UPLOAD_FOLDER);
@@ -51,11 +47,9 @@ app.use(
 );
 console.log("user  =" + process.env.DB_USER);
 console.log("server  =" + process.env.DB_SERVER);
-
 var privateKey, certificate, ca_bundle;
-
 try {
-  privateKey  = fs.readFileSync(SSL_PRIVATE_KEY, 'utf8');
+  privateKey = fs.readFileSync(SSL_PRIVATE_KEY, 'utf8');
   certificate = fs.readFileSync(SSL_CERTIFICATE, 'utf8');
   ca_bundle = fs.readFileSync(SSL_CA_BUNDLE, 'utf8');
 } catch (err) {
@@ -66,73 +60,55 @@ try {
     console.error('Error reading SSL file:', err.message);
   }
 }
-
-var credentials = {key: privateKey, cert: certificate, ca:ca_bundle };
-
+var credentials = { key: privateKey, cert: certificate, ca: ca_bundle };
 const server = require("http").createServer(app);
 const server_s = require("https").createServer(credentials, app);
-
 const io = require("socket.io")(server, {
   cors: {
     origin: "*",
   },
 });
-
 io.on("connection", (client) => {
   console.log("A client connected");
-  //console.log('Array', client_array)
   console.log("IO: Connected clients: " + io.engine.clientsCount);
   client.on("send", (data) => {
     io.sockets.emit("send", data);
-    //console.log(data);
   });
   client.on("changeServer", (data) => {
     io.sockets.emit("changeServer", data);
-    //console.log(data);
   });
-  io.sockets.emit("request_check_online2",{check:'online'});
-  io.sockets.emit("online_list", client_array);  
-
+  io.sockets.emit("request_check_online2", { check: 'online' });
+  io.sockets.emit("online_list", client_array);
   client.on("respond_check_online", (data) => {
-    //if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
-    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
-    //console.log('response check',data);
+    if (client_array.filter(item => item.EMPL_NO === data.EMPL_NO).length === 0) client_array.push(data);
   });
   client.on("notification", (data) => {
     io.sockets.emit("notification", data);
-    //client_array.push(data);
-    ////console.log(client_array);
     console.log(data);
   });
   client.on("online_list", (data) => {
-    //io.sockets.emit("online_list", data);   
     console.log(data);
   });
   client.on("setWebVer", (data) => {
-    io.sockets.emit("setWebVer", data);   
+    io.sockets.emit("setWebVer", data);
     console.log(data);
   });
   client.on("login", (data) => {
-    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
-    io.sockets.emit("online_list", client_array);   
+    if (client_array.filter(item => item.EMPL_NO === data.EMPL_NO).length === 0) client_array.push(data);
+    io.sockets.emit("online_list", client_array);
     io.sockets.emit("login", data + "da dang nhap");
-    //console.log(client_array);
     console.log(data + " da dang nhap");
   });
   client.on("logout", (data) => {
-    //if (client_array.indexOf(data) > -1) client_array.splice(client_array.indexOf(data), 1);
     client_array = client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO);
-    //console.log([...client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO)])
-    //io.sockets.emit("logout", client_array); 
-    io.sockets.emit("online_list", client_array);  
+    io.sockets.emit("online_list", client_array);
     console.log(data + " da dang xuat");
-    //console.log(client_array);
   });
   client.on("disconnect", (data) => {
     console.log(data);
-    console.log("A client disconnected !");    
+    console.log("A client disconnected !");
     console.log("Connected clients: " + io.engine.clientsCount);
-    io.sockets.emit("request_check_online2",{check:'online'});    
+    io.sockets.emit("request_check_online2", { check: 'online' });
     io.sockets.emit("online_list", client_array);
   });
 });
@@ -143,56 +119,46 @@ const ios = require("socket.io")(server_s, {
 });
 ios.on("connection", (client) => {
   console.log("A client connected");
-  //console.log("IOS: Connected clients: " + ios.engine.clientsCount);
-  ios.sockets.emit("request_check_online2",{check:'online'});
-
-  client.on("respond_check_online", (data) => {
-    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
-    //console.log('response check',data);
-  });
+  console.log("IOS: Connected clients: " + ios.engine.clientsCount);
   client.on("send", (data) => {
     ios.sockets.emit("send", data);
-    //console.log(data);
   });
   client.on("changeServer", (data) => {
-    io.sockets.emit("changeServer", data);
-    //console.log(data);
+    ios.sockets.emit("changeServer", data);
+  });
+  ios.sockets.emit("request_check_online2", { check: 'online' });
+  ios.sockets.emit("online_list", client_array);
+  client.on("respond_check_online", (data) => {
+    if (client_array.filter(item => item.EMPL_NO === data.EMPL_NO).length === 0) client_array.push(data);
   });
   client.on("notification", (data) => {
     ios.sockets.emit("notification", data);
-    //client_array.push(data);
-    ////console.log(client_array);
     console.log(data);
   });
   client.on("online_list", (data) => {
-    //ios.sockets.emit("online_list", data);   
     console.log(data);
   });
   client.on("setWebVer", (data) => {
-    ios.sockets.emit("setWebVer", data);   
+    ios.sockets.emit("setWebVer", data);
     console.log(data);
   });
   client.on("login", (data) => {
-    if(client_array.filter(item=> item.EMPL_NO === data.EMPL_NO).length === 0)  client_array.push(data);
-    io.sockets.emit("online_list", client_array);   
+    if (client_array.filter(item => item.EMPL_NO === data.EMPL_NO).length === 0) client_array.push(data);
+    ios.sockets.emit("online_list", client_array);
     ios.sockets.emit("login", data + "da dang nhap");
-    ////console.log(client_array);
     console.log(data + " da dang nhap");
   });
   client.on("logout", (data) => {
-    //if (client_array.indexOf(data) > -1) client_array.splice(client_array.indexOf(data), 1);
     client_array = client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO);
-    ios.sockets.emit("logout", client_array);    
-    ////console.log(client_array);
-    io.sockets.emit("online_list", client_array);
+    ios.sockets.emit("online_list", client_array);
     console.log(data + " da dang xuat");
   });
   client.on("disconnect", (data) => {
     console.log(data);
     console.log("A client disconnected !");
-    console.log("Connected clients: IOS: " + ios.engine.clientsCount);
-    ios.sockets.emit("request_check_online2",{check:'online'});
-    io.sockets.emit("online_list", client_array);
+    console.log("Connected clients: " + ios.engine.clientsCount);
+    ios.sockets.emit("request_check_online2", { check: 'online' });
+    ios.sockets.emit("online_list", client_array);
   });
 });
 var corsOptions = {
@@ -236,7 +202,6 @@ var bodyParser = require("body-parser");
 const { existsSync } = require("fs");
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
-
 app.use("/", function (req, res, next) {
   api_module.checklogin_index(req, res, next);
 });
@@ -294,11 +259,9 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
       const newfilename = req.body.filename;
       const uploadfoldername = req.body.uploadfoldername;
       const newfilenamelist = req.body.newfilenamelist;
-
       let filenamearray = [];
       if (newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
       console.log("filenamearray:", filenamearray);
-     
       if (!existsSync(DESTINATION_FOlDER + uploadfoldername + filename)) {
         //fs.mkdir(DESTINATION_FOlDER + uploadfoldername);
         if (!existsSync(DESTINATION_FOlDER + uploadfoldername)) {
@@ -309,7 +272,6 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
             }
           });
         }
-
         if (filenamearray.length === 0) {
           console.log("tempfile: ", TEMP_UPLOAD_FOLDER + filename);
           console.log(
@@ -401,11 +363,9 @@ app.post("/uploadfilechecksheet", upload2.single("uploadedfile"), function (req,
       const newfilename = req.body.filename;
       const uploadfoldername = req.body.uploadfoldername;
       const newfilenamelist = req.body.newfilenamelist;
-
       let filenamearray = [];
       if (newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
       console.log("filenamearray:", filenamearray);
-     
       if (!existsSync(DESTINATION_55FOlDER + uploadfoldername + filename)) {
         //fs.mkdir(DESTINATION_55FOlDER + uploadfoldername);
         if (!existsSync(DESTINATION_55FOlDER + uploadfoldername)) {
@@ -416,7 +376,6 @@ app.post("/uploadfilechecksheet", upload2.single("uploadedfile"), function (req,
             }
           });
         }
-
         if (filenamearray.length === 0) {
           console.log("tempfile: ", TEMP_UPLOAD_FOLDER + filename);
           console.log(
@@ -488,5 +447,5 @@ server.listen(API_PORT);
 server_s.listen(SOCKET_PORT);
 process.on('uncaughtException', function (error) {
   console.log("loi cmnr: " + error);
-}); 
-console.log("Server listening on  " + API_PORT +  "/" + SOCKET_PORT);
+});
+console.log("Server listening on  " + API_PORT + "/" + SOCKET_PORT);
