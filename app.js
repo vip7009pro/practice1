@@ -101,7 +101,7 @@ io.on("connection", (client) => {
   });
   client.on("logout", (data) => {
     client_array = client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO);
-    console.log('client_array', client_array.map((e,i)=> e.EMPL_NO));
+    console.log('client_array', client_array.map((e, i) => e.EMPL_NO));
     io.sockets.emit("online_list", client_array);
     console.log(data + " da dang xuat");
   });
@@ -220,8 +220,8 @@ app.use("/login2", function (req, res, next) {
   api_module.checklogin_login(req, res, next);
 });
 app.post("/api", function (req, res) {
-  //const clientIpV4 = req.ip.split(':').pop(); 
-  //console.log('Client IP: ' + clientIpV4);
+  const clientIpV4 = req.ip.split(':').pop(); 
+  console.log('Client IP: ' + clientIpV4);
   //api_module.process_api(req,res);
   var qr = req.body;
   if (
