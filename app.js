@@ -101,6 +101,7 @@ io.on("connection", (client) => {
   });
   client.on("logout", (data) => {
     client_array = client_array.filter(obj => obj.EMPL_NO !== data.EMPL_NO);
+    console.log('client_array', client_array.map((e,i)=> e.EMPL_NO));
     io.sockets.emit("online_list", client_array);
     console.log(data + " da dang xuat");
   });

@@ -916,7 +916,7 @@ exports.process_api = function async(req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
-/*   if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
+  /*   if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD HH:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
@@ -8350,8 +8350,7 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `SELECT CAST(INSPECT_START_TIME as date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM 
@@ -8379,7 +8378,6 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
           if (DATA.FACTORY !== 'ALL') {
             condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
           }
-
           if (DATA.codeArray.length === 1) {
             condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
           }
@@ -8388,11 +8386,9 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
-
           let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_',  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))) AS YEAR_WEEK, YEAR(INSPECT_START_TIME) AS YEAR_NUM,  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME)) AS WEEK_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
           LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
                     LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
@@ -8425,8 +8421,7 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_', MONTH(INSPECT_START_TIME)) AS YEAR_MONTH, YEAR(INSPECT_START_TIME) AS YEAR_NUM, MONTH(INSPECT_START_TIME) AS MONTH_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
@@ -8462,8 +8457,7 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
             condition += `
              AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM,  SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
@@ -13231,34 +13225,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let setpdQuery = `
           DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
           DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
-
           DECLARE @CurrentDate DATE = @StartDate;
           DECLARE @str1 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str1 =  @str1 + 'ISNULL([' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate)) + '],0) + ';
               SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
-
           SET @CurrentDate = @StartDate;
           DECLARE @str2 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str2 =  @str2 + 'ISNULL([' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate)) + '],0) AS [' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate)) + '], ';
               SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
-
           SET @CurrentDate = @StartDate;
           DECLARE @str3 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str3 =  @str3 + '[' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'], ';
@@ -13266,35 +13252,24 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           END
           -- Xóa dấu phẩy cuối cùng
           SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
-
-
           SET @CurrentDate = @StartDate;
           DECLARE @str4 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str4 =  @str4 + 'B5.[' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'], ';
               SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str4 = LEFT( @str4, LEN( @str4) - 1);
-
-
-
           SET @CurrentDate = @StartDate;
           DECLARE @str5 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str5 =  @str5 + 'B6.[' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'] AS [' + CONCAT(YEAR(@CurrentDate),'_',DATEPART(WEEK,@CurrentDate))+'_QTY], ';
               SET @CurrentDate = DATEADD(WEEK, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str5 = LEFT( @str5, LEN( @str5) - 1);
-
-
           declare @query varchar(max) 
           select 
           @query = '
@@ -13439,8 +13414,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition3 += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition3 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13496,9 +13470,8 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition3 += ` AND INSPECTION_DATA_DOC.G_CODE IN (${codeArStr})`;
           }
-          let condition4= `WHERE ZTBINSPECTNGTB2.ERR_CODE='${DATA.ERR_CODE}' `;
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          let condition4 = `WHERE ZTBINSPECTNGTB2.ERR_CODE='${DATA.ERR_CODE}' `;
+          if (DATA.CUST_NAME_KD !== '') {
             condition4 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13542,8 +13515,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13582,8 +13554,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13622,8 +13593,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13664,8 +13634,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13706,8 +13675,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -13748,8 +13716,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14508,8 +14475,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14546,8 +14512,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBPQC3TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14612,8 +14577,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14653,8 +14617,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14693,8 +14656,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14733,8 +14695,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14773,8 +14734,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14819,8 +14779,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14865,8 +14824,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14911,8 +14869,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14957,8 +14914,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -14998,8 +14954,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15048,8 +15003,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15116,8 +15070,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15186,8 +15139,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15256,8 +15208,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15317,8 +15268,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15375,8 +15325,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15434,8 +15383,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15493,8 +15441,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
             condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
           }
-          if(DATA.CUST_NAME_KD !=='')
-          {
+          if (DATA.CUST_NAME_KD !== '') {
             condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
           }
           let setpdQuery = `
@@ -15748,34 +15695,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let setpdQuery = `
           DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
           DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
-          
           DECLARE @CurrentDate DATE = @StartDate;
           DECLARE @str1 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str1 =  @str1 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) + ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
-
           SET @CurrentDate = @StartDate;
           DECLARE @str2 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str2 =  @str2 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) AS [' + FORMAT(@CurrentDate, 'yyyy_MM') + '], ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
-
           SET @CurrentDate = @StartDate;
           DECLARE @str3 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str3 =  @str3 + '[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
@@ -15783,36 +15722,24 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           END
           -- Xóa dấu phẩy cuối cùng
           SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
-
-
           SET @CurrentDate = @StartDate;
           DECLARE @str4 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str4 =  @str4 + 'B5.[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str4 = LEFT( @str4, LEN( @str4) - 1);
-
-
-
           SET @CurrentDate = @StartDate;
           DECLARE @str5 VARCHAR(MAX) = '';
-
           WHILE @CurrentDate <= @EndDate
           BEGIN
               SET  @str5 =  @str5 + 'B6.[' + FORMAT(@CurrentDate, 'yyyy_MM')+'] AS [' + FORMAT(@CurrentDate, 'yyyy_MM')+'_QTY], ';
               SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
           END
-
           -- Xóa dấu phẩy cuối cùng
           SET  @str5 = LEFT( @str5, LEN( @str5) - 1);
-
-
-
           declare @query varchar(max) 
           select 
           @query = '
