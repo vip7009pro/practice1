@@ -8880,7 +8880,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
                     ${condition}
                     ORDER BY P400.PROD_REQUEST_NO DESC`;
           //${moment().format('YYYY-MM-DD')}
-          ////console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
         })();
@@ -14267,7 +14267,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD, SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA,  SUM(INSPECT_BALANCE_QTY+ WAIT_CS_QTY+ WAIT_SORTING_RMA) AS TOTAL_WAIT FROM ZTB_WAIT_INSPECT JOIN M100 ON ( M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE) 
-          WHERE ZTB_WAIT_INSPECT.UPDATE_DATE = '${DATA.TO_DATE}'
+          WHERE ZTB_WAIT_INSPECT.UPDATE_DATE = '${DATA.TO_DATE}'  AND ZTB_WAIT_INSPECT.CALAMVIEC='DEM'
           GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
