@@ -8880,7 +8880,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
                     ${condition}
                     ORDER BY P400.PROD_REQUEST_NO DESC`;
           //${moment().format('YYYY-MM-DD')}
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
         })();
