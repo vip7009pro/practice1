@@ -2604,7 +2604,7 @@ exports.process_api = function async(req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `UPDATE ZTB_MATERIAL_TB SET M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}' WHERE M_ID='${DATA.M_ID}' `;
+          query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}' WHERE M_ID='${DATA.M_ID}' `;
           console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -3927,10 +3927,11 @@ LEFT JOIN (
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           //let query = `SELECT * FROM ZTBPoTable WHERE G_CODE='${DATA.G_CODE}' AND CUST_CD='${DATA.CUST_CD}' AND PO_NO='${DATA.PO_NO}'`;
-          let query = `SELECT  ZTBPOTable.CUST_CD, ZTBPOTable.PO_NO, ZTBPOTable.G_CODE,(ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) WHERE ZTBPOTable.G_CODE='${DATA.G_CODE}' AND ZTBPOTable.CUST_CD='${DATA.CUST_CD}' AND ZTBPOTable.PO_NO='${DATA.PO_NO}'`;
+          let query = `SELECT  ZTBPOTable.CUST_CD,  ZTBPOTable.PO_DATE, ZTBPOTable.PO_NO, ZTBPOTable.G_CODE,(ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD) WHERE ZTBPOTable.G_CODE='${DATA.G_CODE}' AND ZTBPOTable.CUST_CD='${DATA.CUST_CD}' AND ZTBPOTable.PO_NO='${DATA.PO_NO}'`;
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
+          //console.log(kqua);
         })();
         break;
       case "checkGCodeVer":
@@ -9216,7 +9217,7 @@ INSPECT_OUTPUT_TABLE.INS_OUTPUT,  ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESUL
           if (DATA.NGMATERIAL === true) {
             condition += ` AND  (CUST_CD is null OR SSPRICE is null OR CMSPRICE is null OR SLITTING_PRICE is null OR MASTER_WIDTH is null OR ROLL_LENGTH is null)`;
           }
-          let setpdQuery = `SELECT ZTB_MATERIAL_TB.M_ID, ZTB_MATERIAL_TB.M_NAME, ZTB_MATERIAL_TB.DESCR, ZTB_MATERIAL_TB.CUST_CD, M110.CUST_NAME_KD,ZTB_MATERIAL_TB.SSPRICE, ZTB_MATERIAL_TB.CMSPRICE, ZTB_MATERIAL_TB.SLITTING_PRICE ,ZTB_MATERIAL_TB.MASTER_WIDTH, ZTB_MATERIAL_TB.ROLL_LENGTH, ZTB_MATERIAL_TB.USE_YN, ZTB_MATERIAL_TB.INS_DATE, ZTB_MATERIAL_TB.INS_EMPL, ZTB_MATERIAL_TB.UPD_DATE, ZTB_MATERIAL_TB.UPD_EMPL FROM ZTB_MATERIAL_TB LEFT JOIN M110 ON (M110.CUST_CD = ZTB_MATERIAL_TB.CUST_CD) ${condition}`;
+          let setpdQuery = `SELECT ZTB_MATERIAL_TB.M_ID, ZTB_MATERIAL_TB.M_NAME, ZTB_MATERIAL_TB.DESCR, ZTB_MATERIAL_TB.CUST_CD, M110.CUST_NAME_KD,ZTB_MATERIAL_TB.SSPRICE, ZTB_MATERIAL_TB.CMSPRICE, ZTB_MATERIAL_TB.SLITTING_PRICE ,ZTB_MATERIAL_TB.MASTER_WIDTH, ZTB_MATERIAL_TB.ROLL_LENGTH, ZTB_MATERIAL_TB.USE_YN,ZTB_MATERIAL_TB.EXP_DATE, ZTB_MATERIAL_TB.TDS,ZTB_MATERIAL_TB.INS_DATE, ZTB_MATERIAL_TB.INS_EMPL, ZTB_MATERIAL_TB.UPD_DATE, ZTB_MATERIAL_TB.UPD_EMPL FROM ZTB_MATERIAL_TB LEFT JOIN M110 ON (M110.CUST_CD = ZTB_MATERIAL_TB.CUST_CD) ${condition}`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -11934,13 +11935,17 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             condition += ` AND M110.CUST_NAME_KD LIKE '${DATA.CUST_NAME_KD}'`;
           }
           let setpdQuery = ` 
-            SELECT PROD_PRICE_TABLE.PROD_ID, M100.PROD_MAIN_MATERIAL, M110.CUST_NAME_KD ,PROD_PRICE_TABLE.CUST_CD,PROD_PRICE_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD, M100.DESCR, M100.PROD_DVT, PROD_PRICE_TABLE.PRICE_DATE,PROD_PRICE_TABLE.MOQ,PROD_PRICE_TABLE.PROD_PRICE,PROD_PRICE_TABLE.BEP, PROD_PRICE_TABLE.INS_DATE,PROD_PRICE_TABLE.INS_EMPL,PROD_PRICE_TABLE.UPD_DATE,PROD_PRICE_TABLE.UPD_EMPL,PROD_PRICE_TABLE.REMARK,PROD_PRICE_TABLE.FINAL
-            FROM 
-            PROD_PRICE_TABLE
-            LEFT JOIN 
-            M100 ON (M100.G_CODE = PROD_PRICE_TABLE.G_CODE)
-            LEFT JOIN
-            M110 ON (M110.CUST_CD = PROD_PRICE_TABLE.CUST_CD)
+          SELECT PROD_PRICE_TABLE.PROD_ID, M100.PROD_MAIN_MATERIAL, M110.CUST_NAME_KD ,PROD_PRICE_TABLE.CUST_CD,PROD_PRICE_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD, M100.DESCR, M100.PROD_DVT, PROD_PRICE_TABLE.PRICE_DATE,PROD_PRICE_TABLE.MOQ,PROD_PRICE_TABLE.PROD_PRICE,PROD_PRICE_TABLE.BEP, PROD_PRICE_TABLE.INS_DATE,PROD_PRICE_TABLE.INS_EMPL,PROD_PRICE_TABLE.UPD_DATE,PROD_PRICE_TABLE.UPD_EMPL,PROD_PRICE_TABLE.REMARK,PROD_PRICE_TABLE.FINAL,AA.DUPLICATE
+          FROM 
+          PROD_PRICE_TABLE
+          LEFT JOIN 
+          M100 ON (M100.G_CODE = PROD_PRICE_TABLE.G_CODE)
+          LEFT JOIN
+          M110 ON (M110.CUST_CD = PROD_PRICE_TABLE.CUST_CD)       
+          LEFT JOIN (
+          SELECT G_CODE, CUST_CD, PROD_PRICE, COUNT(G_CODE) AS DUPLICATE FROM PROD_PRICE_TABLE 
+          GROUP BY G_CODE, CUST_CD, PROD_PRICE
+          ) AS AA ON (AA.CUST_CD = PROD_PRICE_TABLE.CUST_CD AND AA.G_CODE = PROD_PRICE_TABLE.G_CODE AND AA.PROD_PRICE=PROD_PRICE_TABLE.PROD_PRICE)
             ${condition}
             ORDER BY M100.G_CODE ASC, PROD_PRICE_TABLE.PRICE_DATE ASC
             `;
@@ -11979,16 +11984,20 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             condition += ` AND M110.CUST_CD = '${DATA.CUST_CD}'`;
           }
           let setpdQuery = ` 
-            SELECT M110.CUST_NAME_KD ,PROD_PRICE_TABLE.CUST_CD,PROD_PRICE_TABLE.PROD_ID,PROD_PRICE_TABLE.G_CODE,M100.G_NAME, M100.G_NAME_KD, M100.DESCR, M100.PROD_DVT, M100.PROD_MAIN_MATERIAL, PROD_PRICE_TABLE.PRICE_DATE,PROD_PRICE_TABLE.MOQ,PROD_PRICE_TABLE.PROD_PRICE,PROD_PRICE_TABLE.BEP, PROD_PRICE_TABLE.INS_DATE,PROD_PRICE_TABLE.INS_EMPL,PROD_PRICE_TABLE.UPD_DATE,PROD_PRICE_TABLE.UPD_EMPL,PROD_PRICE_TABLE.REMARK,PROD_PRICE_TABLE.FINAL, M100.G_WIDTH, M100.G_LENGTH, M100.G_NAME_KT,M100.EQ1, M100.EQ2, M100.EQ3, M100.EQ4
-            FROM 
-           (SELECT CUST_CD, G_CODE, MOQ, MAX(PRICE_DATE) AS LAST_PRICE_DATE FROM PROD_PRICE_TABLE GROUP BY CUST_CD, G_CODE, MOQ) AS AA
-           LEFT JOIN 
-           PROD_PRICE_TABLE
-           ON (AA.CUST_CD = PROD_PRICE_TABLE.CUST_CD AND AA.G_CODE = PROD_PRICE_TABLE.G_CODE AND AA.LAST_PRICE_DATE = PROD_PRICE_TABLE.PRICE_DATE AND AA.MOQ = PROD_PRICE_TABLE.MOQ) 
-           LEFT JOIN 
-           M100 ON (M100.G_CODE = PROD_PRICE_TABLE.G_CODE)
-           LEFT JOIN
-           M110 ON (M110.CUST_CD = PROD_PRICE_TABLE.CUST_CD)
+          SELECT BB.DUPLICATE, M110.CUST_NAME_KD ,PROD_PRICE_TABLE.CUST_CD,PROD_PRICE_TABLE.PROD_ID,PROD_PRICE_TABLE.G_CODE,M100.G_NAME, M100.G_NAME_KD, M100.DESCR, M100.PROD_DVT, M100.PROD_MAIN_MATERIAL, PROD_PRICE_TABLE.PRICE_DATE,PROD_PRICE_TABLE.MOQ,PROD_PRICE_TABLE.PROD_PRICE,PROD_PRICE_TABLE.BEP, PROD_PRICE_TABLE.INS_DATE,PROD_PRICE_TABLE.INS_EMPL,PROD_PRICE_TABLE.UPD_DATE,PROD_PRICE_TABLE.UPD_EMPL,PROD_PRICE_TABLE.REMARK,PROD_PRICE_TABLE.FINAL, M100.G_WIDTH, M100.G_LENGTH, M100.G_NAME_KT,M100.EQ1, M100.EQ2, M100.EQ3, M100.EQ4
+          FROM 
+          (SELECT CUST_CD, G_CODE, MOQ, MAX(PRICE_DATE) AS LAST_PRICE_DATE FROM PROD_PRICE_TABLE GROUP BY CUST_CD, G_CODE, MOQ) AS AA
+          LEFT JOIN 
+          PROD_PRICE_TABLE
+          ON (AA.CUST_CD = PROD_PRICE_TABLE.CUST_CD AND AA.G_CODE = PROD_PRICE_TABLE.G_CODE AND AA.LAST_PRICE_DATE = PROD_PRICE_TABLE.PRICE_DATE AND AA.MOQ = PROD_PRICE_TABLE.MOQ) 
+          LEFT JOIN 
+          M100 ON (M100.G_CODE = PROD_PRICE_TABLE.G_CODE)
+          LEFT JOIN
+          M110 ON (M110.CUST_CD = PROD_PRICE_TABLE.CUST_CD)
+          LEFT JOIN (
+          SELECT G_CODE, CUST_CD, PROD_PRICE, COUNT(G_CODE) AS DUPLICATE FROM PROD_PRICE_TABLE 
+          GROUP BY G_CODE, CUST_CD, PROD_PRICE
+          ) AS BB ON (BB.CUST_CD = PROD_PRICE_TABLE.CUST_CD AND BB.G_CODE = PROD_PRICE_TABLE.G_CODE AND BB.PROD_PRICE=PROD_PRICE_TABLE.PROD_PRICE)
             ${condition}
             ORDER BY M100.G_CODE ASC, PROD_PRICE_TABLE.MOQ DESC, PROD_PRICE_TABLE.PRICE_DATE ASC
             `;
@@ -15647,6 +15656,24 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+      case "updateTDSStatus":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE ZTB_MATERIAL_TB SET TDS='Y' WHERE  M_ID=${DATA.M_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "updateCSDoiSachVNStatus":
         (async () => {
           let DATA = qr["DATA"];
@@ -15811,6 +15838,275 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           execute(@query)
             `;
           //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadRNRchitiet":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE  SUBDEPTNAME is not null  `
+          if(DATA.ALLTIME === false) {
+            condition += ` AND ZTB_RNR_TEST.TEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+          }
+          if(DATA.EMPL_NAME !=='') {
+            condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`
+          }
+          if(DATA.FACTORY !=='ALL') {
+            condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`
+          }
+          if(DATA.TEST_TYPE !=='ALL') {
+            condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`
+          }
+          if(DATA.TEST_ID !=='') {
+            condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`
+          }
+          let setpdQuery = `
+            SELECT ZTB_RNR_TEST.TEST_DATE, ZTB_RNR_TEST.TEST_ID, ZTB_RNR_TEST.TEST_NO, ZTB_RNR_TEST.TEST_TYPE, CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END AS FACTORY, CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) AS FULL_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME, ZTB_RNR_TEST.TEST_EMPL_NO, 
+            ZTB_RNR_TEST.UPD_DATE, ZTB_RNR_TEST.UPD_EMPL, ZTB_RNR_TEST.TEST_NUMBER, ZTB_RNR_RESULT.TEST_NUMBER2, ZTB_RNR_RESULT.RESULT_OK_NG, ZTB_RNR_RESULT.RESULT_DETAIL, ZTB_RNR_TEST.TEST_RESULT1, ZTB_RNR_TEST.TEST_REUST2, CASE WHEN TEST_RESULT1 <> ZTB_RNR_RESULT.RESULT_OK_NG AND SUBSTRING(RESULT_DETAIL,1,2) ='NG' THEN 1 ELSE 0 END AS MIX1, CASE WHEN TEST_REUST2 <> ZTB_RNR_RESULT.RESULT_OK_NG AND SUBSTRING(RESULT_DETAIL,1,2) ='NG' THEN 1 ELSE 0 END AS MIX2
+            FROM 
+            ZTB_RNR_TEST LEFT JOIN
+            ZTB_RNR_RESULT ON ZTB_RNR_RESULT.TEST_ID = ZTB_RNR_TEST.TEST_ID AND ZTB_RNR_RESULT.TEST_NUMBER = ZTB_RNR_TEST.TEST_NUMBER  AND ZTB_RNR_RESULT.TEST_NO = ZTB_RNR_TEST.TEST_NO 
+            LEFT JOIN ZTBEMPLINFO ON ZTB_RNR_TEST.TEST_EMPL_NO = ZTBEMPLINFO.EMPL_NO
+            LEFT JOIN ZTBWORKPOSITION ON ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE
+            LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.SUBDEPTCODE = ZTBSUBDEPARTMENT.SUBDEPTCODE
+            ${condition}
+            ORDER BY ZTB_RNR_TEST.TEST_ID DESC, ZTB_RNR_TEST.TEST_EMPL_NO DESC,  ZTB_RNR_TEST.TEST_NUMBER ASC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "RnRtheonhanvien":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE SUBDEPTNAME is not null  `
+          if(DATA.ALLTIME === false) {
+            condition += ` AND ZTB_RNR_TEST.TEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+          }
+          if(DATA.EMPL_NAME !=='') {
+            condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`
+          }
+          if(DATA.FACTORY !=='ALL') {
+            condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`
+          }
+          if(DATA.TEST_TYPE !=='ALL') {
+            condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`
+          }
+          if(DATA.TEST_ID !=='') {
+            condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`
+          }
+          let setpdQuery = `
+          WITH RNR_DATA AS
+          (
+          SELECT ZTB_RNR_TEST.TEST_DATE, ZTB_RNR_TEST.TEST_ID, ZTB_RNR_TEST.TEST_NO, ZTB_RNR_TEST.TEST_TYPE, CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END AS FACTORY, CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) AS FULL_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME, ZTB_RNR_TEST.TEST_EMPL_NO, 
+          ZTB_RNR_TEST.UPD_DATE, ZTB_RNR_TEST.UPD_EMPL, ZTB_RNR_TEST.TEST_NUMBER, ZTB_RNR_RESULT.TEST_NUMBER2, ZTB_RNR_RESULT.RESULT_OK_NG, ZTB_RNR_RESULT.RESULT_DETAIL, ZTB_RNR_TEST.TEST_RESULT1, ZTB_RNR_TEST.TEST_REUST2, CASE WHEN TEST_RESULT1 <> ZTB_RNR_RESULT.RESULT_OK_NG AND SUBSTRING(RESULT_DETAIL,1,2) ='NG' THEN 1 ELSE 0 END AS MIX1, CASE WHEN TEST_REUST2 <> ZTB_RNR_RESULT.RESULT_OK_NG AND SUBSTRING(RESULT_DETAIL,1,2) ='NG' THEN 1 ELSE 0 END AS MIX2
+          FROM 
+          ZTB_RNR_TEST LEFT JOIN
+          ZTB_RNR_RESULT ON ZTB_RNR_RESULT.TEST_ID = ZTB_RNR_TEST.TEST_ID AND ZTB_RNR_RESULT.TEST_NUMBER = ZTB_RNR_TEST.TEST_NUMBER AND ZTB_RNR_RESULT.TEST_NO = ZTB_RNR_TEST.TEST_NO 
+          LEFT JOIN ZTBEMPLINFO ON ZTB_RNR_TEST.TEST_EMPL_NO = ZTBEMPLINFO.EMPL_NO
+          LEFT JOIN ZTBWORKPOSITION ON ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE
+          LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.SUBDEPTCODE = ZTBSUBDEPARTMENT.SUBDEPTCODE
+          ${condition}
+          )
+          SELECT FULL_NAME, SUBDEPTNAME, TEST_ID, TEST_TYPE, TEST_NO, SUM(CASE WHEN TEST_RESULT1 = RESULT_OK_NG THEN 1 ELSE 0 END) AS COUNT1, SUM(CASE WHEN TEST_REUST2 = RESULT_OK_NG THEN 1 ELSE 0 END) AS COUNT2, CASE WHEN TEST_TYPE='G_RNR' THEN 20 WHEN TEST_TYPE='Test_CC' THEN 30 ELSE 10 END AS SO_CAU, SUM(CASE WHEN TEST_RESULT1 = RESULT_OK_NG THEN 1 ELSE 0 END)*1.0/(CASE WHEN TEST_TYPE='G_RNR' THEN 20 WHEN TEST_TYPE='Test_CC' THEN 30 ELSE 10 END)*100 AS SCORE1,SUM(CASE WHEN TEST_REUST2 = RESULT_OK_NG THEN 1 ELSE 0 END)*1.0/(CASE WHEN TEST_TYPE='G_RNR' THEN 20 WHEN TEST_TYPE='Test_CC' THEN 30 ELSE 10 END)*100 AS SCORE2, SUM(MIX1) AS MIX1, SUM(MIX2) AS MIX2
+          FROM RNR_DATA
+          GROUP BY FULL_NAME, SUBDEPTNAME, TEST_ID,TEST_TYPE, TEST_NO
+          ORDER BY  FULL_NAME ASC,TEST_ID DESC, TEST_NO ASC 
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "auditlistcheck":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          SELECT  AUDIT_INFO_TABLE.AUDIT_ID, AUDIT_INFO_TABLE.AUDIT_NAME, M110.CUST_NAME_KD, AUDIT_INFO_TABLE.PASS_SCORE FROM  
+          AUDIT_INFO_TABLE LEFT OUTER JOIN M110 ON M110.CUST_CD = AUDIT_INFO_TABLE.CUST_CD
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "createNewAudit":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          INSERT INTO AUDIT_RESULT_TABLE (CTR_CD, AUDIT_ID, AUDIT_NAME, AUDIT_DATE, REMARK, INS_DATE, INS_EMPL) VALUES ('002',${DATA.AUDIT_ID},'${DATA.AUDIT_NAME}','${moment().format('YYYY-MM-DD')}','',GETDATE(),'${EMPL_NO}')
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadAuditResultList":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          SELECT        AUDIT_RESULT_TABLE.AUDIT_RESULT_ID, AUDIT_INFO_TABLE.AUDIT_ID, AUDIT_INFO_TABLE.AUDIT_NAME, AUDIT_RESULT_TABLE.AUDIT_DATE, AUDIT_RESULT_TABLE.REMARK, AUDIT_INFO_TABLE.INS_DATE,
+           AUDIT_INFO_TABLE.INS_EMPL, AUDIT_INFO_TABLE.UPD_DATE, AUDIT_INFO_TABLE.UPD_EMPL
+ FROM            AUDIT_RESULT_TABLE  LEFT JOIN
+           AUDIT_INFO_TABLE ON AUDIT_INFO_TABLE.AUDIT_ID = AUDIT_RESULT_TABLE.AUDIT_ID
+           WHERE AUDIT_RESULT_TABLE.AUDIT_ID=${DATA.AUDIT_ID}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadAuditResultCheckList":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          SELECT AUDIT_RESULT_DETAIL.AUDIT_RESULT_DETAIL_ID, AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID, AUDIT_DETAIL_TABLE.AUDIT_DETAIL_ID, AUDIT_DETAIL_TABLE.AUDIT_ID, AUDIT_INFO_TABLE.AUDIT_NAME, AUDIT_DETAIL_TABLE.MAIN_ITEM_NO, AUDIT_DETAIL_TABLE.MAIN_ITEM_CONTENT, 
+          AUDIT_DETAIL_TABLE.SUB_ITEM_NO, AUDIT_DETAIL_TABLE.SUB_ITEM_CONTENT, AUDIT_DETAIL_TABLE.LEVEL_CAT, AUDIT_DETAIL_TABLE.DETAIL_VN, AUDIT_DETAIL_TABLE.DETAIL_KR, 
+          AUDIT_DETAIL_TABLE.DETAIL_EN, AUDIT_DETAIL_TABLE.MAX_SCORE,  AUDIT_RESULT_DETAIL.AUDIT_SCORE,AUDIT_RESULT_DETAIL.AUDIT_EVIDENT,AUDIT_RESULT_DETAIL.REMARK, AUDIT_DETAIL_TABLE.DEPARTMENT,
+          AUDIT_DETAIL_TABLE.INS_DATE, AUDIT_DETAIL_TABLE.INS_EMPL, AUDIT_DETAIL_TABLE.UPD_DATE, AUDIT_DETAIL_TABLE.UPD_EMPL
+          FROM AUDIT_DETAIL_TABLE 
+          LEFT JOIN AUDIT_INFO_TABLE ON  AUDIT_DETAIL_TABLE.AUDIT_ID = AUDIT_INFO_TABLE.AUDIT_ID
+          LEFT JOIN AUDIT_RESULT_DETAIL ON  AUDIT_DETAIL_TABLE.AUDIT_ID = AUDIT_RESULT_DETAIL.AUDIT_ID AND AUDIT_DETAIL_TABLE.MAIN_ITEM_NO = AUDIT_RESULT_DETAIL.MAIN_ITEM_NO AND AUDIT_DETAIL_TABLE.SUB_ITEM_NO = AUDIT_RESULT_DETAIL.SUB_ITEM_NO
+          WHERE AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID = ${DATA.AUDIT_RESULT_ID}
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkAuditResultCheckListExist":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          SELECT TOP 1 AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID FROM AUDIT_RESULT_DETAIL  WHERE AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID = ${DATA.AUDIT_RESULT_ID}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insertResultIDtoCheckList":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          INSERT INTO AUDIT_RESULT_DETAIL 
+          (CTR_CD,AUDIT_RESULT_ID, AUDIT_ID, MAIN_ITEM_NO, SUB_ITEM_NO, INS_DATE,INS_EMPL)
+          SELECT '002' AS CTR_CD,${DATA.AUDIT_RESULT_ID} AS AUDIT_RESULT_ID,  AUDIT_ID, MAIN_ITEM_NO,SUB_ITEM_NO, GETDATE() AS INS_DATE, 'NHU1903' AS INS_EMPL FROM AUDIT_DETAIL_TABLE
+          WHERE AUDIT_ID=${DATA.AUDIT_ID}          
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateEvident":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT='${DATA.AUDIT_EVIDENT}' WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updatechecksheetResultRow":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          UPDATE AUDIT_RESULT_DETAIL SET REMARK='${DATA.REMARK}',AUDIT_SCORE=${DATA.AUDIT_SCORE} WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "resetEvident":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT=null WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
+          `;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);

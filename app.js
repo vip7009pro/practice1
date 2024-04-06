@@ -80,6 +80,7 @@ io.on("connection", (client) => {
   io.sockets.emit("request_check_online2", { check: 'online' });
   io.sockets.emit("online_list", client_array);
   client.on("respond_check_online", (data) => {
+    //console.log('co responde check online',data.EMPL_NO)
     if (client_array.filter(item => item.EMPL_NO === data.EMPL_NO).length === 0) client_array.push(data);
   });
   client.on("notification", (data) => {
