@@ -3898,7 +3898,7 @@ LEFT JOIN (
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          query = `SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBDelivery.PO_NO,ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBPOTable.PROD_PRICE) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM
+          query = `SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBPOTable.PO_ID, ZTBDelivery.PO_NO,ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBPOTable.PROD_PRICE) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM,CASE WHEN ZTBPOTable.RD_DATE < ZTBDelivery.DELIVERY_DATE THEN 'OVER' ELSE 'OK' END AS OVERDUE
           FROM ZTBDelivery
           LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
           LEFT JOIN M010 ON (M010.EMPL_NO = ZTBDelivery.EMPL_NO)
@@ -16068,7 +16068,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";          
           let setpdQuery = `
-          UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT='${DATA.AUDIT_EVIDENT}' WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
+          UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT=N'${DATA.AUDIT_EVIDENT}' WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -16105,6 +16105,96 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let checkkq = "OK";          
           let setpdQuery = `
           UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT=null WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insertNewAuditInfo":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          INSERT INTO AUDIT_INFO_TABLE (CTR_CD, AUDIT_NAME, CUST_CD, PASS_SCORE, INS_DATE, INS_EMPL) VALUES ('002',N'${DATA.AUDIT_NAME}', '${DATA.CUST_CD}', ${DATA.PASS_SCORE},GETDATE(), '${EMPL_NO}')
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insertCheckSheetData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          INSERT INTO AUDIT_DETAIL_TABLE (CTR_CD, AUDIT_ID, MAIN_ITEM_NO, MAIN_ITEM_CONTENT, SUB_ITEM_NO, SUB_ITEM_CONTENT,LEVEL_CAT, DETAIL_VN, DETAIL_KR, DETAIL_EN, MAX_SCORE, DEPARTMENT, INS_DATE, INS_EMPL) VALUES ('002',${DATA.AUDIT_ID},${DATA.MAIN_ITEM_NO},N'${DATA.MAIN_ITEM_CONTENT}',${DATA.SUB_ITEM_NO},N'${DATA.SUB_ITEM_CONTENT}',N'${DATA.LEVEL_CAT}',N'${DATA.DETAIL_VN}',N'${DATA.DETAIL_KR}',N'${DATA.DETAIL_EN}',${DATA.MAX_SCORE},N'${DATA.DEPARTMENT}',GETDATE(),'${EMPL_NO}')
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkAuditNamebyCustomer":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          SELECT * FROM AUDIT_INFO_TABLE WHERE AUDIT_NAME =N'${DATA.AUDIT_NAME}' AND CUST_CD='${DATA.CUST_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checklastAuditID":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          SELECT MAX(AUDIT_ID) AS MAX_AUDIT_ID FROM AUDIT_INFO_TABLE
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "addbangiaodaofilmtailieu":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+           INSERT INTO KNIFE_FILM (CTR_CD,FACTORY_NAME, NGAYBANGIAO, G_CODE, LOAIBANGIAO_PDP, LOAIPHATHANH, SOLUONG, SOLUONGOHP, LYDOBANGIAO, PQC_EMPL_NO, RND_EMPL_NO, SX_EMPL_NO, REMARK, MA_DAO, CUST_CD, G_WIDTH, G_LENGTH, KNIFE_TYPE) VALUES ('002','${DATA.FACTORY}','${DATA.NGAYBANGIAO}','${DATA.G_CODE}','${DATA.LOAIBANGIAO_PDP}','${DATA.LOAIPHATHANH}','${DATA.SOLUONG}','${DATA.SOLUONGOHP}','${DATA.LYDOBANGIAO}','${DATA.PQC_EMPL_NO}','${DATA.RND_EMPL_NO}','${DATA.SX_EMPL_NO}',N'${DATA.REMARK}','${DATA.MA_DAO}','${DATA.CUST_CD}',${DATA.G_WIDTH},${DATA.G_LENGTH},'${DATA.KNIFE_TYPE}')
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
