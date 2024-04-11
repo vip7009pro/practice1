@@ -5293,6 +5293,17 @@ LEFT JOIN (
           res.send(checkkq);
         })();
         break;
+      case "update_appsheet_value":
+        (async () => {
+          ////console.log(DATA);
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE M100 SET APPSHEET='${DATA.appsheetvalue}' WHERE G_CODE= '${DATA.G_CODE}'`;
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "check_amazon_data":
         (async () => {
           //////console.log(DATA);
@@ -6071,7 +6082,7 @@ LEFT JOIN (
           let DATA = qr["DATA"];
           //////console.log(DATA);
           let checkkq = "OK";
-          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.LOSS_ST_SX1, M100.LOSS_ST_SX2, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%'`;
+          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.LOSS_ST_SX1, M100.LOSS_ST_SX2, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -6708,7 +6719,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT FSC, PO_TYPE, G_CODE, M100.CUST_CD, M110.CUST_NAME, M110.CUST_NAME_KD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, EQ3, EQ4, PROD_DIECUT_STEP, PROD_PRINT_TIMES, M100.REMK, M100.USE_YN, FACTORY,  Setting1, Setting2,Setting3,Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2,Step3,Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4, LOSS_SETTING1 , LOSS_SETTING2 ,LOSS_SETTING3 ,LOSS_SETTING4 ,NOTE, PROD_DVT  FROM M100 LEFT JOIN M110 ON (M110.CUST_CD = M100.CUST_CD)
+          let setpdQuery = `SELECT FSC, PO_TYPE, G_CODE, M100.CUST_CD, M110.CUST_NAME, M110.CUST_NAME_KD, PROD_PROJECT, PROD_MODEL, CODE_12, PROD_TYPE, G_NAME_KD, DESCR, PROD_MAIN_MATERIAL, G_NAME, G_LENGTH, G_WIDTH, PD, G_LG, G_CG, G_C, G_C_R, G_SG_L, G_SG_R, PACK_DRT, KNIFE_TYPE, KNIFE_LIFECYCLE, KNIFE_PRICE, CODE_33, ROLE_EA_QTY,RPM, PIN_DISTANCE, PROCESS_TYPE, EQ1, EQ2, EQ3, EQ4, PROD_DIECUT_STEP, PROD_PRINT_TIMES, M100.REMK, M100.USE_YN, FACTORY,  Setting1, Setting2,Setting3,Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2,Step3,Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4, LOSS_SETTING1 , LOSS_SETTING2 ,LOSS_SETTING3 ,LOSS_SETTING4 ,NOTE, PROD_DVT, QL_HSD, EXP_DATE  FROM M100 LEFT JOIN M110 ON (M110.CUST_CD = M100.CUST_CD)
           WHERE M100.G_CODE='${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -6815,8 +6826,8 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE M100 SET FSC='${DATA.FSC}', PO_TYPE='${DATA.PO_TYPE}', CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', EQ3='${DATA.EQ3}',EQ4='${DATA.EQ4}', PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}',PROD_DVT='${DATA.PROD_DVT}', PDBV='P', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
-          ////console.log(setpdQuery);
+          let setpdQuery = `UPDATE M100 SET FSC='${DATA.FSC}', PO_TYPE='${DATA.PO_TYPE}', CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', EQ3='${DATA.EQ3}',EQ4='${DATA.EQ4}', PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}',PROD_DVT='${DATA.PROD_DVT}', PDBV='P',QL_HSD='${DATA.QL_HSD}',EXP_DATE = ${DATA.EXP_DATE},  UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           ////console.log(checkkq);
@@ -16197,6 +16208,127 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
            INSERT INTO KNIFE_FILM (CTR_CD,FACTORY_NAME, NGAYBANGIAO, G_CODE, LOAIBANGIAO_PDP, LOAIPHATHANH, SOLUONG, SOLUONGOHP, LYDOBANGIAO, PQC_EMPL_NO, RND_EMPL_NO, SX_EMPL_NO, REMARK, MA_DAO, CUST_CD, G_WIDTH, G_LENGTH, KNIFE_TYPE) VALUES ('002','${DATA.FACTORY}','${DATA.NGAYBANGIAO}','${DATA.G_CODE}','${DATA.LOAIBANGIAO_PDP}','${DATA.LOAIPHATHANH}','${DATA.SOLUONG}','${DATA.SOLUONGOHP}','${DATA.LYDOBANGIAO}','${DATA.PQC_EMPL_NO}','${DATA.RND_EMPL_NO}','${DATA.SX_EMPL_NO}',N'${DATA.REMARK}','${DATA.MA_DAO}','${DATA.CUST_CD}',${DATA.G_WIDTH},${DATA.G_LENGTH},'${DATA.KNIFE_TYPE}')
           `;
           console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "dailyoverduedata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          DECLARE @D_P int;
+          set @D_P =${DATA.D_PLUS};
+          WITH DLVRDATA AS
+          (
+          SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBPOTable.PO_ID, ZTBDelivery.PO_NO,ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, DATEDIFF(day, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE) AS D_PLUS, ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBPOTable.PROD_PRICE) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM,CASE WHEN ZTBPOTable.RD_DATE < ZTBDelivery.DELIVERY_DATE THEN 'OVER' ELSE 'OK' END AS OVERDUE
+                    FROM ZTBDelivery
+                    LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+                    LEFT JOIN M010 ON (M010.EMPL_NO = ZTBDelivery.EMPL_NO)
+                    LEFT JOIN M100 ON (M100.G_CODE = ZTBDelivery.G_CODE)
+                    LEFT JOIN ZTBPOTable ON (ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD)
+                    WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}'
+          )
+          SELECT DELIVERY_DATE, COUNT (DELIVERY_ID) AS TOTAL_IV, COUNT (CASE WHEN OVERDUE = 'OK' OR D_PLUS <=@D_P THEN 1 ELSE null END) AS OK_IV, COUNT (CASE WHEN OVERDUE = 'OVER'  AND D_PLUS>@D_P THEN 1 ELSE null END) AS OVER_IV FROM DLVRDATA GROUP BY DELIVERY_DATE ORDER BY DELIVERY_DATE DESC
+          `;
+          ///console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "weeklyoverduedata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          DECLARE @D_P int;
+          set @D_P =${DATA.D_PLUS};
+          WITH DLVRDATA AS
+          (
+          SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBPOTable.PO_ID, ZTBDelivery.PO_NO,ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE,DATEDIFF(day, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE) AS D_PLUS, ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBPOTable.PROD_PRICE) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM,CASE WHEN ZTBPOTable.RD_DATE < ZTBDelivery.DELIVERY_DATE THEN 'OVER' ELSE 'OK' END AS OVERDUE
+                    FROM ZTBDelivery
+                    LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+                    LEFT JOIN M010 ON (M010.EMPL_NO = ZTBDelivery.EMPL_NO)
+                    LEFT JOIN M100 ON (M100.G_CODE = ZTBDelivery.G_CODE)
+                    LEFT JOIN ZTBPOTable ON (ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD)
+                    WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}'
+          )
+          SELECT CONCAT(YEARNUM,'_', WEEKNUM) AS DEL_YW,YEARNUM, WEEKNUM, COUNT (DELIVERY_ID) AS TOTAL_IV, COUNT (CASE WHEN (OVERDUE = 'OK' OR D_PLUS<=@D_P) THEN 1 ELSE null END) AS OK_IV, COUNT (CASE WHEN OVERDUE = 'OVER' AND D_PLUS>@D_P THEN 1 ELSE null END) AS OVER_IV FROM DLVRDATA GROUP BY CONCAT(YEARNUM,'_', WEEKNUM), YEARNUM ,WEEKNUM ORDER BY YEARNUM DESC,WEEKNUM DESC
+          
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "monthlyoverduedata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          DECLARE @D_P int;
+          set @D_P =${DATA.D_PLUS};
+          WITH DLVRDATA AS
+          (
+          SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBPOTable.PO_ID, ZTBDelivery.PO_NO,ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE,DATEDIFF(day, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE) AS D_PLUS, ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBPOTable.PROD_PRICE) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM,DATEPART(MONTH,DELIVERY_DATE) AS MONTHNUM, CASE WHEN ZTBPOTable.RD_DATE < ZTBDelivery.DELIVERY_DATE THEN 'OVER' ELSE 'OK' END AS OVERDUE
+                    FROM ZTBDelivery
+                    LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+                    LEFT JOIN M010 ON (M010.EMPL_NO = ZTBDelivery.EMPL_NO)
+                    LEFT JOIN M100 ON (M100.G_CODE = ZTBDelivery.G_CODE)
+                    LEFT JOIN ZTBPOTable ON (ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD)
+                    WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}'
+          )
+          SELECT CONCAT(YEARNUM,'_', MONTHNUM) AS DEL_YM,YEARNUM, MONTHNUM, COUNT (DELIVERY_ID) AS TOTAL_IV, COUNT (CASE WHEN (OVERDUE = 'OK' OR D_PLUS<=@D_P) THEN 1 ELSE null END) AS OK_IV, COUNT (CASE WHEN OVERDUE = 'OVER' AND D_PLUS>@D_P THEN 1 ELSE null END) AS OVER_IV FROM DLVRDATA GROUP BY CONCAT(YEARNUM,'_', MONTHNUM), YEARNUM ,MONTHNUM ORDER BY YEARNUM DESC,MONTHNUM DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "yearlyoverduedata":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+          DECLARE @D_P int;
+          set @D_P =${DATA.D_PLUS};
+          WITH DLVRDATA AS
+          (
+          SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD,ZTBPOTable.PO_ID, ZTBDelivery.PO_NO,ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE,DATEDIFF(day, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE) AS D_PLUS, ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBPOTable.PROD_PRICE) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART(ISOWK,DELIVERY_DATE) AS WEEKNUM,DATEPART(MONTH,DELIVERY_DATE) AS MONTHNUM, CASE WHEN ZTBPOTable.RD_DATE < ZTBDelivery.DELIVERY_DATE THEN 'OVER' ELSE 'OK' END AS OVERDUE
+                    FROM ZTBDelivery
+                    LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD)
+                    LEFT JOIN M010 ON (M010.EMPL_NO = ZTBDelivery.EMPL_NO)
+                    LEFT JOIN M100 ON (M100.G_CODE = ZTBDelivery.G_CODE)
+                    LEFT JOIN ZTBPOTable ON (ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD)
+                    WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}'
+          )
+          SELECT YEARNUM,  COUNT (DELIVERY_ID) AS TOTAL_IV, COUNT (CASE WHEN (OVERDUE = 'OK' OR D_PLUS<=@D_P) THEN 1 ELSE null END) AS OK_IV, COUNT (CASE WHEN OVERDUE = 'OVER' AND D_PLUS>@D_P THEN 1 ELSE null END) AS OVER_IV FROM DLVRDATA GROUP BY YEARNUM ORDER BY YEARNUM DESC
+          `;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
