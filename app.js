@@ -205,9 +205,15 @@ const { existsSync } = require("fs");
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 app.use("/", function (req, res, next) {
+  //console.log('req',req)
+  console.log('vao cmn day r')
   api_module.checklogin_index(req, res, next);
 });
 app.use("/uploadfile", function (req, res, next) {
+  api_module.checklogin_index_update(req, res, next);
+});
+app.use("/csharp", function (req, res, next) {  
+  console.log('vao csharp day')  
   api_module.checklogin_index_update(req, res, next);
 });
 app.use("/uploadfilechecksheet", function (req, res, next) {
@@ -236,6 +242,10 @@ app.post("/api", function (req, res) {
     console.log("loi cmnr");
     res.send({ tk_status: "ng" });
   }
+});
+app.post("/csharp", function (req, res) {
+  console.log(req);
+  res.send({ tk_status: "OK", message: "C sharp da qua day" });
 });
 app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
   console.log("vao uploaded file thanh cong");

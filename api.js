@@ -857,7 +857,7 @@ exports.checklogin_index = function (req, res, next) {
     //console.log("req", req);
     if (token === undefined)
       token =
-        req.body.DATA.token_string === undefined
+        req.body.DATA?.token_string === undefined
           ? req.body.token_string
           : req.body.DATA.token_string;
     //console.log('req', req);
@@ -12748,7 +12748,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT DISTINCT M_NAME FROM ZTB_MATERIAL_TB`;
+          let setpdQuery = `SELECT DISTINCT M_NAME, EXP_DATE FROM ZTB_MATERIAL_TB WHERE USE_YN='Y'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -13979,7 +13979,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           P500.REMARK, ZTB_SX_RESULT.PD, ZTB_SX_RESULT.CAVITY, ZTB_QLSXPLAN.STEP, P500.PR_NB, PROCESS_TB.MAX_PROCESS_NUMBER, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN 1 ELSE 0 END AS LAST_PROCESS,
           (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) * M090.WIDTH_CD*1.0/1000 AS USED_SQM, 
 		      (isnull(P500.PR_NG,0) +isnull(P500.SETTING_MET,0)) * M090.WIDTH_CD*1.0/1000 AS LOSS_SQM ,
-          ((P500.INPUT_QTY - isnull(P500.REMAIN_QTY,0))- (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000)) *  M090.WIDTH_CD*1.0/1000 AS TT_LOSS_SQM
+          ((P500.INPUT_QTY - isnull(P500.REMAIN_QTY,0))- (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000)) *  M090.WIDTH_CD*1.0/1000 AS TT_LOSS_SQM,
+          CASE WHEN P500.PR_NB=1 THEN (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) ELSE 0 END AS PURE_INPUT,
+		  CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000) ELSE 0 END AS PURE_OUTPUT
           FROM P500
           LEFT JOIN ZTB_SX_RESULT ON (P500.PLAN_ID = ZTB_SX_RESULT.PLAN_ID)
           LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = P500.PLAN_ID)
@@ -16327,6 +16329,220 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
                     WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}'
           )
           SELECT YEARNUM,  COUNT (DELIVERY_ID) AS TOTAL_IV, COUNT (CASE WHEN (OVERDUE = 'OK' OR D_PLUS<=@D_P) THEN 1 ELSE null END) AS OK_IV, COUNT (CASE WHEN OVERDUE = 'OVER' AND D_PLUS>@D_P THEN 1 ELSE null END) AS OVER_IV FROM DLVRDATA GROUP BY YEARNUM ORDER BY YEARNUM DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "dailysxlosstrend":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";    
+          let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND P500.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
+          if (DATA.MACHINE !== 'ALL') {
+            condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
+          }
+          if (DATA.FACTORY !== 'ALL')
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+          let setpdQuery = `
+          WITH P501_A AS
+          (
+          SELECT P501.M_LOT_NO, P501.PLAN_ID, SUM(P501.TEMP_QTY) AS TEMP_QTY FROM P501 WHERE P501.INS_DATE > '2023-11-30 20:00:00' AND TEMP_QTY is not null GROUP BY P501.M_LOT_NO, P501.PLAN_ID
+          ),          
+          INSP_NK_TB AS
+          (
+          SELECT PLAN_ID, M_LOT_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY FROM ZTBINSPECTNGTB  WHERE M_LOT_NO is not null AND PLAN_ID is not null AND PLAN_ID <> '' AND M_LOT_NO <>''  GROUP BY PLAN_ID, M_LOT_NO
+          ),
+          PROCESS_TB AS
+          (
+          SELECT G_CODE,
+          CASE WHEN EQ4 <> 'NA' AND EQ4 <> 'NO' AND EQ4 is not null AND EQ4 <> '' THEN 4 
+          WHEN EQ3 <> 'NA' AND EQ3 <> 'NO' AND EQ3 is not null AND EQ3 <> ''  THEN 3
+          WHEN EQ2 <> 'NA' AND EQ2 <> 'NO' AND EQ2 is not null AND EQ2 <> ''  THEN 2 
+          ELSE 1 END AS MAX_PROCESS_NUMBER
+          FROM M100
+          ),
+          ROLL_TB AS
+          (
+          SELECT CAST(P500.INS_DATE as date) AS INPUT_DATE, CASE WHEN P500.PR_NB=1 THEN (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) ELSE 0 END AS PURE_INPUT, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000) ELSE 0 END AS PURE_OUTPUT
+          FROM P500
+          LEFT JOIN ZTB_SX_RESULT ON (P500.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) 
+          LEFT JOIN P501_A ON (P501_A.PLAN_ID = P500.PLAN_ID AND P501_A.M_LOT_NO = P500.M_LOT_NO)  
+          LEFT JOIN INSP_NK_TB ON (INSP_NK_TB.PLAN_ID = P500.PLAN_ID AND INSP_NK_TB.M_LOT_NO = P500.M_LOT_NO)
+          LEFT JOIN M100 ON (P500.G_CODE = M100.G_CODE)
+          LEFT JOIN PROCESS_TB ON (PROCESS_TB.G_CODE = P500.G_CODE)        
+          ${condition}
+          )
+          SELECT INPUT_DATE, SUM(PURE_INPUT) AS PURE_INPUT, SUM(PURE_OUTPUT) AS PURE_OUTPUT FROM ROLL_TB GROUP BY INPUT_DATE
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "weeklysxlosstrend":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";    
+          let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND P500.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
+          if (DATA.MACHINE !== 'ALL') {
+            condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
+          }
+          if (DATA.FACTORY !== 'ALL')
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+          let setpdQuery = `
+          WITH P501_A AS
+          (
+          SELECT P501.M_LOT_NO, P501.PLAN_ID, SUM(P501.TEMP_QTY) AS TEMP_QTY FROM P501 WHERE P501.INS_DATE > '2023-11-30 20:00:00' AND TEMP_QTY is not null GROUP BY P501.M_LOT_NO, P501.PLAN_ID
+          ),          
+          INSP_NK_TB AS
+          (
+          SELECT PLAN_ID, M_LOT_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY FROM ZTBINSPECTNGTB  WHERE M_LOT_NO is not null AND PLAN_ID is not null AND PLAN_ID <> '' AND M_LOT_NO <>''  GROUP BY PLAN_ID, M_LOT_NO
+          ),
+          PROCESS_TB AS
+          (
+          SELECT G_CODE,
+          CASE WHEN EQ4 <> 'NA' AND EQ4 <> 'NO' AND EQ4 is not null AND EQ4 <> '' THEN 4 
+          WHEN EQ3 <> 'NA' AND EQ3 <> 'NO' AND EQ3 is not null AND EQ3 <> ''  THEN 3
+          WHEN EQ2 <> 'NA' AND EQ2 <> 'NO' AND EQ2 is not null AND EQ2 <> ''  THEN 2 
+          ELSE 1 END AS MAX_PROCESS_NUMBER
+          FROM M100
+          ),
+          ROLL_TB AS
+          (
+          SELECT CAST(P500.INS_DATE as date) AS INPUT_DATE, CASE WHEN P500.PR_NB=1 THEN (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) ELSE 0 END AS PURE_INPUT, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000) ELSE 0 END AS PURE_OUTPUT
+          FROM P500
+          LEFT JOIN ZTB_SX_RESULT ON (P500.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) 
+          LEFT JOIN P501_A ON (P501_A.PLAN_ID = P500.PLAN_ID AND P501_A.M_LOT_NO = P500.M_LOT_NO)  
+          LEFT JOIN INSP_NK_TB ON (INSP_NK_TB.PLAN_ID = P500.PLAN_ID AND INSP_NK_TB.M_LOT_NO = P500.M_LOT_NO)
+          LEFT JOIN M100 ON (P500.G_CODE = M100.G_CODE)
+          LEFT JOIN PROCESS_TB ON (PROCESS_TB.G_CODE = P500.G_CODE)        
+          ${condition}
+          )
+          SELECT YEAR(INPUT_DATE) AS INPUT_YEAR,DATEPART(WEEK,INPUT_DATE) AS INPUT_WEEK, CONCAT(YEAR(INPUT_DATE),'_',DATEPART(WEEK,INPUT_DATE)) AS INPUT_YW,  SUM(PURE_INPUT) AS PURE_INPUT, SUM(PURE_OUTPUT) AS PURE_OUTPUT FROM ROLL_TB 
+          GROUP BY YEAR(INPUT_DATE),DATEPART(WEEK,INPUT_DATE),CONCAT(YEAR(INPUT_DATE),'_',DATEPART(WEEK,INPUT_DATE))
+          ORDER BY YEAR(INPUT_DATE) DESC, DATEPART(WEEK,INPUT_DATE) DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "monthlysxlosstrend":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";    
+          let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND P500.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
+          if (DATA.MACHINE !== 'ALL') {
+            condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
+          }
+          if (DATA.FACTORY !== 'ALL')
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+          let setpdQuery = `
+          WITH P501_A AS
+          (
+          SELECT P501.M_LOT_NO, P501.PLAN_ID, SUM(P501.TEMP_QTY) AS TEMP_QTY FROM P501 WHERE P501.INS_DATE > '2023-11-30 20:00:00' AND TEMP_QTY is not null GROUP BY P501.M_LOT_NO, P501.PLAN_ID
+          ),          
+          INSP_NK_TB AS
+          (
+          SELECT PLAN_ID, M_LOT_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY FROM ZTBINSPECTNGTB  WHERE M_LOT_NO is not null AND PLAN_ID is not null AND PLAN_ID <> '' AND M_LOT_NO <>''  GROUP BY PLAN_ID, M_LOT_NO
+          ),
+          PROCESS_TB AS
+          (
+          SELECT G_CODE,
+          CASE WHEN EQ4 <> 'NA' AND EQ4 <> 'NO' AND EQ4 is not null AND EQ4 <> '' THEN 4 
+          WHEN EQ3 <> 'NA' AND EQ3 <> 'NO' AND EQ3 is not null AND EQ3 <> ''  THEN 3
+          WHEN EQ2 <> 'NA' AND EQ2 <> 'NO' AND EQ2 is not null AND EQ2 <> ''  THEN 2 
+          ELSE 1 END AS MAX_PROCESS_NUMBER
+          FROM M100
+          ),
+          ROLL_TB AS
+          (
+          SELECT CAST(P500.INS_DATE as date) AS INPUT_DATE, CASE WHEN P500.PR_NB=1 THEN (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) ELSE 0 END AS PURE_INPUT, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000) ELSE 0 END AS PURE_OUTPUT
+          FROM P500
+          LEFT JOIN ZTB_SX_RESULT ON (P500.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) 
+          LEFT JOIN P501_A ON (P501_A.PLAN_ID = P500.PLAN_ID AND P501_A.M_LOT_NO = P500.M_LOT_NO)  
+          LEFT JOIN INSP_NK_TB ON (INSP_NK_TB.PLAN_ID = P500.PLAN_ID AND INSP_NK_TB.M_LOT_NO = P500.M_LOT_NO)
+          LEFT JOIN M100 ON (P500.G_CODE = M100.G_CODE)
+          LEFT JOIN PROCESS_TB ON (PROCESS_TB.G_CODE = P500.G_CODE)        
+          ${condition}
+          )
+          SELECT YEAR(INPUT_DATE) AS INPUT_YEAR,DATEPART(MONTH,INPUT_DATE) AS INPUT_WEEK, CONCAT(YEAR(INPUT_DATE),'_',DATEPART(MONTH,INPUT_DATE)) AS INPUT_YM,  SUM(PURE_INPUT) AS PURE_INPUT, SUM(PURE_OUTPUT) AS PURE_OUTPUT FROM ROLL_TB 
+          GROUP BY YEAR(INPUT_DATE),DATEPART(MONTH,INPUT_DATE),CONCAT(YEAR(INPUT_DATE),'_',DATEPART(MONTH,INPUT_DATE))
+          ORDER BY YEAR(INPUT_DATE) DESC, DATEPART(MONTH,INPUT_DATE) DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "yearlysxlosstrend":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";    
+          let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
+          if (DATA.MACHINE !== 'ALL') {
+            condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
+          }
+          if (DATA.FACTORY !== 'ALL')
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+          let setpdQuery = `
+          WITH P501_A AS
+          (
+          SELECT P501.M_LOT_NO, P501.PLAN_ID, SUM(P501.TEMP_QTY) AS TEMP_QTY FROM P501 WHERE P501.INS_DATE > '2023-11-30 20:00:00' AND TEMP_QTY is not null GROUP BY P501.M_LOT_NO, P501.PLAN_ID
+          ),          
+          INSP_NK_TB AS
+          (
+          SELECT PLAN_ID, M_LOT_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY FROM ZTBINSPECTNGTB  WHERE M_LOT_NO is not null AND PLAN_ID is not null AND PLAN_ID <> '' AND M_LOT_NO <>''  GROUP BY PLAN_ID, M_LOT_NO
+          ),
+          PROCESS_TB AS
+          (
+          SELECT G_CODE,
+          CASE WHEN EQ4 <> 'NA' AND EQ4 <> 'NO' AND EQ4 is not null AND EQ4 <> '' THEN 4 
+          WHEN EQ3 <> 'NA' AND EQ3 <> 'NO' AND EQ3 is not null AND EQ3 <> ''  THEN 3
+          WHEN EQ2 <> 'NA' AND EQ2 <> 'NO' AND EQ2 is not null AND EQ2 <> ''  THEN 2 
+          ELSE 1 END AS MAX_PROCESS_NUMBER
+          FROM M100
+          ),
+          ROLL_TB AS
+          (
+          SELECT CAST(P500.INS_DATE as date) AS INPUT_DATE, CASE WHEN P500.PR_NB=1 THEN (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) ELSE 0 END AS PURE_INPUT, CASE WHEN PROCESS_TB.MAX_PROCESS_NUMBER = P500.PR_NB THEN (isnull(INSP_NK_TB.INSPECT_OK_QTY,0)*1.0 * M100.PD /(M100.G_C * M100.G_C_R)/1000) ELSE 0 END AS PURE_OUTPUT
+          FROM P500
+          LEFT JOIN ZTB_SX_RESULT ON (P500.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) 
+          LEFT JOIN P501_A ON (P501_A.PLAN_ID = P500.PLAN_ID AND P501_A.M_LOT_NO = P500.M_LOT_NO)  
+          LEFT JOIN INSP_NK_TB ON (INSP_NK_TB.PLAN_ID = P500.PLAN_ID AND INSP_NK_TB.M_LOT_NO = P500.M_LOT_NO)
+          LEFT JOIN M100 ON (P500.G_CODE = M100.G_CODE)
+          LEFT JOIN PROCESS_TB ON (PROCESS_TB.G_CODE = P500.G_CODE)        
+          ${condition}
+          )
+          SELECT YEAR(INPUT_DATE) AS INPUT_YEAR, SUM(PURE_INPUT) AS PURE_INPUT, SUM(PURE_OUTPUT) AS PURE_OUTPUT FROM ROLL_TB 
+          GROUP BY YEAR(INPUT_DATE)
+          ORDER BY YEAR(INPUT_DATE) DESC
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
