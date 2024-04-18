@@ -206,7 +206,7 @@ app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 app.use("/", function (req, res, next) {
   //console.log('req',req)
-  console.log('vao cmn day r')
+  //console.log('vao cmn day r')
   api_module.checklogin_index(req, res, next);
 });
 app.use("/uploadfile", function (req, res, next) {
@@ -228,7 +228,7 @@ app.use("/login2", function (req, res, next) {
 });
 app.post("/api", function (req, res) {
   const clientIpV4 = req.ip.split(':').pop(); 
-  console.log('Client IP: ' + clientIpV4);
+  //console.log('Client IP: ' + clientIpV4);
   //api_module.process_api(req,res);
   var qr = req.body;
   if (
