@@ -15866,19 +15866,19 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = `WHERE  SUBDEPTNAME is not null  `
-          if(DATA.ALLTIME === false) {
+          if (DATA.ALLTIME === false) {
             condition += ` AND ZTB_RNR_TEST.TEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
           }
-          if(DATA.EMPL_NAME !=='') {
+          if (DATA.EMPL_NAME !== '') {
             condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`
           }
-          if(DATA.FACTORY !=='ALL') {
+          if (DATA.FACTORY !== 'ALL') {
             condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`
           }
-          if(DATA.TEST_TYPE !=='ALL') {
+          if (DATA.TEST_TYPE !== 'ALL') {
             condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`
           }
-          if(DATA.TEST_ID !=='') {
+          if (DATA.TEST_ID !== '') {
             condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`
           }
           let setpdQuery = `
@@ -15909,19 +15909,19 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = `WHERE SUBDEPTNAME is not null  `
-          if(DATA.ALLTIME === false) {
+          if (DATA.ALLTIME === false) {
             condition += ` AND ZTB_RNR_TEST.TEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
           }
-          if(DATA.EMPL_NAME !=='') {
+          if (DATA.EMPL_NAME !== '') {
             condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`
           }
-          if(DATA.FACTORY !=='ALL') {
+          if (DATA.FACTORY !== 'ALL') {
             condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`
           }
-          if(DATA.TEST_TYPE !=='ALL') {
+          if (DATA.TEST_TYPE !== 'ALL') {
             condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`
           }
-          if(DATA.TEST_ID !=='') {
+          if (DATA.TEST_ID !== '') {
             condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`
           }
           let setpdQuery = `
@@ -15956,7 +15956,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT  AUDIT_INFO_TABLE.AUDIT_ID, AUDIT_INFO_TABLE.AUDIT_NAME, M110.CUST_NAME_KD, AUDIT_INFO_TABLE.PASS_SCORE FROM  
           AUDIT_INFO_TABLE LEFT OUTER JOIN M110 ON M110.CUST_CD = AUDIT_INFO_TABLE.CUST_CD
@@ -15975,7 +15975,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           INSERT INTO AUDIT_RESULT_TABLE (CTR_CD, AUDIT_ID, AUDIT_NAME, AUDIT_DATE, REMARK, INS_DATE, INS_EMPL) VALUES ('002',${DATA.AUDIT_ID},'${DATA.AUDIT_NAME}','${moment().format('YYYY-MM-DD')}','',GETDATE(),'${EMPL_NO}')
           `;
@@ -15993,7 +15993,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT        AUDIT_RESULT_TABLE.AUDIT_RESULT_ID, AUDIT_INFO_TABLE.AUDIT_ID, AUDIT_INFO_TABLE.AUDIT_NAME, AUDIT_RESULT_TABLE.AUDIT_DATE, AUDIT_RESULT_TABLE.REMARK, AUDIT_INFO_TABLE.INS_DATE,
            AUDIT_INFO_TABLE.INS_EMPL, AUDIT_INFO_TABLE.UPD_DATE, AUDIT_INFO_TABLE.UPD_EMPL
@@ -16015,7 +16015,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT AUDIT_RESULT_DETAIL.AUDIT_RESULT_DETAIL_ID, AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID, AUDIT_DETAIL_TABLE.AUDIT_DETAIL_ID, AUDIT_DETAIL_TABLE.AUDIT_ID, AUDIT_INFO_TABLE.AUDIT_NAME, AUDIT_DETAIL_TABLE.MAIN_ITEM_NO, AUDIT_DETAIL_TABLE.MAIN_ITEM_CONTENT, 
           AUDIT_DETAIL_TABLE.SUB_ITEM_NO, AUDIT_DETAIL_TABLE.SUB_ITEM_CONTENT, AUDIT_DETAIL_TABLE.LEVEL_CAT, AUDIT_DETAIL_TABLE.DETAIL_VN, AUDIT_DETAIL_TABLE.DETAIL_KR, 
@@ -16040,7 +16040,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT TOP 1 AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID FROM AUDIT_RESULT_DETAIL  WHERE AUDIT_RESULT_DETAIL.AUDIT_RESULT_ID = ${DATA.AUDIT_RESULT_ID}
           `;
@@ -16058,7 +16058,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           INSERT INTO AUDIT_RESULT_DETAIL 
           (CTR_CD,AUDIT_RESULT_ID, AUDIT_ID, MAIN_ITEM_NO, SUB_ITEM_NO, INS_DATE,INS_EMPL)
@@ -16079,7 +16079,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT=N'${DATA.AUDIT_EVIDENT}' WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
           `;
@@ -16097,7 +16097,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           UPDATE AUDIT_RESULT_DETAIL SET REMARK=N'${DATA.REMARK}',AUDIT_SCORE=${DATA.AUDIT_SCORE}, UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
           `;
@@ -16115,7 +16115,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           UPDATE AUDIT_RESULT_DETAIL SET AUDIT_EVIDENT=null WHERE AUDIT_RESULT_DETAIL_ID=${DATA.AUDIT_RESULT_DETAIL_ID}
           `;
@@ -16133,7 +16133,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           INSERT INTO AUDIT_INFO_TABLE (CTR_CD, AUDIT_NAME, CUST_CD, PASS_SCORE, INS_DATE, INS_EMPL) VALUES ('002',N'${DATA.AUDIT_NAME}', '${DATA.CUST_CD}', ${DATA.PASS_SCORE},GETDATE(), '${EMPL_NO}')
           `;
@@ -16151,7 +16151,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           INSERT INTO AUDIT_DETAIL_TABLE (CTR_CD, AUDIT_ID, MAIN_ITEM_NO, MAIN_ITEM_CONTENT, SUB_ITEM_NO, SUB_ITEM_CONTENT,LEVEL_CAT, DETAIL_VN, DETAIL_KR, DETAIL_EN, MAX_SCORE, DEPARTMENT, INS_DATE, INS_EMPL) VALUES ('002',${DATA.AUDIT_ID},${DATA.MAIN_ITEM_NO},N'${DATA.MAIN_ITEM_CONTENT}',${DATA.SUB_ITEM_NO},N'${DATA.SUB_ITEM_CONTENT}',N'${DATA.LEVEL_CAT}',N'${DATA.DETAIL_VN}',N'${DATA.DETAIL_KR}',N'${DATA.DETAIL_EN}',${DATA.MAX_SCORE},N'${DATA.DEPARTMENT}',GETDATE(),'${EMPL_NO}')
           `;
@@ -16169,7 +16169,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT * FROM AUDIT_INFO_TABLE WHERE AUDIT_NAME =N'${DATA.AUDIT_NAME}' AND CUST_CD='${DATA.CUST_CD}'
           `;
@@ -16187,7 +16187,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT MAX(AUDIT_ID) AS MAX_AUDIT_ID FROM AUDIT_INFO_TABLE
           `;
@@ -16205,7 +16205,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
            INSERT INTO KNIFE_FILM (CTR_CD,FACTORY_NAME, NGAYBANGIAO, G_CODE, LOAIBANGIAO_PDP, LOAIPHATHANH, SOLUONG, SOLUONGOHP, LYDOBANGIAO, PQC_EMPL_NO, RND_EMPL_NO, SX_EMPL_NO, REMARK, MA_DAO, CUST_CD, G_WIDTH, G_LENGTH, KNIFE_TYPE) VALUES ('002','${DATA.FACTORY}','${DATA.NGAYBANGIAO}','${DATA.G_CODE}','${DATA.LOAIBANGIAO_PDP}','${DATA.LOAIPHATHANH}','${DATA.SOLUONG}','${DATA.SOLUONGOHP}','${DATA.LYDOBANGIAO}','${DATA.PQC_EMPL_NO}','${DATA.RND_EMPL_NO}','${DATA.SX_EMPL_NO}',N'${DATA.REMARK}','${DATA.MA_DAO}','${DATA.CUST_CD}',${DATA.G_WIDTH},${DATA.G_LENGTH},'${DATA.KNIFE_TYPE}')
           `;
@@ -16223,7 +16223,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           DECLARE @D_P int;
           set @D_P =${DATA.D_PLUS};
@@ -16253,7 +16253,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           DECLARE @D_P int;
           set @D_P =${DATA.D_PLUS};
@@ -16268,7 +16268,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
                     WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}'
           )
           SELECT CONCAT(YEARNUM,'_', WEEKNUM) AS DEL_YW,YEARNUM, WEEKNUM, COUNT (DELIVERY_ID) AS TOTAL_IV, COUNT (CASE WHEN (OVERDUE = 'OK' OR D_PLUS<=@D_P) THEN 1 ELSE null END) AS OK_IV, COUNT (CASE WHEN OVERDUE = 'OVER' AND D_PLUS>@D_P THEN 1 ELSE null END) AS OVER_IV FROM DLVRDATA GROUP BY CONCAT(YEARNUM,'_', WEEKNUM), YEARNUM ,WEEKNUM ORDER BY YEARNUM DESC,WEEKNUM DESC
-          
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -16284,7 +16283,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           DECLARE @D_P int;
           set @D_P =${DATA.D_PLUS};
@@ -16314,7 +16313,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           DECLARE @D_P int;
           set @D_P =${DATA.D_PLUS};
@@ -16344,13 +16343,13 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";    
+          let checkkq = "OK";
           let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND P500.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
           if (DATA.MACHINE !== 'ALL') {
             condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
           }
           if (DATA.FACTORY !== 'ALL')
-            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`
           let setpdQuery = `
           WITH P501_A AS
           (
@@ -16396,13 +16395,13 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";    
+          let checkkq = "OK";
           let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND P500.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
           if (DATA.MACHINE !== 'ALL') {
             condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
           }
           if (DATA.FACTORY !== 'ALL')
-            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`
           let setpdQuery = `
           WITH P501_A AS
           (
@@ -16450,13 +16449,13 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";    
+          let checkkq = "OK";
           let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND P500.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
           if (DATA.MACHINE !== 'ALL') {
             condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
           }
           if (DATA.FACTORY !== 'ALL')
-            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`
           let setpdQuery = `
           WITH P501_A AS
           (
@@ -16504,13 +16503,13 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";    
+          let checkkq = "OK";
           let condition = ` WHERE P500.INS_DATE > '2023-12-01 00:00:00' AND P500.M_LOT_NO <> '' AND (P500.INPUT_QTY- isnull(P500.REMAIN_QTY,0)) <> 0`
           if (DATA.MACHINE !== 'ALL') {
             condition += ` AND SUBSTRING(P500.EQUIPMENT_CD,1,2)='${DATA.MACHINE}'`
           }
           if (DATA.FACTORY !== 'ALL')
-            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`      
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`
           let setpdQuery = `
           WITH P501_A AS
           (

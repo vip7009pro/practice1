@@ -205,7 +205,7 @@ const { existsSync } = require("fs");
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 app.use("/", function (req, res, next) {
-  //console.log('req',req)
+  //console.log('req',req.filename);
   //console.log('vao cmn day r')
   api_module.checklogin_index(req, res, next);
 });
