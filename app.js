@@ -205,7 +205,7 @@ const { existsSync } = require("fs");
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 app.use("/", function (req, res, next) {
-  //console.log('req',req.filename);
+  //console.log('req',req.body);
   //console.log('vao cmn day r')
   api_module.checklogin_index(req, res, next);
 });
@@ -351,7 +351,7 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
     }
   }
 });
-app.post("/uploadfilechecksheet", upload2.single("uploadedfile"), function (req, res) {
+app.post("/uploadfile55", upload2.single("uploadedfile"), function (req, res) {
   console.log("vao uploaded file thanh cong");
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);

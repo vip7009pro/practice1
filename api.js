@@ -5432,15 +5432,95 @@ LEFT JOIN (
           let checkkq = "OK";
           let condition = " WHERE 1=1 ";
           if (DATA.codeSearch !== "") {
-            condition += ` AND TONKHOFULL.G_NAME LIKE '%${DATA.codeSearch}%'`;
+            condition += ` AND TONKHOFULL.G_NAME LIKE ''%${DATA.codeSearch}%''`;
           }
           if (DATA.allcode !== false) {
             condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
           }
-          let setpdQuery = `SELECT 
+          let startdate = moment().add(-7, "month").format("YYYY-MM-01");
+          let enddate = moment().add(0, "day").format("YYYY-MM-DD");
+
+          let setpdQuery = `
+          DECLARE @StartDate DATE = '${startdate}'; -- Thay đổi start date tại đây
+DECLARE @EndDate DATE = '${enddate}'; -- Thay đổi end date tại đây
+
+DECLARE @CurrentDate DATE = @StartDate;
+DECLARE @str1 VARCHAR(MAX) = '';
+
+WHILE @CurrentDate <= @EndDate
+BEGIN
+    SET  @str1 =  @str1 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) + ';
+    SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+END
+
+-- Xóa dấu phẩy cuối cùng
+SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
+
+
+SET @CurrentDate = @StartDate;
+DECLARE @ttmonth int;
+SET @ttmonth= 0;
+WHILE @CurrentDate <= @EndDate
+BEGIN
+SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+SET  @ttmonth += 1;   
+END
+
+SET @CurrentDate = @StartDate;
+DECLARE @str2 VARCHAR(MAX) = '';
+DECLARE @stt int, @temptt int;
+SET @stt= 0;
+SET @temptt = 0;
+
+WHILE @CurrentDate <= @EndDate
+BEGIN
+	SET @temptt = @ttmonth - @stt;
+    SET  @str2 =  @str2 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) AS M_'+CAST(@temptt as varchar)+', ';
+    SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+	SET @stt =  @stt + 1;
+END
+
+-- Xóa dấu phẩy cuối cùng
+SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
+
+SET @CurrentDate = @StartDate;
+DECLARE @str3 VARCHAR(MAX) = '';
+
+WHILE @CurrentDate <= @EndDate
+BEGIN
+    SET  @str3 =  @str3 + '[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
+    SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+END
+-- Xóa dấu phẩy cuối cùng
+SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
+
+
+SET @CurrentDate = @StartDate;
+DECLARE @str4 VARCHAR(MAX) = '';
+DECLARE @stt2 int, @temptt2 int;
+SET @stt2= 0;
+SET @temptt2 = 0;
+
+WHILE @CurrentDate <= @EndDate
+BEGIN
+	SET @temptt2 = @ttmonth - @stt2;
+    SET  @str4 =  @str4 + 'ISNULL([M_' + CAST(@temptt2 as varchar) + '],0) AS M_'+CAST(@temptt2 as varchar)+', ';
+    SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+	SET @stt2 =  @stt2 + 1;
+END
+
+
+
+print(@str2)
+
+declare @query varchar(max) 
+select 
+@query = '
+SELECT 
           PO_TABLE_1.G_CODE, 
           TONKHOFULL.G_NAME, 
           TONKHOFULL.G_NAME_KD, 
+		  '+@str4+'
           PO_TABLE_1.PO_QTY, 
           TOTAL_DELIVERED, 
           PO_TABLE_1.PO_BALANCE, 
@@ -5530,7 +5610,7 @@ LEFT JOIN (
               LEFT JOIN (
             SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD,M100.PROD_TYPE,  AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
             (
-            SELECT G_CODE, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y' GROUP BY G_CODE
+            SELECT G_CODE, SUM(CASE WHEN STATUS=''N'' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS=''B'' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN =''Y'' GROUP BY G_CODE
             ) AS AA
             LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE)        
               ) AS THANHPHAM ON (
@@ -5557,7 +5637,7 @@ LEFT JOIN (
                     date, 
                     GETDATE()
                   ) 
-                  AND CALAMVIEC = 'DEM' 
+                  AND CALAMVIEC = ''DEM'' 
                 GROUP BY 
                   ZTB_WAIT_INSPECT.G_CODE, 
                   M100.G_NAME, 
@@ -5637,16 +5717,53 @@ LEFT JOIN (
                 BB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO
               ) 
             WHERE 
-              P400.CODE_03 <> '04' 
+              P400.CODE_03 <> ''04''
               AND P400.PROD_REQUEST_QTY > INS_OUTPUT_TB.INS_OUTPUT 
-              AND PROD_REQUEST_DATE > '20230101' 
+              AND PROD_REQUEST_DATE > ''20230101'' 
             GROUP BY 
               P400.G_CODE
           ) AS YCSXBLTB ON (
             YCSXBLTB.G_CODE = PO_TABLE_1.G_CODE
           )
-          ${condition}`;
-          //////console.log(setpdQuery);
+		  LEFT JOIN
+		  (
+		  SELECT G_CODE, '+@str2+' FROM 
+			(
+			SELECT G_CODE, CONCAT(DEL_YEAR,''_'', DEL_MONTH) AS DEL_YM, TotalDelivered FROM 
+			(
+			SELECT
+			ZTBPOTable.G_CODE,
+			YEAR(ZTBDelivery.DELIVERY_DATE) AS DEL_YEAR,
+			FORMAT(ZTBDelivery.DELIVERY_DATE,''MM'') AS DEL_MONTH,
+			SUM(ZTBDelivery.DELIVERY_QTY) AS TotalDelivered
+			FROM 
+			ZTBDelivery 
+			LEFT JOIN ZTBPOTable ON (
+			ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD 
+			AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD 
+			AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE 
+			AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO
+			)
+			WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '''+CAST(@StartDate as varchar)+''' AND '''+CAST(@EndDate as varchar)+'''
+			GROUP BY 
+			ZTBPOTable.G_CODE,
+			YEAR(ZTBDelivery.DELIVERY_DATE),
+			FORMAT(ZTBDelivery.DELIVERY_DATE,''MM'')
+			) AS src
+			) AS src2
+			PIVOT
+			(
+			 SUM(TotalDelivered)
+			 FOR DEL_YM IN ('+@str3+')
+			) AS pvtb
+		  ) AS LSGH6T
+		  ON (LSGH6T.G_CODE= PO_TABLE_1.G_CODE)
+      ${condition}
+'
+print(@query)
+execute(@query)          
+          `;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
@@ -6826,7 +6943,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE M100 SET FSC='${DATA.FSC}', PO_TYPE='${DATA.PO_TYPE}', CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', EQ3='${DATA.EQ3}',EQ4='${DATA.EQ4}', PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}',PROD_DVT='${DATA.PROD_DVT}', PDBV='P',QL_HSD='${DATA.QL_HSD}',EXP_DATE = ${DATA.EXP_DATE}, PD_HSD='${DATA.PD_HSD}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
+          let setpdQuery = `UPDATE M100 SET FSC='${DATA.FSC}', PO_TYPE='${DATA.PO_TYPE}', CUST_CD='${DATA.CUST_CD}',PROD_PROJECT='${DATA.PROD_PROJECT}',PROD_MODEL='${DATA.PROD_MODEL}',PROD_TYPE='${DATA.PROD_TYPE}',G_NAME_KD='${DATA.G_NAME_KD}',DESCR='${DATA.DESCR}',PROD_MAIN_MATERIAL='${DATA.PROD_MAIN_MATERIAL}',G_NAME='${DATA.G_NAME}',G_LENGTH='${DATA.G_LENGTH}',G_WIDTH='${DATA.G_WIDTH}',PD='${DATA.PD}',G_C='${DATA.G_C}',G_C_R='${DATA.G_C_R}',G_SG_L='${DATA.G_SG_L}',G_SG_R='${DATA.G_SG_R}',PACK_DRT='${DATA.PACK_DRT}',KNIFE_TYPE='${DATA.KNIFE_TYPE}',KNIFE_LIFECYCLE='${DATA.KNIFE_LIFECYCLE}',KNIFE_PRICE='${DATA.KNIFE_PRICE}',CODE_33='${DATA.CODE_33}',ROLE_EA_QTY='${DATA.ROLE_EA_QTY}',RPM='${DATA.RPM}',PIN_DISTANCE='${DATA.PIN_DISTANCE}',PROCESS_TYPE='${DATA.PROCESS_TYPE}',EQ1='${DATA.EQ1}',EQ2='${DATA.EQ2}', EQ3='${DATA.EQ3}',EQ4='${DATA.EQ4}', PROD_DIECUT_STEP='${DATA.PROD_DIECUT_STEP}',PROD_PRINT_TIMES='${DATA.PROD_PRINT_TIMES}',REMK='${DATA.REMK}',USE_YN='${DATA.USE_YN}',G_CG='${DATA.G_CG}',G_LG='${DATA.G_LG}',PROD_DVT='${DATA.PROD_DVT}', PDBV='P',QL_HSD='${DATA.QL_HSD}',EXP_DATE = ${DATA.EXP_DATE}, PD_HSD='${DATA.PD_HSD??'N'}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE = '${DATA.G_CODE}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
