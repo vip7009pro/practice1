@@ -4233,6 +4233,11 @@ LEFT JOIN (
                     M100.PDBV_EMPL,
                     M100.PDBV_DATE,
                     M100.G_NAME,
+                    M100.G_WIDTH,
+                    M100.G_LENGTH,
+                    M100.PROD_PRINT_TIMES,
+                    M100.G_C,
+                    M100.G_C_R,
                     M010.EMPL_NAME,
                     M010.EMPL_NO,
                     M110.CUST_NAME_KD,
@@ -13473,7 +13478,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             condition3 += ` WHERE ZTBPOTable.PO_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'`
           }
           let setpdQuery = `
-          SELECT CC.M_CODE, M090.M_NAME, M090.WIDTH_CD, CC.NEED_M_QTY,   ((isnull(M090.STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0)) - CC.NEED_M_QTY) AS M_SHORTAGE FROM 
+          SELECT CC.M_CODE, M090.M_NAME, M090.WIDTH_CD, CC.NEED_M_QTY, (isnull(M090.STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0)) AS STOCK_M,(isnull(M090.HOLDING_CFM_NM1,0) + isnull(M090.HOLDING_CFM_NM2,0)) AS HOLDING_M,   ((isnull(M090.STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0)) - CC.NEED_M_QTY) AS M_SHORTAGE FROM 
           (
           SELECT BB.M_CODE, SUM(BB.NEED_M_QTY) AS NEED_M_QTY FROM 
           (
@@ -13495,7 +13500,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           ${condition2}
           ORDER BY ((M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) - CC.NEED_M_QTY) ASC
           `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
