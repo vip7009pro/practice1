@@ -2900,6 +2900,22 @@ exports.process_api = function async(req, res) {
           }
         })();
         break;
+      case "updateM010":
+        (async () => {
+          ////console.log(DATA);
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
+            let checkkq = "OK";            
+            let setpdQuery = `UPDATE M010 SET EMPL_NAME='${DATA.EMPL_NAME}' WHERE EMPL_NO= '${DATA.EMPL_NO}'`;
+            //console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          } else {
+            res.send({ tk_status: "NG", message: "Bạn không phải leader" });
+          }
+        })();
+        break;
       case "diemdanhnhom":
         //console.log(qr);
         (async () => {
