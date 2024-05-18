@@ -13008,8 +13008,8 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           }
           let setpdQuery = `
           SELECT  O660.OUT_DATE, O660.FACTORY,O660.AUTO_ID,O660.INSPECT_OUTPUT_ID,O660.PACK_ID,M010.EMPL_NAME, O660.PROD_REQUEST_NO,O660.G_CODE,M100.G_NAME, M100.G_NAME_KD, O660.PLAN_ID,O660.CUST_CD,O660.OUT_QTY, M100.PROD_TYPE, M110.CUST_NAME_KD, P400.PO_NO,
-          CASE WHEN O660.OUT_TYPE='N' THEN 'NORMAL' WHEN O660.OUT_TYPE='F' THEN 'FREE' WHEN O660.OUT_TYPE='L' THEN 'CHANGE LOT' ELSE 'OTHER' END AS OUT_TYPE ,
-          CASE WHEN O660.USE_YN='T' THEN 'PREPARING' WHEN O660.USE_YN='Y' THEN 'PREPAIRED' ELSE 'COMPLETED' END AS USE_YN
+          CASE WHEN O660.OUT_TYPE='N' THEN 'NORMAL' WHEN O660.OUT_TYPE='F' THEN 'FREE' WHEN O660.OUT_TYPE='L' THEN 'CHANGE LOT'  WHEN O660.OUT_TYPE='D' THEN 'SCRAP' ELSE 'OTHER' END AS OUT_TYPE ,
+          CASE WHEN O660.USE_YN='T' THEN 'PREPARING' WHEN O660.USE_YN='Y' THEN 'PREPAIRED' WHEN O660.USE_YN='P' THEN 'PENDING' ELSE 'COMPLETED' END AS USE_YN
           ,O660.INS_DATE,O660.INS_EMPL,O660.UPD_DATE,O660.UPD_EMPL,O660.STATUS,O660.REMARK,O660.AUTO_ID_IN,O660.OUT_PRT_SEQ
           FROM O660
           LEFT JOIN M100 ON (M100.G_CODE = O660.G_CODE)
@@ -13018,7 +13018,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
           ${condition}
           `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -13120,6 +13120,44 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updatePheDuyetHuyO660":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          UPDATE O660 SET USE_YN = 'X', REMARK = 'XUAT HUY', UPD_DATE = '${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL=${EMPL_NO} WHERE AUTO_ID= ${DATA.AUTO_ID}          
+          `;          
+          checkkq = await queryDB(setpdQuery);
+          setpdQuery = `
+          UPDATE I660 SET USE_YN = 'X',  UPD_DATE = '${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL=${EMPL_NO} WHERE AUTO_ID= ${DATA.AUTO_ID_IN}          
+          `;          
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "cancelPheDuyetHuyO660":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            DELETE FROM O660 WHERE AUTO_ID= ${DATA.AUTO_ID}          
+          `;          
+          checkkq = await queryDB(setpdQuery);       
           //console.log(checkkq);
           res.send(checkkq);
         })();
