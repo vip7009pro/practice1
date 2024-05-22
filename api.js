@@ -2906,7 +2906,7 @@ exports.process_api = function async(req, res) {
           let JOB_NAME = req.payload_data["JOB_NAME"];
           if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
             let checkkq = "OK";            
-            let setpdQuery = `UPDATE M010 SET EMPL_NAME='${DATA.EMPL_NAME}' WHERE EMPL_NO= '${DATA.EMPL_NO}'`;
+            let setpdQuery = `UPDATE M010 SET EMPL_NAME='${removeVietnameseTones(DATA.MIDLAST_NAME)} ${removeVietnameseTones(DATA.FIRST_NAME)}' WHERE EMPL_NO= '${DATA.EMPL_NO}'`;
             //console.log(setpdQuery);
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
