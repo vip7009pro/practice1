@@ -12704,7 +12704,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-         SELECT * FROM ZTB_BARCODE_MANAGER WHERE G_CODE ='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
+            SELECT * FROM ZTB_BARCODE_MANAGER WHERE G_CODE ='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
