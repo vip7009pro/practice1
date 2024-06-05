@@ -15182,7 +15182,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           ) as pvtb
           ORDER BY pvtb.INSPECT_DATE DESC
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -17194,6 +17194,144 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+        case "rnddailynewcode":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+            let condition = `WHERE CODETB.CREATED_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;          
+            let setpdQuery = `
+            WITH CODETB AS (SELECT G_CODE,CASE WHEN REV_NO='A' THEN 1 ELSE 0 END AS NEWCODE, CASE WHEN REV_NO<>'A' THEN 1 ELSE 0 END AS ECN, CAST(INS_DATE as date) AS CREATED_DATE FROM M100)
+            SELECT CODETB.CREATED_DATE, SUM(NEWCODE) AS NEWCODE, SUM(ECN) AS ECN FROM CODETB 
+            ${condition}
+            GROUP BY CODETB.CREATED_DATE            
+            ORDER BY CODETB.CREATED_DATE DESC
+            `;
+            console.log(setpdQuery);
+            checkkq = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq);
+          })();
+          break;
+          case "rndweeklynewcode":
+            (async () => {
+              let DATA = qr["DATA"];
+              //console.log(DATA);
+              let EMPL_NO = req.payload_data["EMPL_NO"];
+              let JOB_NAME = req.payload_data["JOB_NAME"];
+              let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+              let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+              let checkkq = "OK";
+              let condition = `WHERE CODETB.CREATED_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;          
+              let setpdQuery = `
+              WITH CODETB AS (SELECT G_CODE,CASE WHEN REV_NO='A' THEN 1 ELSE 0 END AS NEWCODE, CASE WHEN REV_NO<>'A' THEN 1 ELSE 0 END AS ECN, CAST(INS_DATE as date) AS CREATED_DATE FROM M100)
+              SELECT YEAR(CREATED_DATE) AS CREATED_YEAR,  DATEPART(WEEK,CREATED_DATE) AS CREATE_WEEK, CONCAT(YEAR(CREATED_DATE),'_', DATEPART(WEEK,CREATED_DATE)) AS CREATED_YW,SUM(NEWCODE) AS NEWCODE, SUM(ECN) AS ECN FROM CODETB 
+              ${condition}
+              GROUP BY YEAR(CREATED_DATE), DATEPART(WEEK,CREATED_DATE)              
+              ORDER BY YEAR(CREATED_DATE) DESC,  DATEPART(WEEK,CREATED_DATE) DESC
+              `;
+              //console.log(setpdQuery);
+              checkkq = await queryDB(setpdQuery);
+              //console.log(checkkq);
+              res.send(checkkq);
+            })();
+            break;
+          case "rndmonthlynewcode":
+            (async () => {
+              let DATA = qr["DATA"];
+              //console.log(DATA);
+              let EMPL_NO = req.payload_data["EMPL_NO"];
+              let JOB_NAME = req.payload_data["JOB_NAME"];
+              let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+              let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+              let checkkq = "OK";
+              let condition = `WHERE CODETB.CREATED_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;          
+              let setpdQuery = `
+              WITH CODETB AS (SELECT G_CODE,CASE WHEN REV_NO='A' THEN 1 ELSE 0 END AS NEWCODE, CASE WHEN REV_NO<>'A' THEN 1 ELSE 0 END AS ECN, CAST(INS_DATE as date) AS CREATED_DATE FROM M100)
+              SELECT YEAR(CREATED_DATE) AS CREATED_YEAR,  MONTH(CREATED_DATE) AS CREATE_MONTH, CONCAT(YEAR(CREATED_DATE),'_', MONTH(CREATED_DATE)) AS CREATED_YM,SUM(NEWCODE) AS NEWCODE, SUM(ECN) AS ECN FROM CODETB 
+              ${condition}
+              GROUP BY YEAR(CREATED_DATE),  MONTH(CREATED_DATE)              
+              ORDER BY YEAR(CREATED_DATE) DESC,  MONTH(CREATED_DATE) DESC
+              `;
+              //console.log(setpdQuery);
+              checkkq = await queryDB(setpdQuery);
+              //console.log(checkkq);
+              res.send(checkkq);
+            })();
+            break;
+          case "rndyearlynewcode":
+            (async () => {
+              let DATA = qr["DATA"];
+              //console.log(DATA);
+              let EMPL_NO = req.payload_data["EMPL_NO"];
+              let JOB_NAME = req.payload_data["JOB_NAME"];
+              let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+              let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+              let checkkq = "OK";
+              let condition = `WHERE CODETB.CREATED_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;          
+              let setpdQuery = `
+              WITH CODETB AS (SELECT G_CODE,CASE WHEN REV_NO='A' THEN 1 ELSE 0 END AS NEWCODE, CASE WHEN REV_NO<>'A' THEN 1 ELSE 0 END AS ECN, CAST(INS_DATE as date) AS CREATED_DATE FROM M100)
+              SELECT YEAR(CREATED_DATE) AS CREATED_YEAR,SUM(NEWCODE) AS NEWCODE, SUM(ECN) AS ECN FROM CODETB 
+              ${condition}
+              GROUP BY YEAR(CREATED_DATE)        
+              ORDER BY YEAR(CREATED_DATE) DESC
+              `;
+              //console.log(setpdQuery);
+              checkkq = await queryDB(setpdQuery);
+              //console.log(checkkq);
+              res.send(checkkq);
+            })();
+            break;
+          case "rndNewCodeByCustomer":
+            (async () => {
+              let DATA = qr["DATA"];
+              //console.log(DATA);
+              let EMPL_NO = req.payload_data["EMPL_NO"];
+              let JOB_NAME = req.payload_data["JOB_NAME"];
+              let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+              let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+              let checkkq = "OK";                   
+              let setpdQuery = `
+              WITH CODETB AS (SELECT G_CODE, CAST(INS_DATE as date) AS CREATED_DATE, CUST_CD FROM M100),
+              CUST_CODE_TB AS 
+              (SELECT CODETB.CUST_CD, COUNT(G_CODE) AS NEWCODE FROM CODETB
+              WHERE CODETB.CREATED_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' 
+              GROUP BY CODETB.CUST_CD
+              ) 
+              SELECT M110.CUST_NAME_KD, CUST_CODE_TB.NEWCODE FROM CUST_CODE_TB LEFT JOIN M110 ON M110.CUST_CD = CUST_CODE_TB.CUST_CD ORDER BY CUST_CODE_TB.NEWCODE DESC
+              `;
+              //console.log(setpdQuery);
+              checkkq = await queryDB(setpdQuery);
+              //console.log(checkkq);
+              res.send(checkkq);
+            })();
+            break;
+          case "rndNewCodeByProdType":
+            (async () => {
+              let DATA = qr["DATA"];
+              //console.log(DATA);
+              let EMPL_NO = req.payload_data["EMPL_NO"];
+              let JOB_NAME = req.payload_data["JOB_NAME"];
+              let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+              let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+              let checkkq = "OK";                   
+              let setpdQuery = `
+              WITH CODETB AS (SELECT G_CODE, CAST(INS_DATE as date) AS CREATED_DATE, PROD_TYPE FROM M100)
+              SELECT CODETB.PROD_TYPE, COUNT(G_CODE) AS NEWCODE FROM CODETB
+              WHERE CODETB.CREATED_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' 
+              GROUP BY CODETB.PROD_TYPE      
+              ORDER BY NEWCODE DESC       
+              `;
+              //console.log(setpdQuery);
+              checkkq = await queryDB(setpdQuery);
+              //console.log(checkkq);
+              res.send(checkkq);
+            })();
+            break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
