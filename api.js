@@ -14616,6 +14616,195 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+      case "ngbyCustomerOQC":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;          
+          if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          let setpdQuery = `
+           WITH OQC_TB AS
+          (
+          SELECT OQC_ID, DELIVERY_DATE, SHIFT_CODE,  M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, ZTB_OQC_TB.LABEL_ID,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
+          FROM
+          ZTB_OQC_TB
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_DATE = ZTB_OQC_TB.PROD_REQUEST_DATE AND P400.PROD_REQUEST_NO = ZTB_OQC_TB.PROD_REQUEST_NO)
+          LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTB_OQC_TB.CUST_CD)
+          ${condition}
+          ),
+           OQCCUSTOMERTB AS 
+          (
+              SELECT CUST_NAME_KD, SUM(CASE WHEN SAMPLE_NG_QTY > 0 THEN 1 ELSE 0 END) AS NG_LOT FROM OQC_TB  GROUP BY CUST_NAME_KD
+          ) 
+          SELECT * FROM OQCCUSTOMERTB WHERE NG_LOT >0  ORDER BY NG_LOT DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "ngbyProTypeOQC":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;          
+          if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          let setpdQuery = `
+            WITH OQC_TB AS
+            (
+            SELECT OQC_ID, DELIVERY_DATE, SHIFT_CODE,  M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, ZTB_OQC_TB.LABEL_ID,M100.PROD_TYPE,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
+            FROM 
+            ZTB_OQC_TB 
+            LEFT JOIN P400 ON (P400.PROD_REQUEST_DATE = ZTB_OQC_TB.PROD_REQUEST_DATE AND P400.PROD_REQUEST_NO = ZTB_OQC_TB.PROD_REQUEST_NO) 
+            LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) 
+            LEFT JOIN M110 ON (M110.CUST_CD = ZTB_OQC_TB.CUST_CD)  
+            ${condition}    
+            ),
+            OQCPRODTYPETB AS 
+            (
+            SELECT PROD_TYPE, SUM(CASE WHEN SAMPLE_NG_QTY > 0 THEN 1 ELSE 0 END) AS NG_LOT FROM OQC_TB  GROUP BY PROD_TYPE
+            ) 
+            SELECT * FROM OQCPRODTYPETB WHERE NG_LOT >0 ORDER BY NG_LOT DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "dailyOQCTrendingData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;          
+          if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          let setpdQuery = `
+           WITH OQC_TB AS
+          (
+          SELECT OQC_ID, DELIVERY_DATE, SHIFT_CODE,  M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, ZTB_OQC_TB.LABEL_ID,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
+          FROM 
+          ZTB_OQC_TB 
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_DATE = ZTB_OQC_TB.PROD_REQUEST_DATE AND P400.PROD_REQUEST_NO = ZTB_OQC_TB.PROD_REQUEST_NO) 
+          LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) 
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTB_OQC_TB.CUST_CD)
+          ${condition}
+          )
+          SELECT DELIVERY_DATE, COUNT(OQC_ID) AS TOTAL_LOT, SUM(CASE WHEN SAMPLE_NG_QTY > 0 THEN 1 ELSE 0 END) AS NG_LOT FROM OQC_TB GROUP BY DELIVERY_DATE
+          ORDER BY DELIVERY_DATE DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "weeklyOQCTrendingData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;          
+          if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          let setpdQuery = `
+          WITH OQC_TB AS
+          (
+          SELECT OQC_ID, DELIVERY_DATE, YEAR(DELIVERY_DATE) AS DELIVERY_YEAR, DATEPART(WEEK, DELIVERY_DATE) AS DELIVERY_WEEK, SHIFT_CODE,  M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, ZTB_OQC_TB.LABEL_ID,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
+          FROM 
+          ZTB_OQC_TB 
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_DATE = ZTB_OQC_TB.PROD_REQUEST_DATE AND P400.PROD_REQUEST_NO = ZTB_OQC_TB.PROD_REQUEST_NO) 
+          LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) 
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTB_OQC_TB.CUST_CD)
+          ${condition}
+          )
+          SELECT DELIVERY_YEAR, DELIVERY_WEEK, CONCAT( DELIVERY_YEAR,'_', DELIVERY_WEEK) AS DELIVERY_YW,COUNT(OQC_ID) AS TOTAL_LOT, SUM(CASE WHEN SAMPLE_NG_QTY > 0 THEN 1 ELSE 0 END) AS NG_LOT FROM OQC_TB GROUP BY DELIVERY_YEAR, DELIVERY_WEEK ORDER BY DELIVERY_YEAR DESC, DELIVERY_WEEK DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "monthlyOQCTrendingData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;          
+          if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          let setpdQuery = `
+          WITH OQC_TB AS
+          (
+          SELECT OQC_ID, DELIVERY_DATE, YEAR(DELIVERY_DATE) AS DELIVERY_YEAR, MONTH(DELIVERY_DATE) AS DELIVERY_MONTH, SHIFT_CODE,  M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, ZTB_OQC_TB.LABEL_ID,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
+          FROM 
+          ZTB_OQC_TB 
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_DATE = ZTB_OQC_TB.PROD_REQUEST_DATE AND P400.PROD_REQUEST_NO = ZTB_OQC_TB.PROD_REQUEST_NO) 
+          LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) 
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTB_OQC_TB.CUST_CD)
+          ${condition}
+          )
+          SELECT DELIVERY_YEAR, DELIVERY_MONTH, CONCAT( DELIVERY_YEAR,'_', DELIVERY_MONTH) AS DELIVERY_YM,COUNT(OQC_ID) AS TOTAL_LOT, SUM(CASE WHEN SAMPLE_NG_QTY > 0 THEN 1 ELSE 0 END) AS NG_LOT FROM OQC_TB GROUP BY DELIVERY_YEAR, DELIVERY_MONTH ORDER BY DELIVERY_YEAR DESC, DELIVERY_MONTH DESC
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "yearlyOQCTrendingData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;          
+          if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+          let setpdQuery = `
+          WITH OQC_TB AS
+          (
+          SELECT OQC_ID, DELIVERY_DATE, YEAR(DELIVERY_DATE) AS DELIVERY_YEAR, MONTH(DELIVERY_DATE) AS DELIVERY_MONTH, SHIFT_CODE,  M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, ZTB_OQC_TB.LABEL_ID,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
+          FROM 
+          ZTB_OQC_TB 
+          LEFT JOIN P400 ON (P400.PROD_REQUEST_DATE = ZTB_OQC_TB.PROD_REQUEST_DATE AND P400.PROD_REQUEST_NO = ZTB_OQC_TB.PROD_REQUEST_NO) 
+          LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE) 
+          LEFT JOIN M110 ON (M110.CUST_CD = ZTB_OQC_TB.CUST_CD)
+          ${condition}
+          )
+          SELECT DELIVERY_YEAR, COUNT(OQC_ID) AS TOTAL_LOT, SUM(CASE WHEN SAMPLE_NG_QTY > 0 THEN 1 ELSE 0 END) AS NG_LOT FROM OQC_TB GROUP BY DELIVERY_YEAR ORDER BY DELIVERY_YEAR DESC
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "tralichsutemlotsx":
         (async () => {
           let DATA = qr["DATA"];
@@ -15236,9 +15425,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           SELECT CONCAT(SETTING_YEAR, '_', SETTING_WEEK) AS SETTING_YW, SETTING_YEAR, SETTING_WEEK, COUNT(PQC1_ID) AS TOTAL_LOT, COUNT(PQC3_ID) AS NG_LOT, COUNT(PQC3_ID)*1.0/COUNT(PQC1_ID) AS NG_RATE, SUM(INSPECT_AMOUNT) AS  INSPECT_AMOUNT FROM PQC_DATA GROUP BY SETTING_YEAR, SETTING_WEEK 
           ORDER BY SETTING_YEAR DESC, SETTING_WEEK DESC
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
