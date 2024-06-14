@@ -3766,7 +3766,7 @@ LEFT JOIN (
                     ) 
                     AND (
                       POTB.PO_BALANCE <> 0
-                    ) THEN 'OVER' ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, PRICE_STATUS.FINAL
+                    ) THEN 'OVER' ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, PRICE_STATUS.FINAL, M100.QL_HSD, M100.EXP_DATE
           FROM ZTBPOTable 
           LEFT JOIN POTB ON ZTBPOTable.G_CODE = POTB.G_CODE AND ZTBPOTable.CUST_CD = POTB.CUST_CD AND ZTBPOTable.PO_NO = POTB.PO_NO
           LEFT JOIN M100 ON M100.G_CODE = ZTBPOTable.G_CODE
