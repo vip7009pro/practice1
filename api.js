@@ -11134,7 +11134,7 @@ AS JUDGEMENT
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.G_CODE, M100.FSC FROM ZTB_QLSXPLAN JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE) WHERE ZTB_QLSXPLAN.PLAN_ID='${DATA.PLAN_ID}' `;
+          let setpdQuery = `SELECT ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.G_CODE, isnull(M100.FSC,'N') AS FSC, isnull(M100.FSC_CODE,'01') AS FSC_CODE FROM ZTB_QLSXPLAN JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE) WHERE ZTB_QLSXPLAN.PLAN_ID='${DATA.PLAN_ID}' `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
