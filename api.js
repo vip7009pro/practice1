@@ -2604,13 +2604,27 @@ exports.process_api = function async(req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE M_ID='${DATA.M_ID}' `;
+          query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE M_ID='${DATA.M_ID}' `;          
+          kqua = await queryDB(query);
+          ////console.log(kqua);
+          res.send(kqua);
+        })();
+        break;
+      case "updateM090FSC":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let kqua;
+          let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+          let query = "";
+          query = `UPDATE M090 SET FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE M_NAME='${DATA.M_NAME}'`;
           console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
         })();
         break;
+
       case "insert_po":
         (async () => {
           //////console.log(DATA);
@@ -5263,7 +5277,7 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `SELECT M100.G_NAME_KD, M100.FSC, M100.PDBV, M140.LIEUQL_SX, M100.PROD_MAIN_MATERIAL, M100.PO_TYPE, P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) AS TONLIEU, (M090.HOLDING_CFM_NM1 + M090.HOLDING_CFM_NM2) AS HOLDING, (M090.STOCK_CFM_NM1 + STOCK_CFM_NM2 + M090.HOLDING_CFM_NM1 + M090.HOLDING_CFM_NM2) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION, M100.PROD_DIECUT_STEP, M100.PROD_PRINT_TIMES,M100.FACTORY, M100.EQ1, M100.EQ2, M100.EQ3,M100.EQ4,M100.Setting1, M100.Setting2, M100.Setting3,M100.Setting4,M100.UPH1, M100.UPH2,M100.UPH3,M100.UPH4, M100.Step1, M100.Step2, M100.Step3,M100.Step4,M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SX3, M100.LOSS_SX4, M100.LOSS_SETTING1 , M100.LOSS_SETTING2 ,M100.LOSS_SETTING3, M100.LOSS_SETTING4, M100.NOTE, M100.PROD_TYPE, P400.PL_HANG FROM P400 
+          let setpdQuery = `SELECT M100.G_NAME_KD,M100.FSC_CODE, M100.FSC, M100.PDBV, M140.LIEUQL_SX, M100.PROD_MAIN_MATERIAL, M100.PO_TYPE, P400.REMK,P400.PROD_REQUEST_QTY,P400.PROD_REQUEST_NO,P400.PROD_REQUEST_DATE,P400.G_CODE,P400.DELIVERY_DT,P400.CODE_55,P400.CODE_50,M140.RIV_NO,M140.M_QTY,M140.M_CODE,M110.CUST_NAME,M100.ROLE_EA_QTY,M100.PACK_DRT,M100.G_WIDTH,M100.G_SG_R,M100.G_SG_L,M100.G_R,M100.G_NAME,M100.G_LG, M100.PROD_PRINT_TIMES, M100.G_LENGTH,M100.G_CODE_C,M100.G_CG,M100.G_C,M100.G_C_R,M100.PD, M100.CODE_33,M090.M_NAME,M090.WIDTH_CD,M010.EMPL_NO,M010.EMPL_NAME, P400.CODE_03,M140.REMK AS REMARK , (M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) AS TONLIEU, (M090.HOLDING_CFM_NM1 + M090.HOLDING_CFM_NM2) AS HOLDING, (M090.STOCK_CFM_NM1 + STOCK_CFM_NM2 + M090.HOLDING_CFM_NM1 + M090.HOLDING_CFM_NM2) AS TONG_TON_LIEU, P400.PDUYET, M100.NO_INSPECTION, M100.PROD_DIECUT_STEP, M100.PROD_PRINT_TIMES,M100.FACTORY, M100.EQ1, M100.EQ2, M100.EQ3,M100.EQ4,M100.Setting1, M100.Setting2, M100.Setting3,M100.Setting4,M100.UPH1, M100.UPH2,M100.UPH3,M100.UPH4, M100.Step1, M100.Step2, M100.Step3,M100.Step4,M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SX3, M100.LOSS_SX4, M100.LOSS_SETTING1 , M100.LOSS_SETTING2 ,M100.LOSS_SETTING3, M100.LOSS_SETTING4, M100.NOTE, M100.PROD_TYPE, P400.PL_HANG FROM P400 
                     LEFT JOIN M100 ON P400.G_CODE = M100.G_CODE 
                     LEFT JOIN M010 ON P400.EMPL_NO = M010.EMPL_NO 
                     LEFT JOIN M140 ON P400.G_CODE = M140.G_CODE 
@@ -5358,7 +5372,7 @@ LEFT JOIN (
         (async () => {
           ////console.log(DATA);
           let checkkq = "OK";
-          let setpdQuery = `SELECT P400.CODE_50, P400.G_CODE, M100.G_NAME, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, M100.PROD_MODEL FROM P400 JOIN M100 ON (P400.G_CODE = M100.G_CODE) WHERE P400.PROD_REQUEST_NO='${DATA.ycsxno}'`;
+          let setpdQuery = `SELECT P400.CODE_50, P400.G_CODE, M100.G_NAME, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_NO, P400.PROD_REQUEST_QTY, M100.PROD_MODEL, P400.PL_HANG FROM P400 JOIN M100 ON (P400.G_CODE = M100.G_CODE) WHERE P400.PROD_REQUEST_NO='${DATA.ycsxno}'`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -17704,6 +17718,26 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let checkkq = "OK";
           let setpdQuery = `
             SELECT * FROM ZTB_FSC_TB
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkMainMaterialFSC":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            SELECT TOP 1 isnull(FSC,'N') AS FSC, isnull(ZTB_MATERIAL_TB.FSC_CODE,'01') AS FSC_CODE,ZTB_FSC_TB.FSC_NAME  FROM ZTB_MATERIAL_TB 
+LEFT JOIN ZTB_FSC_TB ON ZTB_FSC_TB.FSC_CODE = ZTB_MATERIAL_TB.FSC_CODE
+WHERE ZTB_MATERIAL_TB.M_NAME='${DATA.M_NAME}'
             `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
