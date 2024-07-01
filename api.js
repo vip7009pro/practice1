@@ -18042,7 +18042,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           console.log(checkkq);
           res.send(checkkq);
         })();
-        break;
+        break; 
       case "addMonitoringSample":
         (async () => {
           let DATA = qr["DATA"];
