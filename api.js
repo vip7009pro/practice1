@@ -9030,7 +9030,7 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO ${condition}
             condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY = '${DATA.FACTORY}'`;
           }
           if (DATA.M_NAME !== "") {
-            condition += ` AND SD_LIEU.M_NAME LIKE '%${DATA.M_NAME}%'`;
+            condition += ` AND isnull(isnull(WAREHOUSE_OUT.M_NAME, AA.M_NAME),BB.M_NAME) LIKE '%${DATA.M_NAME}%'`;
           }
           if (DATA.M_CODE !== "") {
             condition += ` AND M090.M_CODE = '${DATA.M_CODE}'`;
