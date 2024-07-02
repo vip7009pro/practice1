@@ -8121,6 +8121,8 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           //console.log(setpdQuery1);
           checkkq = await queryDB(setpdQuery1);
           checkkq = await queryDB(setpdQuery2);
+          checkkq = await queryDB(setpdQuery3);
+          checkkq = await queryDB(setpdQuery4);
           res.send(checkkq);
           ////console.log(checkkq);
         })();
@@ -8274,6 +8276,21 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `UPDATE O301 SET OUT_PRE_QTY='${DATA.OUT_PRE_QTY}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`;
+          //${moment().format('YYYY-MM-DD')}
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkPLANID_OUT_KHO_AO":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT TOP 1 * FROM OUT_KHO_AO WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}'`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
