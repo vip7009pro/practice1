@@ -4308,8 +4308,16 @@ LEFT JOIN (
                     P400.PDUYET,
                     P400.CODE_50 AS LOAIXH,
                     M100.BANVE,
-                    M100.NO_INSPECTION,
-					CASE WHEN BOM_MAIN_M.M_NAME = M100.PROD_MAIN_MATERIAL THEN 'Y' ELSE 'N' END AS SETVL
+                    M100.NO_INSPECTION,                    
+					CASE WHEN BOM_MAIN_M.M_NAME = M100.PROD_MAIN_MATERIAL THEN 'Y' ELSE 'N' END AS SETVL,
+          ZTB_DM_HISTORY.LOSS_SX1,
+                    ZTB_DM_HISTORY.LOSS_SX2,
+                    ZTB_DM_HISTORY.LOSS_SX3,
+                    ZTB_DM_HISTORY.LOSS_SX4,
+                    ZTB_DM_HISTORY.LOSS_SETTING1,
+                    ZTB_DM_HISTORY.LOSS_SETTING2,
+                    ZTB_DM_HISTORY.LOSS_SETTING3,
+                    ZTB_DM_HISTORY.LOSS_SETTING4
           FROM P400
           LEFT JOIN AMAZONTB ON (AMAZONTB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
           LEFT JOIN PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
@@ -4319,7 +4327,9 @@ LEFT JOIN (
           LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE)
 		  LEFT JOIN BOM_MAIN_M ON (M100.G_CODE = BOM_MAIN_M.G_CODE)
           LEFT JOIN M010 ON (P400.EMPL_NO = M010.EMPL_NO)
-          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD) ${generate_condition_get_ycsx(
+          LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD)
+          LEFT JOIN ZTB_DM_HISTORY ON (P400.PROD_REQUEST_NO= ZTB_DM_HISTORY.PROD_REQUEST_NO)
+           ${generate_condition_get_ycsx(
             DATA.alltime,
             DATA.start_date,
             DATA.end_date,
@@ -7281,7 +7291,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = ` SELECT * FROM ZTB_BOM2  WHERE RIV_NO='A' AND G_CODE='${DATA.G_CODE}'`;
+          let setpdQuery = ` SELECT ZTB_BOM2.BOM_ID,ZTB_BOM2.G_CODE,ZTB_BOM2.RIV_NO,ZTB_BOM2.G_SEQ,ZTB_BOM2.CATEGORY,ZTB_BOM2.M_CODE,ZTB_BOM2.CUST_CD,ZTB_BOM2.IMPORT_CAT,ZTB_BOM2.M_CMS_PRICE,ZTB_BOM2.M_SS_PRICE,ZTB_BOM2.M_SLITTING_PRICE,ZTB_BOM2.USAGE,ZTB_BOM2.MAT_MASTER_WIDTH,ZTB_BOM2.MAT_ROLL_LENGTH,ZTB_BOM2.MAT_THICKNESS,ZTB_BOM2.M_QTY,ZTB_BOM2.REMARK,ZTB_BOM2.PROCESS_ORDER,ZTB_BOM2.INS_EMPL,ZTB_BOM2.UPD_EMPL,ZTB_BOM2.INS_DATE,ZTB_BOM2.UPD_DATE,ZTB_BOM2.MAIN_M, M090.M_NAME, M090.WIDTH_CD AS MAT_CUTWIDTH FROM ZTB_BOM2 LEFT JOIN M090 ON M090.M_CODE = ZTB_BOM2.M_CODE WHERE RIV_NO='A' AND G_CODE='${DATA.G_CODE}'`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
@@ -7478,7 +7488,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO ZTB_BOM2 (CTR_CD, G_CODE, RIV_NO, G_SEQ, M_CODE, M_NAME, CUST_CD, USAGE, MAT_MASTER_WIDTH, MAT_CUTWIDTH, MAT_ROLL_LENGTH, MAT_THICKNESS, M_QTY, REMARK, PROCESS_ORDER, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, MAIN_M, M_CMS_PRICE, M_SS_PRICE, M_SLITTING_PRICE) VALUES ('002', '${DATA.G_CODE}','A','${DATA.G_SEQ}','${DATA.M_CODE}','${DATA.M_NAME}','${DATA.CUST_CD}','${DATA.USAGE}','${DATA.MAT_MASTER_WIDTH}','${DATA.MAT_CUTWIDTH}','${DATA.MAT_ROLL_LENGTH}','${DATA.MAT_THICKNESS}','${DATA.M_QTY}','${DATA.REMARK}','${DATA.PROCESS_ORDER}','${EMPL_NO}','${EMPL_NO}',GETDATE(),GETDATE(),'${DATA.MAIN_M}',${DATA.M_CMS_PRICE},${DATA.M_SS_PRICE},${DATA.M_SLITTING_PRICE})`;
+          let setpdQuery = `INSERT INTO ZTB_BOM2 (CTR_CD, G_CODE, RIV_NO, G_SEQ, M_CODE, M_NAME, CUST_CD, USAGE, MAT_MASTER_WIDTH, MAT_CUTWIDTH, MAT_ROLL_LENGTH, MAT_THICKNESS, M_QTY, REMARK, PROCESS_ORDER, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, MAIN_M, M_CMS_PRICE, M_SS_PRICE, M_SLITTING_PRICE) VALUES ('002', '${DATA.G_CODE}','A','${DATA.G_SEQ}','${DATA.M_CODE}','${DATA.M_NAME}','${DATA.CUST_CD}','${DATA.USAGE}','${DATA.MAT_MASTER_WIDTH}','${DATA.MAT_CUTWIDTH}','${DATA.MAT_ROLL_LENGTH}','${DATA.MAT_THICKNESS}','${DATA.M_QTY}','${DATA.REMARK}','${DATA.PROCESS_ORDER}','${EMPL_NO}','${EMPL_NO}',GETDATE(),GETDATE(),${DATA.MAIN_M},${DATA.M_CMS_PRICE},${DATA.M_SS_PRICE},${DATA.M_SLITTING_PRICE})`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
@@ -17976,7 +17986,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-            SELECT ZTB_SAMPLE_MONITOR.SAMPLE_ID, ZTB_SAMPLE_MONITOR.PROD_REQUEST_NO, ZTB_SAMPLE_MONITOR.G_NAME_KD, ZTB_SAMPLE_MONITOR.FILE_MAKET, ZTB_SAMPLE_MONITOR.FILM_FILE, ZTB_SAMPLE_MONITOR.KNIFE_STATUS,ZTB_SAMPLE_MONITOR.KNIFE_CODE, ZTB_SAMPLE_MONITOR.FILM, ZTB_SAMPLE_MONITOR.RND_EMPL, ZTB_SAMPLE_MONITOR.RND_UPD_DATE, ZTB_SAMPLE_MONITOR.PRINT_STATUS,ZTB_SAMPLE_MONITOR.DIECUT_STATUS, ZTB_SAMPLE_MONITOR.PR_EMPL, ZTB_SAMPLE_MONITOR.PR_UPD_DATE, ZTB_SAMPLE_MONITOR.QC_STATUS, ZTB_SAMPLE_MONITOR.QC_EMPL, ZTB_SAMPLE_MONITOR.QC_UPD_DATE, ZTB_SAMPLE_MONITOR.APPROVE_STATUS, ZTB_SAMPLE_MONITOR.APPROVE_DATE, ZTB_SAMPLE_MONITOR.USE_YN, ZTB_SAMPLE_MONITOR.REMARK, ZTB_SAMPLE_MONITOR.INS_DATE, ZTB_SAMPLE_MONITOR.INS_EMPL, P400.PROD_REQUEST_DATE, P400.G_CODE, P400.PROD_REQUEST_QTY, P400.CUST_CD, P400.DELIVERY_DT, M100.G_WIDTH, M100.G_LENGTH, M110.CUST_NAME_KD, M100.G_NAME
+            SELECT ZTB_SAMPLE_MONITOR.SAMPLE_ID, ZTB_SAMPLE_MONITOR.PROD_REQUEST_NO, ZTB_SAMPLE_MONITOR.G_NAME_KD, ZTB_SAMPLE_MONITOR.FILE_MAKET, ZTB_SAMPLE_MONITOR.FILM_FILE, ZTB_SAMPLE_MONITOR.KNIFE_STATUS,ZTB_SAMPLE_MONITOR.KNIFE_CODE, ZTB_SAMPLE_MONITOR.FILM, ZTB_SAMPLE_MONITOR.RND_EMPL, ZTB_SAMPLE_MONITOR.RND_UPD_DATE, ZTB_SAMPLE_MONITOR.MATERIAL_STATUS, ZTB_SAMPLE_MONITOR.PUR_EMPL, ZTB_SAMPLE_MONITOR.PUR_UPD_DATE, ZTB_SAMPLE_MONITOR.PRINT_STATUS,ZTB_SAMPLE_MONITOR.DIECUT_STATUS, ZTB_SAMPLE_MONITOR.PR_EMPL, ZTB_SAMPLE_MONITOR.PR_UPD_DATE, ZTB_SAMPLE_MONITOR.QC_STATUS, ZTB_SAMPLE_MONITOR.QC_EMPL, ZTB_SAMPLE_MONITOR.QC_UPD_DATE, ZTB_SAMPLE_MONITOR.APPROVE_STATUS, ZTB_SAMPLE_MONITOR.APPROVE_DATE, ZTB_SAMPLE_MONITOR.USE_YN, ZTB_SAMPLE_MONITOR.REMARK, ZTB_SAMPLE_MONITOR.INS_DATE, ZTB_SAMPLE_MONITOR.INS_EMPL, P400.PROD_REQUEST_DATE, P400.G_CODE, P400.PROD_REQUEST_QTY, P400.CUST_CD, P400.DELIVERY_DT, M100.G_WIDTH, M100.G_LENGTH, M110.CUST_NAME_KD, M100.G_NAME
             FROM ZTB_SAMPLE_MONITOR LEFT OUTER JOIN
             P400 ON P400.PROD_REQUEST_NO = ZTB_SAMPLE_MONITOR.PROD_REQUEST_NO LEFT OUTER JOIN
             M100 ON P400.G_CODE = M100.G_CODE LEFT OUTER JOIN
@@ -18043,6 +18053,24 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           res.send(checkkq);
         })();
         break;
+      case "updateMATERIAL_STATUS":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE ZTB_SAMPLE_MONITOR SET MATERIAL_STATUS='${DATA.MATERIAL_STATUS}',  PUR_EMPL='${EMPL_NO}', PUR_UPD_DATE=GETDATE() WHERE SAMPLE_ID=${DATA.SAMPLE_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "updateAPPROVE_SAMPLE_STATUS":
         (async () => {
           let DATA = qr["DATA"];
@@ -18090,6 +18118,61 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let checkkq = "OK";
           let setpdQuery = `
             UPDATE ZTB_SAMPLE_MONITOR SET USE_YN='${DATA.USE_YN}' WHERE SAMPLE_ID=${DATA.SAMPLE_ID}
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "insertDBYCSX":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            INSERT INTO ZTB_DM_HISTORY
+            SELECT '002' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL FROM M100 WHERE G_CODE='${DATA.G_CODE}'
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateDBYCSX":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            UPDATE ZTB_DM_HISTORY SET LOSS_SX1='${DATA.LOSS_SX1}',LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SX3='${DATA.LOSS_SX3}',LOSS_SX4='${DATA.LOSS_SX4}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',LOSS_SETTING3='${DATA.LOSS_SETTING3}',LOSS_SETTING4='${DATA.LOSS_SETTING4}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' 
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkMassG_CODE":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+             SELECT TOP 1 * FROM P400 WHERE G_CODE='${DATA.G_CODE}' AND CODE_55 <> '04' ORDER BY INS_DATE ASC
             `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
