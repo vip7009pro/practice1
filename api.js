@@ -18305,6 +18305,289 @@ FROM
           res.send(checkkq);
         })();
         break;
+      case "dailyEQEffTrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           WITH AA AS
+(
+SELECT
+    ZTB_SX_RESULT.SX_DATE,   
+    DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
+    DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME     
+    FROM 
+    ZTB_SX_RESULT 
+    LEFT JOIN ZTB_SX_EFFICIENCY ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID 
+        AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT
+    )
+    LEFT JOIN ZTB_QLSXPLAN ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID
+    ) 
+    LEFT JOIN M100 ON (
+        M100.G_CODE = ZTB_QLSXPLAN.G_CODE
+    ) 
+    LEFT JOIN P400 ON (ZTB_QLSXPLAN.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+    WHERE P400.CODE_55 <> '04' AND ZTB_SX_RESULT.MASS_END_TIME is not null  AND ZTB_SX_RESULT.MASS_START_TIME is not null  AND ZTB_SX_RESULT.SETTING_START_TIME is not null
+)
+SELECT 
+AA.SX_DATE,
+74880 AS ALVB_TIME,
+SUM(AA.TOTAL_TIME) AS TOTAL_TIME, 
+SUM(AA.RUN_TIME_SX) AS RUN_TIME_SX, 
+CASE WHEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) > =0 THEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) ELSE 0  END AS PURE_RUN_TIME,
+SUM(AA.SETTING_TIME) AS SETTING_TIME, 
+SUM(AA.TOTAL_LOSS_TIME) AS LOSS_TIME, 
+CAST(SUM(AA.RUN_TIME_SX) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS HIEU_SUAT_TIME, 
+CAST(SUM(AA.SETTING_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS SETTING_TIME_RATE, 
+CAST(SUM(AA.TOTAL_LOSS_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS LOSS_TIME_RATE 
+FROM AA
+WHERE AA.SX_DATE is not null AND AA.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+GROUP BY 
+AA.SX_DATE
+ORDER BY 
+AA.SX_DATE DESC
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "weeklyEQEffTrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           WITH AA AS
+(
+SELECT
+    ZTB_SX_RESULT.SX_DATE,   
+    DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
+    DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME     
+    FROM 
+    ZTB_SX_RESULT 
+    LEFT JOIN ZTB_SX_EFFICIENCY ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID 
+        AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT
+    )
+    LEFT JOIN ZTB_QLSXPLAN ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID
+    ) 
+    LEFT JOIN M100 ON (
+        M100.G_CODE = ZTB_QLSXPLAN.G_CODE
+    ) 
+    LEFT JOIN P400 ON (ZTB_QLSXPLAN.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+    WHERE P400.CODE_55 <> '04' AND ZTB_SX_RESULT.MASS_END_TIME is not null  AND ZTB_SX_RESULT.MASS_START_TIME is not null  AND ZTB_SX_RESULT.SETTING_START_TIME is not null
+)
+SELECT 
+YEAR(AA.SX_DATE) AS SX_YEAR,
+449280 AS ALVB_TIME,
+DATEPART(WEEK, AA.SX_DATE) AS SX_WEEK,
+CONCAT(YEAR(AA.SX_DATE),'_',DATEPART(WEEK, AA.SX_DATE)) AS SX_YW,
+SUM(AA.TOTAL_TIME) AS TOTAL_TIME, 
+CASE WHEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) > =0 THEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) ELSE 0  END AS PURE_RUN_TIME,
+SUM(AA.RUN_TIME_SX) AS RUN_TIME_SX, 
+SUM(AA.SETTING_TIME) AS SETTING_TIME, 
+SUM(AA.TOTAL_LOSS_TIME) AS LOSS_TIME, 
+CAST(SUM(AA.RUN_TIME_SX) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS HIEU_SUAT_TIME, 
+CAST(SUM(AA.SETTING_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS SETTING_TIME_RATE, 
+CAST(SUM(AA.TOTAL_LOSS_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS LOSS_TIME_RATE 
+FROM AA
+WHERE AA.SX_DATE is not null AND AA.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+GROUP BY 
+YEAR(AA.SX_DATE), DATEPART(WEEK, AA.SX_DATE)
+ORDER BY 
+YEAR(AA.SX_DATE) DESC, DATEPART(WEEK, AA.SX_DATE) DESC
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "monthlyEQEffTrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           WITH AA AS
+(
+SELECT
+    ZTB_SX_RESULT.SX_DATE,   
+    DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
+    DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME     
+    FROM 
+    ZTB_SX_RESULT 
+    LEFT JOIN ZTB_SX_EFFICIENCY ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID 
+        AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT
+    )
+    LEFT JOIN ZTB_QLSXPLAN ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID
+    ) 
+    LEFT JOIN M100 ON (
+        M100.G_CODE = ZTB_QLSXPLAN.G_CODE
+    ) 
+    LEFT JOIN P400 ON (ZTB_QLSXPLAN.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+    WHERE P400.CODE_55 <> '04' AND ZTB_SX_RESULT.MASS_END_TIME is not null  AND ZTB_SX_RESULT.MASS_START_TIME is not null  AND ZTB_SX_RESULT.SETTING_START_TIME is not null
+)
+SELECT 
+YEAR(AA.SX_DATE) AS SX_YEAR,
+MONTH(AA.SX_DATE) AS SX_MONTH,
+CONCAT(YEAR(AA.SX_DATE),'_',MONTH(AA.SX_DATE)) AS SX_YM,
+1797120 AS ALVB_TIME,
+SUM(AA.TOTAL_TIME) AS TOTAL_TIME, 
+CASE WHEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) > =0 THEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) ELSE 0  END AS PURE_RUN_TIME,
+SUM(AA.RUN_TIME_SX) AS RUN_TIME_SX, 
+SUM(AA.SETTING_TIME) AS SETTING_TIME, 
+SUM(AA.TOTAL_LOSS_TIME) AS LOSS_TIME, 
+CAST(SUM(AA.RUN_TIME_SX) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS HIEU_SUAT_TIME, 
+CAST(SUM(AA.SETTING_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS SETTING_TIME_RATE, 
+CAST(SUM(AA.TOTAL_LOSS_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS LOSS_TIME_RATE 
+FROM AA
+WHERE AA.SX_DATE is not null AND AA.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+GROUP BY 
+YEAR(AA.SX_DATE),MONTH(AA.SX_DATE)
+ORDER BY 
+YEAR(AA.SX_DATE) DESC, MONTH(AA.SX_DATE) DESC
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "yearlyEQEffTrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           WITH AA AS
+(
+SELECT
+    ZTB_SX_RESULT.SX_DATE,   
+    DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
+    DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME     
+    FROM 
+    ZTB_SX_RESULT 
+    LEFT JOIN ZTB_SX_EFFICIENCY ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID 
+        AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT
+    )
+    LEFT JOIN ZTB_QLSXPLAN ON (
+        ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID
+    ) 
+    LEFT JOIN M100 ON (
+        M100.G_CODE = ZTB_QLSXPLAN.G_CODE
+    ) 
+    LEFT JOIN P400 ON (ZTB_QLSXPLAN.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+    WHERE P400.CODE_55 <> '04' AND ZTB_SX_RESULT.MASS_END_TIME is not null  AND ZTB_SX_RESULT.MASS_START_TIME is not null  AND ZTB_SX_RESULT.SETTING_START_TIME is not null
+)
+SELECT 
+YEAR(AA.SX_DATE) AS SX_YEAR,
+21565440 AS ALVB_TIME,
+SUM(AA.TOTAL_TIME) AS TOTAL_TIME, 
+CASE WHEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) > =0 THEN SUM(AA.RUN_TIME_SX) - SUM(AA.TOTAL_LOSS_TIME) ELSE 0  END AS PURE_RUN_TIME,
+SUM(AA.RUN_TIME_SX) AS RUN_TIME_SX, 
+SUM(AA.SETTING_TIME) AS SETTING_TIME, 
+SUM(AA.TOTAL_LOSS_TIME) AS LOSS_TIME, 
+CAST(SUM(AA.RUN_TIME_SX) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS HIEU_SUAT_TIME, 
+CAST(SUM(AA.SETTING_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS SETTING_TIME_RATE, 
+CAST(SUM(AA.TOTAL_LOSS_TIME) as float)/ CAST(SUM(AA.TOTAL_TIME) as float) AS LOSS_TIME_RATE 
+FROM AA
+WHERE AA.SX_DATE is not null AND AA.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+GROUP BY 
+YEAR(AA.SX_DATE)
+ORDER BY 
+YEAR(AA.SX_DATE) DESC
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "sxLossTimeByReason":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          WITH LOSS_TIME_TB AS
+          (
+          SELECT SUM(isnull(LAY_DO, 0)) AS LAY_DO , SUM(isnull(MAY_HONG, 0)) AS MAY_HONG , SUM(isnull(DAO_NG, 0)) AS DAO_NG , SUM(isnull(CHO_BTP, 0)) AS CHO_BTP , SUM(isnull(CHO_LIEU, 0)) AS CHO_LIEU , SUM(isnull(HET_LIEU, 0)) AS HET_LIEU , SUM(isnull(LIEU_NG, 0)) AS LIEU_NG , SUM(isnull(CAN_HANG, 0)) AS CAN_HANG , SUM(isnull(HOP_FL, 0)) AS HOP_FL , SUM(isnull(CHO_QC, 0)) AS CHO_QC , SUM(isnull(CHOT_BAOCAO, 0)) AS CHOT_BAOCAO , SUM(isnull(CHUYEN_CODE, 0)) AS CHUYEN_CODE , SUM(isnull(KHAC, 0)) AS KHAC, SUM((isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0))) AS TOTAL_LOSS_TIME FROM ZTB_SX_EFFICIENCY
+          LEFT JOIN ZTB_SX_RESULT ON (ZTB_SX_RESULT.PLAN_ID= ZTB_SX_EFFICIENCY.PLAN_ID AND ZTB_SX_RESULT.WORK_SHIFT= ZTB_SX_EFFICIENCY.WORK_SHIFT)
+          WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+          )
+          SELECT unpvt.REASON, unpvt.LOSS_TIME, unpvt.TOTAL_LOSS_TIME, unpvt.LOSS_TIME*1.0/ unpvt.TOTAL_LOSS_TIME AS RATE FROM 
+          (
+          SELECT * FROM LOSS_TIME_TB
+          ) AS s
+          UNPIVOT
+          (
+          LOSS_TIME FOR [REASON] IN ([LAY_DO],[MAY_HONG],[DAO_NG],[CHO_LIEU],[HET_LIEU],[LIEU_NG],[HOP_FL],[CHO_QC],[CHOT_BAOCAO],[CHUYEN_CODE],[CAN_HANG],[CHO_BTP],[KHAC])
+          ) as unpvt
+           ORDER BY unpvt.LOSS_TIME DESC
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "sxLossTimeByEmpl":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          WITH LOSS_TIME_TB AS
+(
+SELECT M010.EMPL_NAME, SUM((isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0))) AS TOTAL_LOSS_TIME FROM ZTB_SX_EFFICIENCY
+ LEFT JOIN ZTB_SX_RESULT ON (ZTB_SX_RESULT.PLAN_ID= ZTB_SX_EFFICIENCY.PLAN_ID AND ZTB_SX_RESULT.WORK_SHIFT= ZTB_SX_EFFICIENCY.WORK_SHIFT)
+ LEFT JOIN M010 ON M010.EMPL_NO = ZTB_SX_RESULT.INS_EMPL
+ WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}' AND ZTB_SX_RESULT.INS_EMPL is not null
+ GROUP BY M010.EMPL_NAME
+)
+SELECT * FROM LOSS_TIME_TB
+ORDER BY TOTAL_LOSS_TIME DESC
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
