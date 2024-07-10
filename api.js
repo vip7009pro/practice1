@@ -18217,6 +18217,94 @@ FROM
           res.send(checkkq);
         })();
         break;
+      case "sxdailyachivementtrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           SELECT  ZTB_SX_RESULT.SX_DATE, SUM(ZTB_SX_RESULT.SX_RESULT) AS SX_RESULT, SUM(ZTB_QLSXPLAN.PLAN_QTY) AS PLAN_QTY  
+          FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_SX_RESULT.PLAN_ID= ZTB_QLSXPLAN.PLAN_ID)
+          WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+          GROUP BY ZTB_SX_RESULT.SX_DATE
+          ORDER BY SX_DATE ASC             
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "sxweeklyachivementtrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           SELECT  YEAR(ZTB_SX_RESULT.SX_DATE) AS SX_YEAR, DATEPART(WEEK,ZTB_SX_RESULT.SX_DATE) AS SX_WEEK, CONCAT(YEAR(ZTB_SX_RESULT.SX_DATE),'_', DATEPART(WEEK,ZTB_SX_RESULT.SX_DATE)) AS SX_YW,SUM(ZTB_SX_RESULT.SX_RESULT) AS SX_RESULT, SUM(ZTB_QLSXPLAN.PLAN_QTY) AS PLAN_QTY  
+ FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_SX_RESULT.PLAN_ID= ZTB_QLSXPLAN.PLAN_ID)
+  WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+ GROUP BY YEAR(ZTB_SX_RESULT.SX_DATE), DATEPART(WEEK,ZTB_SX_RESULT.SX_DATE)
+ ORDER BY YEAR(ZTB_SX_RESULT.SX_DATE) DESC, DATEPART(WEEK,ZTB_SX_RESULT.SX_DATE) DESC         
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "sxmonthlyachivementtrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           SELECT  YEAR(ZTB_SX_RESULT.SX_DATE) AS SX_YEAR, MONTH(ZTB_SX_RESULT.SX_DATE) AS SX_MONTH, CONCAT(YEAR(ZTB_SX_RESULT.SX_DATE),'_', MONTH(ZTB_SX_RESULT.SX_DATE)) AS SX_YM,SUM(ZTB_SX_RESULT.SX_RESULT) AS SX_RESULT, SUM(ZTB_QLSXPLAN.PLAN_QTY) AS PLAN_QTY  
+ FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_SX_RESULT.PLAN_ID= ZTB_QLSXPLAN.PLAN_ID)
+  WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+ GROUP BY YEAR(ZTB_SX_RESULT.SX_DATE), MONTH(ZTB_SX_RESULT.SX_DATE)
+ ORDER BY YEAR(ZTB_SX_RESULT.SX_DATE) DESC, MONTH(ZTB_SX_RESULT.SX_DATE) DESC      
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "sxyearlyachivementtrending":
+        (async () => {
+          let DATA = qr["DATA"];  
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           SELECT  YEAR(ZTB_SX_RESULT.SX_DATE) AS SX_YEAR,SUM(CAST(ZTB_SX_RESULT.SX_RESULT AS float)) AS SX_RESULT, SUM(CAST(ZTB_QLSXPLAN.PLAN_QTY AS float)) AS PLAN_QTY  
+ FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_SX_RESULT.PLAN_ID= ZTB_QLSXPLAN.PLAN_ID)
+  WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+ GROUP BY YEAR(ZTB_SX_RESULT.SX_DATE)
+ ORDER BY YEAR(ZTB_SX_RESULT.SX_DATE) DESC     
+            `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
