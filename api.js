@@ -2604,7 +2604,7 @@ exports.process_api = function async(req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE M_ID='${DATA.M_ID}' `;          
+          query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME}', CUST_CD ='${DATA.CUST_CD}',DESCR =N'${DATA.DESCR}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE M_ID='${DATA.M_ID}' `;
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
@@ -2624,7 +2624,6 @@ exports.process_api = function async(req, res) {
           res.send(kqua);
         })();
         break;
-
       case "insert_po":
         (async () => {
           //////console.log(DATA);
@@ -9069,7 +9068,6 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO  ${condition}
           if (DATA.TRUSAMPLE) {
             condition += ` AND P400.CODE_55 <> '04'`;
           }
-          
           let setpdQuery = `
           WITH AA AS (
     SELECT PLAN_ID_SUDUNG,M090.M_NAME, SUM(isnull(TOTAL_IN_QTY, 0)) AS INPUT_QTY
@@ -9269,7 +9267,7 @@ FROM
 ORDER BY 
   ZTB_QLSXPLAN.PLAN_ID DESC
   `;
-  //console.log(setpdQuery)
+          //console.log(setpdQuery)
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
         })();
@@ -9307,132 +9305,131 @@ ORDER BY
           if (DATA.ONLYCLOSE) {
             condition += ` AND (isnull(INS_OUTPUT_TB.INS_OUTPUT,0) >= P400.PROD_REQUEST_QTY  OR P400.YCSX_PENDING=0) `
           }
-         /*  let setpdQuery = `
-          SELECT 
-          CASE WHEN  (isnull(INS_OUTPUT_TB.INS_OUTPUT,0) >= P400.PROD_REQUEST_QTY  OR P400.YCSX_PENDING=0) THEN 'CLOSED' ELSE 'PENDING' END AS YCSX_PENDING, P400.G_CODE, CASE WHEN P400.CODE_55 = '04' THEN 'SAMPLE' ELSE 'MASS' END AS PHAN_LOAI, P400.PROD_REQUEST_NO, M100.G_NAME,M100.G_NAME_KD,M100.FACTORY, M100.EQ1, M100.EQ2, M100.EQ3, M100.EQ4, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(SD_LIEU.M_NAME,'X') AS M_NAME,  isnull(SD_LIEU.TOTAL_OUT_QTY,0) AS M_OUTPUT,isnull(SCANNED.SCANNED_QTY,0) AS SCANNED_QTY,(isnull(SD_LIEU.REMAIN_QTY,0)) AS REMAIN_QTY, (isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) AS USED_QTY, M100.PD, M100.G_C* M100.G_C_R AS CAVITY, CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)) * 1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS WAREHOUSE_ESTIMATED_QTY, CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0))*1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS ESTIMATED_QTY, KQSXTABLE.CD1,KQSXTABLE.CD2, KQSXTABLE.CD3, KQSXTABLE.CD4, 
-		  KQSX_ST_TABLE.ST1 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS ST1 , 
-		  KQSX_ST_TABLE.ST2 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  ST2 ,
-		  KQSX_ST_TABLE.ST3 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  ST3 ,
-		  KQSX_ST_TABLE.ST4 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  ST4 , 
-		  KQSX_NG_TABLE.NG1 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG1 , 
-		  KQSX_NG_TABLE.NG2 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG2 ,
-		  KQSX_NG_TABLE.NG3 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG3 ,
-		  KQSX_NG_TABLE.NG4 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG4,
-		  isnull(INS_INPUT_TB.INS_INPUT,0) INS_INPUT, 
-       isnull(NHATKYKT.INSPECT_TOTAL_QTY,0) AS INSPECT_TOTAL_QTY, isnull(NHATKYKT.INSPECT_OK_QTY,0) AS INSPECT_OK_QTY,isnull(NHATKYKT.LOSS_THEM_TUI,0) AS LOSS_THEM_TUI, isnull(NHATKYKT.INSPECT_LOSS_QTY,0) AS INSPECT_LOSS_QTY, isnull(NHATKYKT.INSPECT_TOTAL_NG,0) AS INSPECT_TOTAL_NG, isnull(NHATKYKT.INSPECT_MATERIAL_NG,0) AS INSPECT_MATERIAL_NG, isnull(NHATKYKT.INSPECT_PROCESS_NG,0) AS INSPECT_PROCESS_NG, isnull(NHATKYKT.SX_MARKING_QTY,0) AS SX_MARKING_QTY,
-      isnull(INS_OUTPUT_TB.INS_OUTPUT,0)
-                      AS INS_OUTPUT,
-                      CASE WHEN CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) <>0 THEN 1-isnull(KQSXTABLE.CD1,0) /CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS float) ELSE 0 END AS LOSS_SX1,
-                      CASE 
-                      WHEN isnull(KQSXTABLE.CD1,0) <>0 AND  (M100.EQ2 <> 'NA' AND M100.EQ2 <>'NO' AND M100.EQ2 <>'' AND M100.EQ2 is not null) THEN 1-CAST(isnull(KQSXTABLE.CD2,0) as float) /Cast(isnull(KQSXTABLE.CD1,0) as float) 
-                      WHEN isnull(KQSXTABLE.CD1,0) <>0 AND NOT (M100.EQ2 <> 'NA' AND M100.EQ2 <>'NO' AND M100.EQ2 <>'' AND M100.EQ2 is not null) THEN 0
-                      ELSE 0
-                      END AS LOSS_SX2,
-             CASE 
-                      WHEN isnull(KQSXTABLE.CD2,0) <>0 AND   (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null) THEN 1-CAST(isnull(KQSXTABLE.CD3,0) as float) /Cast(isnull(KQSXTABLE.CD2,0) as float) 
-                      WHEN isnull(KQSXTABLE.CD2,0) <>0 AND NOT (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null) THEN 0
-                      ELSE 0
-                      END AS LOSS_SX3,
-             CASE 
-                      WHEN isnull(KQSXTABLE.CD3,0) <>0 AND   (M100.EQ4 <> 'NA' AND M100.EQ4 <>'NO' AND M100.EQ4 <>'' AND M100.EQ4 is not null) THEN 1-CAST(isnull(KQSXTABLE.CD4,0) as float) /Cast(isnull(KQSXTABLE.CD3,0) as float) 
-                      WHEN isnull(KQSXTABLE.CD3,0) <>0 AND  NOT (M100.EQ4 <> 'NA' AND M100.EQ4 <>'NO' AND M100.EQ4 <>'' AND M100.EQ4 is not null) THEN 0
-                      ELSE 0
-                      END AS LOSS_SX4, 
-                      CASE 
-                      WHEN isnull(INS_INPUT_TB.INS_INPUT,0) <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast(isnull(INS_INPUT_TB.INS_INPUT,0) as float)
-                      ELSE 0
-                      END AS LOSS_INSPECT,		
-                      CASE 
-                      WHEN (isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
-                      ELSE 0
-                      END AS TOTAL_LOSS,
+          /*  let setpdQuery = `
+           SELECT 
+           CASE WHEN  (isnull(INS_OUTPUT_TB.INS_OUTPUT,0) >= P400.PROD_REQUEST_QTY  OR P400.YCSX_PENDING=0) THEN 'CLOSED' ELSE 'PENDING' END AS YCSX_PENDING, P400.G_CODE, CASE WHEN P400.CODE_55 = '04' THEN 'SAMPLE' ELSE 'MASS' END AS PHAN_LOAI, P400.PROD_REQUEST_NO, M100.G_NAME,M100.G_NAME_KD,M100.FACTORY, M100.EQ1, M100.EQ2, M100.EQ3, M100.EQ4, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(SD_LIEU.M_NAME,'X') AS M_NAME,  isnull(SD_LIEU.TOTAL_OUT_QTY,0) AS M_OUTPUT,isnull(SCANNED.SCANNED_QTY,0) AS SCANNED_QTY,(isnull(SD_LIEU.REMAIN_QTY,0)) AS REMAIN_QTY, (isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) AS USED_QTY, M100.PD, M100.G_C* M100.G_C_R AS CAVITY, CAST((isnull(SD_LIEU.TOTAL_OUT_QTY,0)) * 1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS WAREHOUSE_ESTIMATED_QTY, CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0))*1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) AS ESTIMATED_QTY, KQSXTABLE.CD1,KQSXTABLE.CD2, KQSXTABLE.CD3, KQSXTABLE.CD4, 
+       KQSX_ST_TABLE.ST1 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS ST1 , 
+       KQSX_ST_TABLE.ST2 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  ST2 ,
+       KQSX_ST_TABLE.ST3 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  ST3 ,
+       KQSX_ST_TABLE.ST4 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  ST4 , 
+       KQSX_NG_TABLE.NG1 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG1 , 
+       KQSX_NG_TABLE.NG2 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG2 ,
+       KQSX_NG_TABLE.NG3 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG3 ,
+       KQSX_NG_TABLE.NG4 *1.0 / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS  NG4,
+       isnull(INS_INPUT_TB.INS_INPUT,0) INS_INPUT, 
+        isnull(NHATKYKT.INSPECT_TOTAL_QTY,0) AS INSPECT_TOTAL_QTY, isnull(NHATKYKT.INSPECT_OK_QTY,0) AS INSPECT_OK_QTY,isnull(NHATKYKT.LOSS_THEM_TUI,0) AS LOSS_THEM_TUI, isnull(NHATKYKT.INSPECT_LOSS_QTY,0) AS INSPECT_LOSS_QTY, isnull(NHATKYKT.INSPECT_TOTAL_NG,0) AS INSPECT_TOTAL_NG, isnull(NHATKYKT.INSPECT_MATERIAL_NG,0) AS INSPECT_MATERIAL_NG, isnull(NHATKYKT.INSPECT_PROCESS_NG,0) AS INSPECT_PROCESS_NG, isnull(NHATKYKT.SX_MARKING_QTY,0) AS SX_MARKING_QTY,
+       isnull(INS_OUTPUT_TB.INS_OUTPUT,0)
+                       AS INS_OUTPUT,
+                       CASE WHEN CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS int) <>0 THEN 1-isnull(KQSXTABLE.CD1,0) /CAST((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 AS float) ELSE 0 END AS LOSS_SX1,
                        CASE 
-                      WHEN (isnull(SD_LIEU.TOTAL_OUT_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(SD_LIEU.TOTAL_OUT_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
-                      ELSE 0
-                      END AS TOTAL_LOSS2
-                      FROM P400
-                      LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2,isnull(PVTB.[3],0) AS CD3,isnull(PVTB.[4],0) AS CD4 FROM 
-                      (
-                          SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
-                      )
-                      AS PV
-                      PIVOT
-                      ( 
-                      SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2],[3],[4])
-                      ) 
-                      AS PVTB) AS KQSXTABLE ON (P400.PROD_REQUEST_NO = KQSXTABLE.PROD_REQUEST_NO) 
-					  --- SETTING table
-					   LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS ST1, isnull(PVTB.[2],0) AS ST2,isnull(PVTB.[3],0) AS ST3,isnull(PVTB.[4],0) AS ST4 FROM 
-                      (
-                          SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SETTING_MET,0)) AS SETTING_MET FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
-                      )
-                      AS PV
-                      PIVOT
-                      ( 
-                      SUM(PV.SETTING_MET) FOR PV.PROCESS_NUMBER IN ([1],[2],[3],[4])
-                      ) 
-                      AS PVTB) AS KQSX_ST_TABLE ON (P400.PROD_REQUEST_NO = KQSX_ST_TABLE.PROD_REQUEST_NO) 
-					  --- NG TABLE
-					  LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS NG1, isnull(PVTB.[2],0) AS NG2,isnull(PVTB.[3],0) AS NG3,isnull(PVTB.[4],0) AS NG4 FROM 
-                      (
-                          SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(NG_MET,0)) AS NG_MET FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
-                      )
-                      AS PV
-                      PIVOT
-                      ( 
-                      SUM(PV.NG_MET) FOR PV.PROCESS_NUMBER IN ([1],[2],[3],[4])
-                      ) 
-                      AS PVTB) AS KQSX_NG_TABLE ON (P400.PROD_REQUEST_NO = KQSX_NG_TABLE.PROD_REQUEST_NO) 
-                      LEFT JOIN 
-                      (
-                      SELECT  PROD_REQUEST_NO, SUM(INPUT_QTY_EA) AS INS_INPUT FROM ZTBINSPECTINPUTTB GROUP BY PROD_REQUEST_NO
-                      ) AS INS_INPUT_TB ON (INS_INPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
-                      LEFT JOIN
-                      (
-                          SELECT  PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS INS_OUTPUT FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO
-                      ) AS INS_OUTPUT_TB ON (INS_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
-                      LEFT JOIN 
-                      (SELECT DISTINCT PROD_REQUEST_NO AS PROD_REQUEST_NO1 FROM ZTB_QLSXPLAN) AS ZTB_QLSXPLAN_A ON (ZTB_QLSXPLAN_A.PROD_REQUEST_NO1 = P400.PROD_REQUEST_NO) 
-                      LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
-                      LEFT JOIN
-                      ( 			
-                              SELECT isnull(AA.PROD_REQUEST_NO,BB.PROD_REQUEST_NO) AS PROD_REQUEST_NO, isnull(AA.M_NAME,BB.M_NAME) AS M_NAME, AA.TOTAL_OUT_QTY, isnull(BB.REMAIN_QTY,0) AS REMAIN_QTY FROM 
-                              (
-                                  SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME, SUM(IN_KHO_SX.TOTAL_IN_QTY) AS TOTAL_OUT_QTY 
-                                  FROM IN_KHO_SX 			
-                                  LEFT JOIN M090 ON (IN_KHO_SX.M_CODE = M090.M_CODE) 
-                                  LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = IN_KHO_SX.PLAN_ID_INPUT)
-                                  WHERE IN_KHO_SX.PHANLOAI='N'
-                                  GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
-                              ) AS AA
-                              FULL OUTER JOIN 
-                              (
-                                  SELECT P500.PROD_REQUEST_NO, M090.M_NAME, SUM(P500.REMAIN_QTY) AS REMAIN_QTY
-                                  FROM P500	LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = P500.PLAN_ID)
-                                  LEFT JOIN M090 ON (P500.M_CODE = M090.M_CODE)
-                                  WHERE ZTB_QLSXPLAN.PROCESS_NUMBER =1 
-                                  GROUP BY P500.PROD_REQUEST_NO, M090.M_NAME
-                              ) AS BB
-                              ON (AA.PROD_REQUEST_NO = BB.PROD_REQUEST_NO AND AA.M_NAME = BB.M_NAME)							
-                      ) AS SD_LIEU 
-                      ON (SD_LIEU.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)	
-                      LEFT JOIN (
-                          SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME, SUM(TOTAL_IN_QTY) AS SCANNED_QTY  FROM IN_KHO_SX  LEFT JOIN ZTB_QLSXPLAN ON(ZTB_QLSXPLAN.PLAN_ID = IN_KHO_SX.PLAN_ID_SUDUNG)
-                          LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE)
-                          WHERE IN_KHO_SX.USE_YN='X'
-                          GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME				
-                      ) AS SCANNED 
-                      ON (SCANNED.PROD_REQUEST_NO = SD_LIEU.PROD_REQUEST_NO AND SCANNED.M_NAME = SD_LIEU.M_NAME) 
-            LEFT JOIN (
-            SELECT PROD_REQUEST_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY, SUM(ERR1+ ERR2+ERR3) AS INSPECT_LOSS_QTY, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11) AS INSPECT_MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS INSPECT_PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
- ) INSPECT_TOTAL_NG, SUM(ERR32) AS SX_MARKING_QTY, SUM(ERR1) AS LOSS_THEM_TUI
- FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME >= '2022-10-18' GROUP BY PROD_REQUEST_NO
-            ) AS NHATKYKT ON (NHATKYKT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
-                    ${condition}
-                    ORDER BY P400.PROD_REQUEST_NO DESC`;
-
-             */
-            let setpdQuery = ` 
+                       WHEN isnull(KQSXTABLE.CD1,0) <>0 AND  (M100.EQ2 <> 'NA' AND M100.EQ2 <>'NO' AND M100.EQ2 <>'' AND M100.EQ2 is not null) THEN 1-CAST(isnull(KQSXTABLE.CD2,0) as float) /Cast(isnull(KQSXTABLE.CD1,0) as float) 
+                       WHEN isnull(KQSXTABLE.CD1,0) <>0 AND NOT (M100.EQ2 <> 'NA' AND M100.EQ2 <>'NO' AND M100.EQ2 <>'' AND M100.EQ2 is not null) THEN 0
+                       ELSE 0
+                       END AS LOSS_SX2,
+              CASE 
+                       WHEN isnull(KQSXTABLE.CD2,0) <>0 AND   (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null) THEN 1-CAST(isnull(KQSXTABLE.CD3,0) as float) /Cast(isnull(KQSXTABLE.CD2,0) as float) 
+                       WHEN isnull(KQSXTABLE.CD2,0) <>0 AND NOT (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null) THEN 0
+                       ELSE 0
+                       END AS LOSS_SX3,
+              CASE 
+                       WHEN isnull(KQSXTABLE.CD3,0) <>0 AND   (M100.EQ4 <> 'NA' AND M100.EQ4 <>'NO' AND M100.EQ4 <>'' AND M100.EQ4 is not null) THEN 1-CAST(isnull(KQSXTABLE.CD4,0) as float) /Cast(isnull(KQSXTABLE.CD3,0) as float) 
+                       WHEN isnull(KQSXTABLE.CD3,0) <>0 AND  NOT (M100.EQ4 <> 'NA' AND M100.EQ4 <>'NO' AND M100.EQ4 <>'' AND M100.EQ4 is not null) THEN 0
+                       ELSE 0
+                       END AS LOSS_SX4, 
+                       CASE 
+                       WHEN isnull(INS_INPUT_TB.INS_INPUT,0) <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast(isnull(INS_INPUT_TB.INS_INPUT,0) as float)
+                       ELSE 0
+                       END AS LOSS_INSPECT,		
+                       CASE 
+                       WHEN (isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(SCANNED.SCANNED_QTY,0)- isnull(SD_LIEU.REMAIN_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
+                       ELSE 0
+                       END AS TOTAL_LOSS,
+                        CASE 
+                       WHEN (isnull(SD_LIEU.TOTAL_OUT_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000  <>0 THEN 1-CAST(isnull(INS_OUTPUT_TB.INS_OUTPUT,0) as float) /Cast((isnull(SD_LIEU.TOTAL_OUT_QTY,0)) / M100.PD * (M100.G_C* M100.G_C_R)*1000 as float)
+                       ELSE 0
+                       END AS TOTAL_LOSS2
+                       FROM P400
+                       LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2,isnull(PVTB.[3],0) AS CD3,isnull(PVTB.[4],0) AS CD4 FROM 
+                       (
+                           SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
+                       )
+                       AS PV
+                       PIVOT
+                       ( 
+                       SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2],[3],[4])
+                       ) 
+                       AS PVTB) AS KQSXTABLE ON (P400.PROD_REQUEST_NO = KQSXTABLE.PROD_REQUEST_NO) 
+             --- SETTING table
+              LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS ST1, isnull(PVTB.[2],0) AS ST2,isnull(PVTB.[3],0) AS ST3,isnull(PVTB.[4],0) AS ST4 FROM 
+                       (
+                           SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SETTING_MET,0)) AS SETTING_MET FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
+                       )
+                       AS PV
+                       PIVOT
+                       ( 
+                       SUM(PV.SETTING_MET) FOR PV.PROCESS_NUMBER IN ([1],[2],[3],[4])
+                       ) 
+                       AS PVTB) AS KQSX_ST_TABLE ON (P400.PROD_REQUEST_NO = KQSX_ST_TABLE.PROD_REQUEST_NO) 
+             --- NG TABLE
+             LEFT JOIN (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS NG1, isnull(PVTB.[2],0) AS NG2,isnull(PVTB.[3],0) AS NG3,isnull(PVTB.[4],0) AS NG4 FROM 
+                       (
+                           SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(NG_MET,0)) AS NG_MET FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID) WHERE ZTB_QLSXPLAN.STEP=0 GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER
+                       )
+                       AS PV
+                       PIVOT
+                       ( 
+                       SUM(PV.NG_MET) FOR PV.PROCESS_NUMBER IN ([1],[2],[3],[4])
+                       ) 
+                       AS PVTB) AS KQSX_NG_TABLE ON (P400.PROD_REQUEST_NO = KQSX_NG_TABLE.PROD_REQUEST_NO) 
+                       LEFT JOIN 
+                       (
+                       SELECT  PROD_REQUEST_NO, SUM(INPUT_QTY_EA) AS INS_INPUT FROM ZTBINSPECTINPUTTB GROUP BY PROD_REQUEST_NO
+                       ) AS INS_INPUT_TB ON (INS_INPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                       LEFT JOIN
+                       (
+                           SELECT  PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS INS_OUTPUT FROM ZTBINSPECTOUTPUTTB GROUP BY PROD_REQUEST_NO
+                       ) AS INS_OUTPUT_TB ON (INS_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                       LEFT JOIN 
+                       (SELECT DISTINCT PROD_REQUEST_NO AS PROD_REQUEST_NO1 FROM ZTB_QLSXPLAN) AS ZTB_QLSXPLAN_A ON (ZTB_QLSXPLAN_A.PROD_REQUEST_NO1 = P400.PROD_REQUEST_NO) 
+                       LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE)
+                       LEFT JOIN
+                       ( 			
+                               SELECT isnull(AA.PROD_REQUEST_NO,BB.PROD_REQUEST_NO) AS PROD_REQUEST_NO, isnull(AA.M_NAME,BB.M_NAME) AS M_NAME, AA.TOTAL_OUT_QTY, isnull(BB.REMAIN_QTY,0) AS REMAIN_QTY FROM 
+                               (
+                                   SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME, SUM(IN_KHO_SX.TOTAL_IN_QTY) AS TOTAL_OUT_QTY 
+                                   FROM IN_KHO_SX 			
+                                   LEFT JOIN M090 ON (IN_KHO_SX.M_CODE = M090.M_CODE) 
+                                   LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = IN_KHO_SX.PLAN_ID_INPUT)
+                                   WHERE IN_KHO_SX.PHANLOAI='N'
+                                   GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO,M090.M_NAME
+                               ) AS AA
+                               FULL OUTER JOIN 
+                               (
+                                   SELECT P500.PROD_REQUEST_NO, M090.M_NAME, SUM(P500.REMAIN_QTY) AS REMAIN_QTY
+                                   FROM P500	LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = P500.PLAN_ID)
+                                   LEFT JOIN M090 ON (P500.M_CODE = M090.M_CODE)
+                                   WHERE ZTB_QLSXPLAN.PROCESS_NUMBER =1 
+                                   GROUP BY P500.PROD_REQUEST_NO, M090.M_NAME
+                               ) AS BB
+                               ON (AA.PROD_REQUEST_NO = BB.PROD_REQUEST_NO AND AA.M_NAME = BB.M_NAME)							
+                       ) AS SD_LIEU 
+                       ON (SD_LIEU.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)	
+                       LEFT JOIN (
+                           SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME, SUM(TOTAL_IN_QTY) AS SCANNED_QTY  FROM IN_KHO_SX  LEFT JOIN ZTB_QLSXPLAN ON(ZTB_QLSXPLAN.PLAN_ID = IN_KHO_SX.PLAN_ID_SUDUNG)
+                           LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE)
+                           WHERE IN_KHO_SX.USE_YN='X'
+                           GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, M090.M_NAME				
+                       ) AS SCANNED 
+                       ON (SCANNED.PROD_REQUEST_NO = SD_LIEU.PROD_REQUEST_NO AND SCANNED.M_NAME = SD_LIEU.M_NAME) 
+             LEFT JOIN (
+             SELECT PROD_REQUEST_NO, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY, SUM(ERR1+ ERR2+ERR3) AS INSPECT_LOSS_QTY, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11) AS INSPECT_MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS INSPECT_PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
+  ) INSPECT_TOTAL_NG, SUM(ERR32) AS SX_MARKING_QTY, SUM(ERR1) AS LOSS_THEM_TUI
+  FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME >= '2022-10-18' GROUP BY PROD_REQUEST_NO
+             ) AS NHATKYKT ON (NHATKYKT.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+                     ${condition}
+                     ORDER BY P400.PROD_REQUEST_NO DESC`;
+              */
+          let setpdQuery = ` 
             WITH KQSXTABLE  AS 
 (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2,isnull(PVTB.[3],0) AS CD3,isnull(PVTB.[4],0) AS CD4 FROM 
 (
@@ -17807,7 +17804,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-            UPDATE ZTB_SAMPLE_MONITOR SET FILE_MAKET='${DATA.FILE_MAKET}', FILM_FILE='${DATA.FILM_FILE}', KNIFE_STATUS='${DATA.KNIFE_STATUS}', KNIFE_CODE=N'${DATA.KNIFE_CODE??''}', FILM='${DATA.FILM}', RND_EMPL='${EMPL_NO}', RND_UPD_DATE=GETDATE() WHERE SAMPLE_ID=${DATA.SAMPLE_ID}
+            UPDATE ZTB_SAMPLE_MONITOR SET FILE_MAKET='${DATA.FILE_MAKET}', FILM_FILE='${DATA.FILM_FILE}', KNIFE_STATUS='${DATA.KNIFE_STATUS}', KNIFE_CODE=N'${DATA.KNIFE_CODE ?? ''}', FILM='${DATA.FILM}', RND_EMPL='${EMPL_NO}', RND_UPD_DATE=GETDATE() WHERE SAMPLE_ID=${DATA.SAMPLE_ID}
             `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -17879,14 +17876,14 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-            UPDATE ZTB_SAMPLE_MONITOR SET APPROVE_STATUS='${DATA.APPROVE_STATUS}',REMARK=N'${DATA.REMARK}', ${DATA.APPROVE_STATUS==='Y' ? 'APPROVE_DATE=GETDATE(),':''}  UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE SAMPLE_ID=${DATA.SAMPLE_ID}
+            UPDATE ZTB_SAMPLE_MONITOR SET APPROVE_STATUS='${DATA.APPROVE_STATUS}',REMARK=N'${DATA.REMARK}', ${DATA.APPROVE_STATUS === 'Y' ? 'APPROVE_DATE=GETDATE(),' : ''}  UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE SAMPLE_ID=${DATA.SAMPLE_ID}
             `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
           res.send(checkkq);
         })();
-        break; 
+        break;
       case "addMonitoringSample":
         (async () => {
           let DATA = qr["DATA"];
@@ -17980,7 +17977,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
         break;
       case "datasxdailylosstrend":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18000,7 +17997,6 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             FROM P500
             LEFT JOIN M090 ON (M090.M_CODE = P500.M_CODE)
             GROUP BY PLAN_ID,M090.M_NAME),
-
         INSPECT_OUTPUT_TABLE AS 
         (SELECT 
               PLAN_ID, 
@@ -18039,7 +18035,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
         break;
       case "datasxweeklylosstrend":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18059,7 +18055,6 @@ BB AS (
     FROM P500
     LEFT JOIN M090 ON (M090.M_CODE = P500.M_CODE)
     GROUP BY PLAN_ID,M090.M_NAME),
-
 INSPECT_OUTPUT_TABLE AS 
 (SELECT 
       PLAN_ID, 
@@ -18099,7 +18094,7 @@ FROM
         break;
       case "datasxmonthlylosstrend":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18119,7 +18114,6 @@ BB AS (
     FROM P500
     LEFT JOIN M090 ON (M090.M_CODE = P500.M_CODE)
     GROUP BY PLAN_ID,M090.M_NAME),
-
 INSPECT_OUTPUT_TABLE AS 
 (SELECT 
       PLAN_ID, 
@@ -18159,7 +18153,7 @@ FROM
         break;
       case "datasxyearlylosstrend":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18179,7 +18173,6 @@ BB AS (
     FROM P500
     LEFT JOIN M090 ON (M090.M_CODE = P500.M_CODE)
     GROUP BY PLAN_ID,M090.M_NAME),
-
 INSPECT_OUTPUT_TABLE AS 
 (SELECT 
       PLAN_ID, 
@@ -18219,7 +18212,7 @@ FROM
         break;
       case "sxdailyachivementtrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18241,7 +18234,7 @@ FROM
         break;
       case "sxweeklyachivementtrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18263,7 +18256,7 @@ FROM
         break;
       case "sxmonthlyachivementtrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18285,7 +18278,7 @@ FROM
         break;
       case "sxyearlyachivementtrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18307,7 +18300,7 @@ FROM
         break;
       case "dailyEQEffTrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18362,7 +18355,7 @@ AA.SX_DATE DESC
         break;
       case "weeklyEQEffTrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18419,7 +18412,7 @@ YEAR(AA.SX_DATE) DESC, DATEPART(WEEK, AA.SX_DATE) DESC
         break;
       case "monthlyEQEffTrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18476,7 +18469,7 @@ YEAR(AA.SX_DATE) DESC, MONTH(AA.SX_DATE) DESC
         break;
       case "yearlyEQEffTrending":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18531,7 +18524,7 @@ YEAR(AA.SX_DATE) DESC
         break;
       case "sxLossTimeByReason":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
@@ -18563,7 +18556,7 @@ YEAR(AA.SX_DATE) DESC
         break;
       case "sxLossTimeByEmpl":
         (async () => {
-          let DATA = qr["DATA"];  
+          let DATA = qr["DATA"];
           //console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
