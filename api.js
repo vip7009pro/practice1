@@ -18159,7 +18159,7 @@ YEAR(AA.SX_DATE),MONTH(AA.SX_DATE)
 ORDER BY 
 YEAR(AA.SX_DATE) DESC, MONTH(AA.SX_DATE) DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
           res.send(checkkq);
@@ -18214,7 +18214,7 @@ YEAR(AA.SX_DATE)
 ORDER BY 
 YEAR(AA.SX_DATE) DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
           res.send(checkkq);
@@ -18246,7 +18246,7 @@ YEAR(AA.SX_DATE) DESC
           ) as unpvt
            ORDER BY unpvt.LOSS_TIME DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
           res.send(checkkq);
@@ -18273,7 +18273,7 @@ SELECT M010.EMPL_NAME, SUM((isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO
 SELECT * FROM LOSS_TIME_TB
 ORDER BY TOTAL_LOSS_TIME DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
           res.send(checkkq);
