@@ -3546,7 +3546,7 @@ LEFT JOIN (
 			 ON (CCTB.CHECK_DATE = ZTBEMPLINFOA.DATE_COLUMN AND CCTB.NV_CCID = ZTBEMPLINFOA.NV_CCID)	
  WHERE ZTBEMPLINFOA.WORK_STATUS_CODE =1  AND ZTBEMPLINFOA.EMPL_NO=@empl AND ZTBEMPLINFOA.DATE_COLUMN BETWEEN @startdate AND @enddate
  ORDER BY ZTBEMPLINFOA.DATE_COLUMN DESC, ZTBEMPLINFOA.POSITION_CODE ASC`;
-          console.log(query);
+          //console.log(query);
           kqua = await queryDB(query);
           res.send(kqua);
         })();
