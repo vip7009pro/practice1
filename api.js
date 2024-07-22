@@ -3978,7 +3978,13 @@ LEFT JOIN (
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let query = `SELECT G_CODE , G_NAME, G_NAME_KD, PROD_LAST_PRICE, USE_YN FROM M100`;
+          let condition  = ``;
+          if(DATA.G_NAME !== undefined && DATA.G_NAME !== null && DATA.G_NAME !=='')
+          {
+            condition = ` WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+          }
+
+          let query = `SELECT G_CODE , G_NAME, G_NAME_KD, PROD_LAST_PRICE, USE_YN FROM M100 ${condition}`;
           kqua = await queryDB(query);
           ////console.log(kqua);
           res.send(kqua);
@@ -4866,14 +4872,14 @@ LEFT JOIN (
         (async () => {
           ////console.log(DATA);
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY, PLAN_ID) VALUES ('002','${DATA.in_date
+          let setpdQuery = `INSERT INTO P500 (CTR_CD, PROCESS_IN_DATE, PROCESS_IN_NO, PROCESS_IN_SEQ, M_LOT_IN_SEQ, PROD_REQUEST_DATE, PROD_REQUEST_NO, G_CODE, M_CODE, M_LOT_NO, EMPL_NO, EQUIPMENT_CD, SCAN_RESULT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, FACTORY, PLAN_ID, PR_NB) VALUES ('002','${DATA.in_date
             }','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(
               4,
               7
             )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.PROD_REQUEST_DATE
             }','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO
             }','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO
-            }','NM1','${DATA.PLAN_ID}')`;
+            }','NM1','${DATA.PLAN_ID}',${DATA.PR_NB})`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -4885,13 +4891,13 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID) VALUES  ('002','${DATA.in_date
+          let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID, PROCESS_NUMBER) VALUES  ('002','${DATA.in_date
             }','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(
               4,
               7
             )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq
             }','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO
-            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}')`;
+            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER})`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -6302,7 +6308,7 @@ GROUP BY
           let checkkq = "OK";
           let condition = `WHERE 1=1 `
           if(DATA.G_NAME !=='') {
-            condition +=  ` AND  M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%' `
+            condition +=  ` AND  (M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%') `
           }
           if(DATA.CNDB === false) {
             condition+= ` AND G_CODE_CNDB is null`;
@@ -6310,7 +6316,29 @@ GROUP BY
           if(DATA.ACTIVE_ONLY=== true) {
             condition +=  ` AND M100.USE_YN='Y' `
           }
-          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) ${condition}`;
+          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) ${condition} ORDER BY G_CODE ASC`;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "codeinforRnD":
+        (async () => {
+          let DATA = qr["DATA"];
+          //////console.log(DATA);
+          let checkkq = "OK";
+          let condition = `WHERE 1=1 `
+          if(DATA.G_NAME !=='') {
+            condition +=  ` AND  (M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%') `
+          }
+          if(DATA.CNDB === false) {
+            condition+= ` AND G_CODE_CNDB is null`;
+          }
+          if(DATA.ACTIVE_ONLY=== true) {
+            condition +=  ` AND M100.USE_YN='Y' `
+          }
+          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET FROM M100  ${condition} ORDER BY G_CODE ASC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
