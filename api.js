@@ -3978,12 +3978,10 @@ LEFT JOIN (
         (async () => {
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
-          let condition  = ``;
-          if(DATA.G_NAME !== undefined && DATA.G_NAME !== null && DATA.G_NAME !=='')
-          {
+          let condition = ``;
+          if (DATA.G_NAME !== undefined && DATA.G_NAME !== null && DATA.G_NAME !== '') {
             condition = ` WHERE M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
           }
-
           let query = `SELECT G_CODE , G_NAME, G_NAME_KD, PROD_LAST_PRICE, USE_YN FROM M100 ${condition}`;
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -4717,7 +4715,7 @@ LEFT JOIN (
             DATA.material,
             DATA.inspect_inputcheck,
             DATA.phanloaihang
-          )} ORDER BY P400.PROD_REQUEST_NO DESC`;          
+          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -6307,14 +6305,14 @@ GROUP BY
           //////console.log(DATA);
           let checkkq = "OK";
           let condition = `WHERE 1=1 `
-          if(DATA.G_NAME !=='') {
-            condition +=  ` AND  (M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%') `
+          if (DATA.G_NAME !== '') {
+            condition += ` AND  (M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%') `
           }
-          if(DATA.CNDB === false) {
-            condition+= ` AND G_CODE_CNDB is null`;
+          if (DATA.CNDB === false) {
+            condition += ` AND G_CODE_CNDB is null`;
           }
-          if(DATA.ACTIVE_ONLY=== true) {
-            condition +=  ` AND M100.USE_YN='Y' `
+          if (DATA.ACTIVE_ONLY === true) {
+            condition += ` AND M100.USE_YN='Y' `
           }
           let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET FROM M100 LEFT JOIN (SELECT BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE) ) ) AS BBB GROUP BY BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE) ${condition} ORDER BY G_CODE ASC`;
           //console.log(setpdQuery);
@@ -6329,14 +6327,14 @@ GROUP BY
           //////console.log(DATA);
           let checkkq = "OK";
           let condition = `WHERE 1=1 `
-          if(DATA.G_NAME !=='') {
-            condition +=  ` AND  (M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%') `
+          if (DATA.G_NAME !== '') {
+            condition += ` AND  (M100.G_NAME LIKE '%${DATA.G_NAME}%' OR M100.G_CODE ='${DATA.G_NAME}' OR M100.G_NAME_KD LIKE '%${DATA.G_NAME}%') `
           }
-          if(DATA.CNDB === false) {
-            condition+= ` AND G_CODE_CNDB is null`;
+          if (DATA.CNDB === false) {
+            condition += ` AND G_CODE_CNDB is null`;
           }
-          if(DATA.ACTIVE_ONLY=== true) {
-            condition +=  ` AND M100.USE_YN='Y' `
+          if (DATA.ACTIVE_ONLY === true) {
+            condition += ` AND M100.USE_YN='Y' `
           }
           let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.G_CODE, G_NAME, G_NAME_KD, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET FROM M100  ${condition} ORDER BY G_CODE ASC`;
           //console.log(setpdQuery);
@@ -10666,12 +10664,11 @@ ORDER BY P400.PROD_REQUEST_NO DESC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition =  `WHERE IQC1_TABLE.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
-          if(DATA.M_CODE !== '') condition += ` AND IQC1_TABLE.M_CODE ='${DATA.M_CODE}' `;
-          if(DATA.LOTNCC !== '') condition += ` AND I222.LOTNCC ='${DATA.LOTNCC}' `;
-          if(DATA.M_NAME !== '') condition += ` AND M090.M_NAME LIKE'%${DATA.M_NAME}%' `;
-          if(DATA.VENDOR_NAME !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.VENDOR_NAME}%' `;
-
+          let condition = `WHERE IQC1_TABLE.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
+          if (DATA.M_CODE !== '') condition += ` AND IQC1_TABLE.M_CODE ='${DATA.M_CODE}' `;
+          if (DATA.LOTNCC !== '') condition += ` AND I222.LOTNCC ='${DATA.LOTNCC}' `;
+          if (DATA.M_NAME !== '') condition += ` AND M090.M_NAME LIKE'%${DATA.M_NAME}%' `;
+          if (DATA.VENDOR_NAME !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.VENDOR_NAME}%' `;
           let setpdQuery = ` SELECT  IQC1_TABLE.IQC1_ID, IQC1_TABLE.M_CODE, M090.M_NAME, M090.WIDTH_CD, IQC1_TABLE.M_LOT_NO, IQC1_TABLE.LOT_CMS, I222.LOTNCC, IQC1_TABLE.CUST_CD, M110.CUST_NAME_KD, I222.EXP_DATE, IQC1_TABLE.INPUT_LENGTH, IQC1_TABLE.TOTAL_ROLL, IQC1_TABLE.NQ_CHECK_ROLL, IQC1_TABLE.DTC_ID, IQC1_TABLE.TEST_EMPL, IQC1_TABLE.TOTAL_RESULT,XX.NGOAIQUAN, XX.KICHTHUOC,XX.THICKNESS, XX.DIENTRO, XX.CANNANG, XX.KEOKEO, XX.KEOKEO2, XX.FTIR, XX.MAIMON, XX.XRF, XX.SCANBARCODE, XX.PHTHALATE, XX.MAUSAC, XX.SHOCKNHIET, XX.TINHDIEN, XX.NHIETAM, XX.TVOC, XX.DOBONG, IQC1_TABLE.INS_DATE, IQC1_TABLE.INS_EMPL, IQC1_TABLE.UPD_DATE, IQC1_TABLE.UPD_EMPL, IQC1_TABLE.REMARK, CASE WHEN (XX.NGOAIQUAN=0 OR XX.KICHTHUOC=0 OR XX.THICKNESS=0 OR XX.DIENTRO=0 OR XX.CANNANG=0 OR XX.KEOKEO=0 OR XX.KEOKEO2=0 OR XX.FTIR=0 OR XX.MAIMON=0 OR XX.XRF=0 OR XX.SCANBARCODE=0 OR XX.PHTHALATE=0 OR XX.MAUSAC=0 OR XX.SHOCKNHIET=0 OR XX.TINHDIEN=0 OR XX.NHIETAM=0 OR XX.TVOC=0 OR XX.DOBONG=0) THEN 'NG' ELSE CASE WHEN (XX.NGOAIQUAN=2 OR XX.KICHTHUOC=2 OR XX.THICKNESS=2 OR XX.DIENTRO=2 OR XX.CANNANG=2 OR XX.KEOKEO=2 OR XX.KEOKEO2=2 OR XX.FTIR=2 OR XX.MAIMON=2 OR XX.XRF=2 OR XX.SCANBARCODE=2 OR XX.PHTHALATE=2 OR XX.MAUSAC=2 OR XX.SHOCKNHIET=2 OR XX.TINHDIEN=2 OR XX.NHIETAM=2 OR XX.TVOC=2 OR XX.DOBONG=2) THEN 'PENDING' ELSE 'OK' END  END AS AUTO_JUDGEMENT FROM IQC1_TABLE LEFT JOIN 
           (SELECT PVTB.DTC_ID, isnull(PVTB.[Điện trở],-1) AS DIENTRO,isnull(PVTB.[Kích thước],-1) AS KICHTHUOC,isnull(PVTB.[Cân nặng],-1) AS CANNANG,isnull(PVTB.[Kéo keo],0) AS KEOKEO,isnull(PVTB.[FTIR],-1) AS FTIR,isnull(PVTB.[Mài mòn],-1) AS MAIMON ,isnull(PVTB.[XRF],-1) AS XRF,isnull(PVTB.[Scanbarcode],-1) AS SCANBARCODE,isnull(PVTB.[Kéo keo 2],-1) AS KEOKEO2,isnull(PVTB.[Phtalate],-1) AS PHTHALATE,isnull(PVTB.[Màu sắc],-1) AS MAUSAC,isnull(PVTB.[Shock nhiệt],-1) AS SHOCKNHIET,isnull(PVTB.[Tĩnh điện],-1) AS TINHDIEN,isnull(PVTB.[Nhiệt cao Ẩm cao],-1) AS NHIETAM,isnull(PVTB.[TVOC],-1) AS TVOC ,isnull(PVTB.[Độ bóng],-1) AS DOBONG,isnull(PVTB.[Ngoại quan],-1) AS NGOAIQUAN, isnull(PVTB.[Độ dày],-1) AS THICKNESS
            FROM 
@@ -11112,7 +11109,6 @@ AS JUDGEMENT
           SELECT LT1TB.EQ_NAME, (isnull(LT1TB.LEADTIME,0) + isnull(LT2TB.LEADTIME,0)) AS YCSX_BALANCE FROM LT1TB LEFT JOIN LT2TB ON (LT1TB.EQ_NAME = LT2TB.EQ_NAME)
           ORDER BY LT1TB.EQ_NAME DESC
           `;
-          
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
