@@ -4763,7 +4763,15 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `SELECT AA.G_CODE, (SUM(ZTBPOTable.PO_QTY)-SUM(AA.TotalDelivered)) As PO_BALANCE FROM (SELECT ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA JOIN ZTBPOTable ON ( AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO) WHERE AA.G_CODE='${DATA.G_CODE}' GROUP BY AA.G_CODE`;
+          let setpdQuery = `WITH POTB AS
+          (
+          SELECT G_CODE, SUM(PO_QTY) AS PO_QTY FROM ZTBPOTable WHERE G_CODE='${DATA.G_CODE}' GROUP BY G_CODE
+          ),
+          DLTB AS
+          (
+          SELECT G_CODE, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery WHERE G_CODE='${DATA.G_CODE}' GROUP BY G_CODE
+          )
+          SELECT POTB.G_CODE, (isnull(POTB.PO_QTY,0)- isnull(DLTB.DELIVERY_QTY,0)) AS PO_BALANCE FROM POTB LEFT JOIN DLTB ON POTB.G_CODE = DLTB.G_CODE`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
