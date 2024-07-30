@@ -18221,6 +18221,71 @@ ORDER BY TOTAL_LOSS_TIME DESC
           res.send(checkkq);
         })();
         break;
+        case "loadProdOverData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, ZTB_PROD_OVER_TB.*, P400.PROD_REQUEST_QTY  FROM ZTB_PROD_OVER_TB
+            LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTB_PROD_OVER_TB.PROD_REQUEST_NO
+            LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE
+            LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
+            ORDER BY ZTB_PROD_OVER_TB.AUTO_ID DESC
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "autoConfirmProdOver":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            MERGE INTO ZTB_PROD_OVER_TB
+            USING
+            (
+            SELECT * FROM ZTB_PROD_OVER_TB
+            WHERE ((GETDATE() > DATEADD(hour,24, INS_DATE)) AND (DATEPART(WEEKDAY,INS_DATE) <> 7) )  OR ((GETDATE() > DATEADD(hour,48, INS_DATE)) AND (DATEPART(WEEKDAY,INS_DATE) =7) ) AND HANDLE_STATUS='P'
+            ) AS src
+            ON(src.AUTO_ID= ZTB_PROD_OVER_TB.AUTO_ID)
+            WHEN MATCHED THEN
+            UPDATE
+            SET ZTB_PROD_OVER_TB.KD_CFM='Y', ZTB_PROD_OVER_TB.KD_EMPL_NO= 'ADMIN', HANDLE_STATUS='C', UPD_DATE= GETDATE(), UPD_EMPL='ADMIN', KD_CF_DATETIME=GETDATE(),  KD_REMARK = N'AUTO_CONFIRM'; 
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateProdOverData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTB_PROD_OVER_TB SET KD_CFM='${DATA.KD_CFM}', KD_EMPL_NO='${EMPL_NO}', KD_CF_DATETIME=GETDATE(), KD_REMARK = N'${DATA.KD_REMARK}'  WHERE AUTO_ID=${DATA.AUTO_ID}`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
