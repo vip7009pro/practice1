@@ -8254,6 +8254,9 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           if (DATA.FACTORY !== "ALL") {
             conditon += ` AND IN_KHO_SX.FACTORY = '${DATA.FACTORY}' `;
           }
+          if(DATA.M_LOT_NO !== undefined){
+            conditon += ` AND M_LOT_NO='${DATA.M_LOT_NO}'`
+          }
           let setpdQuery = `SELECT  IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.USE_YN, IN_KHO_SX.REMARK, IN_KHO_SX.PLAN_ID_SUDUNG, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY, IN_KHO_SX.INS_DATE FROM IN_KHO_SX LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE) ${conditon} ORDER BY IN_KHO_SX.INS_DATE DESC`;
           //${moment().format('YYYY-MM-DD')}
           //console.log(setpdQuery);
@@ -18230,11 +18233,20 @@ ORDER BY TOTAL_LOSS_TIME DESC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition = `WHERE 1=1 `
+          console.log(DATA.ONLY_PENDING);
+          if(DATA.ONLY_PENDING === true) 
+          {
+            condition +=  ` AND ZTB_PROD_OVER_TB.KD_CFM='P'`
+          }
+
           let setpdQuery = `
-            SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, ZTB_PROD_OVER_TB.*, P400.PROD_REQUEST_QTY  FROM ZTB_PROD_OVER_TB
+            SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_PROD_OVER_TB.*, M100.PROD_LAST_PRICE,P400.PROD_REQUEST_QTY,(ZTB_PROD_OVER_TB.OVER_QTY*M100.PROD_LAST_PRICE) AS AMOUNT  
+ FROM ZTB_PROD_OVER_TB
             LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTB_PROD_OVER_TB.PROD_REQUEST_NO
             LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE
             LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
+			      ${condition}
             ORDER BY ZTB_PROD_OVER_TB.AUTO_ID DESC
             `;
           //console.log(setpdQuery);
