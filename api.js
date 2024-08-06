@@ -4530,7 +4530,6 @@ LEFT JOIN (
           let checkkq = "OK";
           let setpdQuery = `
           WITH
-         
           PLANTABLE AS 
           (SELECT DISTINCT PROD_REQUEST_NO, CTR_CD FROM ZTB_QLSXPLAN),
           INSPECT_INPUT_TB AS 
@@ -7166,7 +7165,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
       case "getbomgia":
         (async () => {
           ////console.log(DATA);
-          let EMPL_NO = req.payload_data["EMPL_NO"];          
+          let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
@@ -8416,7 +8415,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           if (DATA.FACTORY !== "ALL") {
             conditon += ` AND IN_KHO_SX.FACTORY = '${DATA.FACTORY}' `;
           }
-          if(DATA.M_LOT_NO !== undefined){
+          if (DATA.M_LOT_NO !== undefined) {
             conditon += ` AND M_LOT_NO='${DATA.M_LOT_NO}'`
           }
           let setpdQuery = `SELECT  IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.USE_YN, IN_KHO_SX.REMARK, IN_KHO_SX.PLAN_ID_SUDUNG, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY, IN_KHO_SX.INS_DATE, RETURN_NVL.UPD_DATE  AS KHO_CFM_DATE, RETURN_NVL.USE_YN AS RETURN_STATUS FROM IN_KHO_SX 
@@ -18351,7 +18350,6 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
                     isnull(AA.CD2, 0) AS CD2,
                     isnull(AA.CD3, 0) AS CD3,
                     isnull(AA.CD4, 0) AS CD4
-                    
           FROM P400
           LEFT JOIN M100 ON (M100.G_CODE =P400.G_CODE)         
           LEFT JOIN AA ON (AA.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
@@ -18364,7 +18362,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           res.send(checkkq);
         })();
         break;
-        case "loadProdOverData":
+      case "loadProdOverData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18375,11 +18373,9 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let checkkq = "OK";
           let condition = `WHERE 1=1 `
           console.log(DATA.ONLY_PENDING);
-          if(DATA.ONLY_PENDING === true) 
-          {
-            condition +=  ` AND ZTB_PROD_OVER_TB.KD_CFM='P'`
+          if (DATA.ONLY_PENDING === true) {
+            condition += ` AND ZTB_PROD_OVER_TB.KD_CFM='P'`
           }
-
           let setpdQuery = `
             SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_PROD_OVER_TB.*, M100.PROD_LAST_PRICE,P400.PROD_REQUEST_QTY,(ZTB_PROD_OVER_TB.OVER_QTY*M100.PROD_LAST_PRICE) AS AMOUNT  
  FROM ZTB_PROD_OVER_TB
@@ -18395,7 +18391,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           res.send(checkkq);
         })();
         break;
-        case "autoConfirmProdOver":
+      case "autoConfirmProdOver":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18422,7 +18418,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           res.send(checkkq);
         })();
         break;
-        case "updateProdOverData":
+      case "updateProdOverData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18438,7 +18434,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           res.send(checkkq);
         })();
         break;
-        case "neededSXQtyByYCSX":
+      case "neededSXQtyByYCSX":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
