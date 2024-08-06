@@ -4528,7 +4528,166 @@ LEFT JOIN (
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `WITH 
+          let setpdQuery = `
+          WITH
+         
+          PLANTABLE AS 
+          (SELECT DISTINCT PROD_REQUEST_NO, CTR_CD FROM ZTB_QLSXPLAN),
+          INSPECT_INPUT_TB AS 
+          (
+          SELECT CTR_CD,PROD_REQUEST_NO, SUM(INPUT_QTY_EA) AS LOT_TOTAL_INPUT_QTY_EA FROM ZTBINSPECTINPUTTB GROUP BY CTR_CD,PROD_REQUEST_NO
+          ),
+          INSPECT_OUTPUT_TB AS 
+          (
+          SELECT CTR_CD,PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB GROUP BY CTR_CD,PROD_REQUEST_NO
+          ),
+          WH_TABLE AS 
+          (SELECT CTR_CD, I660.PROD_REQUEST_NO, SUM(I660.IN_QTY) AS INPUT_QTY, SUM(CASE WHEN STATUS='N' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' AND I660.USE_YN ='Y' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY, SUM(CASE WHEN I660.USE_YN <> 'Y' THEN I660.IN_QTY ELSE 0 END) AS OUTPUT_QTY FROM I660  GROUP BY CTR_CD,I660.PROD_REQUEST_NO),
+          ZTBDLVR AS
+          (SELECT CTR_CD,G_CODE, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CTR_CD,G_CODE),
+          POTB AS
+          (
+          SELECT CTR_CD,G_CODE, SUM(ZTBPOTable.PO_QTY) AS PO_QTY FROM ZTBPOTable GROUP BY CTR_CD,G_CODE
+          ),
+          PO_TON AS
+          (
+            SELECT POTB.CTR_CD,POTB.G_CODE, (POTB.PO_QTY- ZTBDLVR.DELIVERY_QTY) AS PO_BALANCE FROM POTB LEFT JOIN ZTBDLVR ON (POTB.G_CODE =ZTBDLVR.G_CODE AND POTB.CTR_CD =ZTBDLVR.CTR_CD )
+          ),
+          AA AS
+          (
+            SELECT
+			'002' AS CTR_CD,
+              PVTB.PROD_REQUEST_NO,
+              isnull(PVTB.[1], 0) AS CD1,
+              isnull(PVTB.[2], 0) AS CD2,
+              isnull(PVTB.[3], 0) AS CD3,
+              isnull(PVTB.[4], 0) AS CD4
+            FROM
+              (
+                SELECT
+                  ZTB_QLSXPLAN.PROD_REQUEST_NO,
+                  ZTB_QLSXPLAN.PROCESS_NUMBER,
+                  SUM(isnull(SX_RESULT, 0)) AS KETQUASX
+                FROM
+                  ZTB_SX_RESULT
+                  LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID)
+                WHERE
+                  ZTB_QLSXPLAN.STEP = 0
+                GROUP BY
+                  ZTB_QLSXPLAN.PROD_REQUEST_NO,
+                  ZTB_QLSXPLAN.PROCESS_NUMBER
+              ) AS PV PIVOT (
+                SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1], [2], [3], [4])
+              ) AS PVTB
+          ),
+		  LOSSKT AS (
+           SELECT '002' AS CTR_CD,BB.G_CODE, SUM(BB.INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(BB.TOTAL_NG) AS TOTAL_NG FROM 
+            (
+            SELECT AA.G_CODE, AA.INSPECT_DATE,AA.INSPECT_TOTAL_QTY, AA.TOTAL_NG, COUNT(G_CODE) OVER(PARTITION BY G_CODE ORDER BY INSPECT_DATE DESC) AS CNT 
+            FROM 
+            (
+            SELECT  G_CODE,CAST(INSPECT_DATETIME AS date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY-ERR32) AS INSPECT_TOTAL_QTY, SUM(ERR1+ERR2+ERR3+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
+            ) AS TOTAL_NG FROM ZTBINSPECTNGTB
+            GROUP BY G_CODE,CAST(INSPECT_DATETIME AS date)
+            ) AS AA
+            ) AS BB
+            WHERE BB.CNT <=10
+            GROUP BY BB.G_CODE
+          )
+          SELECT 
+          M100.FACTORY,
+                    M100.Setting1,
+                    M100.Setting2,
+                    M100.Step1,
+                    M100.Step2,
+                    M100.LOSS_SX1,
+                    M100.LOSS_SX2,
+                    M100.LOSS_SETTING1,
+                    M100.LOSS_SETTING2,
+                    M100.NOTE,
+                    M100.UPH1,
+                    M100.UPH2,
+                    M100.Step3,
+                    M100.Step4,
+                    M100.EQ3,
+                    M100.EQ4,
+                    M100.UPH3,
+                    M100.UPH4,
+                    M100.Setting3,
+                    M100.Setting4,
+                    M100.LOSS_SX3,
+                    M100.LOSS_SX4,
+                    M100.LOSS_SETTING3,
+                    M100.LOSS_SETTING4,
+                    P400.G_CODE,
+                    M100.PROD_TYPE,
+                    M100.PROD_MAIN_MATERIAL,
+                    M100.DESCR,
+                    M100.PDBV,
+                    M100.PDBV_EMPL,
+                    M100.PDBV_DATE,
+                    M100.G_NAME,
+                    M100.G_NAME_KD,
+                    M100.G_WIDTH,
+                    M100.G_LENGTH,
+                    M100.PROD_PRINT_TIMES,
+                    M100.G_C,
+                    M100.G_C_R,
+                    M010.EMPL_NAME,
+                    M010.EMPL_NO,
+                    M110.CUST_NAME_KD,
+                    M110.CUST_CD,
+                    P400.PROD_REQUEST_NO,
+                    P400.PROD_REQUEST_DATE,
+                    P400.DELIVERY_DT,
+                    P400.PL_HANG,
+                    P400.PROD_REQUEST_QTY,                  
+                   CASE WHEN (P400.YCSX_PENDING =0 OR isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY) THEN 0 ELSE 1 END AS YCSX_PENDING,
+                    P400.CODE_55 AS PHAN_LOAI,
+                    P400.REMK AS REMARK,         
+                    P400.PDUYET,
+                    P400.CODE_50 AS LOAIXH,
+                    M100.BANVE,
+                    M100.NO_INSPECTION,
+                    isnull(PO_TON.PO_BALANCE, 0) AS PO_BALANCE,
+                    M100.EQ1,
+                    M100.EQ2,
+                    isnull(AA.CD1, 0) AS CD1,
+                    isnull(AA.CD2, 0) AS CD2,
+                    isnull(AA.CD3, 0) AS CD3,
+                    isnull(AA.CD4, 0) AS CD4, 
+                    isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
+                    PLANTABLE.PROD_REQUEST_NO AS DACHITHI,
+					CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX2,0)+isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (isnull(LOSS_SETTING2,0)+isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) AS SLC_CD1,
+CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) AS SLC_CD2,
+CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX4,0))*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) AS SLC_CD3,
+CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (0)*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) AS SLC_CD4
+          FROM P400
+          LEFT JOIN M100 ON (M100.G_CODE =P400.G_CODE AND M100.CTR_CD =P400.CTR_CD)
+          LEFT JOIN M010 ON (M010.EMPL_NO= P400.EMPL_NO AND M010.CTR_CD =P400.CTR_CD)
+          LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD AND M110.CTR_CD =P400.CTR_CD)
+          LEFT JOIN PO_TON ON (PO_TON.G_CODE = P400.G_CODE AND PO_TON.CTR_CD =P400.CTR_CD)
+          LEFT JOIN AA ON (AA.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND AA.CTR_CD =P400.CTR_CD)         
+          LEFT JOIN INSPECT_OUTPUT_TB ON (INSPECT_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND INSPECT_OUTPUT_TB.CTR_CD =P400.CTR_CD)
+          LEFT JOIN PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND PLANTABLE.CTR_CD =P400.CTR_CD)
+		  LEFT JOIN LOSSKT ON (LOSSKT.G_CODE = P400.G_CODE AND LOSSKT.CTR_CD =P400.CTR_CD)
+         ${generate_condition_get_ycsx(
+            DATA.alltime,
+            DATA.start_date,
+            DATA.end_date,
+            DATA.cust_name,
+            DATA.codeCMS,
+            DATA.codeKD,
+            DATA.prod_type,
+            DATA.empl_name,
+            DATA.phanloai,
+            DATA.ycsx_pending,
+            DATA.prod_request_no,
+            DATA.material,
+            DATA.inspect_inputcheck,
+            DATA.phanloaihang
+          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          /* let setpdQuery = `WITH 
           AMAZONTB AS
           ( SELECT DISTINCT PROD_REQUEST_NO FROM AMAZONE_DATA),
           PLANTABLE AS 
@@ -4715,7 +4874,7 @@ LEFT JOIN (
             DATA.material,
             DATA.inspect_inputcheck,
             DATA.phanloaihang
-          )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          )} ORDER BY P400.PROD_REQUEST_NO DESC`; */
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -8260,7 +8419,9 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           if(DATA.M_LOT_NO !== undefined){
             conditon += ` AND M_LOT_NO='${DATA.M_LOT_NO}'`
           }
-          let setpdQuery = `SELECT  IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.USE_YN, IN_KHO_SX.REMARK, IN_KHO_SX.PLAN_ID_SUDUNG, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY, IN_KHO_SX.INS_DATE FROM IN_KHO_SX LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE) ${conditon} ORDER BY IN_KHO_SX.INS_DATE DESC`;
+          let setpdQuery = `SELECT  IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.USE_YN, IN_KHO_SX.REMARK, IN_KHO_SX.PLAN_ID_SUDUNG, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY, IN_KHO_SX.INS_DATE, RETURN_NVL.UPD_DATE  AS KHO_CFM_DATE, RETURN_NVL.USE_YN AS RETURN_STATUS FROM IN_KHO_SX 
+LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE) 
+LEFT JOIN RETURN_NVL ON (IN_KHO_SX.PLAN_ID_INPUT = RETURN_NVL.PLAN_ID AND IN_KHO_SX.M_LOT_NO = RETURN_NVL.M_LOT_NO) ${conditon} ORDER BY IN_KHO_SX.INS_DATE DESC`;
           //${moment().format('YYYY-MM-DD')}
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -18222,9 +18383,9 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let setpdQuery = `
             SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_PROD_OVER_TB.*, M100.PROD_LAST_PRICE,P400.PROD_REQUEST_QTY,(ZTB_PROD_OVER_TB.OVER_QTY*M100.PROD_LAST_PRICE) AS AMOUNT  
  FROM ZTB_PROD_OVER_TB
-            LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTB_PROD_OVER_TB.PROD_REQUEST_NO
-            LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE
-            LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD
+            LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTB_PROD_OVER_TB.PROD_REQUEST_NO AND P400.CTR_CD = ZTB_PROD_OVER_TB.CTR_CD
+            LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE AND M100.CTR_CD = P400.CTR_CD
+            LEFT JOIN M110 ON M110.CUST_CD = P400.CUST_CD AND  M110.CTR_CD = P400.CTR_CD	
 			      ${condition}
             ORDER BY ZTB_PROD_OVER_TB.AUTO_ID DESC
             `;
