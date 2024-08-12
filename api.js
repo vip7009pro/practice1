@@ -12935,12 +12935,14 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-          UPDATE O660 SET USE_YN = 'X', REMARK = 'XUAT HUY', UPD_DATE = '${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL=${EMPL_NO} WHERE AUTO_ID= ${DATA.AUTO_ID}          
+          UPDATE O660 SET USE_YN = 'X', REMARK = 'XUAT_HUY',OUT_PRT_SEQ='999', OUT_DATE='${moment().format('YYYYMMDD')}', UPD_DATE = '${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE AUTO_ID= ${DATA.AUTO_ID}          
           `;
+          console.log(setpdQuery)
           checkkq = await queryDB(setpdQuery);
           setpdQuery = `
-          UPDATE I660 SET USE_YN = 'X',  UPD_DATE = '${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL=${EMPL_NO} WHERE AUTO_ID= ${DATA.AUTO_ID_IN}          
+          UPDATE I660 SET USE_YN = 'X',  UPD_DATE = '${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE AUTO_ID= ${DATA.AUTO_ID_IN}          
           `;
+          console.log(setpdQuery)
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
