@@ -4978,7 +4978,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO, PL_HANG) VALUES ('002',FORMAT(GETDATE(), 'yyyyMMdd'),'${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}','${DATA.PHANLOAI}')`;
-          ////console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -5043,10 +5043,10 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
             )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.PROD_REQUEST_DATE
             }','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO
             }','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO
-            }','NM1','${DATA.PLAN_ID}',${DATA.PR_NB})`;
-          ////console.log(setpdQuery);
+            }','NM1','${DATA.PLAN_ID}',${DATA.PR_NB??0})`;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
+          console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -5061,10 +5061,10 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
               7
             )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq
             }','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO
-            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER}, ${DATA.TEMP_QTY})`;
+            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER??0}, ${DATA.TEMP_QTY??0})`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
+          console.log(checkkq);
           res.send(checkkq);
         })();
         break;
