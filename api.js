@@ -3,6 +3,13 @@ var jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { existsSync } = require("fs");
 const fs = require("fs");
+var util = require('util');
+var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'a'});
+var log_stdout = process.stdout;
+console.log = function(d) { //
+  log_file.write(util.format(d) + '\n');
+  log_stdout.write(util.format(d) + '\n');
+};
 require("dotenv").config();
 const fetch = require('node-fetch');
 let CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec'
@@ -1870,7 +1877,7 @@ exports.process_api = function async(req, res) {
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='${EMPL_NO}'`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log('ketqua check login',checkkq);
           if (checkkq.data[0].WORK_STATUS_CODE === 0) {

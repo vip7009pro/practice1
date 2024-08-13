@@ -25,3 +25,4 @@ yarn-error.log*
 sslcert/ca_bundle.crt
 sslcert/certificate.crt
 sslcert/private.key
+debug.log
