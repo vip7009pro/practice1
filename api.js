@@ -12958,7 +12958,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-            DELETE FROM O660 WHERE AUTO_ID= ${DATA.AUTO_ID}          
+            DELETE FROM O660 WHERE AUTO_ID= ${DATA.AUTO_ID} AND OUT_TYPE='D' AND UPD_DATE is null
           `;
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
