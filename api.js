@@ -4,9 +4,9 @@ const moment = require("moment");
 const { existsSync } = require("fs");
 const fs = require("fs");
 var util = require('util');
-var log_file = fs.createWriteStream(__dirname + '/log/debug.log', {flags : 'a'});
+var log_file = fs.createWriteStream(__dirname + '/log/debug.log', { flags: 'a' });
 var log_stdout = process.stdout;
-console.log = function(d) { //
+console.log = function (d) { //
   //log_file.write(util.format(d) + '\n');
   log_stdout.write(util.format(d) + '\n');
 };
@@ -5050,7 +5050,7 @@ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(
             )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.PROD_REQUEST_DATE
             }','${DATA.PROD_REQUEST_NO}','${DATA.G_CODE}', '','','${DATA.EMPL_NO
             }','${DATA.phanloai}01','OK',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO
-            }','NM1','${DATA.PLAN_ID}',${DATA.PR_NB??0})`;
+            }','NM1','${DATA.PLAN_ID}',${DATA.PR_NB ?? 0})`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -5068,7 +5068,7 @@ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(
               7
             )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq
             }','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO
-            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER??0}, ${DATA.TEMP_QTY??0})`;
+            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER ?? 0}, ${DATA.TEMP_QTY ?? 0})`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -5433,7 +5433,6 @@ SELECT
     TONKHOFULL.BLOCK_QTY, 
     TONKHOFULL.GRAND_TOTAL_STOCK, 
     (TONKHOFULL.GRAND_TOTAL_STOCK - PO_TABLE_1.PO_BALANCE) AS THUA_THIEU 
-    
 FROM 
     PO_TABLE_1 
     LEFT JOIN TONKHOFULL ON TONKHOFULL.G_CODE = PO_TABLE_1.G_CODE  
@@ -9028,7 +9027,6 @@ ORDER BY
           if (DATA.ONLYCLOSE) {
             condition += ` AND (isnull(INS_OUTPUT_TB.INS_OUTPUT,0) >= P400.PROD_REQUEST_QTY  OR P400.YCSX_PENDING=0) `
           }
-          
           let setpdQuery = ` 
             WITH KQSXTABLE  AS 
 (SELECT PVTB.PROD_REQUEST_NO, isnull(PVTB.[1],0) AS CD1, isnull(PVTB.[2],0) AS CD2,isnull(PVTB.[3],0) AS CD3,isnull(PVTB.[4],0) AS CD4 FROM 
@@ -13955,7 +13953,7 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           )
           SELECT * FROM LOSS_TB 
           WHERE G_CODE='${DATA.G_CODE}'
-          `;          
+          `;
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
