@@ -923,7 +923,7 @@ exports.process_api = function async(req, res) {
   //let nhanvien = req.payload_data['EMPL_NO'];
   var qr = req.body;
   let rightnow = new Date().toLocaleString();
-  /*   if(req.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
+/*     if(req?.payload_data['EMPL_NO']!== undefined) console.log(req.payload_data['EMPL_NO']); */
   console.log(moment().format("YYYY-MM-DD HH:mm:ss") + ":" + qr["command"]);
   let DATA = qr["DATA"];
   if (
@@ -4984,7 +4984,7 @@ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO, PL_HANG) VALUES ('002',FORMAT(GETDATE(), 'yyyyMMdd'),'${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}','${DATA.PHANLOAI}')`;
+          let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO, PL_HANG) VALUES ('002',FORMAT(GETDATE(), 'yyyyMMdd'),'${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK ?? ''}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}','${DATA.PHANLOAI}')`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -7655,7 +7655,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
             FROM ZTB_QLSXPLAN
             LEFT JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE)
             LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO)
-          WHERE PLAN_EQ is not null AND PLAN_DATE = '${DATA.PLAN_DATE}'
+            
           ),
           NEXTB AS
           (
@@ -8181,7 +8181,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           if (DATA.FACTORY !== "ALL") {
             conditon += ` AND IN_KHO_SX.FACTORY = '${DATA.FACTORY}' `;
           }
-          let setpdQuery = `SELECT IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY,CASE WHEN IN_KHO_SX.FSC ='Y' THEN 'Y' ELSE 'N' END AS FSC  FROM IN_KHO_SX LEFT JOIN M090 ON  (M090.M_CODE= IN_KHO_SX.M_CODE) ${conditon} `;
+          let setpdQuery = `SELECT IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY,CASE WHEN IN_KHO_SX.FSC ='Y' THEN 'Y' ELSE 'N' END AS FSC, IN_KHO_SX.INS_DATE,ZTB_QLSXPLAN.PLAN_EQ  FROM IN_KHO_SX LEFT JOIN M090 ON  (M090.M_CODE= IN_KHO_SX.M_CODE) LEFT JOIN ZTB_QLSXPLAN ON ZTB_QLSXPLAN.PLAN_ID=IN_KHO_SX.PLAN_ID_INPUT ${conditon} ORDER BY IN_KHO_SX.INS_DATE DESC`;
           //${moment().format('YYYY-MM-DD')}
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -8250,7 +8250,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
             conditon += ` AND IN_KHO_SX.FACTORY = '${DATA.FACTORY}' `;
           }
           if (DATA.M_LOT_NO !== undefined) {
-            conditon += ` AND M_LOT_NO='${DATA.M_LOT_NO}'`
+            conditon += ` AND IN_KHO_SX.M_LOT_NO='${DATA.M_LOT_NO}'`
           }
           let setpdQuery = `SELECT  IN_KHO_SX.IN_KHO_ID, IN_KHO_SX.USE_YN, IN_KHO_SX.REMARK, IN_KHO_SX.PLAN_ID_SUDUNG, IN_KHO_SX.FACTORY, IN_KHO_SX.PHANLOAI, IN_KHO_SX.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX.M_LOT_NO, IN_KHO_SX.PLAN_ID_INPUT, IN_KHO_SX.ROLL_QTY, IN_KHO_SX.IN_QTY, IN_KHO_SX.TOTAL_IN_QTY, IN_KHO_SX.INS_DATE, RETURN_NVL.UPD_DATE  AS KHO_CFM_DATE, RETURN_NVL.USE_YN AS RETURN_STATUS FROM IN_KHO_SX 
 LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE) 
@@ -17341,8 +17341,11 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-             SELECT TOP 1 * FROM P400 WHERE G_CODE='${DATA.G_CODE}' AND CODE_55 <> '04' ORDER BY INS_DATE ASC
+             SELECT TOP 1 * FROM P400 WHERE G_CODE='${DATA.G_CODE}' AND CODE_55 <> '04' ORDER BY INS_DATE DESC
             `;
+          /* let setpdQuery = `
+             SELECT TOP 1 * FROM P400 WHERE G_CODE='${DATA.G_CODE}' AND CODE_55 <> '04' ORDER BY INS_DATE ASC
+            `; */
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -18122,6 +18125,22 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `UPDATE ZTB_PROD_OVER_TB SET KD_CFM='${DATA.KD_CFM}', KD_EMPL_NO='${EMPL_NO}', KD_CF_DATETIME=GETDATE(), KD_REMARK = N'${DATA.KD_REMARK}'  WHERE AUTO_ID=${DATA.AUTO_ID}`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "checktonKhoAoMLotNo":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT * FROM IN_KHO_SX WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND USE_YN ='Y' `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
