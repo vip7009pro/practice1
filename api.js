@@ -17470,9 +17470,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
             INSERT INTO ZTB_DM_HISTORY
             SELECT '002' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL FROM M100 WHERE G_CODE='${DATA.G_CODE}'
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17488,9 +17488,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let setpdQuery = `
             UPDATE ZTB_DM_HISTORY SET LOSS_SX1='${DATA.LOSS_SX1}',LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SX3='${DATA.LOSS_SX3}',LOSS_SX4='${DATA.LOSS_SX4}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',LOSS_SETTING3='${DATA.LOSS_SETTING3}',LOSS_SETTING4='${DATA.LOSS_SETTING4}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' 
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17509,9 +17509,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           /* let setpdQuery = `
              SELECT TOP 1 * FROM P400 WHERE G_CODE='${DATA.G_CODE}' AND CODE_55 <> '04' ORDER BY INS_DATE ASC
             `; */
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17567,9 +17567,9 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
         SELECT PLAN_DATE AS INPUT_DATE, SUM(ESTIMATED_QTY) AS PURE_INPUT, SUM(INS_OUTPUT) AS PURE_OUTPUT FROM SXDATATB GROUP BY PLAN_DATE
         ORDER BY PLAN_DATE ASC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17626,9 +17626,9 @@ FROM
  GROUP BY YEAR(PLAN_DATE), DATEPART(WEEK, PLAN_DATE)
  ORDER BY YEAR(PLAN_DATE) DESC, DATEPART(WEEK, PLAN_DATE) DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17685,9 +17685,9 @@ FROM
  GROUP BY YEAR(PLAN_DATE), MONTH(PLAN_DATE)
  ORDER BY YEAR(PLAN_DATE) DESC, MONTH(PLAN_DATE) DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17744,7 +17744,7 @@ FROM
  GROUP BY YEAR(PLAN_DATE)
  ORDER BY YEAR(PLAN_DATE) DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
           res.send(checkkq);
@@ -17766,9 +17766,9 @@ FROM
           GROUP BY ZTB_SX_RESULT.SX_DATE
           ORDER BY SX_DATE ASC             
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17788,9 +17788,9 @@ FROM
  GROUP BY YEAR(ZTB_SX_RESULT.SX_DATE), DATEPART(WEEK,ZTB_SX_RESULT.SX_DATE)
  ORDER BY YEAR(ZTB_SX_RESULT.SX_DATE) DESC, DATEPART(WEEK,ZTB_SX_RESULT.SX_DATE) DESC         
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17810,9 +17810,9 @@ FROM
  GROUP BY YEAR(ZTB_SX_RESULT.SX_DATE), MONTH(ZTB_SX_RESULT.SX_DATE)
  ORDER BY YEAR(ZTB_SX_RESULT.SX_DATE) DESC, MONTH(ZTB_SX_RESULT.SX_DATE) DESC      
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17832,9 +17832,9 @@ FROM
  GROUP BY YEAR(ZTB_SX_RESULT.SX_DATE)
  ORDER BY YEAR(ZTB_SX_RESULT.SX_DATE) DESC     
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17887,9 +17887,9 @@ AA.SX_DATE
 ORDER BY 
 AA.SX_DATE DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17944,9 +17944,9 @@ YEAR(AA.SX_DATE), DATEPART(WEEK, AA.SX_DATE)
 ORDER BY 
 YEAR(AA.SX_DATE) DESC, DATEPART(WEEK, AA.SX_DATE) DESC
             `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -18001,9 +18001,9 @@ YEAR(AA.SX_DATE),MONTH(AA.SX_DATE)
 ORDER BY 
 YEAR(AA.SX_DATE) DESC, MONTH(AA.SX_DATE) DESC
             `;
-          //console.log(setpdQuery);
+          ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -18058,7 +18058,7 @@ YEAR(AA.SX_DATE) DESC
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -18090,7 +18090,7 @@ YEAR(AA.SX_DATE) DESC
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -18117,7 +18117,7 @@ ORDER BY TOTAL_LOSS_TIME DESC
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -18218,7 +18218,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
+          ////console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -18425,6 +18425,22 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT USAGE, MAIN_M FROM ZTB_BOM2 WHERE G_CODE='${DATA.G_CODE}' AND USAGE='main' AND MAIN_M = 1 `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "checkmainBOM2_M140_M_CODE_MATCHING":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT COUNT(ZTB_BOM2.M_CODE) AS BOM2_M_CODE_COUNT,  COUNT(M140.M_CODE) AS M140_M_CODE_COUNT, COUNT(ZTB_BOM2.M_CODE) - COUNT(M140.M_CODE) AS THIEU FROM ZTB_BOM2 LEFT JOIN M140 ON M140.G_CODE = ZTB_BOM2.G_CODE AND M140.M_CODE = ZTB_BOM2.M_CODE WHERE ZTB_BOM2.G_CODE='${DATA.G_CODE}'`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
