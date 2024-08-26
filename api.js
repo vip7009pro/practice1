@@ -4285,7 +4285,8 @@ LEFT JOIN (
                     M110.CUST_CD,
                     P400.PROD_REQUEST_NO,
                     P400.PROD_REQUEST_DATE,
-                    P400.PROD_REQUEST_QTY,		  
+                    P400.PROD_REQUEST_QTY,		 
+                    P400.USE_YN, 
                     isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) AS LOT_TOTAL_INPUT_QTY_EA,
                     isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
                 isnull(WH_TABLE.INPUT_QTY,0) AS INPUT_QTY,
@@ -6743,17 +6744,17 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = `WHERE 1=1 `;
-          if(DATA.ALLTIME !== true) {
+          if (DATA.ALLTIME !== true) {
             condition += ` AND NGAYBANGIAO BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`
           }
-          if(DATA.G_CODE !=='') {
-            condition +=  ` AND KNIFE_FILM.G_CODE ='${DATA.G_CODE}'`
+          if (DATA.G_CODE !== '') {
+            condition += ` AND KNIFE_FILM.G_CODE ='${DATA.G_CODE}'`
           }
-          if(DATA.G_NAME !=='') {
-            condition +=  ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
           }
-          if(DATA.FACTORY !=='All') {
-            condition +=  ` AND KNIFE_FILM.FACTORY_NAME = '${DATA.FACTORY}'`
+          if (DATA.FACTORY !== 'All') {
+            condition += ` AND KNIFE_FILM.FACTORY_NAME = '${DATA.FACTORY}'`
           }
           let setpdQuery = `
             SELECT KNIFE_FILM_ID,FACTORY_NAME,NGAYBANGIAO,KNIFE_FILM.G_CODE, M100.G_NAME, LOAIBANGIAO_PDP,LOAIPHATHANH,SOLUONG,SOLUONGOHP,LYDOBANGIAO,PQC_EMPL_NO,RND_EMPL_NO,SX_EMPL_NO,MA_DAO, CFM_GIAONHAN, CFM_INS_EMPL, CFM_DATE, KNIFE_FILM_STATUS, KNIFE_FILM.G_WIDTH, KNIFE_FILM.G_LENGTH,  M110.CUST_NAME_KD AS VENDOR, KNIFE_FILM.TOTAL_PRESS, REMARK 
@@ -7176,7 +7177,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO M140 (CTR_CD, G_CODE,RIV_NO,G_SEQ,M_CODE,M_QTY,META_PAT_CD,REMK,USE_YN,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, MAIN_M) VALUES ('002','${DATA.G_CODE}','A','${DATA.G_SEQ}', '${DATA.M_CODE}','${DATA.M_QTY}', 'x', '','Y', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}','${DATA.MAIN_M}')`;
+          let setpdQuery = `INSERT INTO M140 (CTR_CD, G_CODE,RIV_NO,G_SEQ,M_CODE,M_QTY,META_PAT_CD,REMK,USE_YN,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, MAIN_M, LIEUQL_SX) VALUES ('002','${DATA.G_CODE}','A','${DATA.G_SEQ}', '${DATA.M_CODE}','${DATA.M_QTY}', 'x', '','Y', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}','${DATA.MAIN_M}','${DATA.LIEUQL_SX}')`;
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
@@ -7192,7 +7193,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `UPDATE M140 SET M_QTY=${DATA.M_QTY}, MAIN_M = ${DATA.MAIN_M}, LIEUQL_SX=${DATA.LIEUQL_SX}, UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE G_CODE='${DATA.G_CODE}' AND M_CODE ='${DATA.M_CODE}'`;
-          ////console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           ////console.log(checkkq);
@@ -7222,10 +7223,10 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO ZTB_BOM2 (CTR_CD, G_CODE, RIV_NO, G_SEQ, M_CODE, M_NAME, CUST_CD, USAGE, MAT_MASTER_WIDTH, MAT_CUTWIDTH, MAT_ROLL_LENGTH, MAT_THICKNESS, M_QTY, REMARK, PROCESS_ORDER, INS_EMPL, UPD_EMPL, INS_DATE, UPD_DATE, MAIN_M, M_CMS_PRICE, M_SS_PRICE, M_SLITTING_PRICE) VALUES ('002', '${DATA.G_CODE}','A','${DATA.G_SEQ}','${DATA.M_CODE}','${DATA.M_NAME}','${DATA.CUST_CD}','${DATA.USAGE}','${DATA.MAT_MASTER_WIDTH}','${DATA.MAT_CUTWIDTH}','${DATA.MAT_ROLL_LENGTH}','${DATA.MAT_THICKNESS}','${DATA.M_QTY}','${DATA.REMARK}','${DATA.PROCESS_ORDER}','${EMPL_NO}','${EMPL_NO}',GETDATE(),GETDATE(),${DATA.MAIN_M},${DATA.M_CMS_PRICE},${DATA.M_SS_PRICE},${DATA.M_SLITTING_PRICE})`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
-          console.log(checkkq);
+          //console.log(checkkq);
         })();
         break;
       case "deleteM140":
@@ -12534,6 +12535,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           FROM KNIFE_FILM 
           LEFT JOIN M100 ON M100.G_CODE = KNIFE_FILM.G_CODE
           LEFT JOIN M110 ON M110.CUST_CD = M100.CUST_CD
+          ORDER BY KNIFE_FILM.NGAYBANGIAO DESC, KNIFE_FILM.KNIFE_FILM_ID DESC
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -18306,7 +18308,7 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `UPDATE ZTB_PROD_OVER_TB SET KD_CFM='${DATA.KD_CFM}', KD_EMPL_NO='${EMPL_NO}', KD_CF_DATETIME=GETDATE(), KD_REMARK = N'${DATA.KD_REMARK}'  WHERE AUTO_ID=${DATA.AUTO_ID}`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -18458,9 +18460,26 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition = `WHERE 1=1 `;
+          if (DATA.ALLTIME !== true) {
+            condition += ` AND ZTB_QL_KNIFE_FILM.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`
+          }
+          if (DATA.G_CODE !== '') {
+            condition += ` AND M100.G_CODE ='${DATA.G_CODE}'`
+          }
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
+          }
+          if (DATA.FACTORY !== 'All') {
+            condition += ` AND ZTB_QL_KNIFE_FILM.FACTORY_NAME = '${DATA.FACTORY}'`
+          }
+          if (DATA.KNIFE_TYPE !== 'All') {
+            condition += ` AND ZTB_QL_KNIFE_FILM.KNIFE_TYPE = '${DATA.KNIFE_TYPE}'`
+          }
           let setpdQuery = `SELECT ZTB_QL_KNIFE_FILM.*, M100.G_NAME, M100.G_NAME_KD, M100.PROD_TYPE, M100.REV_NO, M110.CUST_NAME_KD AS VENDOR FROM ZTB_QL_KNIFE_FILM
 LEFT JOIN M100 ON M100.G_CODE= ZTB_QL_KNIFE_FILM.G_CODE
 LEFT JOIN M110 oN M110.CUST_CD = ZTB_QL_KNIFE_FILM.CUST_CD
+${condition}
 ORDER BY KNIFE_FILM_ID DESC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -18478,17 +18497,20 @@ ORDER BY KNIFE_FILM_ID DESC`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = `WHERE 1=1 `;
-          if(DATA.ALLTIME !== true) {
+          if (DATA.ALLTIME !== true) {
             condition += ` AND OUT_KNIFE_FILM.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`
           }
-          if(DATA.G_CODE !=='') {
-            condition +=  ` AND ZTB_QLSXPLAN.G_CODE ='${DATA.G_CODE}'`
+          if (DATA.G_CODE !== '') {
+            condition += ` AND ZTB_QLSXPLAN.G_CODE ='${DATA.G_CODE}'`
           }
-          if(DATA.G_NAME !=='') {
-            condition +=  ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
+          if (DATA.G_NAME !== '') {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
           }
-          if(DATA.FACTORY !=='All') {
-            condition +=  ` AND ZTB_QLSXPLAN.PLAN_FACTORY = '${DATA.FACTORY}'`
+          if (DATA.PLAN_ID !== '') {
+            condition += ` AND ZTB_QLSXPLAN.PLAN_ID = '${DATA.PLAN_ID}'`
+          }
+          if (DATA.FACTORY !== 'All') {
+            condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY = '${DATA.FACTORY}'`
           }
           let setpdQuery = `SELECT OUT_KNIFE_FILM.*, M100.G_NAME, M100.G_NAME_KD, ZTB_SX_RESULT.INS_EMPL AS SX_EMPL_NO,ZTB_QLSXPLAN.PLAN_DATE,ZTB_SX_RESULT.SX_DATE FROM OUT_KNIFE_FILM
           LEFT JOIN ZTB_QLSXPLAN ON ZTB_QLSXPLAN.PLAN_ID=OUT_KNIFE_FILM.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD=OUT_KNIFE_FILM.CTR_CD
