@@ -8208,6 +8208,26 @@ CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull
           res.send(checkkq);
         })();
         break;
+      case "checktonlieutrongxuong_sub":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let conditon = ` WHERE IN_KHO_SX_SUB.USE_YN='Y'`;
+          console.log("factory: " + DATA.FACTORY);
+          if (DATA.FACTORY !== "ALL") {
+            conditon += ` AND IN_KHO_SX_SUB.FACTORY = '${DATA.FACTORY}' `;
+          }
+          let setpdQuery = `SELECT IN_KHO_SX_SUB.IN_KHO_ID, IN_KHO_SX_SUB.FACTORY, IN_KHO_SX_SUB.PHANLOAI, IN_KHO_SX_SUB.PLAN_ID_INPUT, IN_KHO_SX_SUB.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX_SUB.M_LOT_NO, IN_KHO_SX_SUB.ROLL_QTY, IN_KHO_SX_SUB.IN_QTY, IN_KHO_SX_SUB.TOTAL_IN_QTY,CASE WHEN IN_KHO_SX_SUB.FSC ='Y' THEN 'Y' ELSE 'N' END AS FSC, IN_KHO_SX_SUB.INS_DATE,ZTB_QLSXPLAN.PLAN_EQ  FROM IN_KHO_SX_SUB LEFT JOIN M090 ON  (M090.M_CODE= IN_KHO_SX_SUB.M_CODE) LEFT JOIN ZTB_QLSXPLAN ON ZTB_QLSXPLAN.PLAN_ID=IN_KHO_SX_SUB.PLAN_ID_INPUT ${conditon} ORDER BY IN_KHO_SX_SUB.INS_DATE DESC`;
+          //${moment().format('YYYY-MM-DD')}
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+        })();
+        break;
       case "xuatkhoao":
         (async () => {
           ////console.log(DATA);
@@ -8281,6 +8301,30 @@ LEFT JOIN RETURN_NVL ON (IN_KHO_SX.PLAN_ID_INPUT = RETURN_NVL.LAST_PLAN_ID AND I
           res.send(checkkq);
         })();
         break;
+      case "lichsunhapkhosub":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let conditon = ` WHERE IN_KHO_SX_SUB.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'`;
+          if (DATA.FACTORY !== "ALL") {
+            conditon += ` AND IN_KHO_SX_SUB.FACTORY = '${DATA.FACTORY}' `;
+          }
+          if (DATA.M_LOT_NO !== undefined) {
+            conditon += ` AND IN_KHO_SX_SUB.M_LOT_NO='${DATA.M_LOT_NO}'`
+          }
+          let setpdQuery = `SELECT  IN_KHO_SX_SUB.IN_KHO_ID, IN_KHO_SX_SUB.USE_YN, IN_KHO_SX_SUB.REMARK, IN_KHO_SX_SUB.PLAN_ID_SUDUNG, IN_KHO_SX_SUB.FACTORY, IN_KHO_SX_SUB.PHANLOAI, IN_KHO_SX_SUB.M_CODE, M090.M_NAME, M090.WIDTH_CD, IN_KHO_SX_SUB.M_LOT_NO, IN_KHO_SX_SUB.PLAN_ID_INPUT, IN_KHO_SX_SUB.ROLL_QTY, IN_KHO_SX_SUB.IN_QTY, IN_KHO_SX_SUB.TOTAL_IN_QTY, IN_KHO_SX_SUB.INS_DATE, RETURN_NVL.UPD_DATE  AS KHO_CFM_DATE, RETURN_NVL.USE_YN AS RETURN_STATUS FROM IN_KHO_SX_SUB 
+LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX_SUB.M_CODE) 
+LEFT JOIN RETURN_NVL ON (IN_KHO_SX_SUB.PLAN_ID_INPUT = RETURN_NVL.LAST_PLAN_ID AND IN_KHO_SX_SUB.M_LOT_NO = RETURN_NVL.M_LOT_NO) ${conditon} ORDER BY IN_KHO_SX_SUB.INS_DATE DESC`;
+          //${moment().format('YYYY-MM-DD')}
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+        })();
+        break;
       case "deleteXuatKhoAo":
         (async () => {
           ////console.log(DATA);
@@ -8320,6 +8364,21 @@ LEFT JOIN RETURN_NVL ON (IN_KHO_SX.PLAN_ID_INPUT = RETURN_NVL.LAST_PLAN_ID AND I
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 * FROM OUT_KHO_SX WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}'`;
+          //${moment().format('YYYY-MM-DD')}
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+        })();
+        break;
+      case "checkTonTaiXuatKhoSub":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT TOP 1 * FROM IN_KHO_SX_SUB WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}'`;
           //${moment().format('YYYY-MM-DD')}
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -8629,6 +8688,23 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO  ${condition}
           res.send(checkkq);
         })();
         break;
+      case "setUSE_YN_KHO_SUB_INPUT":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          /* let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID_INPUT= '${DATA.PLAN_ID_INPUT}' AND M_CODE='${DATA.M_CODE}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND TOTAL_IN_QTY=${DATA.TOTAL_IN_QTY}`;  */
+          let setpdQuery = `UPDATE IN_KHO_SX_SUB SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W' WHERE IN_KHO_ID=${DATA.IN_KHO_ID}`;
+          //${moment().format('YYYY-MM-DD')}
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+        })();
+        break;
+
       case "inspect_daily_ppm":
         (async () => {
           ////console.log(DATA);
@@ -18330,6 +18406,22 @@ CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT
           res.send(checkkq);
         })();
         break;
+      case "checktonKhoSubMLotNo":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT * FROM IN_KHO_SX_SUB WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND USE_YN ='Y' `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "neededSXQtyByYCSX":
         (async () => {
           let DATA = qr["DATA"];
@@ -18694,11 +18786,71 @@ ORDER BY KNIFE_FILM_ID DESC`;
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";     
+          let checkkq = "OK";
           let setpdQuery = `
           SELECT * FROM ZTB_REL_TESTTABLE
           `;
           //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadDtcTestPointList":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+         SELECT ZTB_REL_TESTTABLE.TEST_CODE, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_TESTPOINT.POINT_CODE, ZTB_REL_TESTPOINT.POINT_NAME FROM ZTB_REL_TESTPOINT
+LEFT JOIN ZTB_REL_TESTTABLE ON ZTB_REL_TESTPOINT.TEST_CODE = ZTB_REL_TESTTABLE.TEST_CODE
+WHERE ZTB_REL_TESTTABLE.TEST_CODE = ${DATA.TEST_CODE}
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "addTestItem":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = ''
+          if (DATA.TEST_CODE === -1) {
+            setpdQuery = `INSERT INTO ZTB_REL_TESTTABLE (CTR_CD, TEST_NAME) VALUES ('002',N'${DATA.TEST_NAME}')`
+          }
+          else {
+            setpdQuery = `
+            INSERT INTO ZTB_REL_TESTTABLE (CTR_CD, TEST_CODE, TEST_NAME) VALUES ('002','${DATA.TEST_CODE}',N'${DATA.TEST_NAME}')
+          `;
+          }
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "addTestPoint":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `INSERT INTO ZTB_REL_TESTPOINT (CTR_CD, TEST_CODE, POINT_CODE, POINT_NAME) VALUES ('002','${DATA.TEST_CODE}','${DATA.POINT_CODE}',N'${DATA.POINT_NAME}')`;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
