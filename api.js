@@ -8681,7 +8681,7 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO  ${condition}
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           /* let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID_INPUT= '${DATA.PLAN_ID_INPUT}' AND M_CODE='${DATA.M_CODE}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND TOTAL_IN_QTY=${DATA.TOTAL_IN_QTY}`;  */
-          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W' WHERE IN_KHO_ID=${DATA.IN_KHO_ID}`;
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG.toUpperCase()}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W' WHERE IN_KHO_ID=${DATA.IN_KHO_ID}`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -8697,7 +8697,7 @@ LEFT JOIN I222 ON I222.M_LOT_NO = P500.M_LOT_NO  ${condition}
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           /* let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID_INPUT= '${DATA.PLAN_ID_INPUT}' AND M_CODE='${DATA.M_CODE}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND TOTAL_IN_QTY=${DATA.TOTAL_IN_QTY}`;  */
-          let setpdQuery = `UPDATE IN_KHO_SX_SUB SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W' WHERE IN_KHO_ID=${DATA.IN_KHO_ID}`;
+          let setpdQuery = `UPDATE IN_KHO_SX_SUB SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG.toUpperCase()}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W' WHERE IN_KHO_ID=${DATA.IN_KHO_ID}`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
