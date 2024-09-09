@@ -2322,15 +2322,9 @@ exports.process_api = function async(req, res) {
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
-          let querythuong = `SELECT isnull(SUM(DIEM),0) AS THUONG FROM ZTBTHUONGPHATTB WHERE TP_EMPL_NO='${EMPL_NO}' AND PL_HINHTHUC='KT'`;
-          let queryphat = `SELECT isnull(SUM(DIEM),0) AS PHAT FROM ZTBTHUONGPHATTB WHERE TP_EMPL_NO='${EMPL_NO}' AND PL_HINHTHUC='KL'`;
+          let querythuong = `SELECT TP_EMPL_NO, SUM(CASE WHEN PL_HINHTHUC='KT' THEN isnull(DIEM,0) ELSE 0 END) AS THUONG, SUM(CASE WHEN PL_HINHTHUC='KL' THEN isnull(DIEM,0)  ELSE 0 END) AS PHAT FROM ZTBTHUONGPHATTB WHERE TP_EMPL_NO='${EMPL_NO}' GROUP BY TP_EMPL_NO`;          
           ////console.log(query);
-          kquathuong = await queryDB(querythuong);
-          kquaphat = await queryDB(queryphat);
-          kqua = {
-            tk_status: "OK",
-            data: { count_thuong: kquathuong.data, count_phat: kquaphat.data },
-          };
+          kqua = await queryDB(querythuong);         
           res.send(kqua);
         })();
         break;
