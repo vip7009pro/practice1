@@ -165,6 +165,7 @@ ios.on("connection", (client) => {
 });
 var corsOptions = {
   origin: [
+    "http://192.168.1.136:3001",
     "https://cms.ddns.net:3004",
     "http://cms.ddns.net:3010",
     "https://cms.ddns.net:3010",
