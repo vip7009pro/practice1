@@ -7004,7 +7004,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT isnull(M140.LIEUQL_SX,0) AS LIEUQL_SX, M140.MAIN_M,M140.G_CODE, M100.G_NAME, M100.G_NAME_KD, M140.RIV_NO, M140.M_CODE, M090.M_NAME, M090.WIDTH_CD, M140.M_QTY, M140.INS_EMPL, M140.INS_DATE, M140.UPD_EMPL,M140.UPD_DATE, (M090.STOCK_CFM_NM1+M090.STOCK_CFM_NM2) AS M_STOCK FROM M140 JOIN M100 ON (M140.G_CODE = M100.G_CODE) JOIN M090 ON (M090.M_CODE = M140.M_CODE) WHERE M140.G_CODE='${DATA.G_CODE}' AND M140.RIV_NO='A' `;
+          let setpdQuery = `SELECT isnull(M140.LIEUQL_SX,0) AS LIEUQL_SX, M140.MAIN_M,M140.G_CODE, M100.G_NAME, M100.G_NAME_KD, M140.RIV_NO, M140.M_CODE, M090.M_NAME, M090.WIDTH_CD, M140.M_QTY, M140.INS_EMPL, M140.INS_DATE, M140.UPD_EMPL,M140.UPD_DATE, (M090.STOCK_CFM_NM1+M090.STOCK_CFM_NM2) AS M_STOCK FROM M140 JOIN M100 ON (M140.G_CODE = M100.G_CODE) JOIN M090 ON (M090.M_CODE = M140.M_CODE) WHERE M140.G_CODE='${DATA.G_CODE}' AND M140.RIV_NO='A' ORDER BY (M090.STOCK_CFM_NM1+M090.STOCK_CFM_NM2) DESC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
@@ -7782,16 +7782,16 @@ CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull
           let checkkq = "OK";
           let setpdQuery = `SELECT ZTB_QLSXCHITHI.LIEUQL_SX ,ZTB_QLSXCHITHI.CHITHI_ID, ZTB_QLSXCHITHI.PLAN_ID, ZTB_QLSXCHITHI.M_CODE, M090.M_NAME, M090.WIDTH_CD, ZTB_QLSXCHITHI.M_ROLL_QTY, ZTB_QLSXCHITHI.M_MET_QTY,ZTB_QLSXCHITHI.M_QTY, isnull(BB.TOTAL_IN_QTY,0) AS OUT_KHO_SX, AA.OUT_CFM_QTY ,ZTB_QLSXCHITHI.INS_EMPL, ZTB_QLSXCHITHI.INS_DATE, ZTB_QLSXCHITHI.UPD_EMPL, ZTB_QLSXCHITHI.UPD_DATE, (M090.STOCK_CFM_NM1+M090.STOCK_CFM_NM2) AS M_STOCK FROM ZTB_QLSXCHITHI 
           JOIN M090 ON (M090.M_CODE = ZTB_QLSXCHITHI.M_CODE) 
-                    LEFT JOIN 
-                    (
-                    SELECT PLAN_ID, M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE PLAN_ID='${DATA.PLAN_ID}' GROUP BY PLAN_ID, M_CODE
-                    ) AS AA ON (AA.PLAN_ID=ZTB_QLSXCHITHI.PLAN_ID AND AA.M_CODE=ZTB_QLSXCHITHI.M_CODE)
-                    LEFT JOIN  
-                    (SELECT PLAN_ID_SUDUNG, M_CODE, isnull(SUM(TOTAL_IN_QTY),0) AS TOTAL_IN_QTY  FROM IN_KHO_SX WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND IN_KHO_SX.PLAN_ID_INPUT <> IN_KHO_SX.PLAN_ID_SUDUNG GROUP BY PLAN_ID_SUDUNG, M_CODE) AS BB ON (BB.PLAN_ID_SUDUNG=ZTB_QLSXCHITHI.PLAN_ID AND BB.M_CODE=ZTB_QLSXCHITHI.M_CODE)
-                    WHERE ZTB_QLSXCHITHI.PLAN_ID='${DATA.PLAN_ID}' ORDER BY ZTB_QLSXCHITHI.M_CODE ASC            
-                    `;
+          LEFT JOIN 
+          (
+          SELECT PLAN_ID, M_CODE, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY FROM O302 WHERE PLAN_ID='${DATA.PLAN_ID}' GROUP BY PLAN_ID, M_CODE
+          ) AS AA ON (AA.PLAN_ID=ZTB_QLSXCHITHI.PLAN_ID AND AA.M_CODE=ZTB_QLSXCHITHI.M_CODE)
+          LEFT JOIN  
+          (SELECT PLAN_ID_SUDUNG, M_CODE, isnull(SUM(TOTAL_IN_QTY),0) AS TOTAL_IN_QTY  FROM IN_KHO_SX WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND IN_KHO_SX.PLAN_ID_INPUT <> IN_KHO_SX.PLAN_ID_SUDUNG GROUP BY PLAN_ID_SUDUNG, M_CODE) AS BB ON (BB.PLAN_ID_SUDUNG=ZTB_QLSXCHITHI.PLAN_ID AND BB.M_CODE=ZTB_QLSXCHITHI.M_CODE)
+          WHERE ZTB_QLSXCHITHI.PLAN_ID='${DATA.PLAN_ID}' ORDER BY (M090.STOCK_CFM_NM1+M090.STOCK_CFM_NM2) DESC
+          `;
           //${moment().format('YYYY-MM-DD')}
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           //console.log(checkkq);
@@ -18940,6 +18940,38 @@ WHERE ZTB_REL_TESTTABLE.TEST_CODE = ${DATA.TEST_CODE}
           WHEN MATCHED THEN
           UPDATE SET ZTB_DM_HISTORY.LOSS_KT = SRC.CURRENT_LOSS_KT;`;
           //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "deleteM_CODE_O301":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `DELETE FROM O301 WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE NOT IN (${DATA.M_CODE_LIST})`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "deleteM_CODE_ZTB_QLSXCHITHI":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `DELETE FROM ZTB_QLSXCHITHI WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE NOT IN (${DATA.M_CODE_LIST})`;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
