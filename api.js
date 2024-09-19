@@ -18971,7 +18971,7 @@ WHERE ZTB_REL_TESTTABLE.TEST_CODE = ${DATA.TEST_CODE}
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `DELETE FROM ZTB_QLSXCHITHI WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_CODE NOT IN (${DATA.M_CODE_LIST})`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
