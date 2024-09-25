@@ -6536,7 +6536,7 @@ WHERE ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DA
           if (DATA.ROLL_NO_START != "" && DATA.ROLL_NO_STOP != "") {
             condition += ` AND SUBSTRING(M_LOT_NO,7,10) BETWEEN '${DATA.ROLL_NO_START}' AND '${DATA.ROLL_NO_STOP}'`;
           }
-          let setpdQuery = ` SELECT  I222.LOTNCC, I222.QC_PASS, I222.QC_PASS_EMPL, I222.QC_PASS_DATE, I222.M_LOT_NO, I222.M_CODE,M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY,  I222.ROLL_QTY, (I222.IN_CFM_QTY * I222.ROLL_QTY) AS TOTAL_IN_QTY, I222.INS_DATE, M110.CUST_NAME_KD FROM I222 
+          let setpdQuery = ` SELECT  I222.LOTNCC, I222.QC_PASS, I222.QC_PASS_EMPL, I222.QC_PASS_DATE, I222.M_LOT_NO, I222.M_CODE,M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY,  I222.ROLL_QTY, (I222.IN_CFM_QTY * I222.ROLL_QTY) AS TOTAL_IN_QTY, I222.INS_DATE, M110.CUST_NAME_KD, I222. USE_YN FROM I222 
                     LEFT JOIN  M110 ON (I222.CUST_CD = M110.CUST_CD)
                     LEFT JOIN M090 ON (M090.M_CODE=  I222.M_CODE)
                     ${condition}
@@ -10951,7 +10951,7 @@ LEFT JOIN M090 ON M090.M_CODE = I222.M_CODE AND M090.CTR_CD = I222.CTR_CD
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO ZTB_SX_NG_MATERIAL (CTR_CD,FACTORY,PLAN_ID_SUDUNG,LIEUQL_SX,M_CODE,M_LOT_NO,VENDOR_LOT,ROLL_QTY,IN_QTY,TOTAL_IN_QTY,USE_YN,PQC3_ID,OUT_DATE,INS_EMPL,INS_DATE,PHANLOAI,QC_PASS,REMARK, IN1_EMPL, IN2_EMPL, IN_CUST_CD, DEFECT_PHENOMENON ) VALUES ('002','${DATA.FACTORY}','${DATA.PLAN_ID_SUDUNG}','${DATA.LIEUQL_SX}','${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.VENDOR_LOT}','${DATA.ROLL_QTY}','${DATA.IN_QTY}','${DATA.TOTAL_IN_QTY}','Y','${DATA.PQC3_ID}','${DATA.OUT_DATE}','${EMPL_NO}',GETDATE(),'${DATA.PHANLOAI}','N',N'${DATA.REMARK}','${DATA.IN1_EMPL}','${DATA.IN2_EMPL}','${DATA.IN_CUST_CD}','${DATA.DEFECT_PHENOMENON}')`;
+          let setpdQuery = `INSERT INTO ZTB_SX_NG_MATERIAL (CTR_CD,FACTORY,PLAN_ID_SUDUNG,LIEUQL_SX,M_CODE,M_LOT_NO,VENDOR_LOT,ROLL_QTY,IN_QTY,TOTAL_IN_QTY,USE_YN,PQC3_ID,OUT_DATE,INS_EMPL,INS_DATE,PHANLOAI,QC_PASS,REMARK, IN1_EMPL, IN2_EMPL, IN_CUST_CD, DEFECT_PHENOMENON ) VALUES ('002','${DATA.FACTORY}','${DATA.PLAN_ID_SUDUNG}','${DATA.LIEUQL_SX}','${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.VENDOR_LOT}','${DATA.ROLL_QTY}','${DATA.IN_QTY}','${DATA.TOTAL_IN_QTY}','Y','${DATA.PQC3_ID}','${DATA.OUT_DATE}','${EMPL_NO}',GETDATE(),'${DATA.PHANLOAI}','N',N'${DATA.REMARK}','${DATA.IN1_EMPL}','${DATA.IN2_EMPL}','${DATA.IN_CUST_CD}',N'${DATA.DEFECT_PHENOMENON}')`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -19480,6 +19480,158 @@ WHERE ZTB_REL_TESTTABLE.TEST_CODE = ${DATA.TEST_CODE}
             checkkq = await queryDB(setpdQuery);
             //console.log(checkkq);
             res.send(checkkq);
+          })();
+          break;
+        case "updateStockM090":
+          (async () => {
+            let DATA = qr["DATA"];
+            //console.log(DATA);
+            let EMPL_NO = req.payload_data["EMPL_NO"];
+            let JOB_NAME = req.payload_data["JOB_NAME"];
+            let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+            let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+            let checkkq = "OK";
+            let setpdQuery1 = `
+            MERGE INTO M090 USING(
+            SELECT 
+              M090.M_CODE, 
+              M090.M_NAME, 
+              isnull(STOCK_TB2.STOCK_ROLL_NM1, 0) AS STOCK_ROLL_NM1, 
+              isnull(STOCK_TB2.STOCK_CFM_NM1, 0) AS STOCK_CFM_NM1, 
+              isnull(HOLDING_TB.HOLDING_ROLL_NM1, 0) AS HOLDING_ROLL_NM1, 
+              isnull(HOLDING_TB.HOLDING_CFM_NM1, 0) AS HOLDING_CFM_NM1 
+            FROM 
+              M090 
+              LEFT JOIN(
+                SELECT 
+                  STOCK_TB.M_CODE, 
+                  SUM(STOCK_TB.IN_ROLL_QTY) AS STOCK_ROLL_NM1, 
+                  SUM(STOCK_TB.IN_CFM_QTY) AS STOCK_CFM_NM1 
+                FROM 
+                  (
+                    SELECT 
+                      I222.M_CODE, 
+                      SUM(I222.ROLL_QTY) AS IN_ROLL_QTY, 
+                      SUM(I222.ROLL_QTY * IN_CFM_QTY) AS IN_CFM_QTY 
+                    FROM 
+                      I222 
+                    WHERE 
+                      I222.USE_YN = 'T' 
+                      AND I222.FACTORY = 'NM1' 
+                    GROUP BY 
+                      I222.M_CODE 
+                    UNION ALL 
+                    SELECT 
+                      RETURN_NVL.M_CODE, 
+                      SUM(RETURN_NVL.ROLL_QTY) AS IN_ROLL_QTY, 
+                      SUM(RETURN_NVL.ROLL_QTY * RETURN_QTY) AS IN_CFM_QTY 
+                    FROM 
+                      RETURN_NVL 
+                    WHERE 
+                      RETURN_NVL.USE_YN = 'Y' 
+                      AND RETURN_NVL.FACTORY = 'NM1' 
+                    GROUP BY 
+                      RETURN_NVL.M_CODE
+                  ) AS STOCK_TB 
+                GROUP BY 
+                  STOCK_TB.M_CODE
+              ) AS STOCK_TB2 ON(STOCK_TB2.M_CODE = M090.M_CODE) 
+              LEFT JOIN(
+                SELECT 
+                  HOLDING_TB.M_CODE, 
+                  SUM(HOLDING_TB.HOLDING_ROLL_QTY) AS HOLDING_ROLL_NM1, 
+                  SUM(
+                    HOLDING_TB.HOLDING_ROLL_QTY * HOLDING_QTY
+                  ) AS HOLDING_CFM_NM1 
+                FROM 
+                  HOLDING_TB 
+                WHERE 
+                  HOLDING_TB.USE_YN = 'B' 
+                  AND HOLDING_TB.FACTORY = 'NM1' 
+                GROUP BY 
+                  HOLDING_TB.M_CODE
+              ) AS HOLDING_TB ON(HOLDING_TB.M_CODE = M090.M_CODE)
+          ) AS TONLIEU ON(M090.M_CODE = TONLIEU.M_CODE) WHEN MATCHED THEN 
+          UPDATE 
+          SET 
+            STOCK_ROLL_NM1 = TONLIEU.STOCK_ROLL_NM1, 
+            STOCK_CFM_NM1 = TONLIEU.STOCK_CFM_NM1, 
+            HOLDING_ROLL_NM1 = TONLIEU.HOLDING_ROLL_NM1, 
+            HOLDING_CFM_NM1 = TONLIEU.HOLDING_CFM_NM1;
+            `;
+            let setpdQuery2 = `
+             MERGE INTO M090 USING(
+            SELECT 
+              M090.M_CODE, 
+              M090.M_NAME, 
+              isnull(STOCK_TB2.STOCK_ROLL_NM2, 0) AS STOCK_ROLL_NM2, 
+              isnull(STOCK_TB2.STOCK_CFM_NM2, 0) AS STOCK_CFM_NM2, 
+              isnull(HOLDING_TB.HOLDING_ROLL_NM2, 0) AS HOLDING_ROLL_NM2, 
+              isnull(HOLDING_TB.HOLDING_CFM_NM2, 0) AS HOLDING_CFM_NM2 
+            FROM 
+              M090 
+              LEFT JOIN(
+                SELECT 
+                  STOCK_TB.M_CODE, 
+                  SUM(STOCK_TB.IN_ROLL_QTY) AS STOCK_ROLL_NM2, 
+                  SUM(STOCK_TB.IN_CFM_QTY) AS STOCK_CFM_NM2 
+                FROM 
+                  (
+                    SELECT 
+                      I222.M_CODE, 
+                      SUM(I222.ROLL_QTY) AS IN_ROLL_QTY, 
+                      SUM(I222.ROLL_QTY * IN_CFM_QTY) AS IN_CFM_QTY 
+                    FROM 
+                      I222 
+                    WHERE 
+                      I222.USE_YN = 'T' 
+                      AND I222.FACTORY = 'NM2' 
+                    GROUP BY 
+                      I222.M_CODE 
+                    UNION ALL 
+                    SELECT 
+                      RETURN_NVL.M_CODE, 
+                      SUM(RETURN_NVL.ROLL_QTY) AS IN_ROLL_QTY, 
+                      SUM(RETURN_NVL.ROLL_QTY * RETURN_QTY) AS IN_CFM_QTY 
+                    FROM 
+                      RETURN_NVL 
+                    WHERE 
+                      RETURN_NVL.USE_YN = 'Y' 
+                      AND RETURN_NVL.FACTORY = 'NM2' 
+                    GROUP BY 
+                      RETURN_NVL.M_CODE
+                  ) AS STOCK_TB 
+                GROUP BY 
+                  STOCK_TB.M_CODE
+              ) AS STOCK_TB2 ON(STOCK_TB2.M_CODE = M090.M_CODE) 
+              LEFT JOIN(
+                SELECT 
+                  HOLDING_TB.M_CODE, 
+                  SUM(HOLDING_TB.HOLDING_ROLL_QTY) AS HOLDING_ROLL_NM2, 
+                  SUM(
+                    HOLDING_TB.HOLDING_ROLL_QTY * HOLDING_QTY
+                  ) AS HOLDING_CFM_NM2 
+                FROM 
+                  HOLDING_TB 
+                WHERE 
+                  HOLDING_TB.USE_YN = 'B' 
+                  AND HOLDING_TB.FACTORY = 'NM2' 
+                GROUP BY 
+                  HOLDING_TB.M_CODE
+              ) AS HOLDING_TB ON(HOLDING_TB.M_CODE = M090.M_CODE)
+          ) AS TONLIEU ON(M090.M_CODE = TONLIEU.M_CODE) WHEN MATCHED THEN 
+          UPDATE 
+          SET 
+            STOCK_ROLL_NM2 = TONLIEU.STOCK_ROLL_NM2, 
+            STOCK_CFM_NM2 = TONLIEU.STOCK_CFM_NM2, 
+            HOLDING_ROLL_NM2 = TONLIEU.HOLDING_ROLL_NM2, 
+            HOLDING_CFM_NM2 = TONLIEU.HOLDING_CFM_NM2;
+            `
+            //console.log(setpdQuery);
+            checkkq1 = await queryDB(setpdQuery);
+            checkkq2 = await queryDB(setpdQuery);
+            //console.log(checkkq);
+            res.send(checkkq1);
           })();
           break;
       default:
