@@ -17617,11 +17617,11 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let checkkq = "OK";
           let setpdQuery = `
             INSERT INTO ZTB_DM_HISTORY
-            SELECT '002' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4 GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL FROM M100 WHERE G_CODE='${DATA.G_CODE}'
+            SELECT '002' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL,0 AS LOSS_KT FROM M100 WHERE G_CODE='${DATA.G_CODE}'
             `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
+          console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -17636,6 +17636,24 @@ FROM ZTB_QUOTATION_CALC_TB LEFT JOIN M100 ON (M100.G_CODE = ZTB_QUOTATION_CALC_T
           let checkkq = "OK";
           let setpdQuery = `
             UPDATE ZTB_DM_HISTORY SET LOSS_SX1='${DATA.LOSS_SX1}',LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SX3='${DATA.LOSS_SX3}',LOSS_SX4='${DATA.LOSS_SX4}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',LOSS_SETTING3='${DATA.LOSS_SETTING3}',LOSS_SETTING4='${DATA.LOSS_SETTING4}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' 
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "deleteDMYCSX":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+             DELETE FROM ZTB_DM_HISTORY WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
