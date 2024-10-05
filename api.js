@@ -3646,8 +3646,8 @@ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(
         (async () => {
           ////console.log(DATA);
           let checkkq = "OK";
-          let setpdQuery = `UPDATE M100 SET APPSHEET='${DATA.appsheetvalue}' WHERE CTR_CD='${DATA.CTR_CD}' ANDG_CODE= '${DATA.G_CODE}'`;
-          ////console.log(setpdQuery);
+          let setpdQuery = `UPDATE M100 SET APPSHEET='${DATA.appsheetvalue}' WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE= '${DATA.G_CODE}'`;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -7726,7 +7726,7 @@ ORDER BY P400.PROD_REQUEST_NO DESC
             condition += ` AND SUBSTRING(ZTB_QLSXPLAN.PLAN_EQ,1,2)= '${DATA.PLAN_EQ}'`;
           }
           let checkkq = "OK";
-          let setpdQuery = `SELECT   ZTB_SX_RESULT.WORK_SHIFT, ZTB_QLSXPLAN.PLAN_QTY, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.PLAN_DATE,  ZTB_QLSXPLAN.PLAN_EQ, M100.G_NAME,M100.G_NAME_KD, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,O301_A.PLAN_ID AS DKXL, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, ZTB_SX_RESULT.SX_RESULT AS CHOTBC
+          let setpdQuery = `SELECT   ZTB_SX_RESULT.WORK_SHIFT, ZTB_QLSXPLAN.PLAN_QTY, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.PLAN_ID, ZTB_QLSXPLAN.PLAN_DATE,  ZTB_QLSXPLAN.PLAN_EQ, M100.G_NAME,M100.G_NAME_KD, OUT_KNIFE_FILM_A.PLAN_ID AS XUATDAO, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,O301_A.PLAN_ID AS DKXL, OUT_KHO_SX_A.PLAN_ID_OUTPUT AS XUATLIEU, P501_A.PLAN_ID AS IN_TEM,ZTB_SX_RESULT.SX_RESULT AS CHOTBC
                 FROM ZTB_QLSXPLAN
                 LEFT JOIN (SELECT DISTINCT PLAN_ID, CTR_CD FROM OUT_KNIFE_FILM) AS OUT_KNIFE_FILM_A  
                 ON (ZTB_QLSXPLAN.PLAN_ID  = OUT_KNIFE_FILM_A.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = OUT_KNIFE_FILM_A.CTR_CD)
@@ -7735,6 +7735,7 @@ ORDER BY P400.PROD_REQUEST_NO DESC
                 ON (ZTB_QLSXPLAN.PLAN_ID = OUT_KHO_SX_A.PLAN_ID_OUTPUT AND ZTB_QLSXPLAN.CTR_CD = OUT_KHO_SX_A.CTR_CD)
                 LEFT JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE AND M100.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
                 LEFT JOIN (SELECT DISTINCT PLAN_ID, CTR_CD FROM O301 WHERE INS_DATE > '2022-11-21') AS O301_A ON (O301_A.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID AND O301_A.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
+                LEFT JOIN (SELECT DISTINCT PLAN_ID, CTR_CD FROM P501 WHERE INS_DATE > '2022-11-21') AS P501_A  ON (P501_A.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID AND P501_A.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
                     ${condition} AND ZTB_QLSXPLAN.CTR_CD='${DATA.CTR_CD}'
                     ORDER BY ZTB_QLSXPLAN.PLAN_DATE DESC, ZTB_QLSXPLAN.PLAN_ID DESC`;
           //${moment().format('YYYY-MM-DD')}
@@ -17972,6 +17973,60 @@ ORDER BY PROD_REQUEST_NO ASC
           let checkkq = "OK";
           let setpdQuery = `
           DELETE FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}' AND EQ_CODE='${DATA.EQ_CODE}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "update_file_name":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          INSERT INTO ZTB_FILE_TRANSFER (CTR_CD, FILE_NAME, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}','${DATA.FILE_NAME}',GETDATE(),'${EMPL_NO}',GETDATE(), '${EMPL_NO}')
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "get_file_list":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT * FROM ZTB_FILE_TRANSFER ORDER BY INS_DATE DESC
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "delete_file":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          DELETE FROM ZTB_FILE_TRANSFER WHERE CTR_CD='${DATA.CTR_CD}' AND FILE_NAME='${DATA.FILE_NAME}'
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
