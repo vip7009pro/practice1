@@ -18229,6 +18229,26 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq1);
         })();
         break;
+        case "loadDefectProcessData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT * FROM ZTB_NG_SX100 WHERE G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER=${DATA.PROCESS_NUMBER} AND  CTR_CD='${DATA.CTR_CD}' ORDER BY G_CODE, PROCESS_NUMBER, STT
+          `;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
