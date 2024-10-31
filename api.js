@@ -18239,7 +18239,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-          SELECT * FROM ZTB_NG_SX100 WHERE G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER=${DATA.PROCESS_NUMBER} AND  CTR_CD='${DATA.CTR_CD}' ORDER BY G_CODE, PROCESS_NUMBER, STT
+          SELECT * FROM ZTB_NG_SX100 WHERE USE_YN='Y' AND G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER=${DATA.PROCESS_NUMBER} AND  CTR_CD='${DATA.CTR_CD}' ORDER BY G_CODE, PROCESS_NUMBER, STT
           `;          
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
