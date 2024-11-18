@@ -6666,7 +6666,7 @@ CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull
           let checkkq = "OK";
           let setpdQuery = `INSERT INTO IN_KHO_SX (CTR_CD,FACTORY,PHANLOAI,PLAN_ID_INPUT, PLAN_ID_SUDUNG, M_CODE,M_LOT_NO,ROLL_QTY,IN_QTY,TOTAL_IN_QTY,USE_YN,FSC, FSC_MCODE, FSC_GCODE,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES ('${DATA.CTR_CD}','${DATA.FACTORY}','${DATA.PHANLOAI}', ${DATA.PLAN_ID_INPUT !== null ? "'" + DATA.PLAN_ID_INPUT + "'" : null},${DATA.PLAN_ID_SUDUNG !== null ? "'" + DATA.PLAN_ID_SUDUNG + "'" : null}, '${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.ROLL_QTY}','${DATA.IN_QTY}','${DATA.TOTAL_IN_QTY}','${DATA.USE_YN}', '${DATA.FSC}','${DATA.FSC_MCODE}','${DATA.FSC_GCODE}',GETDATE(), '${EMPL_NO}', GETDATE(),'${EMPL_NO}')`;
           //${moment().format('YYYY-MM-DD')}
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
         })();
@@ -7321,7 +7321,21 @@ SELECT PLAN_ID_INPUT,M090.M_NAME,SUM(isnull(TOTAL_IN_QTY, 0)) AS LOCK_QTY, IN_KH
 FROM IN_KHO_SX
 LEFT JOIN M090 ON (M090.M_CODE = IN_KHO_SX.M_CODE AND M090.CTR_CD = IN_KHO_SX.CTR_CD)
 WHERE IN_KHO_SX.USE_YN='O' AND IN_KHO_SX.CTR_CD='${DATA.CTR_CD}'
-GROUP BY PLAN_ID_INPUT,M090.M_NAME, IN_KHO_SX.CTR_CD)
+GROUP BY PLAN_ID_INPUT,M090.M_NAME, IN_KHO_SX.CTR_CD),
+HH AS (
+SELECT  ZTB_SX_NG_MATERIAL.CTR_CD,PLAN_ID_SUDUNG, M090.M_NAME, SUM(TOTAL_IN_QTY) AS RETURN_IQC   
+FROM ZTB_SX_NG_MATERIAL 
+LEFT JOIN M090 ON M090.CTR_CD=  ZTB_SX_NG_MATERIAL.CTR_CD AND M090.M_CODE=  ZTB_SX_NG_MATERIAL.M_CODE 
+WHERE LIEUQL_SX = 1 AND ZTB_SX_NG_MATERIAL.CTR_CD ='${DATA.CTR_CD}'  
+GROUP BY ZTB_SX_NG_MATERIAL.CTR_CD,PLAN_ID_SUDUNG, M090.M_NAME
+),
+II AS (
+SELECT ZTB_SX_NG_MATERIAL.CTR_CD,OUT_PLAN_ID, M090.M_NAME, SUM(TOTAL_IN_QTY) AS IQC_IN   
+FROM ZTB_SX_NG_MATERIAL 
+LEFT JOIN M090 ON M090.CTR_CD=  ZTB_SX_NG_MATERIAL.CTR_CD AND M090.M_CODE=  ZTB_SX_NG_MATERIAL.M_CODE 
+WHERE LIEUQL_SX = 1 AND ZTB_SX_NG_MATERIAL.CTR_CD ='${DATA.CTR_CD}'  
+GROUP BY ZTB_SX_NG_MATERIAL.CTR_CD,OUT_PLAN_ID, M090.M_NAME
+)
 , INSPECT_INPUT_TABLE AS 
 ( SELECT 
       PLAN_ID, 
@@ -7406,7 +7420,9 @@ SELECT
 isnull(isnull(WAREHOUSE_OUT.M_NAME, AA.M_NAME),BB.M_NAME) AS M_NAME, 
 isnull(WAREHOUSE_OUT.WAREHOUSE_OUTPUT_QTY, 0) AS WAREHOUSE_OUTPUT_QTY,
 isnull(EE.NEXT_IN_QTY,0) AS NEXT_IN_QTY,
+isnull(II.IQC_IN,0) AS IQC_IN,
 CASE WHEN PROCESS_NUMBER =1 THEN  (isnull(WAREHOUSE_OUT.WAREHOUSE_OUTPUT_QTY, 0)+ isnull(EE.NEXT_IN_QTY,0) - isnull(BB.INPUT_QTY * 1.000, isnull(AA.INPUT_QTY * 1.00000,0))) ELSE 0 END AS NOT_BEEP_QTY,
+isnull(HH.RETURN_IQC,0) AS RETURN_IQC,
 isnull(BB.INPUT_QTY * 1.000, isnull(AA.INPUT_QTY * 1.00000,0)) AS BEEP_QTY,	 
 isnull(BB.REMAIN_QTY, 0) AS REMAIN_QTY,
 (isnull(BB.INPUT_QTY * 1.00000, isnull(AA.INPUT_QTY * 1.00000,0)) - isnull(BB.REMAIN_QTY, 0)) AS USED_QTY,
@@ -7475,6 +7491,8 @@ FROM
   LEFT JOIN EE ON (EE.PLAN_ID_SUDUNG= ZTB_QLSXPLAN.PLAN_ID AND EE.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
   LEFT JOIN FF ON (FF.PLAN_ID_INPUT= ZTB_QLSXPLAN.PLAN_ID AND FF.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
   LEFT JOIN GG ON (GG.PLAN_ID_INPUT= ZTB_QLSXPLAN.PLAN_ID AND GG.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
+  LEFT JOIN HH ON (HH.PLAN_ID_SUDUNG= ZTB_QLSXPLAN.PLAN_ID AND HH.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
+  LEFT JOIN II ON (II.OUT_PLAN_ID= ZTB_QLSXPLAN.PLAN_ID AND II.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
   LEFT JOIN WAREHOUSE_OUT ON (WAREHOUSE_OUT.PLAN_ID_INPUT= ZTB_QLSXPLAN.PLAN_ID AND WAREHOUSE_OUT.CTR_CD = ZTB_QLSXPLAN.CTR_CD) 
   LEFT JOIN ZTB_SX_RESULT ON (ZTB_SX_RESULT.PLAN_ID = ZTB_QLSXPLAN.PLAN_ID AND ZTB_SX_RESULT.CTR_CD = ZTB_QLSXPLAN.CTR_CD) 
   LEFT JOIN  INSPECT_INPUT_TABLE ON(ZTB_QLSXPLAN.PLAN_ID = INSPECT_INPUT_TABLE.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = INSPECT_INPUT_TABLE.CTR_CD) 
@@ -18248,6 +18266,57 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
+        case "resetKhoSX_IQC1":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_INPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery); 
+
+          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);           
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "resetKhoSX_IQC2":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+
+          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+
+          setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `; 
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+
+          setpdQuery = `UPDATE P501 SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `; 
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          
+
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        
 
       default:
         //console.log(qr['command']);
