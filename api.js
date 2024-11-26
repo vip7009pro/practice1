@@ -8044,7 +8044,34 @@ ORDER BY P400.PROD_REQUEST_NO DESC
           if (DATA.NGMATERIAL === true) {
             condition += ` AND  (CUST_CD is null OR SSPRICE is null OR CMSPRICE is null OR SLITTING_PRICE is null OR MASTER_WIDTH is null OR ROLL_LENGTH is null)`;
           }
-          let setpdQuery = `SELECT ZTB_MATERIAL_TB.M_ID, ZTB_MATERIAL_TB.M_NAME, ZTB_MATERIAL_TB.DESCR, ZTB_MATERIAL_TB.CUST_CD, M110.CUST_NAME_KD,ZTB_MATERIAL_TB.SSPRICE, ZTB_MATERIAL_TB.CMSPRICE, ZTB_MATERIAL_TB.SLITTING_PRICE ,ZTB_MATERIAL_TB.MASTER_WIDTH, ZTB_MATERIAL_TB.ROLL_LENGTH, ZTB_MATERIAL_TB.FSC, ZTB_MATERIAL_TB.FSC_CODE,ZTB_FSC_TB.FSC_NAME, ZTB_MATERIAL_TB.USE_YN,ZTB_MATERIAL_TB.EXP_DATE, ZTB_MATERIAL_TB.TDS,ZTB_MATERIAL_TB.INS_DATE, ZTB_MATERIAL_TB.INS_EMPL, ZTB_MATERIAL_TB.UPD_DATE, ZTB_MATERIAL_TB.UPD_EMPL FROM ZTB_MATERIAL_TB LEFT JOIN M110 ON (M110.CUST_CD = ZTB_MATERIAL_TB.CUST_CD AND M110.CTR_CD = ZTB_MATERIAL_TB.CTR_CD) LEFT JOIN ZTB_FSC_TB ON (ZTB_FSC_TB.FSC_CODE = ZTB_MATERIAL_TB.FSC_CODE AND ZTB_FSC_TB.CTR_CD = ZTB_MATERIAL_TB.CTR_CD)  ${condition} AND ZTB_MATERIAL_TB.CTR_CD='${DATA.CTR_CD}' `;
+          let setpdQuery = `WITH RankedMaterials AS (
+    SELECT
+		CTR_CD,
+        M_ID,
+		DOC_TYPE,
+        VER,
+        ROW_NUMBER() OVER (PARTITION BY CTR_CD,M_ID,DOC_TYPE ORDER BY VER DESC) AS rn
+    FROM
+        ZTB_DOC_TB WHERE PUR_APP='Y' AND RND_APP='Y' AND DTC_APP='Y' AND CTR_CD='002'
+),
+TDS_TB AS
+(
+SELECT CTR_CD,M_ID,DOC_TYPE,VER FROM RankedMaterials WHERE rn = 1 AND DOC_TYPE='TDS'
+),
+MSDS_TB AS
+(
+SELECT CTR_CD,M_ID,DOC_TYPE,VER FROM RankedMaterials WHERE rn = 1 AND DOC_TYPE='MSDS'
+),
+SGS_TB AS
+(
+SELECT CTR_CD,M_ID,DOC_TYPE,VER FROM RankedMaterials WHERE rn = 1 AND DOC_TYPE='SGS'
+)
+
+SELECT ZTB_MATERIAL_TB.M_ID, ZTB_MATERIAL_TB.M_NAME, ZTB_MATERIAL_TB.DESCR, ZTB_MATERIAL_TB.CUST_CD, M110.CUST_NAME_KD,ZTB_MATERIAL_TB.SSPRICE, ZTB_MATERIAL_TB.CMSPRICE, ZTB_MATERIAL_TB.SLITTING_PRICE ,ZTB_MATERIAL_TB.MASTER_WIDTH, ZTB_MATERIAL_TB.ROLL_LENGTH, ZTB_MATERIAL_TB.FSC, ZTB_MATERIAL_TB.FSC_CODE,ZTB_FSC_TB.FSC_NAME, ZTB_MATERIAL_TB.USE_YN,ZTB_MATERIAL_TB.EXP_DATE,
+TDS_TB.VER AS TDS_VER,
+SGS_TB.VER AS SGS_VER,
+MSDS_TB.VER AS MSDS_VER,
+ZTB_MATERIAL_TB.INS_DATE, ZTB_MATERIAL_TB.INS_EMPL, ZTB_MATERIAL_TB.UPD_DATE, ZTB_MATERIAL_TB.UPD_EMPL FROM ZTB_MATERIAL_TB LEFT JOIN M110 ON (M110.CUST_CD = ZTB_MATERIAL_TB.CUST_CD AND M110.CTR_CD = ZTB_MATERIAL_TB.CTR_CD) LEFT JOIN ZTB_FSC_TB ON (ZTB_FSC_TB.FSC_CODE = ZTB_MATERIAL_TB.FSC_CODE AND ZTB_FSC_TB.CTR_CD = ZTB_MATERIAL_TB.CTR_CD) LEFT JOIN TDS_TB ON (ZTB_MATERIAL_TB.M_ID = TDS_TB.M_ID AND ZTB_MATERIAL_TB.CTR_CD = TDS_TB.CTR_CD) LEFT JOIN MSDS_TB ON (ZTB_MATERIAL_TB.M_ID = MSDS_TB.M_ID AND ZTB_MATERIAL_TB.CTR_CD = MSDS_TB.CTR_CD) LEFT JOIN SGS_TB ON (ZTB_MATERIAL_TB.M_ID = SGS_TB.M_ID AND ZTB_MATERIAL_TB.CTR_CD = SGS_TB.CTR_CD) ${condition} AND ZTB_MATERIAL_TB.CTR_CD='${DATA.CTR_CD}'`;
           //${moment().format('YYYY-MM-DD')}
           ////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -18312,6 +18339,125 @@ ORDER BY PROD_REQUEST_NO ASC
           checkkq = await queryDB(setpdQuery);
           
 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "getMaterialDocData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}'`
+          if(DATA.DOC_TYPE !=='ALL') condition += ` AND DOC_TYPE='${DATA.DOC_TYPE}' `
+          if(DATA.M_NAME !=='') condition += ` AND M_NAME LIKE '%${DATA.M_NAME}%'`
+          let setpdQuery = `SELECT * FROM ZTB_DOC_TB ${condition}`;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+                 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "checkDocVersion":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT MAX(VER) AS VER FROM ZTB_DOC_TB WHERE M_ID=${DATA.M_ID} AND DOC_TYPE='${DATA.DOC_TYPE}' AND CTR_CD='${DATA.CTR_CD}' `;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+                 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "insertMaterialDocData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `INSERT INTO ZTB_DOC_TB (CTR_CD,DOC_TYPE,M_ID,M_NAME,VER,FILE_NAME,FILE_UPLOADED,INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}','${DATA.DOC_TYPE}',${DATA.M_ID},'${DATA.M_NAME}',${DATA.VER},N'${DATA.FILE_NAME}', 'Y',GETDATE(),'${EMPL_NO}')`;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+                 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateMaterialDocData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET USE_YN='${DATA.USE_YN}', REG_DATE='${DATA.REG_DATE}', EXP_DATE='${DATA.EXP_DATE}', EXP_YN='${DATA.EXP_YN}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE DOC_ID=${DATA.DOC_ID}`;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+                 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updatePurApp":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET PUR_APP='${DATA.PUR_APP}', PUR_EMPL='${EMPL_NO}', PUR_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);                 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateDtcApp":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET DTC_APP='${DATA.DTC_APP}', DTC_EMPL='${EMPL_NO}', DTC_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);                 
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateRndApp":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET RND_APP='${DATA.RND_APP}', RND_EMPL='${EMPL_NO}', RND_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;          
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);                 
           //console.log(checkkq);
           res.send(checkkq);
         })();
