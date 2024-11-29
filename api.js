@@ -6095,7 +6095,7 @@ WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN 
           ////console.log(checkkq);
         })();
         break;
-      case "getqlsxplan2":
+      /* case "getqlsxplan2_bk":
         (async () => {
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -6175,8 +6175,8 @@ CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull
           res.send(checkkq);
           ////console.log(checkkq);
         })();
-        break;
-      case "getqlsxplan2backup":
+        break; */
+      case "getqlsxplan2":
         (async () => {
           ////console.log(DATA);
           let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -10948,9 +10948,10 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           WHERE pvtb.CTR_CD='${DATA.CTR_CD}'
           `;
           setpdQuery = `
-          SELECT ZTB_BARCODE_MANAGER.CTR_CD, ZTB_BARCODE_MANAGER.G_CODE, M100.G_NAME, ZTB_BARCODE_MANAGER.BARCODE_STT, ZTB_BARCODE_MANAGER.BARCODE_TYPE, ZTB_BARCODE_MANAGER.RND AS BARCODE_RND, ZTB_BARCODE_MANAGER.DTC AS BARCODE_RELI, ZTB_BARCODE_MANAGER.KT AS BARCODE_INSP, CASE WHEN (RND= DTC COLLATE Latin1_General_CS_AS AND DTC=KT COLLATE Latin1_General_CS_AS ) AND (RND is not null) THEN 'OK' ELSE 'NG' END AS STATUS 
+          SELECT ZTB_BARCODE_MANAGER.CTR_CD, ZTB_BARCODE_MANAGER.G_CODE, M100.G_NAME, ZTB_BARCODE_MANAGER.BARCODE_STT, ZTB_BARCODE_MANAGER.BARCODE_TYPE, ZTB_BARCODE_MANAGER.RND AS BARCODE_RND, ZTB_BARCODE_MANAGER.DTC AS BARCODE_RELI, ZTB_BARCODE_MANAGER.KT AS BARCODE_INSP, CASE WHEN (RND= DTC COLLATE Latin1_General_CS_AS AND DTC=KT COLLATE Latin1_General_CS_AS ) AND (RND is not null) THEN 'OK' ELSE 'NG' END AS STATUS, P500_A.G_CODE AS SX_STATUS 
           FROM ZTB_BARCODE_MANAGER 
           LEFT JOIN M100 ON (ZTB_BARCODE_MANAGER.G_CODE = M100.G_CODE AND ZTB_BARCODE_MANAGER.CTR_CD = M100.CTR_CD)
+          LEFT JOIN (SELECT DISTINCT CTR_CD,G_CODE FROM P500) AS P500_A ON P500_A.G_CODE = ZTB_BARCODE_MANAGER.G_CODE AND P500_A.CTR_CD = ZTB_BARCODE_MANAGER.CTR_CD
           WHERE ZTB_BARCODE_MANAGER.CTR_CD='${DATA.CTR_CD}'
           `;
           //console.log(setpdQuery);
@@ -11007,7 +11008,24 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
             UPDATE ZTB_BARCODE_MANAGER SET BARCODE_TYPE='${DATA.BARCODE_TYPE}', RND='${DATA.BARCODE_RND}' WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
           `;
           checkkq = await queryDB(setpdQueryrnd);
-          console.log(setpdQueryrnd);
+          //console.log(setpdQueryrnd);
+          res.send(checkkq);
+        })();
+        break;
+      case "deleteBarcode":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQueryrnd = `
+            DELETE FROM ZTB_BARCODE_MANAGER  WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}' AND BARCODE_STT=${DATA.BARCODE_STT}
+          `;
+          checkkq = await queryDB(setpdQueryrnd);
+          //console.log(setpdQueryrnd);
           res.send(checkkq);
         })();
         break;
@@ -16151,7 +16169,11 @@ WHERE ZTB_QUOTATION_CALC_TB.CTR_CD = '${DATA.CTR_CD}'
           let checkkq = "OK";
           let setpdQuery = `
             INSERT INTO ZTB_DM_HISTORY
-            SELECT '${DATA.CTR_CD}' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, isnull(LOSS_KT,0) AS LOSS_KT FROM M100 WHERE G_CODE='${DATA.G_CODE}'
+            SELECT '${DATA.CTR_CD}' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, isnull(LOSS_KT,0) AS LOSS_KT FROM M100 WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}'
+            `;
+          setpdQuery = `
+            INSERT INTO ZTB_DM_HISTORY
+            SELECT '${DATA.CTR_CD}' AS CTR_CD,'${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO, LOSS_SX1,LOSS_SX2,LOSS_SX3,LOSS_SX4,LOSS_SETTING1,LOSS_SETTING2,LOSS_SETTING3,LOSS_SETTING4, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, 0 AS LOSS_KT FROM M100 WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}'
             `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -18450,7 +18472,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}'`
+          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}' AND USE_YN='Y' `
           if(DATA.DOC_TYPE !=='ALL') condition += ` AND DOC_TYPE='${DATA.DOC_TYPE}' `
           if(DATA.M_NAME !=='') condition += ` AND M_NAME LIKE '%${DATA.M_NAME}%'`
           let setpdQuery = `SELECT * FROM ZTB_DOC_TB ${condition}`;          
