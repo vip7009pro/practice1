@@ -18403,9 +18403,17 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
+          let condition = ` WHERE ZTB_NG_SX100.CTR_CD='${DATA.CTR_CD}'`
+          if(DATA.G_CODE && DATA.G_CODE !=='') condition += ` AND ZTB_NG_SX100.G_CODE='${DATA.G_CODE}' `  
+          if(DATA.PROCESS_NUMBER && DATA.PROCESS_NUMBER !==-1) condition += ` AND ZTB_NG_SX100.PROCESS_NUMBER=${DATA.PROCESS_NUMBER} `
+          if(DATA.G_NAME && DATA.G_NAME !=='') condition += ` AND G_NAME LIKE '%${DATA.G_NAME}%'`
+          if(DATA.USE_YN) condition += ` AND ZTB_NG_SX100.USE_YN='${DATA.USE_YN}' `
+          if(!DATA.USE_YN) condition += ` AND ZTB_NG_SX100.USE_YN='Y' `
           let setpdQuery = `
-          SELECT * FROM ZTB_NG_SX100 WHERE USE_YN='Y' AND G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER=${DATA.PROCESS_NUMBER} AND  CTR_CD='${DATA.CTR_CD}' ORDER BY G_CODE, PROCESS_NUMBER, STT
-          `;          
+          SELECT ZTB_NG_SX100.*, M100.G_NAME, M100.PROD_TYPE, M100.DESCR, M100.PROD_MODEL FROM ZTB_NG_SX100
+          LEFT JOIN M100 ON M100.G_CODE = ZTB_NG_SX100.G_CODE AND M100.CTR_CD = ZTB_NG_SX100.CTR_CD
+           ${condition} ORDER BY G_CODE, PROCESS_NUMBER, STT
+          `;                  
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           
@@ -18422,11 +18430,11 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_INPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_INPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'`;          
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery); 
 
-          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;          
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);           
           //console.log(checkkq);
@@ -18442,19 +18450,19 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'`;          
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);  
 
-          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `;          
+          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;          
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);  
 
-          setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `; 
+          setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `; 
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
 
-          setpdQuery = `UPDATE P501 SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' `; 
+          setpdQuery = `UPDATE P501 SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `; 
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           
