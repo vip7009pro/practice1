@@ -6159,7 +6159,7 @@ WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN 
           CASE WHEN  (NOT (M100.EQ3 <> 'NA' AND M100.EQ3 <>'NO' AND M100.EQ3 <>'' AND M100.EQ3 is not null)) THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD3,0) END AS TON_CD3,
           CASE WHEN  (NOT (M100.EQ4 <> 'NA' AND M100.EQ4 <>'NO' AND M100.EQ4 <>'' AND M100.EQ4 is not null)) THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD4,0) END AS TON_CD4,
           M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, isnull(M100.LOSS_SX1,0) AS LOSS_SX1, isnull(M100.LOSS_SX2,0) AS LOSS_SX2, isnull(M100.LOSS_SETTING1,0) AS LOSS_SETTING1, isnull(M100.LOSS_SETTING2,0) AS LOSS_SETTING2,M100.Step3, M100.Step4, M100.EQ3, M100.EQ4, M100.UPH3, M100.UPH4, M100.Setting3, M100.Setting4, isnull(M100.LOSS_SX3,0) AS LOSS_SX3, isnull(M100.LOSS_SX4,0) AS LOSS_SX4, isnull(M100.LOSS_SETTING3,0) AS LOSS_SETTING3, isnull(M100.LOSS_SETTING4,0) AS LOSS_SETTING4, M100.NOTE, isnull(M100.LOSS_KT,0) AS LOSS_KT, ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME, LEATIMETB.LEADTIME AS AT_LEADTIME, LEATIMETB.ACC_TIME,
-		  CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX2,0)+isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull(M100.LOSS_KT,0)*1.0/100 + (isnull(LOSS_SETTING2,0)+isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000))) ELSE 0 END AS SLC_CD1,
+      CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX2,0)+isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull(M100.LOSS_KT,0)*1.0/100 + (isnull(LOSS_SETTING2,0)+isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000))) ELSE 0 END AS SLC_CD1,
 CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull(M100.LOSS_KT,0)*1.0/100 + (isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000))) ELSE 0 END AS SLC_CD2,
 CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX4,0))*1.0/100+isnull(M100.LOSS_KT,0)*1.0/100 + (isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000))) ELSE 0 END AS SLC_CD3,
 CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(M100.LOSS_KT,0)*1.0/100 + (0)*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000))) ELSE 0 END AS SLC_CD4
@@ -8184,7 +8184,6 @@ SGS_TB AS
 (
 SELECT CTR_CD,M_ID,DOC_TYPE,VER FROM RankedMaterials WHERE rn = 1 AND DOC_TYPE='SGS'
 )
-
 SELECT ZTB_MATERIAL_TB.M_ID, ZTB_MATERIAL_TB.M_NAME, ZTB_MATERIAL_TB.DESCR, ZTB_MATERIAL_TB.CUST_CD, M110.CUST_NAME_KD,ZTB_MATERIAL_TB.SSPRICE, ZTB_MATERIAL_TB.CMSPRICE, ZTB_MATERIAL_TB.SLITTING_PRICE ,ZTB_MATERIAL_TB.MASTER_WIDTH, ZTB_MATERIAL_TB.ROLL_LENGTH, ZTB_MATERIAL_TB.FSC, ZTB_MATERIAL_TB.FSC_CODE,ZTB_FSC_TB.FSC_NAME, ZTB_MATERIAL_TB.USE_YN,ZTB_MATERIAL_TB.EXP_DATE,
 TDS_TB.VER AS TDS_VER,
 SGS_TB.VER AS SGS_VER,
@@ -18414,7 +18413,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq1);
         })();
         break;
-        case "loadDefectProcessData":
+      case "loadDefectProcessData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18424,24 +18423,23 @@ ORDER BY PROD_REQUEST_NO ASC
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = ` WHERE ZTB_NG_SX100.CTR_CD='${DATA.CTR_CD}'`
-          if(DATA.G_CODE && DATA.G_CODE !=='') condition += ` AND ZTB_NG_SX100.G_CODE='${DATA.G_CODE}' `  
-          if(DATA.PROCESS_NUMBER && DATA.PROCESS_NUMBER !==-1) condition += ` AND ZTB_NG_SX100.PROCESS_NUMBER=${DATA.PROCESS_NUMBER} `
-          if(DATA.G_NAME && DATA.G_NAME !=='') condition += ` AND G_NAME LIKE '%${DATA.G_NAME}%'`
-          if(DATA.USE_YN) condition += ` AND ZTB_NG_SX100.USE_YN='${DATA.USE_YN}' `
-          if(!DATA.USE_YN) condition += ` AND ZTB_NG_SX100.USE_YN='Y' `
+          if (DATA.G_CODE && DATA.G_CODE !== '') condition += ` AND ZTB_NG_SX100.G_CODE='${DATA.G_CODE}' `
+          if (DATA.PROCESS_NUMBER && DATA.PROCESS_NUMBER !== -1) condition += ` AND ZTB_NG_SX100.PROCESS_NUMBER=${DATA.PROCESS_NUMBER} `
+          if (DATA.G_NAME && DATA.G_NAME !== '') condition += ` AND G_NAME LIKE '%${DATA.G_NAME}%'`
+          if (DATA.USE_YN) condition += ` AND ZTB_NG_SX100.USE_YN='${DATA.USE_YN}' `
+          if (!DATA.USE_YN) condition += ` AND ZTB_NG_SX100.USE_YN='Y' `
           let setpdQuery = `
           SELECT ZTB_NG_SX100.*, M100.G_NAME, M100.PROD_TYPE, M100.DESCR, M100.PROD_MODEL FROM ZTB_NG_SX100
           LEFT JOIN M100 ON M100.G_CODE = ZTB_NG_SX100.G_CODE AND M100.CTR_CD = ZTB_NG_SX100.CTR_CD
            ${condition} ORDER BY G_CODE, PROCESS_NUMBER, STT
-          `;                  
+          `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "resetKhoSX_IQC1":
+      case "resetKhoSX_IQC1":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18450,18 +18448,17 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_INPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'`;          
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_INPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'`;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery); 
-
-          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;          
+          checkkq = await queryDB(setpdQuery);
+          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);           
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "resetKhoSX_IQC2":
+      case "resetKhoSX_IQC2":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18470,28 +18467,23 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'`;          
-          console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
-
-          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;          
-          console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
-
-          setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `; 
+          let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_SUDUNG=null WHERE PLAN_ID_SUDUNG='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-
-          setpdQuery = `UPDATE P501 SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `; 
+          setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC', PLAN_ID_OUTPUT=null WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          
-
+          setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          setpdQuery = `UPDATE P501 SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "getMaterialDocData":
+      case "getMaterialDocData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18501,17 +18493,16 @@ ORDER BY PROD_REQUEST_NO ASC
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = ` WHERE CTR_CD='${DATA.CTR_CD}' AND USE_YN='Y' `
-          if(DATA.DOC_TYPE !=='ALL') condition += ` AND DOC_TYPE='${DATA.DOC_TYPE}' `
-          if(DATA.M_NAME !=='') condition += ` AND M_NAME LIKE '%${DATA.M_NAME}%'`
-          let setpdQuery = `SELECT * FROM ZTB_DOC_TB ${condition}`;          
+          if (DATA.DOC_TYPE !== 'ALL') condition += ` AND DOC_TYPE='${DATA.DOC_TYPE}' `
+          if (DATA.M_NAME !== '') condition += ` AND M_NAME LIKE '%${DATA.M_NAME}%'`
+          let setpdQuery = `SELECT * FROM ZTB_DOC_TB ${condition}`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-                 
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "checkDocVersion":
+      case "checkDocVersion":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18520,15 +18511,14 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `SELECT MAX(VER) AS VER FROM ZTB_DOC_TB WHERE M_ID=${DATA.M_ID} AND DOC_TYPE='${DATA.DOC_TYPE}' AND CTR_CD='${DATA.CTR_CD}' `;          
+          let setpdQuery = `SELECT MAX(VER) AS VER FROM ZTB_DOC_TB WHERE M_ID=${DATA.M_ID} AND DOC_TYPE='${DATA.DOC_TYPE}' AND CTR_CD='${DATA.CTR_CD}' `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-                 
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "insertMaterialDocData":
+      case "insertMaterialDocData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18537,15 +18527,14 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO ZTB_DOC_TB (CTR_CD,DOC_TYPE,M_ID,M_NAME,VER,FILE_NAME,FILE_UPLOADED,INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}','${DATA.DOC_TYPE}',${DATA.M_ID},'${DATA.M_NAME}',${DATA.VER},N'${DATA.FILE_NAME}', 'Y',GETDATE(),'${EMPL_NO}')`;          
+          let setpdQuery = `INSERT INTO ZTB_DOC_TB (CTR_CD,DOC_TYPE,M_ID,M_NAME,VER,FILE_NAME,FILE_UPLOADED,INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}','${DATA.DOC_TYPE}',${DATA.M_ID},'${DATA.M_NAME}',${DATA.VER},N'${DATA.FILE_NAME}', 'Y',GETDATE(),'${EMPL_NO}')`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-                 
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "updateMaterialDocData":
+      case "updateMaterialDocData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18554,15 +18543,14 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET USE_YN='${DATA.USE_YN}', REG_DATE='${DATA.REG_DATE}', EXP_DATE='${DATA.EXP_DATE}', EXP_YN='${DATA.EXP_YN}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE DOC_ID=${DATA.DOC_ID}`;          
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET USE_YN='${DATA.USE_YN}', REG_DATE='${DATA.REG_DATE}', EXP_DATE='${DATA.EXP_DATE}', EXP_YN='${DATA.EXP_YN}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE DOC_ID=${DATA.DOC_ID}`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-                 
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "updatePurApp":
+      case "updatePurApp":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18571,14 +18559,14 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET PUR_APP='${DATA.PUR_APP}', PUR_EMPL='${EMPL_NO}', PUR_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;          
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET PUR_APP='${DATA.PUR_APP}', PUR_EMPL='${EMPL_NO}', PUR_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);                 
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "updateDtcApp":
+      case "updateDtcApp":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18587,14 +18575,14 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET DTC_APP='${DATA.DTC_APP}', DTC_EMPL='${EMPL_NO}', DTC_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;          
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET DTC_APP='${DATA.DTC_APP}', DTC_EMPL='${EMPL_NO}', DTC_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);                 
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "updateRndApp":
+      case "updateRndApp":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -18603,15 +18591,13 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET RND_APP='${DATA.RND_APP}', RND_EMPL='${EMPL_NO}', RND_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;          
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET RND_APP='${DATA.RND_APP}', RND_EMPL='${EMPL_NO}', RND_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);                 
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        
-
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
