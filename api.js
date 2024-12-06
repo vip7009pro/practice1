@@ -2053,6 +2053,49 @@ exports.process_api = function async(req, res) {
               res.send(insert_dd);
             } else {
               let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
+              console.log(update_diemdanhQuery)
+              let update_dd = await queryDB(update_diemdanhQuery);
+              res.send(update_dd);
+              //console.log('da diem danh, update gia tri diem danh');
+            }
+          } else {
+            res.send("NO_LEADER");
+          }
+        })();
+        break;
+      case "setdiemdanhnhom2":
+        //console.log(qr);
+        (async () => {
+          let kqua;
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let CURRENT_TEAM = DATA.CURRENT_TEAM;
+          let CURRENT_CA = DATA.CURRENT_CA;
+          //console.log("CURRENT_TEAM:" + CURRENT_TEAM);
+          let diemdanhvalue = DATA.diemdanhvalue;
+          let EMPL_NO = DATA.EMPL_NO;
+          if (
+            JOB_NAME == "Leader" ||
+            JOB_NAME == "Sub Leader" ||
+            JOB_NAME == "Dept Staff" ||
+            JOB_NAME == "ADMIN"
+          ) {
+            var today = new Date();
+            //var today_format = moment().format('YYYY-MM-DD');
+            var today_format = moment().format("YYYY-MM-DD");
+            let checkAttQuery = `SELECT ON_OFF FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}'`;
+            //console.log(checkAttQuery);
+            let checkAttKQ = await queryDB(checkAttQuery);
+            //console.log('checkqa = ' + checkAttKQ);
+            //console.log(checkAttKQ);
+            if (checkAttKQ.tk_status === "NG") {
+              //console.log('Chua diem danh, se them moi diem danh');
+              let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${EMPL_NO}', '${today_format}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}')`;
+              console.log(insert_diemdanhQuery);
+              let insert_dd = await queryDB(insert_diemdanhQuery);
+              res.send(insert_dd);
+            } else {
+              let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
+              console.log(update_diemdanhQuery)
               let update_dd = await queryDB(update_diemdanhQuery);
               res.send(update_dd);
               //console.log('da diem danh, update gia tri diem danh');
@@ -6289,6 +6332,22 @@ CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull
           ////console.log(checkkq);
         })();
         break;
+      case "checkdiemdanh_empl":
+        (async () => {
+          ////console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `SELECT * FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO= '${DATA.EMPL_NO}' AND APPLY_DATE= '${DATA.APPLY_DATE}' `;
+          //${moment().format('YYYY-MM-DD')}
+          ////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+          ////console.log(checkkq);
+        })();
+        break;
       case "getchithidatatable":
         (async () => {
           ////console.log(DATA);
@@ -10378,10 +10437,12 @@ ON (DATEADD(day,+1,CHAMCONG0.CHECK_DATE) = ZTBEMPLINFOA.DATE_COLUMN AND CHAMCONG
              ZTBOFFREGISTRATIONTB.CA_NGHI, 
              ZTBATTENDANCETB.ON_OFF, 
              ZTBATTENDANCETB.OVERTIME_INFO, 
-             ZTBATTENDANCETB.OVERTIME, 
+             ZTBATTENDANCETB.OVERTIME,  
              ZTBREASON.REASON_NAME, 
              ZTBOFFREGISTRATIONTB.REMARK, 
              ZTBATTENDANCETB.XACNHAN,
+             ZTBATTENDANCETB.IN_TIME AS FIXED_IN_TIME,
+			  ZTBATTENDANCETB.OUT_TIME AS FIXED_OUT_TIME,
 			 XX.CHECK1,
 			 XX.CHECK2,
 			 XX.CHECK3,
@@ -10393,7 +10454,7 @@ ON (DATEADD(day,+1,CHAMCONG0.CHECK_DATE) = ZTBEMPLINFOA.DATE_COLUMN AND CHAMCONG
 			 XX.NEXT_CHECK3
 FROM 
 (SELECT DATE_COLUMN, CALV, NV_CCID, EMPL_NO, CMS_ID, FIRST_NAME, MIDLAST_NAME, DOB, HOMETOWN, SEX_CODE, ADD_PROVINCE, ADD_DISTRICT, ADD_COMMUNE, ADD_VILLAGE, PHONE_NUMBER, WORK_START_DATE, PASSWORD, EMAIL, WORK_POSITION_CODE, WORK_SHIFT_CODE, POSITION_CODE, JOB_CODE, FACTORY_CODE, WORK_STATUS_CODE, REMARK, ONLINE_DATETIME, EMPL_IMAGE, RESIGN_DATE, DATETABLE.CTR_CD FROM DATETABLE CROSS JOIN ZTBEMPLINFO WHERE DATETABLE.DATE_COLUMN BETWEEN @startdate AND @enddate ${condition} AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}') AS ZTBEMPLINFOA 
-	   LEFT JOIN (SELECT DATETABLE.CTR_CD, DATETABLE.DATE_COLUMN, ZTBATTENDANCETB.EMPL_NO,  ZTBATTENDANCETB.APPLY_DATE,  ZTBATTENDANCETB.ON_OFF,  ZTBATTENDANCETB.REMARK,  ZTBATTENDANCETB.OVERTIME_INFO, ZTBATTENDANCETB.OVERTIME, ZTBATTENDANCETB.XACNHAN,CURRENT_TEAM , ZTBATTENDANCETB.CURRENT_CA FROM DATETABLE LEFT JOIN ZTBATTENDANCETB ON (DATETABLE.DATE_COLUMN = ZTBATTENDANCETB.APPLY_DATE AND DATETABLE.CTR_CD = ZTBATTENDANCETB.CTR_CD) WHERE DATETABLE.DATE_COLUMN BETWEEN @startdate AND @enddate AND DATETABLE.CTR_CD='${DATA.CTR_CD}') AS ZTBATTENDANCETB ON (
+	   LEFT JOIN (SELECT DATETABLE.CTR_CD, DATETABLE.DATE_COLUMN, ZTBATTENDANCETB.EMPL_NO,ZTBATTENDANCETB.IN_TIME, ZTBATTENDANCETB.OUT_TIME,  ZTBATTENDANCETB.APPLY_DATE,  ZTBATTENDANCETB.ON_OFF,  ZTBATTENDANCETB.REMARK,  ZTBATTENDANCETB.OVERTIME_INFO, ZTBATTENDANCETB.OVERTIME, ZTBATTENDANCETB.XACNHAN,CURRENT_TEAM , ZTBATTENDANCETB.CURRENT_CA FROM DATETABLE LEFT JOIN ZTBATTENDANCETB ON (DATETABLE.DATE_COLUMN = ZTBATTENDANCETB.APPLY_DATE AND DATETABLE.CTR_CD = ZTBATTENDANCETB.CTR_CD) WHERE DATETABLE.DATE_COLUMN BETWEEN @startdate AND @enddate AND DATETABLE.CTR_CD='${DATA.CTR_CD}') AS ZTBATTENDANCETB ON (
          ZTBEMPLINFOA.EMPL_NO = ZTBATTENDANCETB.EMPL_NO AND ZTBEMPLINFOA.DATE_COLUMN = ZTBATTENDANCETB.APPLY_DATE AND ZTBEMPLINFOA.CTR_CD = ZTBATTENDANCETB.CTR_CD
        ) 
        LEFT JOIN ZTBSEX ON (
@@ -18554,7 +18615,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET USE_YN='${DATA.USE_YN}', REG_DATE='${DATA.REG_DATE}', EXP_DATE='${DATA.EXP_DATE}', EXP_YN='${DATA.EXP_YN}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE DOC_ID=${DATA.DOC_ID}`;
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET USE_YN='${DATA.USE_YN}', REG_DATE='${DATA.REG_DATE}', EXP_DATE='${DATA.EXP_DATE}', EXP_YN='${DATA.EXP_YN}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE DOC_ID=${DATA.DOC_ID} AND CTR_CD='${DATA.CTR_CD}'`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -18570,7 +18631,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET PUR_APP='${DATA.PUR_APP}', PUR_EMPL='${EMPL_NO}', PUR_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET PUR_APP='${DATA.PUR_APP}', PUR_EMPL='${EMPL_NO}', PUR_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID} AND CTR_CD='${DATA.CTR_CD}'`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -18586,7 +18647,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET DTC_APP='${DATA.DTC_APP}', DTC_EMPL='${EMPL_NO}', DTC_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET DTC_APP='${DATA.DTC_APP}', DTC_EMPL='${EMPL_NO}', DTC_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID} AND CTR_CD='${DATA.CTR_CD}'`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -18602,7 +18663,23 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTB_DOC_TB SET RND_APP='${DATA.RND_APP}', RND_EMPL='${EMPL_NO}', RND_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID}`;
+          let setpdQuery = `UPDATE ZTB_DOC_TB SET RND_APP='${DATA.RND_APP}', RND_EMPL='${EMPL_NO}', RND_APP_DATE=GETDATE() WHERE DOC_ID=${DATA.DOC_ID} AND CTR_CD='${DATA.CTR_CD}'`;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "fixTime":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `UPDATE ZTBATTENDANCETB SET IN_TIME='${DATA.IN_TIME}', OUT_TIME='${DATA.OUT_TIME}', ON_OFF=1 WHERE EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}' AND CTR_CD='${DATA.CTR_CD}'`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
