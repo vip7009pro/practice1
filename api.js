@@ -2089,13 +2089,13 @@ exports.process_api = function async(req, res) {
             //console.log(checkAttKQ);
             if (checkAttKQ.tk_status === "NG") {
               //console.log('Chua diem danh, se them moi diem danh');
-              let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${EMPL_NO}', '${today_format}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}')`;
-              console.log(insert_diemdanhQuery);
+              let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${DATA.EMPL_NO}', '${DATA.APPLY_DATE}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}')`;
+              //console.log(insert_diemdanhQuery);
               let insert_dd = await queryDB(insert_diemdanhQuery);
               res.send(insert_dd);
             } else {
-              let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
-              console.log(update_diemdanhQuery)
+              let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}'`;
+              //console.log(update_diemdanhQuery)
               let update_dd = await queryDB(update_diemdanhQuery);
               res.send(update_dd);
               //console.log('da diem danh, update gia tri diem danh');
@@ -18679,8 +18679,8 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE ZTBATTENDANCETB SET IN_TIME='${DATA.IN_TIME}', OUT_TIME='${DATA.OUT_TIME}', ON_OFF=1 WHERE EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}' AND CTR_CD='${DATA.CTR_CD}'`;
-          console.log(setpdQuery);
+          let setpdQuery = `UPDATE ZTBATTENDANCETB SET IN_TIME='${DATA.IN_TIME}', OUT_TIME='${DATA.OUT_TIME}' WHERE EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}' AND CTR_CD='${DATA.CTR_CD}'`;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
