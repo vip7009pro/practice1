@@ -1523,7 +1523,7 @@ exports.process_api = function async(req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `SELECT CUST_TYPE, CUST_CD, CUST_NAME_KD, CUST_NAME,  CUST_ADDR1, CUST_ADDR2,CUST_ADDR3,TAX_NO, CUST_NUMBER,  BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,  CHARGE_EMAIL AS EMAIL, REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL FROM M110 WHERE CTR_CD='${DATA.CTR_CD}'`;
+          query = `SELECT USE_YN,CUST_TYPE, CUST_CD, CUST_NAME_KD, CUST_NAME,  CUST_ADDR1, CUST_ADDR2,CUST_ADDR3,TAX_NO, CUST_NUMBER,  BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,  CHARGE_EMAIL AS EMAIL, REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL FROM M110 WHERE CTR_CD='${DATA.CTR_CD}'`;
           //console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -1537,7 +1537,7 @@ exports.process_api = function async(req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = `INSERT INTO M110 (CTR_CD, CUST_TYPE, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL,CUST_ADDR2, CUST_ADDR3, CHARGE_EMAIL) VALUES ('${DATA.CTR_CD}','${DATA.CUST_TYPE}','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}',N'${DATA.ADDR2}',N'${DATA.ADDR3}',N'${DATA.EMAIL}')`;
+          query = `INSERT INTO M110 (CTR_CD, CUST_TYPE, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL,CUST_ADDR2, CUST_ADDR3, CHARGE_EMAIL,USE_YN) VALUES ('${DATA.CTR_CD}','${DATA.CUST_TYPE}','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}',N'${DATA.ADDR2}',N'${DATA.ADDR3}',N'${DATA.EMAIL}','${DATA.USE_YN}')`;
           //console.log(query);
           kqua = await queryDB(query);
           //console.log(kqua);
@@ -1551,7 +1551,7 @@ exports.process_api = function async(req, res) {
           let kqua;
           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
           let query = "";
-          query = ` UPDATE M110 SET CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', CUST_ADDR2 =N'${DATA.CUST_ADDR2}',CUST_ADDR3 =N'${DATA.CUST_ADDR3}',CHARGE_EMAIL =N'${DATA.EMAIL}',TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND CUST_CD='${DATA.CUST_CD}'`;
+          query = ` UPDATE M110 SET USE_YN='${DATA.USE_YN}', CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', CUST_ADDR2 =N'${DATA.CUST_ADDR2}',CUST_ADDR3 =N'${DATA.CUST_ADDR3}',CHARGE_EMAIL =N'${DATA.EMAIL}',TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND CUST_CD='${DATA.CUST_CD}'`;
           //console.log(query);
           kqua = await queryDB(query);
           ////console.log(kqua);
@@ -18709,7 +18709,7 @@ ORDER BY PROD_REQUEST_NO ASC
 
           --PRINT(@machine);
 
-          DECLARE @query varchar(max), @query2 varchar(max)
+          DECLARE @query varchar(max), @query2 varchar(max), @query3 varchar(max)
           SELECT @query = '
           DECLARE @worktime int;
 			    SET @worktime = 900;
@@ -18761,7 +18761,8 @@ ORDER BY PROD_REQUEST_NO ASC
           LT4TB AS
           (
           SELECT EQ4 AS EQ_NAME, SUM(isnull(LT4,0)) AS LEADTIME FROM LEADTIMETB GROUP BY EQ4
-          ),
+          ),'
+          SELECT @query2 = '
           EQ_TB AS (
           SELECT DISTINCT SUBSTRING(EQ_NAME, 0, 3) AS EQ_NAME FROM ZTB_SX_EQ_STATUS WHERE CTR_CD=''${DATA.CTR_CD}''),
           YCSX_BALANCE_TB AS
@@ -18822,7 +18823,8 @@ ORDER BY PROD_REQUEST_NO ASC
 
           isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 AS ATT_WF_TO_EQ, 
           isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime AS ATT_WF_TO_EQ_CAPA,'
-          SELECT @query2='
+
+          SELECT @query3='
            CASE WHEN isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0) *1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime > EQ_OP_TB.MAN_FULL_CAPA THEN EQ_OP_TB.MAN_FULL_CAPA ELSE isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0) *1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime END AS RETAIN_WF_MIN_CAPA,
            CASE WHEN isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime > EQ_OP_TB.MAN_FULL_CAPA THEN EQ_OP_TB.MAN_FULL_CAPA ELSE isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime END AS ATT_WF_MIN_CAPA
            FROM EQ_SERIES
@@ -18834,10 +18836,10 @@ ORDER BY PROD_REQUEST_NO ASC
            LEFT JOIN YCSX_BALANCE_TB ON YCSX_BALANCE_TB.EQ_NAME = CAPA_TB.EQ_SERIES
            ORDER BY CAPA_TB.EQ_SERIES DESC
            '
-           print( @query + @query2)
-		       execute(@query + @query2)
+           print( @query + @query2 + @query3)
+		       execute(@query + @query2 + @query3)
           `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
