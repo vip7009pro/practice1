@@ -18845,6 +18845,42 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
+        case "loadProdProcessData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT * FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}' ORDER BY PROCESS_NUMBER ASC
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "addProdProcessData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          INSERT INTO ZTB_PROD_PROCESS_TB (CTR_CD, G_CODE, PROCESS_NUMBER, EQ_SERIES, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}', '${DATA.G_CODE}', ${DATA.PROCESS_NUMBER}, '${DATA.EQ_SERIES}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
