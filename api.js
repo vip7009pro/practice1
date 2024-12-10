@@ -9488,7 +9488,7 @@ execute(@query)
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let setpdQuery = `UPDATE  ZTB_SX_NG_MATERIAL SET OUT1_EMPL='${DATA.OUT1_EMPL}', OUT2_EMPL='${DATA.OUT2_EMPL}', OUT_CUST_CD='${DATA.OUT_CUST_CD}', OUT_PLAN_ID='${DATA.OUT_PLAN_ID}',REMARK_OUT='${DATA.REMARK_OUT}', QC_PASS ='Y', QC_PASS_EMPL ='${EMPL_NO}', QC_PASS_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND FAIL_ID=${DATA.FAIL_ID}`;
+          let setpdQuery = `UPDATE  ZTB_SX_NG_MATERIAL SET OUT1_EMPL='${DATA.OUT1_EMPL}', OUT2_EMPL='${DATA.OUT2_EMPL}', OUT_CUST_CD='${DATA.OUT_CUST_CD}', OUT_PLAN_ID='${DATA.OUT_PLAN_ID}',REMARK_OUT='${DATA.REMARK_OUT}', QC_PASS ='Y', QC_PASS_EMPL ='${EMPL_NO}', QC_PASS_DATE = GETDATE(),USE_YN='N' WHERE CTR_CD='${DATA.CTR_CD}' AND FAIL_ID=${DATA.FAIL_ID}`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
