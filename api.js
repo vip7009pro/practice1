@@ -18173,7 +18173,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-          UPDATE ZTB_SX_NG_MATERIAL SET IN2_EMPL='${DATA.IN2_EMPL}', UPD_EMPL='${DATA.IN2_EMPL}', UPD_DATE= GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND FAIL_ID=${DATA.FAIL_ID} 
+          UPDATE ZTB_SX_NG_MATERIAL SET IN2_EMPL='${DATA.IN2_EMPL.toUpperCase()}', UPD_EMPL='${DATA.IN2_EMPL.toUpperCase()}', UPD_DATE= GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND FAIL_ID=${DATA.FAIL_ID} 
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
