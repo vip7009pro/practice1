@@ -6309,6 +6309,7 @@ CASE WHEN M100.PD <> 0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull
           LEFT JOIN  BB ON (BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO AND BB.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
           LEFT JOIN LOSSKT ON (LOSSKT.G_CODE = ZTB_QLSXPLAN.G_CODE AND LOSSKT.CTR_CD = ZTB_QLSXPLAN.CTR_CD)
           ${condition} AND ZTB_QLSXPLAN.CTR_CD='${DATA.CTR_CD}' ORDER BY ZTB_QLSXPLAN.PLAN_EQ ASC,  ZTB_QLSXPLAN.PLAN_ORDER ASC `;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           res.send(checkkq);
           ////console.log(checkkq);
@@ -16265,6 +16266,25 @@ WHERE ZTB_QUOTATION_CALC_TB.CTR_CD = '${DATA.CTR_CD}'
           res.send(checkkq);
         })();
         break;
+      case "insertDBYCSX_New":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            INSERT INTO ZTB_DM_HISTORY2
+            SELECT '${DATA.CTR_CD}' AS CTR_CD, '${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO,PROCESS_NUMBER,EQ_SERIES,SETTING_TIME,UPH,STEP,LOSS_SX,LOSS_SETTING,FACTORY,GETDATE() AS INS_DATE,'${EMPL_NO}' AS INS_EMPL,GETDATE() AS UPD_DATE,'${EMPL_NO}' AS UPD_EMPL FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}'
+            `;         
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "updateDBYCSX":
         (async () => {
           let DATA = qr["DATA"];
@@ -16275,7 +16295,42 @@ WHERE ZTB_QUOTATION_CALC_TB.CTR_CD = '${DATA.CTR_CD}'
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `
-            UPDATE ZTB_DM_HISTORY SET LOSS_SX1='${DATA.LOSS_SX1}',LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SX3='${DATA.LOSS_SX3}',LOSS_SX4='${DATA.LOSS_SX4}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',LOSS_SETTING3='${DATA.LOSS_SETTING3}',LOSS_SETTING4='${DATA.LOSS_SETTING4}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE(), LOSS_KT=${DATA.LOSS_KT} WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' 
+            UPDATE ZTB_DM_HISTORY SET LOSS_SX1='${DATA.LOSS_SX1}',LOSS_SX2='${DATA.LOSS_SX2}',LOSS_SX3='${DATA.LOSS_SX3}',LOSS_SX4='${DATA.LOSS_SX4}',LOSS_SETTING1='${DATA.LOSS_SETTING1}',LOSS_SETTING2='${DATA.LOSS_SETTING2}',LOSS_SETTING3='${DATA.LOSS_SETTING3}',LOSS_SETTING4='${DATA.LOSS_SETTING4}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE(), LOSS_KT=${DATA.LOSS_KT} WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'  
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "updateDBYCSX_New":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            MERGE INTO ZTB_DM_HISTORY2
+            USING (
+              SELECT * FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}'
+            )
+            AS SRC_TB
+            ON SRC_TB.CTR_CD = ZTB_DM_HISTORY2.CTR_CD AND SRC_TB.PROCESS_NUMBER = ZTB_DM_HISTORY2.PROCESS_NUMBER AND ZTB_DM_HISTORY2.PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'
+            WHEN MATCHED THEN
+            UPDATE
+            SET 
+            EQ_SERIES = SRC_TB.EQ_SERIES,
+            SETTING_TIME = SRC_TB.SETTING_TIME,
+            UPH = SRC_TB.UPH,
+            STEP = SRC_TB.STEP,
+            LOSS_SX = SRC_TB.LOSS_SX,
+            LOSS_SETTING = SRC_TB.LOSS_SETTING,
+            FACTORY = SRC_TB.FACTORY,
+            UPD_DATE = GETDATE(),
+            UPD_EMPL = 'NHU1903';
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -16294,6 +16349,24 @@ WHERE ZTB_QUOTATION_CALC_TB.CTR_CD = '${DATA.CTR_CD}'
           let checkkq = "OK";
           let setpdQuery = `
              DELETE FROM ZTB_DM_HISTORY WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'
+            `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "deleteDMYCSX2":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+             DELETE FROM ZTB_DM_HISTORY2 WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'
             `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -18565,7 +18638,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}' AND USE_YN='Y' `
+          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}'`
           if (DATA.DOC_TYPE !== 'ALL') condition += ` AND DOC_TYPE='${DATA.DOC_TYPE}' `
           if (DATA.M_NAME !== '') condition += ` AND M_NAME LIKE '%${DATA.M_NAME}%'`
           let setpdQuery = `SELECT * FROM ZTB_DOC_TB ${condition}`;
@@ -18881,6 +18954,141 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
+        case "addProdProcessDataQLSX":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          INSERT INTO ZTB_PROD_PROCESS_TB (CTR_CD, G_CODE, PROCESS_NUMBER, EQ_SERIES,SETTING_TIME, UPH, STEP, LOSS_SX, LOSS_SETTING, FACTORY, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}', '${DATA.G_CODE}', ${DATA.PROCESS_NUMBER}, '${DATA.EQ_SERIES}', ${DATA.SETTING_TIME}, ${DATA.UPH}, ${DATA.STEP},${DATA.LOSS_SX}, ${DATA.LOSS_SETTING}, '${DATA.FACTORY}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateProdProcessData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          UPDATE ZTB_PROD_PROCESS_TB SET EQ_SERIES='${DATA.EQ_SERIES}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}' AND PROCESS_NUMBER=${DATA.PROCESS_NUMBER}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateProdProcessDataQLSX":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          UPDATE ZTB_PROD_PROCESS_TB SET EQ_SERIES='${DATA.EQ_SERIES}',SETTING_TIME=${DATA.SETTING_TIME}, UPH=${DATA.UPH}, STEP =${DATA.STEP}, LOSS_SX=${DATA.LOSS_SX}, LOSS_SETTING=${DATA.LOSS_SETTING}, UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}' AND PROCESS_NUMBER=${DATA.PROCESS_NUMBER}
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "deleteProdProcessData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          DELETE FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "deleteProcessNotInCurrentListFromDataBase":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          DELETE FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER NOT IN (${DATA.PROCESS_NUMBER_LIST}) AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "checkProcessExist":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT COUNT(*) AS COUNT_QTY FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER='${DATA.PROCESS_NUMBER}' AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "autoUpdateDocUSEYN_EXP":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          MERGE INTO ZTB_DOC_TB
+          USING
+          (
+          SELECT * FROM ZTB_DOC_TB WHERE EXP_DATE <= GETDATE() AND EXP_YN='Y' AND CTR_CD='${DATA.CTR_CD}'
+          ) AS SRC_TB
+          ON (SRC_TB.CTR_CD = ZTB_DOC_TB.CTR_CD AND SRC_TB.DOC_ID = ZTB_DOC_TB.DOC_ID)
+          WHEN MATCHED THEN
+          UPDATE 
+          SET USE_YN='N';
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
