@@ -18987,9 +18987,6 @@ ORDER BY PROD_REQUEST_NO ASC
           setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          setpdQuery = `UPDATE P501 SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
-          console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
