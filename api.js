@@ -5216,7 +5216,7 @@ WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN 
             condition += ` AND M090.M_CODE = '${DATA.M_CODE}'`;
           }
           if (DATA.JUSTBALANCE === true) {
-            condition += ` AND ((STOCK_CFM_NM1 + STOCK_CFM_NM2)  <>0 OR (HOLDING_CFM_NM1+ HOLDING_CFM_NM2) <>0)`;
+            condition += ` AND ((isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0))  <>0 OR (isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0)) <>0)`;
           }
           let setpdQuery = `SELECT TDS, M_CODE, M_NAME, WIDTH_CD, isnull(STOCK_CFM_NM1,0) AS TON_NM1, isnull(STOCK_CFM_NM2,0) AS TON_NM2, isnull(HOLDING_CFM_NM1,0) AS HOLDING_NM1, isnull(HOLDING_CFM_NM2,0) AS HOLDING_NM2, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0)) AS TOTAL_OK, (isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM1,0)) AS TOTAL_HOLDING FROM M090  ${condition}`;
           ////console.log(setpdQuery);
