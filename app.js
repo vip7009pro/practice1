@@ -87,6 +87,10 @@ io.on("connection", (client) => {
     io.sockets.emit("notification", data);
     console.log(data);
   });
+  client.on("notification_panel", (data) => {
+    io.sockets.emit("notification_panel", data);
+    console.log(data);    
+  })
   client.on("online_list", (data) => {
     console.log(data);
   });
@@ -144,6 +148,10 @@ ios.on("connection", (client) => {
     ios.sockets.emit("setWebVer", data);
     console.log(data);
   });
+  client.on("notification_panel", (data) => {
+    ios.sockets.emit("notification_panel", data);
+    console.log(data);    
+  })
   client.on("login", (data) => {
     if (client_array.filter(item => item.EMPL_NO === data.EMPL_NO).length === 0) client_array.push(data);
     ios.sockets.emit("online_list", client_array);
