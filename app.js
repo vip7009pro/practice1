@@ -118,6 +118,9 @@ io.on("connection", (client) => {
     io.sockets.emit("online_list", client_array);
   });
 });
+const emitSocketCSharp = (command,data) => {
+  io.sockets.emit(command, data);
+}
 const ios = require("socket.io")(server_s, {
   cors: {
     origin: "*",
@@ -247,6 +250,47 @@ app.post("/api", function (req, res) {
     qr["command"] == "login3"
   ) {
     api_module.process_api(req, res);
+  } else {
+    console.log("loi cmnr");
+    res.send({ tk_status: "ng" });
+  }
+});
+app.post("/api2", function (req, res) {
+  const clientIpV4 = req.ip.split(':').pop(); 
+  //console.log('Client IP: ' + clientIpV4);
+  //api_module.process_api(req,res);
+  var qr = req.body;
+  if (
+    req.coloiko == "kocoloi" ||
+    qr["command"] == "login" ||
+    qr["command"] == "login2" ||
+    qr["command"] == "login3"
+  ) {
+    api_module.process_api(req, res);
+    console.log("vao api2");  
+    let DATA = req.body['DATA'];
+    console.log(DATA);
+    
+   
+      let newNotification= {
+        CTR_CD: '002',
+        NOTI_ID: -1,
+        NOTI_TYPE: "success",
+        TITLE: 'Test notification from C#',
+        CONTENT: `Test notification Content from C#`,
+        SUBDEPTNAME: "QC",
+        MAINDEPTNAME: "QC",
+        INS_EMPL: 'NHU1903',
+        INS_DATE: '2024-12-30',
+        UPD_EMPL: 'NHU1903',
+        UPD_DATE: '2024-12-30',
+      }  
+      console.log(newNotification);
+      emitSocketCSharp("notification_panel", DATA);
+      
+      
+   
+    res.send({ tk_status: "OK" });
   } else {
     console.log("loi cmnr");
     res.send({ tk_status: "ng" });

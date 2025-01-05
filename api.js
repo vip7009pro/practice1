@@ -1070,7 +1070,7 @@ exports.process_api = function async(req, res) {
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO='${EMPL_NO}' AND CTR_CD='${DATA.CTR_CD}'`;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log('ketqua check login',checkkq);
           if (checkkq.data[0].WORK_STATUS_CODE === 0) {
@@ -5654,6 +5654,105 @@ GROUP BY TONKHOFULL.G_NAME_KD`;
           res.send(checkkq);
         })();
         break;
+      case "traSTOCKCMS_NEW": //chua update CTR_CD
+        (async () => {
+          ////console.log(DATA);
+          let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.G_CODE !== "") {
+            condition += ` AND M100.G_CODE = '${DATA.G_CODE}' `;
+          }
+          if (DATA.G_NAME !== "") {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
+          }
+          if (DATA.JUSTBALANCE !== false) {
+            condition += `AND (THANHPHAM.TONKHO >0 OR TONKIEM_NEW.INSPECT_BALANCE_QTY >0 OR BTP.BTP_QTY_EA > 0)`;
+          }
+          let setpdQuery = `WITH CTE_THANHPHAM AS (
+    SELECT 
+        Product_MaVach AS G_CODE, 
+        SUM(CASE WHEN IO_type = 'IN' THEN IO_Qty ELSE 0 END) AS NHAPKHO,
+        SUM(CASE WHEN IO_type = 'OUT' THEN IO_Qty ELSE 0 END) AS XUATKHO,
+        SUM(CASE WHEN IO_type = 'OUT' AND IO_Status = 'Pending' THEN IO_Qty ELSE 0 END) AS XUATKHO_PD,
+        SUM(CASE WHEN IO_type = 'IN' THEN IO_Qty ELSE 0 END) - SUM(CASE WHEN IO_type = 'OUT' THEN IO_Qty ELSE 0 END) AS TONKHO,
+        SUM(CASE WHEN IO_type = 'OUT' AND (IO_Status <> 'Pending' OR IO_Status IS NULL) THEN IO_Qty ELSE 0 END) AS XUATKHO_TT,
+        SUM(CASE WHEN IO_type = 'IN' THEN IO_Qty ELSE 0 END) - SUM(CASE WHEN IO_type = 'OUT' AND (IO_Status <> 'Pending' OR IO_Status IS NULL) THEN IO_Qty ELSE 0 END) AS TONKHO_TT
+    FROM tbl_InputOutput
+    GROUP BY Product_MaVach
+),
+CTE_TONKIEM AS (
+    SELECT 
+        ZTB_WAIT_INSPECT.G_CODE,
+        M100.G_NAME,
+        M100.G_NAME_KD,
+        SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY,
+        SUM(WAIT_CS_QTY) AS WAIT_CS_QTY,
+        SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA,
+        SUM(INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA) AS TOTAL_WAIT
+    FROM ZTB_WAIT_INSPECT
+    INNER JOIN M100 ON M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE
+    WHERE UPDATE_DATE = CONVERT(DATE, GETDATE()) AND CALAMVIEC = 'DEM'
+    GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD
+),
+CTE_TONKIEM_NEW AS (
+    SELECT 
+        CTR_CD, 
+        G_CODE, 
+        SUM(INPUT_QTY_EA) AS INSPECT_BALANCE_QTY 
+    FROM ZTBINSPECTINPUTTB
+    WHERE INSPECT_YN = 'Y' AND P400_YN = 'Y'
+    GROUP BY CTR_CD, G_CODE
+),
+CTE_BLOCK_TABLE AS (
+    SELECT 
+        Product_MaVach, 
+        SUM(Block_Qty) AS Block_Qty
+    FROM tbl_Block2
+    GROUP BY Product_MaVach
+),
+CTE_BTP AS (
+    SELECT 
+        ZTB_HALF_GOODS.G_CODE,
+        M100.G_NAME,
+        SUM(BTP_QTY_EA) AS BTP_QTY_EA
+    FROM ZTB_HALF_GOODS
+    INNER JOIN M100 ON M100.G_CODE = ZTB_HALF_GOODS.G_CODE
+    WHERE UPDATE_DATE = CONVERT(DATE, GETDATE())
+    GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME
+)
+SELECT 
+    M100.G_CODE,
+    M100.G_NAME,
+    M100.G_NAME_KD,
+    ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) AS CHO_KIEM,
+    ISNULL(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK,
+    ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) AS CHO_KIEM_RMA,
+    ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) 
+    + ISNULL(TONKIEM.WAIT_CS_QTY, 0) 
+    + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) AS TONG_TON_KIEM,
+    ISNULL(BTP.BTP_QTY_EA, 0) AS BTP,
+    ISNULL(THANHPHAM.TONKHO, 0) AS TON_TP,
+    ISNULL(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY,
+    ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) 
+    + ISNULL(TONKIEM.WAIT_CS_QTY, 0) 
+    + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) 
+    + ISNULL(BTP.BTP_QTY_EA, 0) 
+    + ISNULL(THANHPHAM.TONKHO, 0) 
+    - ISNULL(tbl_Block_table2.Block_Qty, 0) AS GRAND_TOTAL_STOCK,
+    ISNULL(THANHPHAM.XUATKHO_PD, 0) AS PENDINGXK,
+    ISNULL(THANHPHAM.TONKHO_TT, 0) AS TON_TPTT
+FROM M100
+LEFT JOIN CTE_THANHPHAM AS THANHPHAM ON THANHPHAM.G_CODE = M100.G_CODE
+LEFT JOIN CTE_TONKIEM AS TONKIEM ON M100.G_CODE = TONKIEM.G_CODE
+LEFT JOIN CTE_TONKIEM_NEW AS TONKIEM_NEW ON M100.G_CODE = TONKIEM_NEW.G_CODE
+LEFT JOIN CTE_BLOCK_TABLE AS tbl_Block_table2 ON tbl_Block_table2.Product_MaVach = M100.G_CODE
+LEFT JOIN CTE_BTP AS BTP ON BTP.G_CODE = M100.G_CODE ${condition} `;
+          //////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          ////console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       case "traSTOCKKD": //chua update CTR_CD
         (async () => {
           ////console.log(DATA);
@@ -5768,6 +5867,100 @@ GROUP BY TONKHOFULL.G_NAME_KD`;
           ) AS BTP ON (
             BTP.G_CODE = THANHPHAM.Product_MaVach
           ) ${condition} GROUP BY M100.G_NAME_KD`;
+          //////console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          ////console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "traSTOCKKD_NEW": //chua update CTR_CD
+        (async () => {
+          ////console.log(DATA);
+          let checkkq = "OK";
+          let condition = " WHERE 1=1 ";
+          if (DATA.G_NAME !== "") {
+            condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%' `;
+          }
+          if (DATA.JUSTBALANCE !== false) {
+            condition += `AND (THANHPHAM.TONKHO >0  OR TONKIEM_NEW.INSPECT_BALANCE_QTY > 0 OR BTP.BTP_QTY_EA > 0) `;
+          }
+          let setpdQuery = `WITH CTE_THANHPHAM AS (
+    SELECT 
+        Product_MaVach, 
+        SUM(CASE WHEN IO_type = 'IN' THEN IO_Qty ELSE 0 END) AS NHAPKHO,
+        SUM(CASE WHEN IO_type = 'OUT' THEN IO_Qty ELSE 0 END) AS XUATKHO,
+        SUM(CASE WHEN IO_type = 'OUT' AND IO_Status = 'Pending' THEN IO_Qty ELSE 0 END) AS XUATKHO_PD,
+        SUM(CASE WHEN IO_type = 'IN' THEN IO_Qty ELSE 0 END) - SUM(CASE WHEN IO_type = 'OUT' THEN IO_Qty ELSE 0 END) AS TONKHO,
+        SUM(CASE WHEN IO_type = 'OUT' AND (IO_Status <> 'Pending' OR IO_Status IS NULL) THEN IO_Qty ELSE 0 END) AS XUATKHO_TT,
+        SUM(CASE WHEN IO_type = 'IN' THEN IO_Qty ELSE 0 END) - SUM(CASE WHEN IO_type = 'OUT' AND (IO_Status <> 'Pending' OR IO_Status IS NULL) THEN IO_Qty ELSE 0 END) AS TONKHO_TT
+    FROM tbl_InputOutput
+    GROUP BY Product_MaVach
+),
+CTE_TONKIEM AS (
+    SELECT 
+        ZTB_WAIT_INSPECT.G_CODE, 
+        M100.G_NAME, 
+        M100.G_NAME_KD, 
+        SUM(INSPECT_BALANCE_QTY) AS INSPECT_BALANCE_QTY, 
+        SUM(WAIT_CS_QTY) AS WAIT_CS_QTY, 
+        SUM(WAIT_SORTING_RMA) AS WAIT_SORTING_RMA, 
+        SUM(INSPECT_BALANCE_QTY + WAIT_CS_QTY + WAIT_SORTING_RMA) AS TOTAL_WAIT
+    FROM ZTB_WAIT_INSPECT
+    JOIN M100 ON M100.G_CODE = ZTB_WAIT_INSPECT.G_CODE
+    WHERE UPDATE_DATE = CONVERT(date, GETDATE()) AND CALAMVIEC = 'DEM'
+    GROUP BY ZTB_WAIT_INSPECT.G_CODE, M100.G_NAME, M100.G_NAME_KD
+),
+CTE_TONKIEM_NEW AS (
+    SELECT 
+        CTR_CD, 
+        G_CODE, 
+        SUM(INPUT_QTY_EA) AS INSPECT_BALANCE_QTY
+    FROM ZTBINSPECTINPUTTB
+    WHERE INSPECT_YN = 'Y' AND P400_YN = 'Y'
+    GROUP BY CTR_CD, G_CODE
+),
+CTE_BLOCK_TABLE AS (
+    SELECT 
+        Product_MaVach, 
+        SUM(Block_Qty) AS Block_Qty
+    FROM tbl_Block2
+    GROUP BY Product_MaVach
+),
+CTE_BTP AS (
+    SELECT 
+        ZTB_HALF_GOODS.G_CODE, 
+        M100.G_NAME, 
+        SUM(BTP_QTY_EA) AS BTP_QTY_EA
+    FROM ZTB_HALF_GOODS
+    JOIN M100 ON M100.G_CODE = ZTB_HALF_GOODS.G_CODE
+    WHERE UPDATE_DATE = CONVERT(date, GETDATE())
+    GROUP BY ZTB_HALF_GOODS.G_CODE, M100.G_NAME
+)
+SELECT 
+    M100.G_NAME_KD, 
+    SUM(ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0)) AS CHO_KIEM, 
+    SUM(ISNULL(TONKIEM.WAIT_CS_QTY, 0)) AS CHO_CS_CHECK, 
+    SUM(ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)) AS CHO_KIEM_RMA, 
+    SUM(ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)) AS TONG_TON_KIEM, 
+    SUM(ISNULL(BTP.BTP_QTY_EA, 0)) AS BTP, 
+    SUM(ISNULL(THANHPHAM.TONKHO, 0)) AS TON_TP,
+    SUM(ISNULL(THANHPHAM.XUATKHO_PD, 0)) AS PENDINGXK,
+    SUM(ISNULL(THANHPHAM.TONKHO_TT, 0)) AS TON_TPTT,
+    SUM(ISNULL(tbl_Block_table2.Block_Qty, 0)) AS BLOCK_QTY, 
+    SUM(
+        ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)
+        + ISNULL(TONKIEM.WAIT_CS_QTY, 0) 
+        + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)
+        + ISNULL(BTP.BTP_QTY_EA, 0) 
+        + ISNULL(THANHPHAM.TONKHO, 0) 
+        - ISNULL(tbl_Block_table2.Block_Qty, 0)
+    ) AS GRAND_TOTAL_STOCK
+FROM M100
+LEFT JOIN CTE_THANHPHAM AS THANHPHAM ON THANHPHAM.Product_MaVach = M100.G_CODE
+LEFT JOIN CTE_TONKIEM AS TONKIEM ON M100.G_CODE = TONKIEM.G_CODE
+LEFT JOIN CTE_TONKIEM_NEW AS TONKIEM_NEW ON M100.G_CODE = TONKIEM_NEW.G_CODE
+LEFT JOIN CTE_BLOCK_TABLE AS tbl_Block_table2 ON tbl_Block_table2.Product_MaVach = M100.G_CODE
+LEFT JOIN CTE_BTP AS BTP ON BTP.G_CODE = M100.G_CODE ${condition} GROUP BY M100.G_NAME_KD`;
           //////console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
