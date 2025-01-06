@@ -20531,6 +20531,24 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
+        case "isM_LOT_NO_in_O302":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          SELECT * FROM O302 WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
         case "load_Notification_Data":
         (async () => {
           let DATA = qr["DATA"];
