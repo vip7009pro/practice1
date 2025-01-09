@@ -20598,7 +20598,25 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-
+        case "check_G_NAME_2Ver_active":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            SELECT  DISTINCT G_NAME_KD, REV_NO ,USE_YN FROM M100 WHERE G_NAME_KD IN (
+SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
