@@ -310,8 +310,10 @@ function generate_condition_get_ycsx(
   $material,
   $inspect_input,
   $phanloaihang,
-  $ctr_cd
+  $ctr_cd,
+  $material_yes
 ) {
+  console.log('material yes :::: ', $material_yes)
   $condition = ` WHERE P400.CTR_CD= '${$ctr_cd}' `;
   $temp_start_date = moment($start_date).format("YYYYMMDD");
   $temp_end_date = moment($end_date).format("YYYYMMDD");
@@ -374,6 +376,13 @@ function generate_condition_get_ycsx(
   else {
     $phanloaihang = '';
   }
+  console.log('material_yes',$material_yes)
+  if($material_yes){
+    $material_yes = ` AND P400.MATERIAL_YN='Y' `;
+  }
+  else {
+    $material_yes = '';
+  }
   $condition =
     $condition +
     $inspect_time_checkvalue +
@@ -387,7 +396,9 @@ function generate_condition_get_ycsx(
     $phan_loai +
     $prod_request_no +
     $ycsxpending +
-    $phanloaihang;
+    $phanloaihang +
+    $material_yes;
+    console.log($condition)
   return $condition;
 }
 function generate_condition_get_inspection_input(
@@ -3125,6 +3136,7 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
                     P400.PROD_REQUEST_DATE,
                     P400.PROD_REQUEST_QTY,		 
                     P400.USE_YN, 
+                    P400.MATERIAL_YN,
                     isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) AS LOT_TOTAL_INPUT_QTY_EA,
                     isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
                 isnull(WH_TABLE.INPUT_QTY,0) AS INPUT_QTY,
@@ -3201,7 +3213,8 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
             DATA.material,
             DATA.inspect_inputcheck,
             DATA.phanloaihang,
-            DATA.CTR_CD
+            DATA.CTR_CD,
+            DATA.material_yes
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -3212,6 +3225,7 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
       case "traYCSXDataFull_QLSX":
         (async () => {
           ////console.log(DATA);
+          console.log(DATA.material_yes);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
           let setpdQuery = `
@@ -3328,6 +3342,7 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
                     P400.PROD_REQUEST_DATE,
                     P400.DELIVERY_DT,
                     P400.PL_HANG,
+                    P400.MATERIAL_YN,
                     P400.PROD_REQUEST_QTY,                  
                    CASE WHEN (P400.YCSX_PENDING =0 OR isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY) THEN 0 ELSE 1 END AS YCSX_PENDING,
                     P400.CODE_55 AS PHAN_LOAI,
@@ -3373,7 +3388,8 @@ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(
             DATA.material,
             DATA.inspect_inputcheck,
             DATA.phanloaihang,
-            DATA.CTR_CD
+            DATA.CTR_CD,
+            DATA.material_yes
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
@@ -3576,7 +3592,8 @@ MAX(SLC) FOR PROCESS_NUMBER IN ([1], [2], [3], [4], [5]) -- Add as many process 
             DATA.material,
             DATA.inspect_inputcheck,
             DATA.phanloaihang,
-            DATA.CTR_CD
+            DATA.CTR_CD,
+            DATA.material_yes
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
           checkkq = await queryDB(setpdQuery);
           console.log(setpdQuery);
@@ -3681,7 +3698,7 @@ MAX(SLC) FOR PROCESS_NUMBER IN ([1], [2], [3], [4], [5]) -- Add as many process 
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO, PL_HANG) VALUES ('${DATA.CTR_CD}',FORMAT(GETDATE(), 'yyyyMMdd'),'${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK ?? ''}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}','${DATA.PHANLOAI}')`;
+          let setpdQuery = `INSERT INTO P400 (CTR_CD, PROD_REQUEST_DATE,PROD_REQUEST_NO,CODE_50,CODE_03,CODE_55,G_CODE,RIV_NO,PROD_REQUEST_QTY,CUST_CD,EMPL_NO,REMK,USE_YN,DELIVERY_DT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,YCSX_PENDING,G_CODE2,PO_TDYCSX,TKHO_TDYCSX,FCST_TDYCSX,W1,W2,W3,W4,W5,W6,W7,W8,BTP_TDYCSX,CK_TDYCSX,PDUYET,BLOCK_TDYCSX,PO_NO, PL_HANG, MATERIAL_YN) VALUES ('${DATA.CTR_CD}',FORMAT(GETDATE(), 'yyyyMMdd'),'${DATA.PROD_REQUEST_NO}','${DATA.CODE_50}','${DATA.CODE_03}','${DATA.CODE_55}','${DATA.G_CODE}','${DATA.RIV_NO}','${DATA.PROD_REQUEST_QTY}','${DATA.CUST_CD}','${DATA.EMPL_NO}',N'${DATA.REMK ?? ''}','${DATA.USE_YN}','${DATA.DELIVERY_DT}',GETDATE(),'${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}','${DATA.YCSX_PENDING}','${DATA.G_CODE2}','${DATA.PO_TDYCSX}','${DATA.TKHO_TDYCSX}','${DATA.FCST_TDYCSX}','${DATA.W1}','${DATA.W2}','${DATA.W3}','${DATA.W4}','${DATA.W5}','${DATA.W6}','${DATA.W7}','${DATA.W8}','${DATA.BTP_TDYCSX}','${DATA.CK_TDYCSX}','${DATA.PDUYET}','${DATA.BLOCK_TDYCSX}','${DATA.PO_NO}','${DATA.PHANLOAI}','${DATA.MATERIAL_YN}')`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -3759,13 +3776,7 @@ MAX(SLC) FOR PROCESS_NUMBER IN ([1], [2], [3], [4], [5]) -- Add as many process 
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID, PROCESS_NUMBER, TEMP_QTY) VALUES  ('${DATA.CTR_CD}','${DATA.in_date
-            }','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(
-              4,
-              7
-            )}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq
-            }','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO
-            }',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER ?? 0}, ${DATA.TEMP_QTY ?? 0})`;
+          let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID, PROCESS_NUMBER, TEMP_QTY, USE_YN) VALUES  ('${DATA.CTR_CD}','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER ?? 0}, ${DATA.TEMP_QTY ?? 0},'${DATA.USE_YN}')`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -4227,10 +4238,10 @@ TONKHOFULL AS (
         ISNULL(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK, 
         ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) AS CHO_KIEM_RMA, 
         (ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)) AS TONG_TON_KIEM, 
-        ISNULL(BTP.BTP_QTY_EA, 0) AS BTP, 
+        ISNULL(M100.BTP_QTY, 0) AS BTP, 
         ISNULL(THANHPHAM.TONKHO, 0) AS TON_TP, 
         ISNULL(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY, 
-        (ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) + ISNULL(BTP.BTP_QTY_EA, 0) + ISNULL(THANHPHAM.TONKHO, 0) - ISNULL(tbl_Block_table2.Block_Qty, 0)) AS GRAND_TOTAL_STOCK 
+        (ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) + ISNULL(M100.BTP_QTY, 0) + ISNULL(THANHPHAM.TONKHO, 0) - ISNULL(tbl_Block_table2.Block_Qty, 0)) AS GRAND_TOTAL_STOCK 
     FROM 
         M100 
         LEFT JOIN THANHPHAM ON (
@@ -5148,10 +5159,10 @@ CTE_TONKHOFULL AS (
         ISNULL(TONKIEM.WAIT_CS_QTY, 0) AS CHO_CS_CHECK, 
         ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) AS CHO_KIEM_RMA, 
         (ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)) AS TONG_TON_KIEM, 
-        ISNULL(BTP.BTP_QTY_EA, 0) AS BTP, 
+        ISNULL(M100.BTP_QTY, 0) AS BTP, 
         ISNULL(THANHPHAM.TONKHO, 0) AS TON_TP, 
         ISNULL(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY, 
-        (ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) + ISNULL(BTP.BTP_QTY_EA, 0) + ISNULL(THANHPHAM.TONKHO, 0) - ISNULL(tbl_Block_table2.Block_Qty, 0)) AS GRAND_TOTAL_STOCK
+        (ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) + ISNULL(M100.BTP_QTY, 0) + ISNULL(THANHPHAM.TONKHO, 0) - ISNULL(tbl_Block_table2.Block_Qty, 0)) AS GRAND_TOTAL_STOCK
     FROM 
         M100
         LEFT JOIN (
@@ -5231,7 +5242,7 @@ FROM
 GROUP BY 
   TONKHOFULL.G_NAME_KD
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
@@ -5735,13 +5746,13 @@ SELECT
     ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) 
     + ISNULL(TONKIEM.WAIT_CS_QTY, 0) 
     + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) AS TONG_TON_KIEM,
-    ISNULL(BTP.BTP_QTY_EA, 0) AS BTP,
+    ISNULL(M100.BTP_QTY, 0) AS BTP,
     ISNULL(THANHPHAM.TONKHO, 0) AS TON_TP,
     ISNULL(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY,
     ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) 
     + ISNULL(TONKIEM.WAIT_CS_QTY, 0) 
     + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0) 
-    + ISNULL(BTP.BTP_QTY_EA, 0) 
+    + ISNULL(M100.BTP_QTY, 0)
     + ISNULL(THANHPHAM.TONKHO, 0) 
     - ISNULL(tbl_Block_table2.Block_Qty, 0) AS GRAND_TOTAL_STOCK,
     ISNULL(THANHPHAM.XUATKHO_PD, 0) AS PENDINGXK,
@@ -5947,7 +5958,7 @@ SELECT
     SUM(ISNULL(TONKIEM.WAIT_CS_QTY, 0)) AS CHO_CS_CHECK, 
     SUM(ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)) AS CHO_KIEM_RMA, 
     SUM(ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)) AS TONG_TON_KIEM, 
-    SUM(ISNULL(BTP.BTP_QTY_EA, 0)) AS BTP, 
+    SUM(ISNULL(M100.BTP_QTY, 0)) AS BTP, 
     SUM(ISNULL(THANHPHAM.TONKHO, 0)) AS TON_TP,
     SUM(ISNULL(THANHPHAM.XUATKHO_PD, 0)) AS PENDINGXK,
     SUM(ISNULL(THANHPHAM.TONKHO_TT, 0)) AS TON_TPTT,
@@ -5956,7 +5967,7 @@ SELECT
         ISNULL(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) + ISNULL(TONKIEM.WAIT_CS_QTY, 0) + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)
         + ISNULL(TONKIEM.WAIT_CS_QTY, 0) 
         + ISNULL(TONKIEM.WAIT_SORTING_RMA, 0)
-        + ISNULL(BTP.BTP_QTY_EA, 0) 
+        + ISNULL(M100.BTP_QTY, 0) 
         + ISNULL(THANHPHAM.TONKHO, 0) 
         - ISNULL(tbl_Block_table2.Block_Qty, 0)
     ) AS GRAND_TOTAL_STOCK
@@ -13266,7 +13277,7 @@ WHERE ZTB_QUOTATION_CALC_TB.CTR_CD = '${DATA.CTR_CD}'
           if (DATA.ALLTIME !== true)
             condition += ` AND P400.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'`
           let setpdQuery = `
-            SELECT  P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, M110.CUST_CD, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME_KD, ZTB_BOM2.M_CODE, M090.M_NAME, M090.WIDTH_CD, P400.PROD_REQUEST_QTY, M100.PD, M100.G_C AS CAVITY_COT, M100.G_C_R AS CAVITY_HANG, M100.G_C * M100.G_C_R AS CAVITY, CAST(( P400.PROD_REQUEST_QTY*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000)AS bigint) AS NEED_M_QTY 
+            SELECT  P400.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE, M110.CUST_CD, M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME_KD, ZTB_BOM2.M_CODE, M090.M_NAME, M090.WIDTH_CD, P400.PROD_REQUEST_QTY, M100.PD, M100.G_C AS CAVITY_COT, M100.G_C_R AS CAVITY_HANG, M100.G_C * M100.G_C_R AS CAVITY, CAST(( P400.PROD_REQUEST_QTY*1.0)*(M100.PD*1.0)/(M100.G_C *M100.G_C_R*1000)AS bigint) AS NEED_M_QTY, P400.MATERIAL_YN 
             FROM P400 
             LEFT JOIN  ZTB_BOM2 ON (P400.G_CODE = ZTB_BOM2.G_CODE AND P400.CTR_CD = ZTB_BOM2.CTR_CD)
             LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE AND P400.CTR_CD = M100.CTR_CD)
@@ -14917,9 +14928,9 @@ SELECT * FROM TKTB WHERE TOTAL_WAIT > 0 AND CTR_CD='${DATA.CTR_CD}'`;
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `SELECT isnull(MAX(M_LOT_NO),FORMAT(GETDATE(),'yyyyMMdd0000')) AS MAX_M_LOT_NO FROM I222 WHERE CTR_CD='${DATA.CTR_CD}' AND IN_DATE ='${moment().format("YYYYMMDD")}'`;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-          console.log(checkkq);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
@@ -19992,8 +20003,8 @@ ORDER BY PROD_REQUEST_NO ASC
             HOLDING_CFM_NM2 = TONLIEU.HOLDING_CFM_NM2;
             `
           //console.log(setpdQuery);
-          checkkq1 = await queryDB(setpdQuery);
-          checkkq2 = await queryDB(setpdQuery);
+          checkkq1 = await queryDB(setpdQuery1);
+          checkkq2 = await queryDB(setpdQuery2);
           //console.log(checkkq);
           res.send(checkkq1);
         })();
@@ -20559,7 +20570,7 @@ ORDER BY PROD_REQUEST_NO ASC
           //console.log(checkkq);
           res.send(checkkq);
         })();
-        break;
+        break;        
         case "load_Notification_Data":
         (async () => {
           let DATA = qr["DATA"];
@@ -20623,6 +20634,250 @@ ORDER BY PROD_REQUEST_NO ASC
 SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR_CD='${DATA.CTR_CD}'
           `;
           console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadBTPAuto":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+            WITH BTPTB AS
+            (
+            SELECT P501.CTR_CD, P400.PROD_REQUEST_NO,M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P500.EQUIPMENT_CD,SUBSTRING(P500.EQUIPMENT_CD,1,2) AS MACHINE,  P501.PLAN_ID, P501.M_LOT_NO, P501.PROCESS_LOT_NO, P501.TEMP_QTY, LOT_STATUS,ZTB_TON_BTP.PLAN_ID_INPUT, ZTB_TON_BTP.REMAIN_QTY,P400.PL_HANG,P501.USE_YN, P500.PR_NB, FLOOR(ZTB_TON_BTP.REMAIN_QTY*1.0/ZTB_SX_RESULT.PD*ZTB_SX_RESULT.CAVITY*1000) AS BTP_REMAIN_EA, SXRS.EQ_NAME,
+            CASE 
+            WHEN PR_NB = 1 THEN M100.EQ2
+            WHEN PR_NB = 2 THEN M100.EQ3
+            WHEN PR_NB = 3 THEN M100.EQ4
+            WHEN PR_NB = 4 THEN 'KT'
+            END AS NEXT_EQ
+            FROM P501
+            LEFT JOIN P500 ON P501.CTR_CD = P500.CTR_CD AND P501.PROCESS_IN_DATE = P500.PROCESS_IN_DATE AND P501.PROCESS_IN_NO = P500.PROCESS_IN_NO AND P501.PROCESS_IN_SEQ = P500.PROCESS_IN_SEQ
+            LEFT JOIN P400 ON P400.PROD_REQUEST_NO = P500.PROD_REQUEST_NO AND P400.CTR_CD = P500.CTR_CD
+            LEFT JOIN ZTB_SX_RESULT ON ZTB_SX_RESULT.PLAN_ID = P501.PLAN_ID AND ZTB_SX_RESULT.CTR_CD = P501.CTR_CD
+            LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE AND  M100.CTR_CD = P400.CTR_CD
+            LEFT JOIN ZTB_TON_BTP ON P501.PLAN_ID= ZTB_TON_BTP.PLAN_ID_INPUT AND P501.CTR_CD= ZTB_TON_BTP.CTR_CD AND P501.PROCESS_LOT_NO= ZTB_TON_BTP.PROCESS_LOT_NO 
+            LEFT JOIN ZTB_SX_RESULT AS SXRS ON SXRS.SX_RESULT_ID = ZTB_TON_BTP.SX_RESULT_ID AND SXRS.CTR_CD = ZTB_TON_BTP.CTR_CD
+            WHERE P501.INS_DATE > '2024-01-01' 
+            AND ((P501.LOT_STATUS = 'SX' AND ZTB_TON_BTP.REMAIN_QTY >0 )  OR P501.LOT_STATUS is null)
+            AND P400.PL_HANG = 'TT'  
+            AND ZTB_TON_BTP.PLAN_ID_SUDUNG is null 
+            AND P501.PLAN_ID is not null 
+            AND (P501.REMARK<>'HUY TEM' OR P501.REMARK is null) 
+            AND (P501.USE_YN <>'X' OR (ZTB_TON_BTP.USE_YN='Y' AND ZTB_TON_BTP.REMAIN_QTY >0))
+            ),
+            SECONDTB AS
+            (
+            SELECT BTPTB.*,
+            CASE 
+              WHEN BTP_REMAIN_EA > 0 THEN BTP_REMAIN_EA
+              ELSE TEMP_QTY
+            END
+            AS FINAL_BTP,
+            CASE 
+            WHEN  LOT_STATUS is null THEN PR_NB
+            WHEN LOT_STATUS = 'SX' THEN (PR_NB+1)
+            END AS FINAL_PR_NB, 
+            CASE 
+            WHEN  LOT_STATUS is null THEN EQUIPMENT_CD
+            WHEN LOT_STATUS = 'SX' THEN NEXT_EQ
+            END AS BTP_LOCATION, 
+            CASE 
+            WHEN  LOT_STATUS is null THEN SUBSTRING(EQUIPMENT_CD,1,2)
+            WHEN LOT_STATUS = 'SX' THEN SUBSTRING(NEXT_EQ,1,2)
+            END AS FINAL_MACHINE 
+            FROM BTPTB
+            )
+            SELECT SECONDTB.*, 
+            CASE WHEN EQ_NAME is not null THEN EQ_NAME ELSE BTP_LOCATION END AS FINAL_LOCATION,
+            CASE WHEN FINAL_MACHINE IN ('FR','SR') THEN 'B' ELSE 'A' END AS XUONG
+            FROM SECONDTB
+            WHERE TEMP_QTY > 0
+
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadBTPSummaryAuto":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+           WITH BTPTB AS
+          (
+          SELECT P501.CTR_CD, P400.PROD_REQUEST_NO,M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P500.EQUIPMENT_CD,SUBSTRING(P500.EQUIPMENT_CD,1,2) AS MACHINE,  P501.PLAN_ID, P501.M_LOT_NO, P501.PROCESS_LOT_NO, P501.TEMP_QTY, LOT_STATUS,ZTB_TON_BTP.PLAN_ID_INPUT, ZTB_TON_BTP.REMAIN_QTY,P400.PL_HANG,P501.USE_YN, P500.PR_NB, FLOOR(ZTB_TON_BTP.REMAIN_QTY*1.0/ZTB_SX_RESULT.PD*ZTB_SX_RESULT.CAVITY*1000) AS BTP_REMAIN_EA, SXRS.EQ_NAME,
+          CASE
+          WHEN PR_NB = 1 THEN M100.EQ2
+          WHEN PR_NB = 2 THEN M100.EQ3
+          WHEN PR_NB = 3 THEN M100.EQ4
+          WHEN PR_NB = 4 THEN 'KT'
+          END AS NEXT_EQ
+          FROM P501
+          LEFT JOIN P500 ON P501.CTR_CD = P500.CTR_CD AND P501.PROCESS_IN_DATE = P500.PROCESS_IN_DATE AND P501.PROCESS_IN_NO = P500.PROCESS_IN_NO AND P501.PROCESS_IN_SEQ = P500.PROCESS_IN_SEQ
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = P500.PROD_REQUEST_NO AND P400.CTR_CD = P500.CTR_CD
+          LEFT JOIN ZTB_SX_RESULT ON ZTB_SX_RESULT.PLAN_ID = P501.PLAN_ID AND ZTB_SX_RESULT.CTR_CD = P501.CTR_CD
+          LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE AND  M100.CTR_CD = P400.CTR_CD
+          LEFT JOIN ZTB_TON_BTP ON P501.PLAN_ID= ZTB_TON_BTP.PLAN_ID_INPUT AND P501.CTR_CD= ZTB_TON_BTP.CTR_CD AND P501.PROCESS_LOT_NO= ZTB_TON_BTP.PROCESS_LOT_NO
+          LEFT JOIN ZTB_SX_RESULT AS SXRS ON SXRS.SX_RESULT_ID = ZTB_TON_BTP.SX_RESULT_ID AND SXRS.CTR_CD = ZTB_TON_BTP.CTR_CD
+           WHERE P501.INS_DATE > '2024-01-01' 
+            AND ((P501.LOT_STATUS = 'SX' AND ZTB_TON_BTP.REMAIN_QTY >0 )  OR P501.LOT_STATUS is null)
+            AND P400.PL_HANG = 'TT'  
+            AND ZTB_TON_BTP.PLAN_ID_SUDUNG is null 
+            AND P501.PLAN_ID is not null 
+            AND (P501.REMARK<>'HUY TEM' OR P501.REMARK is null) 
+            AND (P501.USE_YN <>'X' OR (ZTB_TON_BTP.USE_YN='Y' AND ZTB_TON_BTP.REMAIN_QTY >0))
+            AND P501.TEMP_QTY > 0
+          ),
+          SECONDTB AS
+          (
+          SELECT BTPTB.*,
+          CASE
+              WHEN BTP_REMAIN_EA > 0 THEN BTP_REMAIN_EA
+              ELSE TEMP_QTY
+          END
+          AS FINAL_BTP,
+          CASE
+          WHEN  LOT_STATUS is null THEN PR_NB
+          WHEN LOT_STATUS = 'SX' THEN (PR_NB+1)
+          END AS FINAL_PR_NB,
+          CASE
+          WHEN  LOT_STATUS is null THEN EQUIPMENT_CD
+          WHEN LOT_STATUS = 'SX' THEN NEXT_EQ
+          END AS BTP_LOCATION,
+          CASE
+          WHEN  LOT_STATUS is null THEN SUBSTRING(EQUIPMENT_CD,1,2)
+          WHEN LOT_STATUS = 'SX' THEN SUBSTRING(NEXT_EQ,1,2)
+          END AS FINAL_MACHINE
+          FROM BTPTB
+          ),
+          THIRD AS 
+          (
+          SELECT SECONDTB.*,
+          CASE WHEN EQ_NAME is not null THEN EQ_NAME ELSE BTP_LOCATION END AS FINAL_LOCATION,
+          CASE WHEN FINAL_MACHINE IN ('FR','SR') THEN 'B' ELSE 'A' END AS XUONG    
+          FROM SECONDTB
+          WHERE LOT_STATUS is null OR (LOT_STATUS ='SX' AND USE_YN='X')
+          )
+          SELECT G_CODE, G_NAME, SUM(CASE WHEN XUONG='A' THEN FINAL_BTP ELSE 0 END) AS XA, SUM(CASE WHEN XUONG='B' THEN FINAL_BTP ELSE 0 END) AS XB, SUM(FINAL_BTP) AS TOTAL_BTP FROM THIRD GROUP BY G_CODE, G_NAME         
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "setMaterial_YN":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          UPDATE P400 SET MATERIAL_YN='${DATA.MATERIAL_YN}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updateBTP_M100":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `
+          WITH BTPTB AS
+          (
+          SELECT P501.CTR_CD, P400.PROD_REQUEST_NO,M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P500.EQUIPMENT_CD,SUBSTRING(P500.EQUIPMENT_CD,1,2) AS MACHINE,  P501.PLAN_ID, P501.M_LOT_NO, P501.PROCESS_LOT_NO, P501.TEMP_QTY, LOT_STATUS,ZTB_TON_BTP.PLAN_ID_INPUT, ZTB_TON_BTP.REMAIN_QTY,P400.PL_HANG,P501.USE_YN, P500.PR_NB, FLOOR(ZTB_TON_BTP.REMAIN_QTY*1.0/ZTB_SX_RESULT.PD*ZTB_SX_RESULT.CAVITY*1000) AS BTP_REMAIN_EA, SXRS.EQ_NAME,
+          CASE
+          WHEN PR_NB = 1 THEN M100.EQ2
+          WHEN PR_NB = 2 THEN M100.EQ3
+          WHEN PR_NB = 3 THEN M100.EQ4
+          WHEN PR_NB = 4 THEN 'KT'
+          END AS NEXT_EQ
+          FROM P501
+          LEFT JOIN P500 ON P501.CTR_CD = P500.CTR_CD AND P501.PROCESS_IN_DATE = P500.PROCESS_IN_DATE AND P501.PROCESS_IN_NO = P500.PROCESS_IN_NO AND P501.PROCESS_IN_SEQ = P500.PROCESS_IN_SEQ
+          LEFT JOIN P400 ON P400.PROD_REQUEST_NO = P500.PROD_REQUEST_NO AND P400.CTR_CD = P500.CTR_CD
+          LEFT JOIN ZTB_SX_RESULT ON ZTB_SX_RESULT.PLAN_ID = P501.PLAN_ID AND ZTB_SX_RESULT.CTR_CD = P501.CTR_CD
+          LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE AND  M100.CTR_CD = P400.CTR_CD
+          LEFT JOIN ZTB_TON_BTP ON P501.PLAN_ID= ZTB_TON_BTP.PLAN_ID_INPUT AND P501.CTR_CD= ZTB_TON_BTP.CTR_CD AND P501.PROCESS_LOT_NO= ZTB_TON_BTP.PROCESS_LOT_NO
+          LEFT JOIN ZTB_SX_RESULT AS SXRS ON SXRS.SX_RESULT_ID = ZTB_TON_BTP.SX_RESULT_ID AND SXRS.CTR_CD = ZTB_TON_BTP.CTR_CD
+           WHERE P501.INS_DATE > '2024-01-01' 
+            AND ((P501.LOT_STATUS = 'SX' AND ZTB_TON_BTP.REMAIN_QTY >0 )  OR P501.LOT_STATUS is null)
+            AND P400.PL_HANG = 'TT'  
+            AND ZTB_TON_BTP.PLAN_ID_SUDUNG is null 
+            AND P501.PLAN_ID is not null 
+            AND (P501.REMARK<>'HUY TEM' OR P501.REMARK is null) 
+            AND (P501.USE_YN <>'X' OR (ZTB_TON_BTP.USE_YN='Y' AND ZTB_TON_BTP.REMAIN_QTY >0))
+			AND P501.TEMP_QTY > 0
+          ),
+          SECONDTB AS
+          (
+          SELECT BTPTB.*,
+          CASE
+              WHEN BTP_REMAIN_EA > 0 THEN BTP_REMAIN_EA
+              ELSE TEMP_QTY
+          END
+          AS FINAL_BTP,
+          CASE
+          WHEN  LOT_STATUS is null THEN PR_NB
+          WHEN LOT_STATUS = 'SX' THEN (PR_NB+1)
+          END AS FINAL_PR_NB,
+          CASE
+          WHEN  LOT_STATUS is null THEN EQUIPMENT_CD
+          WHEN LOT_STATUS = 'SX' THEN NEXT_EQ
+          END AS BTP_LOCATION,
+          CASE
+          WHEN  LOT_STATUS is null THEN SUBSTRING(EQUIPMENT_CD,1,2)
+          WHEN LOT_STATUS = 'SX' THEN SUBSTRING(NEXT_EQ,1,2)
+          END AS FINAL_MACHINE
+          FROM BTPTB
+          ),
+          THIRD AS 
+          (
+          SELECT SECONDTB.*,
+          CASE WHEN EQ_NAME is not null THEN EQ_NAME ELSE BTP_LOCATION END AS FINAL_LOCATION,
+          CASE WHEN FINAL_MACHINE IN ('FR','SR') THEN 'B' ELSE 'A' END AS XUONG    
+          FROM SECONDTB
+          WHERE LOT_STATUS is null OR (LOT_STATUS ='SX' AND USE_YN='X')
+          )
+		  MERGE INTO M100 
+		  USING 
+		  (
+          SELECT M100.CTR_CD, M100.G_CODE, SUM(isnull(FINAL_BTP,0)) AS TOTAL_BTP FROM 
+		  M100 LEFT JOIN THIRD ON M100.CTR_CD= THIRD.CTR_CD AND M100.G_CODE= THIRD.G_CODE
+		  GROUP BY M100.CTR_CD,M100.G_CODE
+		  ) AS SRC_TB
+		  ON (SRC_TB.CTR_CD = M100.CTR_CD AND SRC_TB.G_CODE = M100.G_CODE)
+		  WHEN MATCHED THEN
+		  UPDATE 
+		  SET BTP_QTY = SRC_TB.TOTAL_BTP;
+
+          `;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);

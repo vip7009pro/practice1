@@ -269,25 +269,23 @@ app.post("/api2", function (req, res) {
     api_module.process_api(req, res);
     console.log("vao api2");  
     let DATA = req.body['DATA'];
-    console.log(DATA);
-    
+    console.log(DATA);    
    
-      let newNotification= {
-        CTR_CD: '002',
-        NOTI_ID: -1,
-        NOTI_TYPE: "success",
-        TITLE: 'Test notification from C#',
-        CONTENT: `Test notification Content from C#`,
-        SUBDEPTNAME: "QC",
-        MAINDEPTNAME: "QC",
-        INS_EMPL: 'NHU1903',
-        INS_DATE: '2024-12-30',
-        UPD_EMPL: 'NHU1903',
-        UPD_DATE: '2024-12-30',
-      }  
-      console.log(newNotification);
-      emitSocketCSharp("notification_panel", DATA);
-      
+    let newNotification= {
+      CTR_CD: '002',
+      NOTI_ID: -1,
+      NOTI_TYPE: "success",
+      TITLE: 'Test notification from C#',
+      CONTENT: `Test notification Content from C#`,
+      SUBDEPTNAME: "QC",
+      MAINDEPTNAME: "QC",
+      INS_EMPL: 'NHU1903',
+      INS_DATE: '2024-12-30',
+      UPD_EMPL: 'NHU1903',
+      UPD_DATE: '2024-12-30',
+    }  
+    console.log(newNotification);
+    emitSocketCSharp("notification_panel", DATA);      
       
    
     res.send({ tk_status: "OK" });
