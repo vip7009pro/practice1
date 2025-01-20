@@ -20910,7 +20910,7 @@ SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR
 ) 
 SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA ELSE 0 END) AS XA, SUM(CASE WHEN FINAL_XUONG='B' THEN TONBTPTB.TEMP_QTY_EA ELSE 0 END) AS XB,SUM(TONBTPTB.TEMP_QTY_EA) AS TOTAL_BTP  FROM TONBTPTB GROUP BY G_CODE, G_NAME     
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
