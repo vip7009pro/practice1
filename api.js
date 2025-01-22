@@ -21228,6 +21228,30 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           res.send(checkkq);
         })();
         break;
+        case "insert_information":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          INSERT INTO ZTB_POST_TB (CTR_CD,  DEPT_CODE, FILE_NAME, TITLE, CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) 
+          VALUES ('002', '${DATA.DEPT_CODE}', N'${DATA.FILE_NAME}',N'${DATA.TITLE}', N'${DATA.CONTENT}',GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+          `;
+          //console.log(insertQuery);
+          checkkq = await queryDB(insertQuery);
+          //console.log(checkkq);
+         
+       
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
       default:
         //console.log(qr['command']);
         res.send({ tk_status: "ok", data: req.payload_data });
