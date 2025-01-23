@@ -21241,13 +21241,62 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           INSERT INTO ZTB_POST_TB (CTR_CD,  DEPT_CODE, FILE_NAME, TITLE, CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) 
           VALUES ('002', '${DATA.DEPT_CODE}', N'${DATA.FILE_NAME}',N'${DATA.TITLE}', N'${DATA.CONTENT}',GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
           `;
-          //console.log(insertQuery);
-          checkkq = await queryDB(insertQuery);
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery); 
           //console.log(checkkq);
-         
-       
-          //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
+          res.send(checkkq);
+        })();
+        break;
+        case "getDepartmentList":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          SELECT * FROM ZTB_DEPARTMENT_TB ORDER BY MAINDEPT ASC
+          `;
+          //console.log(insertQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "getlastestPostId":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          SELECT isnull(MAX(POST_ID),1) AS POST_ID FROM ZTB_POST_TB
+          `;
+          //console.log(insertQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadPost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE ORDER BY POST_ID DESC
+          `;
+          //console.log(insertQuery);
+          checkkq = await queryDB(setpdQuery);  
           //console.log(checkkq);
           res.send(checkkq);
         })();
