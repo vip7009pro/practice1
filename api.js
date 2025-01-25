@@ -6214,7 +6214,7 @@ LEFT JOIN CTE_BTP AS BTP ON BTP.G_CODE = M100.G_CODE ${condition} GROUP BY M100.
           if (DATA.ACTIVE_ONLY === true) {
             condition += ` AND M100.USE_YN='Y' `
           }
-          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, M100.G_CODE, G_NAME, G_NAME_KD,M100.DESCR, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET, LOSS_KT FROM M100 LEFT JOIN (SELECT BBB.CTR_CD, BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.CTR_CD, AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE, CTR_CD FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE AND AAA.CTR_CD = M090.CTR_CD) ) ) AS BBB GROUP BY BBB.CTR_CD ,BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE AND CCC.CTR_CD = M100.CTR_CD) ${condition} AND M100.CTR_CD='${DATA.CTR_CD}' ORDER BY G_CODE ASC`;
+          let setpdQuery = `SELECT isnull(M100.BEP,0) AS BEP, CASE WHEN M100.CODE_33='01' THEN 'EA' WHEN M100.CODE_33='02' THEN 'ROLL' WHEN M100.CODE_33='03' THEN 'SHEET' WHEN M100.CODE_33='04' THEN 'MET' WHEN M100.CODE_33='06' THEN 'PACK (BAG)' WHEN M100.CODE_33='99' THEN 'X' END AS PACKING_TYPE, M100.INSPECT_SPEED, M100.G_CODE, G_NAME, G_NAME_KD,M100.DESCR, PROD_TYPE, PROD_LAST_PRICE, PD, (G_C* G_C_R) AS CAVITY, ROLE_EA_QTY AS PACKING_QTY,  G_WIDTH, G_LENGTH, PROD_PROJECT,PROD_MODEL, CCC.M_NAME_FULLBOM, BANVE, NO_INSPECTION, USE_YN, PDBV, PROD_DIECUT_STEP, PROD_PRINT_TIMES,FACTORY, EQ1, EQ2,  EQ3, EQ4, Setting1, Setting2, Setting3, Setting4, UPH1, UPH2, UPH3, UPH4, Step1, Step2, Step3, Step4, LOSS_SX1, LOSS_SX2, LOSS_SX3, LOSS_SX4,  LOSS_SETTING1 , LOSS_SETTING2 ,  LOSS_SETTING3 , LOSS_SETTING4 , LOSS_ST_SX1, LOSS_ST_SX2, LOSS_ST_SX3, LOSS_ST_SX4, NOTE, EXP_DATE, QL_HSD, APPSHEET, LOSS_KT FROM M100 LEFT JOIN (SELECT BBB.CTR_CD, BBB.G_CODE, string_agg(BBB.M_NAME, ', ') AS M_NAME_FULLBOM FROM (SELECT DISTINCT AAA.CTR_CD, AAA.G_CODE, M090.M_NAME FROM ( (SELECT DISTINCT G_CODE, M_CODE, CTR_CD FROM M140) AS AAA LEFT JOIN M090 ON (AAA.M_CODE = M090.M_CODE AND AAA.CTR_CD = M090.CTR_CD) ) ) AS BBB GROUP BY BBB.CTR_CD ,BBB.G_CODE) AS CCC ON (CCC.G_CODE = M100.G_CODE AND CCC.CTR_CD = M100.CTR_CD) ${condition} AND M100.CTR_CD='${DATA.CTR_CD}' ORDER BY G_CODE ASC`;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
@@ -19795,7 +19795,7 @@ LEFT JOIN M_STOCKTB ON M_STOCKTB.G_CODE = YCSXTB4.G_CODE AND M_STOCKTB.CTR_CD = 
 WHERE LEADTIME > 0
 ORDER BY PROD_REQUEST_NO ASC
         `;
-          //console.log(setpdQuery);
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
@@ -21296,6 +21296,386 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE ORDER BY POST_ID DESC
           `;
           //console.log(insertQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "loadKHSXDAIHAN":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          DECLARE @machine VARCHAR(100);
+          DECLARE @query varchar(max);
+          SELECT @machine = STRING_AGG(CONCAT('''', SUBSTRING(EQ_NAME, 0, 3), ''''), ',')
+          FROM (
+              SELECT DISTINCT SUBSTRING(EQ_NAME, 0, 3) AS EQ_NAME
+              FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}'
+          ) AS AA;
+
+          SELECT @query = '
+          WITH KQSX AS
+          ( SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX, ZTB_QLSXPLAN.CTR_CD FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = ZTB_SX_RESULT.CTR_CD) WHERE ZTB_QLSXPLAN.STEP=0 AND ZTB_QLSXPLAN.CTR_CD=''${DATA.CTR_CD}'' GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.CTR_CD
+          ),
+          EQ_Unpivot AS (
+              SELECT 
+              CTR_CD,
+                  G_CODE, 
+                  RIGHT(Attribute, 1) AS PROCESS_NUMBER,
+                  Value AS EQ_NAME
+              FROM M100
+              UNPIVOT
+              (
+                  Value FOR Attribute IN (EQ1, EQ2, EQ3, EQ4)
+              ) AS Unpvt
+          ),
+          PROCESS_TB AS
+          (
+          SELECT 
+            E.CTR_CD,
+              E.G_CODE,   
+              E.PROCESS_NUMBER,
+            E.EQ_NAME
+            FROM EQ_Unpivot AS E
+            WHERE E.EQ_NAME IN ('+@machine+') AND E.EQ_NAME is not null
+          ),
+          TON_YCSX_TB AS
+          (
+          SELECT P400.CTR_CD, M100.G_CODE,M100.G_NAME, PROCESS_TB.PROCESS_NUMBER, PROCESS_TB.EQ_NAME, P400.PROD_REQUEST_QTY,isnull(KQSX.KETQUASX,0) AS KETQUASX, CASE WHEN (P400.PROD_REQUEST_QTY - isnull(KQSX.KETQUASX,0)) > 0 THEn (P400.PROD_REQUEST_QTY - isnull(KQSX.KETQUASX,0)) ELSE 0 END AS TON_YCSX  FROM P400 
+          LEFT JOIN KQSX ON (KQSX.CTR_CD = P400.CTR_CD AND KQSX.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN M100 ON (M100.CTR_CD = P400.CTR_CD AND M100.G_CODE = P400.G_CODE)
+          LEFT JOIN PROCESS_TB ON (M100.CTR_CD = PROCESS_TB.CTR_CD AND M100.G_CODE = PROCESS_TB.G_CODE)
+          WHERE P400.PL_HANG=''TT'' AND P400.PROD_REQUEST_DATE > ''2024-12-01'' AND P400.CTR_CD=''${DATA.CTR_CD}'' AND P400.USE_YN=''Y'' AND P400.YCSX_PENDING = 1 AND P400.CODE_55 <> ''04''
+          ),
+          TON2_TB AS
+          (
+          SELECT CTR_CD,G_CODE,G_NAME, PROCESS_NUMBER, EQ_NAME, SUM(PROD_REQUEST_QTY) AS PROD_REQUEST_QTY, SUM(KETQUASX) AS KETQUASX, SUM(TON_YCSX) AS TON_YCSX FROM TON_YCSX_TB  GROUP BY CTR_CD,G_CODE,G_NAME, PROCESS_NUMBER, EQ_NAME
+          ),
+          PLANTB AS 
+          (	
+            SELECT * FROM ZTB_PROD_PLAN_TB WHERE PLAN_DATE = ''${DATA.PLAN_DATE}''
+          )
+          SELECT TON2_TB.*,PLANTB.PLAN_DATE, 
+          CASE
+           WHEN PLANTB.PROCESS_NUMBER = 1 THEN UPH1
+           WHEN PLANTB.PROCESS_NUMBER = 2 THEN UPH2
+           WHEN PLANTB.PROCESS_NUMBER = 3 THEN UPH3
+           WHEN PLANTB.PROCESS_NUMBER = 4 THEN UPH4
+           ELSE 1
+          END AS UPH,
+          isnull(D1,0) AS D1,
+          isnull(D2,0) AS D2,
+          isnull(D3,0) AS D3,
+          isnull(D4,0) AS D4,
+          isnull(D5,0) AS D5,
+          isnull(D6,0) AS D6,
+          isnull(D7,0) AS D7,
+          isnull(D8,0) AS D8,
+          isnull(D9,0) AS D9,
+          isnull(D10,0) AS D10,
+          isnull(D11,0) AS D11,
+          isnull(D12,0) AS D12,
+          isnull(D13,0) AS D13,
+          isnull(D14,0) AS D14,
+          isnull(D15,0) AS D15,
+          (TON2_TB.TON_YCSX - (isnull(D1,0)+isnull(D2,0)+isnull(D3,0)+isnull(D4,0)+isnull(D5,0)+isnull(D6,0)+isnull(D7,0)+isnull(D8,0)+isnull(D9,0)+isnull(D10,0)+isnull(D11,0)+isnull(D12,0)+isnull(D13,0)+isnull(D14,0)+isnull(D15,0))) AS D16    FROM TON2_TB 
+          LEFT JOIN PLANTB ON (TON2_TB.CTR_CD = PLANTB.CTR_CD AND TON2_TB.EQ_NAME = PLANTB.EQ_SERIES AND TON2_TB.G_CODE = PLANTB.G_CODE AND TON2_TB.PROCESS_NUMBER = PLANTB.PROCESS_NUMBER)
+          LEFT JOIN M100 ON (TON2_TB.CTR_CD = M100.CTR_CD AND TON2_TB.G_CODE = M100.G_CODE)
+          WHERE TON_YCSX >0
+          ORDER BY G_CODE ASC, PROCESS_NUMBER ASC
+          '
+          execute(@query)
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "moveKHSXDAIHAN":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          DECLARE @machine VARCHAR(100);
+          DECLARE @query varchar(max);
+          SELECT @machine = STRING_AGG(CONCAT('''', SUBSTRING(EQ_NAME, 0, 3), ''''), ',')
+          FROM (
+              SELECT DISTINCT SUBSTRING(EQ_NAME, 0, 3) AS EQ_NAME
+              FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}'
+          ) AS AA;
+
+          SELECT @query = '
+          WITH KQSX AS
+          ( SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX, ZTB_QLSXPLAN.CTR_CD FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = ZTB_SX_RESULT.CTR_CD) WHERE ZTB_QLSXPLAN.STEP=0 AND ZTB_QLSXPLAN.CTR_CD=''${DATA.CTR_CD}'' GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.CTR_CD
+          ),
+          EQ_Unpivot AS (
+              SELECT 
+              CTR_CD,
+                  G_CODE, 
+                  RIGHT(Attribute, 1) AS PROCESS_NUMBER,
+                  Value AS EQ_NAME
+              FROM M100
+              UNPIVOT
+              (
+                  Value FOR Attribute IN (EQ1, EQ2, EQ3, EQ4)
+              ) AS Unpvt
+          ),
+          PROCESS_TB AS
+          (
+          SELECT 
+            E.CTR_CD,
+              E.G_CODE,   
+              E.PROCESS_NUMBER,
+            E.EQ_NAME
+            FROM EQ_Unpivot AS E
+            WHERE E.EQ_NAME IN ('+@machine+') AND E.EQ_NAME is not null
+          ),
+          TON_YCSX_TB AS
+          (
+          SELECT P400.CTR_CD, M100.G_CODE,M100.G_NAME, PROCESS_TB.PROCESS_NUMBER, PROCESS_TB.EQ_NAME, P400.PROD_REQUEST_QTY,isnull(KQSX.KETQUASX,0) AS KETQUASX, CASE WHEN (P400.PROD_REQUEST_QTY - isnull(KQSX.KETQUASX,0)) > 0 THEn (P400.PROD_REQUEST_QTY - isnull(KQSX.KETQUASX,0)) ELSE 0 END AS TON_YCSX  FROM P400 
+          LEFT JOIN KQSX ON (KQSX.CTR_CD = P400.CTR_CD AND KQSX.PROD_REQUEST_NO = P400.PROD_REQUEST_NO)
+          LEFT JOIN M100 ON (M100.CTR_CD = P400.CTR_CD AND M100.G_CODE = P400.G_CODE)
+          LEFT JOIN PROCESS_TB ON (M100.CTR_CD = PROCESS_TB.CTR_CD AND M100.G_CODE = PROCESS_TB.G_CODE)
+          WHERE P400.PL_HANG=''TT'' AND P400.PROD_REQUEST_DATE > ''2024-12-01'' AND P400.CTR_CD=''${DATA.CTR_CD}'' AND P400.USE_YN=''Y'' AND P400.YCSX_PENDING = 1 AND P400.CODE_55 <> ''04''
+          ),
+          TON2_TB AS
+          (
+          SELECT CTR_CD,G_CODE,G_NAME, PROCESS_NUMBER, EQ_NAME, SUM(PROD_REQUEST_QTY) AS PROD_REQUEST_QTY, SUM(KETQUASX) AS KETQUASX, SUM(TON_YCSX) AS TON_YCSX FROM TON_YCSX_TB  GROUP BY CTR_CD,G_CODE,G_NAME, PROCESS_NUMBER, EQ_NAME
+          ),
+         
+          TON3_TB AS
+          (SELECT * FROM TON2_TB WHERE TON2_TB.TON_YCSX > 0)
+          INSERT INTO ZTB_PROD_PLAN_TB
+SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, ''${DATA.TO_DATE}'' AS PLAN_DATE, D2 AS D1, D3 AS D2, D4 AS D3, D5 AS D4, D6 AS D5, D7 AS D6, D8 AS D7, D9 AS D8, D10 AS D9, D11 AS D10, D12 AS D11, D13 AS D12, D14 AS D13, D15 AS D14, 0 AS D15, GETDATE() AS INS_DATE, ''${EMPL_NO}'' AS INS_EMPL, GETDATE() AS UPD_DATE, ''${EMPL_NO}'' AS UPD_EMPL FROM ZTB_PROD_PLAN_TB WHERE PLAN_DATE =''${DATA.FROM_DATE}'' AND G_CODE  IN (SELECT DISTINCT G_CODE FROM TON3_TB)
+          '
+          execute(@query)
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+       case "insertKHSXDAIHAN":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `          
+          INSERT INTO ZTB_PROD_PLAN_TB (CTR_CD,EQ_SERIES,G_CODE,PROCESS_NUMBER,PLAN_DATE,D1,D2,D3,D4,D5,D6,D7,D8,D9,D10,D11,D12,D13,D14,D15, INS_EMPL, INS_DATE,UPD_EMPL,UPD_DATE) VALUES ('${DATA.CTR_CD}','${DATA.EQ_NAME}','${DATA.G_CODE}',${DATA.PROCESS_NUMBER},'${DATA.PLAN_DATE}',${DATA.D1},${DATA.D2},${DATA.D3},${DATA.D4},${DATA.D5},${DATA.D6},${DATA.D7},${DATA.D8},${DATA.D9},${DATA.D10},${DATA.D11},${DATA.D12},${DATA.D13},${DATA.D14},${DATA.D15},'${EMPL_NO}',GETDATE(), '${EMPL_NO}',GETDATE())
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+       case "updateKHSXDAIHAN":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          UPDATE ZTB_PROD_PLAN_TB SET
+          D1=${DATA.D1},
+          D2=${DATA.D2},
+          D3=${DATA.D3},
+          D4=${DATA.D4},
+          D5=${DATA.D5},
+          D6=${DATA.D6},
+          D7=${DATA.D7},
+          D8=${DATA.D8},
+          D9=${DATA.D9},
+          D10=${DATA.D10},
+          D11=${DATA.D11},
+          D12=${DATA.D12},
+          D13=${DATA.D13},
+          D14=${DATA.D14},
+          D15=${DATA.D15},
+          UPD_EMPL='${EMPL_NO}',
+          UPD_DATE=GETDATE()
+          WHERE PLAN_DATE='${DATA.PLAN_DATE}' AND G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER='${DATA.PROCESS_NUMBER}' AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+       case "moveKHSXDAIHAN_old":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          INSERT INTO ZTB_PROD_PLAN_TB
+SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE, D2 AS D1, D3 AS D2, D4 AS D3, D5 AS D4, D6 AS D5, D7 AS D6, D8 AS D7, D9 AS D8, D10 AS D9, D11 AS D10, D12 AS D11, D13 AS D12, D14 AS D13, D15 AS D14, 0 AS D15 FROM ZTB_PROD_PLAN_TB WHERE PLAN_DATE ='${DATA.FROM_DATE}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+       case "getProductionPlanCapaData":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let setpdQuery = `          
+          DECLARE @worktime int;
+          SET @worktime = 900;
+          WITH PLTB AS
+          (
+          SELECT ZTB_PROD_PLAN_TB.*,
+          CASE
+            WHEN PROCESS_NUMBER = 1 THEN isnull(UPH1,1)
+            WHEN PROCESS_NUMBER = 2 THEN isnull(UPH2,1)
+            WHEN PROCESS_NUMBER = 3 THEN isnull(UPH3,1)
+            WHEN PROCESS_NUMBER = 4 THEN isnull(UPH4,1)
+            ELSE 1
+          END AS UPH,
+          CASE
+            WHEN PROCESS_NUMBER = 1 THEN isnull(Setting1,9999)
+            WHEN PROCESS_NUMBER = 2 THEN isnull(Setting2,9999)
+            WHEN PROCESS_NUMBER = 3 THEN isnull(Setting3,9999)
+            WHEN PROCESS_NUMBER = 4 THEN isnull(Setting4,9999)
+            ELSE 99999
+          END AS Setting,
+          CASE
+            WHEN PROCESS_NUMBER = 1 THEN isnull(Step1,1)
+            WHEN PROCESS_NUMBER = 2 THEN isnull(Step2,1)
+            WHEN PROCESS_NUMBER = 3 THEN isnull(Step3,1)
+            WHEN PROCESS_NUMBER = 4 THEN isnull(Step4,1)
+            ELSE 1
+          END AS Step
+          FROM ZTB_PROD_PLAN_TB
+          LEFT JOIN M100 ON M100.G_CODE = ZTB_PROD_PLAN_TB.G_CODE AND M100.CTR_CD = ZTB_PROD_PLAN_TB.CTR_CD
+          WHERE PLAN_DATE='${DATA.PLAN_DATE}'
+          ),
+          LEATIMETB1 AS
+          (
+            SELECT PLTB.*, 
+            CASE WHEN D1 <> 0 THEN (D1*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT01,
+            CASE WHEN D2 <> 0 THEN (D2*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT02,
+            CASE WHEN D3 <> 0 THEN (D3*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT03,
+            CASE WHEN D4 <> 0 THEN (D4*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT04,
+            CASE WHEN D5 <> 0 THEN (D5*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT05,
+            CASE WHEN D6 <> 0 THEN (D6*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT06,
+            CASE WHEN D7 <> 0 THEN (D7*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT07,
+            CASE WHEN D8 <> 0 THEN (D8*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT08,
+            CASE WHEN D9 <> 0 THEN (D9*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT09,
+            CASE WHEN D10 <> 0 THEN (D10*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT10,
+            CASE WHEN D11 <> 0 THEN (D11*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT11,
+            CASE WHEN D12 <> 0 THEN (D12*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT12,
+            CASE WHEN D13 <> 0 THEN (D13*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT13,
+            CASE WHEN D14 <> 0 THEN (D14*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT14,
+            CASE WHEN D15 <> 0 THEN (D15*1.0/UPH + Setting*Step*1.0/60) ELSE 0 END AS LT15
+          FROM PLTB
+          ),
+          LEADTIMETB2 AS
+          (
+          SELECT CTR_CD, EQ_SERIES, 
+          SUM(LT01) AS LT01, 
+          SUM(LT02) AS LT02,
+          SUM(LT03) AS LT03,
+          SUM(LT04) AS LT04,
+          SUM(LT05) AS LT05,
+          SUM(LT06) AS LT06,
+          SUM(LT07) AS LT07,
+          SUM(LT08) AS LT08,
+          SUM(LT09) AS LT09,
+          SUM(LT10) AS LT10,
+          SUM(LT11) AS LT11,
+          SUM(LT12) AS LT12,
+          SUM(LT13) AS LT13,
+          SUM(LT14) AS LT14,
+          SUM(LT15) AS LT15
+          FROM LEATIMETB1 WHERE CTR_CD ='${DATA.CTR_CD}' GROUP BY CTR_CD,EQ_SERIES
+          ),
+          UnPivot_LeadTime AS (
+              SELECT 
+                  EQ_SERIES, Attribute AS PROD_DATE,
+                  
+                  Value AS LEADTIME
+              FROM LEADTIMETB2
+              UNPIVOT
+              (
+                  Value FOR Attribute IN (LT01, LT02, LT03, LT04, LT05, LT06, LT07,LT08, LT09, LT10, LT11, LT12, LT13, LT14, LT15)
+              ) AS Unpvt
+          ),
+          EQ_SERIES AS
+                    (
+                    SELECT DISTINCT SUBSTRING(EQ_NAME,1,2) AS EQ_SERIES FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}'
+                    ),
+                    EQ_OP_TB AS
+                    (
+                    SELECT SUBSTRING(EQ_NAME,1,2) AS EQ_SERIES,COUNT(EQ_NAME) AS EQ_QTY, SUM(EQ_OP)*2 AS EQ_OP, AVG(EQ_OP) AS AVG_EQ_OP, COUNT(EQ_NAME) * @worktime AS MAN_FULL_CAPA  FROM ZTB_SX_EQ_STATUS WHERE EQ_ACTIVE='OK' AND CTR_CD='002' GROUP BY SUBSTRING(EQ_NAME,1,2)
+                    ),
+                    RETAIN_WF_TB AS
+                    (
+                    SELECT SUBSTRING(ZTBWORKPOSITION.WORK_POSITION_NAME,4,2) AS EQ_SERIES, ZTBWORKPOSITION.WORK_POSITION_NAME, ZTBJOB.JOB_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME, ZTBMAINDEPARMENT.MAINDEPTNAME FROM ZTBEMPLINFO
+                    LEFT JOIN ZTBWORKPOSITION ON ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE AND ZTBEMPLINFO.CTR_CD = ZTBWORKPOSITION.CTR_CD
+                    LEFT JOIN ZTBJOB ON ZTBEMPLINFO.JOB_CODE = ZTBJOB.JOB_CODE AND ZTBEMPLINFO.CTR_CD = ZTBJOB.CTR_CD
+                    LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.SUBDEPTCODE = ZTBSUBDEPARTMENT.SUBDEPTCODE  AND ZTBWORKPOSITION.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD
+                    LEFT JOIN ZTBMAINDEPARMENT ON ZTBSUBDEPARTMENT.MAINDEPTCODE = ZTBMAINDEPARMENT.MAINDEPTCODE AND ZTBSUBDEPARTMENT.CTR_CD = ZTBMAINDEPARMENT.CTR_CD
+                    WHERE ZTBJOB.JOB_NAME='Worker' AND ZTBMAINDEPARMENT.MAINDEPTNAME = 'SX' AND ZTBWORKPOSITION.WORK_POSITION_NAME<>'SX_VP' AND ZTBEMPLINFO.WORK_STATUS_CODE = 1 AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}'
+                    ),
+                    RETAIN_WF_BY_SERIES AS
+                    (
+                      SELECT EQ_SERIES, COUNT(EQ_SERIES) AS RETAIN_WF, COUNT(EQ_SERIES) * @worktime AS RETAIN_WF_CAPA FROM RETAIN_WF_TB
+                      GROUP BY EQ_SERIES
+                    ),
+                    ATT_WF_TB AS
+                    (
+                      SELECT SUBSTRING(ZTBWORKPOSITION.WORK_POSITION_NAME,4,2) AS EQ_SERIES, ZTBWORKPOSITION.WORK_POSITION_NAME, ZTBJOB.JOB_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME, ZTBMAINDEPARMENT.MAINDEPTNAME FROM ZTBATTENDANCETB
+                      LEFT JOIN ZTBEMPLINFO ON ZTBEMPLINFO.EMPL_NO = ZTBATTENDANCETB.EMPL_NO AND  ZTBEMPLINFO.CTR_CD = ZTBATTENDANCETB.CTR_CD
+                      LEFT JOIN ZTBWORKPOSITION ON ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE AND ZTBEMPLINFO.CTR_CD = ZTBWORKPOSITION.CTR_CD
+                    LEFT JOIN ZTBJOB ON ZTBEMPLINFO.JOB_CODE = ZTBJOB.JOB_CODE AND ZTBEMPLINFO.CTR_CD = ZTBJOB.CTR_CD
+                    LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.SUBDEPTCODE = ZTBSUBDEPARTMENT.SUBDEPTCODE  AND ZTBWORKPOSITION.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD
+                    LEFT JOIN ZTBMAINDEPARMENT ON ZTBSUBDEPARTMENT.MAINDEPTCODE = ZTBMAINDEPARMENT.MAINDEPTCODE AND ZTBSUBDEPARTMENT.CTR_CD = ZTBMAINDEPARMENT.CTR_CD
+                    WHERE ZTBATTENDANCETB.ON_OFF=1 AND ZTBJOB.JOB_NAME='Worker' AND ZTBMAINDEPARMENT.MAINDEPTNAME = 'SX' AND ZTBWORKPOSITION.WORK_POSITION_NAME<>'SX_VP' AND ZTBEMPLINFO.WORK_STATUS_CODE = 1 AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}' AND APPLY_DATE = CAST(GETDATE() as date)
+                      
+                    ),
+                    ATT_WF_BY_SERIES AS
+                    (
+                    SELECT EQ_SERIES, COUNT(EQ_SERIES) AS ATT_WF, COUNT(EQ_SERIES) * @worktime AS ATT_WF_CAPA FROM ATT_WF_TB GROUP BY EQ_SERIES
+                    )
+          SELECT UnPivot_LeadTime.*, EQ_OP_TB.MAN_FULL_CAPA*1.0/60 AS EQ_CAPA, EQ_OP_TB.MAN_FULL_CAPA*1.0/60*1.333333 AS EQ_CAPA_12H, RETAIN_WF_BY_SERIES.RETAIN_WF_CAPA*1.0/60 AS RETAIN_WF_CAPA, ATT_WF_BY_SERIES.ATT_WF_CAPA*1.0/60 AS ATT_WF_CAPA,RETAIN_WF_BY_SERIES.RETAIN_WF_CAPA*1.0/60*1.333333 AS RETAIN_WF_CAPA_12H,ATT_WF_BY_SERIES.ATT_WF_CAPA*1.0/60*1.333333 AS ATT_WF_CAPA_12H  FROM UnPivot_LeadTime 
+          LEFT JOIN EQ_OP_TB ON (UnPivot_LeadTime.EQ_SERIES = EQ_OP_TB.EQ_SERIES)
+          LEFT JOIN RETAIN_WF_BY_SERIES ON (UnPivot_LeadTime.EQ_SERIES = RETAIN_WF_BY_SERIES.EQ_SERIES)
+          LEFT JOIN ATT_WF_BY_SERIES ON (UnPivot_LeadTime.EQ_SERIES = ATT_WF_BY_SERIES.EQ_SERIES)
+          ORDER BY UnPivot_LeadTime.EQ_SERIES ASC, UnPivot_LeadTime.PROD_DATE ASC
+          `;
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);  
           //console.log(checkkq);
           res.send(checkkq);
