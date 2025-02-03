@@ -4653,7 +4653,7 @@ SELECT
               LEFT JOIN (
             SELECT  AA.CTR_CD, AA.G_CODE, M100.G_NAME, M100.G_NAME_KD,M100.PROD_TYPE,  AA.STOCK, AA.BLOCK_QTY, (AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
             (
-            SELECT CTR_CD, G_CODE, SUM(CASE WHEN STATUS=''N'' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS=''B'' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN =''Y'' GROUP BY CTR_CD, G_CODE
+            SELECT CTR_CD, G_CODE, SUM(CASE WHEN STATUS=''N'' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS=''B'' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN =''Y''  AND (I660.REMARK is null OR  I660.REMARK<> ''Pending Huy ton'')GROUP BY CTR_CD, G_CODE
             ) AS AA
             LEFT JOIN M100 ON (M100.CTR_CD = AA.CTR_CD AND M100.G_CODE = AA.G_CODE)        
               ) AS THANHPHAM ON (
@@ -5514,7 +5514,7 @@ WITH PO_BALANCE_TABLE AS (
          SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,
          SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY
        FROM I660
-       WHERE USE_YN ='Y'
+       WHERE USE_YN ='Y'  AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton')
        GROUP BY CTR_CD,G_CODE
      ) AS AA
      LEFT JOIN M100 ON (M100.CTR_CD = AA.CTR_CD AND M100.G_CODE = AA.G_CODE)
@@ -12814,7 +12814,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
-          let condition = " WHERE I660.USE_YN <> 'X' ";
+          let condition = " WHERE I660.USE_YN <> 'X'  AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton')";
           if (DATA.ALLTIME === false) {
             condition += ` AND I660.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'`;
           }
@@ -12937,7 +12937,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let setpdQuery = `
           SELECT  AA.G_CODE, M100.G_NAME, M100.G_NAME_KD, M100.PROD_TYPE, AA.STOCK, AA.BLOCK_QTY, (AA.STOCK + AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
           (
-          SELECT G_CODE, CTR_CD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK, SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y' AND I660.CTR_CD='${DATA.CTR_CD}' GROUP BY G_CODE, CTR_CD
+          SELECT G_CODE, CTR_CD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK, SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE USE_YN ='Y'  AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton') AND I660.CTR_CD='${DATA.CTR_CD}' GROUP BY G_CODE, CTR_CD
           ) AS AA
           LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE AND M100.CTR_CD = AA.CTR_CD)
           ${condition}
@@ -12965,7 +12965,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let setpdQuery = `
           SELECT   AA.G_NAME_KD, AA.STOCK, AA.BLOCK_QTY,(AA.STOCK+ AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
           (
-          SELECT M100.G_NAME_KD, M100.CTR_CD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660  LEFT JOIN M100 ON  (M100.G_CODE = I660.G_CODE AND M100.CTR_CD = I660.CTR_CD) WHERE I660.USE_YN ='Y' AND I660.CTR_CD='${DATA.CTR_CD}' GROUP BY M100.G_NAME_KD, M100.CTR_CD
+          SELECT M100.G_NAME_KD, M100.CTR_CD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK,SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660  LEFT JOIN M100 ON  (M100.G_CODE = I660.G_CODE AND M100.CTR_CD = I660.CTR_CD) WHERE I660.USE_YN ='Y'  AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton') AND I660.CTR_CD='${DATA.CTR_CD}' GROUP BY M100.G_NAME_KD, M100.CTR_CD
           ) AS AA
           ${condition}
           AND AA.CTR_CD='${DATA.CTR_CD}'
@@ -13004,7 +13004,7 @@ ON(DIEMDANHBP.MAINDEPTNAME = BANGNGHI.MAINDEPTNAME)`;
           let setpdQuery = `
           SELECT M110.CUST_NAME_KD, AA.PROD_REQUEST_NO, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PO_NO, M100.PROD_TYPE, AA.STOCK, AA.BLOCK_QTY, (AA.STOCK + AA.BLOCK_QTY) AS TOTAL_STOCK FROM 
           (
-          SELECT I660.PROD_REQUEST_NO, I660.CTR_CD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK, SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE I660.USE_YN ='Y' AND I660.CTR_CD='${DATA.CTR_CD}' GROUP BY I660.PROD_REQUEST_NO, I660.CTR_CD
+          SELECT I660.PROD_REQUEST_NO, I660.CTR_CD, SUM(CASE WHEN STATUS='N' THEN I660.IN_QTY ELSE 0 END) AS STOCK, SUM(CASE WHEN STATUS='B' THEN I660.IN_QTY ELSE 0 END) AS BLOCK_QTY FROM I660 WHERE I660.USE_YN ='Y'  AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton') AND I660.CTR_CD='${DATA.CTR_CD}' GROUP BY I660.PROD_REQUEST_NO, I660.CTR_CD
           ) AS AA
           LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = AA.PROD_REQUEST_NO AND P400.CTR_CD = AA.CTR_CD)
           LEFT JOIN M100 ON (M100.G_CODE = P400.G_CODE AND M100.CTR_CD = P400.CTR_CD)
@@ -21257,7 +21257,7 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `          
-          SELECT * FROM ZTB_DEPARTMENT_TB ORDER BY MAINDEPT ASC
+          SELECT * FROM ZTB_DEPARTMENT_TB ORDER BY DEPT_CODE ASC
           `;
           //console.log(insertQuery);
           checkkq = await queryDB(setpdQuery);  
@@ -21293,7 +21293,7 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = `          
-          SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE ORDER BY POST_ID DESC
+          SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE ORDER BY POST_ID DESC
           `;
           //console.log(insertQuery);
           checkkq = await queryDB(setpdQuery);  
@@ -21363,10 +21363,10 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           )
           SELECT TON2_TB.*,PLANTB.PLAN_DATE, 
           CASE
-           WHEN PLANTB.PROCESS_NUMBER = 1 THEN UPH1
-           WHEN PLANTB.PROCESS_NUMBER = 2 THEN UPH2
-           WHEN PLANTB.PROCESS_NUMBER = 3 THEN UPH3
-           WHEN PLANTB.PROCESS_NUMBER = 4 THEN UPH4
+           WHEN TON2_TB.PROCESS_NUMBER = 1 THEN UPH1
+           WHEN TON2_TB.PROCESS_NUMBER = 2 THEN UPH2
+           WHEN TON2_TB.PROCESS_NUMBER = 3 THEN UPH3
+           WHEN TON2_TB.PROCESS_NUMBER = 4 THEN UPH4
            ELSE 1
           END AS UPH,
           isnull(D1,0) AS D1,
@@ -21677,6 +21677,42 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);  
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "updatePost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+         UPDATE ZTB_POST_TB SET TITLE=N'${DATA.TITLE}', CONTENT=N'${DATA.CONTENT}', IS_PINNED='${DATA.IS_PINNED}' WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+        case "deletePost":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";          
+          let setpdQuery = `
+         DELETE FROM ZTB_POST_TB WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
