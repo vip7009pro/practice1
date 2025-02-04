@@ -285,8 +285,7 @@ app.post("/api2", function (req, res) {
       UPD_DATE: '2024-12-30',
     }  
     console.log(newNotification);
-    emitSocketCSharp("notification_panel", DATA);      
-      
+    emitSocketCSharp("notification_panel", DATA);
    
     res.send({ tk_status: "OK" });
   } else {
