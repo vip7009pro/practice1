@@ -21709,7 +21709,7 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";          
           let setpdQuery = `
-         DELETE FROM ZTB_POST_TB WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
+          DELETE FROM ZTB_POST_TB WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
