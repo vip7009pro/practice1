@@ -21301,7 +21301,7 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
           ${condition} ORDER BY POST_ID DESC
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);  
           //console.log(checkkq);
           res.send(checkkq);
@@ -21321,7 +21321,7 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
           ORDER BY POST_ID DESC
           `;
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);  
           //console.log(checkkq);
           res.send(checkkq);
