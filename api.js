@@ -376,8 +376,8 @@ function generate_condition_get_ycsx(
   else {
     $phanloaihang = '';
   }
-  console.log('material_yes',$material_yes)
-  if($material_yes){
+  console.log('material_yes', $material_yes)
+  if ($material_yes) {
     $material_yes = ` AND P400.MATERIAL_YN='Y' `;
   }
   else {
@@ -398,7 +398,7 @@ function generate_condition_get_ycsx(
     $ycsxpending +
     $phanloaihang +
     $material_yes;
-    console.log($condition)
+  console.log($condition)
   return $condition;
 }
 function generate_condition_get_inspection_input(
@@ -3373,18 +3373,19 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
               ) AS PVTB
           ),
 		  LOSSKT AS (
-           SELECT BB.CTR_CD,BB.G_CODE, SUM(BB.INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(BB.TOTAL_NG) AS TOTAL_NG FROM 
+           SELECT BB.G_CODE, SUM(BB.INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(BB.TOTAL_NG) AS TOTAL_NG, CASE WHEN SUM(BB.TOTAL_NG)*1.0/SUM(BB.INSPECT_TOTAL_QTY) > 0.05 THEN 0.05 ELSE  SUM(BB.TOTAL_NG)*1.0/SUM(BB.INSPECT_TOTAL_QTY) END AS NG_RATE, BB.CTR_CD FROM 
             (
-            SELECT AA.CTR_CD,AA.G_CODE, AA.INSPECT_DATE,AA.INSPECT_TOTAL_QTY, AA.TOTAL_NG, COUNT(G_CODE) OVER(PARTITION BY G_CODE ORDER BY INSPECT_DATE DESC) AS CNT 
+            SELECT AA.G_CODE, AA.INSPECT_DATE,AA.INSPECT_TOTAL_QTY, AA.TOTAL_NG, COUNT(G_CODE) OVER(PARTITION BY G_CODE ORDER BY INSPECT_DATE DESC) AS CNT, AA.CTR_CD
             FROM 
             (
-            SELECT  CTR_CD,G_CODE,CAST(INSPECT_DATETIME AS date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY-ERR32) AS INSPECT_TOTAL_QTY, SUM(ERR1+ERR2+ERR3+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
-            ) AS TOTAL_NG FROM ZTBINSPECTNGTB
-            GROUP BY CTR_CD,G_CODE,CAST(INSPECT_DATETIME AS date)
+            SELECT  G_CODE,CAST(INSPECT_DATETIME AS date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY-ERR32) AS INSPECT_TOTAL_QTY, SUM(ERR1+ERR2+ERR3+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31
+            ) AS TOTAL_NG, CTR_CD FROM ZTBINSPECTNGTB
+            WHERE CTR_CD='${DATA.CTR_CD}'
+            GROUP BY G_CODE,CAST(INSPECT_DATETIME AS date), CTR_CD
             ) AS AA
             ) AS BB
-            WHERE BB.CNT <=10 AND BB.INSPECT_TOTAL_QTY <> 0
-            GROUP BY BB.CTR_CD, BB.G_CODE
+            WHERE BB.CNT <=10 AND BB.INSPECT_TOTAL_QTY<>0
+            GROUP BY BB.G_CODE, BB.CTR_CD
           )
           SELECT 
           M100.FACTORY,
@@ -3450,11 +3451,11 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
                     isnull(AA.CD3, 0) AS CD3,
                     isnull(AA.CD4, 0) AS CD4, 
                     isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS LOT_TOTAL_OUTPUT_QTY_EA,
-                    PLANTABLE.PROD_REQUEST_NO AS DACHITHI, CASE WHEN M100.PD <>0 THEN
-					CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX2,0)+isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (isnull(LOSS_SETTING2,0)+isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD1,
-CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD2,
-CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX4,0))*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD3,
-CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull((LOSSKT.TOTAL_NG*1.0/LOSSKT.INSPECT_TOTAL_QTY),0)) + (0)*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD4
+                    PLANTABLE.PROD_REQUEST_NO AS DACHITHI,CASE WHEN M100.PD <>0 THEN        
+                                      CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX2,0)+isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull(LOSSKT.NG_RATE,0) + (isnull(LOSS_SETTING2,0)+isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000))) ELSE 0 END AS SLC_CD1,
+ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX3,0)+isnull(LOSS_SX4,0))*1.0/100+isnull(LOSSKT.NG_RATE,0)) + (isnull(LOSS_SETTING3,0)+isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD2,
+ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(isnull(LOSS_SX4,0))*1.0/100+isnull(LOSSKT.NG_RATE,0)) + (isnull(LOSS_SETTING4,0))*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD3,
+ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(LOSSKT.NG_RATE,0)) + (0)*1.0/M100.PD*(M100.G_C*M100.G_C_R)*1000)) ELSE 0 END AS SLC_CD4
           FROM P400
           LEFT JOIN M100 ON (M100.G_CODE =P400.G_CODE AND M100.CTR_CD =P400.CTR_CD)
           LEFT JOIN M010 ON (M010.EMPL_NO= P400.EMPL_NO AND M010.CTR_CD =P400.CTR_CD)
@@ -3482,6 +3483,7 @@ CASE WHEN M100.PD <>0 THEN CEILING((P400.PROD_REQUEST_QTY*(1+(0)*1.0/100+isnull(
             DATA.CTR_CD,
             DATA.material_yes
           )} ORDER BY P400.PROD_REQUEST_NO DESC`;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           ////console.log(checkkq);
           res.send(checkkq);
@@ -3657,7 +3659,6 @@ MAX(SLC) FOR PROCESS_NUMBER IN ([1], [2], [3], [4], [5]) -- Add as many process 
 					(isnull(SLC_PVTB.SLC_CD3,0)- isnull(AA.CD3,0)) AS TON_CD3,
 					(isnull(SLC_PVTB.SLC_CD4,0)- isnull(AA.CD4,0)) AS TON_CD4,
 					isnull(SLC_PVTB.SLC_CD1,0) AS SLC_CD1, isnull(SLC_PVTB.SLC_CD2,0) AS SLC_CD2, isnull(SLC_PVTB.SLC_CD3,0) AS SLC_CD3, isnull(SLC_PVTB.SLC_CD4,0) AS SLC_CD4
-					
           FROM P400
           LEFT JOIN M100 ON (M100.G_CODE =P400.G_CODE AND M100.CTR_CD =P400.CTR_CD)
           LEFT JOIN M010 ON (M010.EMPL_NO= P400.EMPL_NO AND M010.CTR_CD =P400.CTR_CD)
@@ -3867,7 +3868,7 @@ MAX(SLC) FOR PROCESS_NUMBER IN ([1], [2], [3], [4], [5]) -- Add as many process 
           ////console.log(DATA);
           let currenttime = moment().format("YYYY-MM-DD HH:mm:ss");
           let checkkq = "OK";
-          let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID, PROCESS_NUMBER, TEMP_QTY, USE_YN) VALUES  ('${DATA.CTR_CD}','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4,7)}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER ?? 0}, ${DATA.TEMP_QTY ?? 0},'${DATA.USE_YN}')`;
+          let setpdQuery = `INSERT INTO P501 (CTR_CD,PROCESS_IN_DATE,PROCESS_IN_NO,PROCESS_IN_SEQ,M_LOT_IN_SEQ,PROCESS_PRT_SEQ,M_LOT_NO,PROCESS_LOT_NO,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL, PLAN_ID, PROCESS_NUMBER, TEMP_QTY, USE_YN) VALUES  ('${DATA.CTR_CD}','${DATA.in_date}','${DATA.next_process_in_no}','${DATA.PROD_REQUEST_NO.substring(4, 7)}','${DATA.PROD_REQUEST_DATE.substring(5, 8)}','${DATA.next_process_prt_seq}','','${DATA.next_process_lot_no}',GETDATE(),'${DATA.EMPL_NO}',GETDATE(),'${DATA.EMPL_NO}','${DATA.PLAN_ID}',${DATA.PROCESS_NUMBER ?? 0}, ${DATA.TEMP_QTY ?? 0},'${DATA.USE_YN}')`;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -5051,7 +5052,6 @@ SELECT
                 M100.CTR_CD = TONKIEM_NEW.CTR_CD
                 AND M100.G_CODE = TONKIEM_NEW.G_CODE
               )       
-              
               LEFT JOIN (
                 SELECT 
                   ZTB_HALF_GOODS.CTR_CD,
@@ -14863,7 +14863,7 @@ WHERE ZTB_QUOTATION_CALC_TB.CTR_CD = '${DATA.CTR_CD}'
           let checkkq = "OK";
           let today = moment().format("YYYY-MM-DD");
           let condition = ``
-          if(DATA.NG_TYPE !=='ALL')
+          if (DATA.NG_TYPE !== 'ALL')
             condition += ` AND ERROR_TABLE.ERR_TYPE='${DATA.NG_TYPE}'`;
           let setpdQuery = `
           WITH INSPECTION_DATA_DOC1 AS
@@ -17829,7 +17829,7 @@ SELECT * FROM TKTB WHERE TOTAL_WAIT > 0 AND CTR_CD='${DATA.CTR_CD}'`;
           let setpdQuery = `
             INSERT INTO ZTB_DM_HISTORY2
             SELECT '${DATA.CTR_CD}' AS CTR_CD, '${DATA.PROD_REQUEST_NO}' AS PROD_REQUEST_NO,PROCESS_NUMBER,EQ_SERIES,SETTING_TIME,UPH,STEP,LOSS_SX,LOSS_SETTING,FACTORY,GETDATE() AS INS_DATE,'${EMPL_NO}' AS INS_EMPL,GETDATE() AS UPD_DATE,'${EMPL_NO}' AS UPD_EMPL FROM ZTB_PROD_PROCESS_TB WHERE G_CODE='${DATA.G_CODE}' AND CTR_CD='${DATA.CTR_CD}'
-            `;         
+            `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           console.log(checkkq);
@@ -20267,9 +20267,9 @@ ORDER BY PROD_REQUEST_NO ASC
           setpdQuery = `UPDATE OUT_KHO_SX SET USE_YN='X', REMARK ='TRA_IQC' WHERE PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
-         /*  setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
-          console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery); */
+          /*  setpdQuery = `UPDATE P500 SET USE_YN='X',INPUT_QTY=0, REMAIN_QTY = 0, REMARK ='TRA_IQC' WHERE PLAN_ID='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' `;
+           console.log(setpdQuery);
+           checkkq = await queryDB(setpdQuery); */
           //console.log(checkkq);
           res.send(checkkq);
         })();
@@ -20418,15 +20418,12 @@ ORDER BY PROD_REQUEST_NO ASC
           DECLARE @machine VARCHAR(100);
           DECLARE @worktime int;
           SET @worktime = 900;
-
           SELECT @machine = STRING_AGG(CONCAT('''', SUBSTRING(EQ_NAME, 0, 3), ''''), ',')
           FROM (
               SELECT DISTINCT SUBSTRING(EQ_NAME, 0, 3) AS EQ_NAME
               FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}'
           ) AS AA;
-
           --PRINT(@machine);
-
           DECLARE @query varchar(max), @query2 varchar(max), @query3 varchar(max)
           SELECT @query = '
           DECLARE @worktime int;
@@ -20523,7 +20520,6 @@ ORDER BY PROD_REQUEST_NO ASC
           LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.SUBDEPTCODE = ZTBSUBDEPARTMENT.SUBDEPTCODE  AND ZTBWORKPOSITION.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD
           LEFT JOIN ZTBMAINDEPARMENT ON ZTBSUBDEPARTMENT.MAINDEPTCODE = ZTBMAINDEPARMENT.MAINDEPTCODE AND ZTBSUBDEPARTMENT.CTR_CD = ZTBMAINDEPARMENT.CTR_CD
           WHERE ZTBATTENDANCETB.ON_OFF=1 AND ZTBJOB.JOB_NAME=''Worker'' AND ZTBMAINDEPARMENT.MAINDEPTNAME = ''SX'' AND ZTBWORKPOSITION.WORK_POSITION_NAME<>''SX_VP'' AND ZTBEMPLINFO.WORK_STATUS_CODE = 1 AND ZTBEMPLINFO.CTR_CD=''${DATA.CTR_CD}'' AND APPLY_DATE = CAST(GETDATE() as date)
-            
           ),
           ATT_WF_BY_SERIES AS
           (
@@ -20535,13 +20531,10 @@ ORDER BY PROD_REQUEST_NO ASC
           isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0)*1.0/2/AVG_EQ_OP * @worktime AS RETAIN_WF_CAPA, 
           isnull(ATT_WF_BY_SERIES.ATT_WF,0) AS ATT_WF, 
           isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0/2/AVG_EQ_OP * @worktime AS ATT_WF_CAPA, 
-
           isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 AS RETAIN_WF_TO_EQ, 
           isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0) *1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime AS RETAIN_WF_TO_EQ_CAPA, 
-
           isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 AS ATT_WF_TO_EQ, 
           isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime AS ATT_WF_TO_EQ_CAPA,'
-
           SELECT @query3='
            CASE WHEN isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0) *1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime > EQ_OP_TB.MAN_FULL_CAPA THEN EQ_OP_TB.MAN_FULL_CAPA ELSE isnull(RETAIN_WF_BY_SERIES.RETAIN_WF,0) *1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime END AS RETAIN_WF_MIN_CAPA,
            CASE WHEN isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime > EQ_OP_TB.MAN_FULL_CAPA THEN EQ_OP_TB.MAN_FULL_CAPA ELSE isnull(ATT_WF_BY_SERIES.ATT_WF,0)*1.0 / EQ_OP_TB.AVG_EQ_OP/2 * @worktime END AS ATT_WF_MIN_CAPA
@@ -20563,7 +20556,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "loadProdProcessData":
+      case "loadProdProcessData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20581,7 +20574,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "addProdProcessData":
+      case "addProdProcessData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20599,7 +20592,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "addProdProcessDataQLSX":
+      case "addProdProcessDataQLSX":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20617,7 +20610,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "updateProdProcessData":
+      case "updateProdProcessData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20635,7 +20628,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "updateProdProcessDataQLSX":
+      case "updateProdProcessDataQLSX":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20653,7 +20646,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "deleteProdProcessData":
+      case "deleteProdProcessData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20671,7 +20664,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "deleteProcessNotInCurrentListFromDataBase":
+      case "deleteProcessNotInCurrentListFromDataBase":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20689,7 +20682,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "checkProcessExist":
+      case "checkProcessExist":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20707,7 +20700,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "autoUpdateDocUSEYN_EXP":
+      case "autoUpdateDocUSEYN_EXP":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20733,7 +20726,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "isM_LOT_NO_in_IN_KHO_SX":
+      case "isM_LOT_NO_in_IN_KHO_SX":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20751,7 +20744,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "isM_LOT_NO_in_O302":
+      case "isM_LOT_NO_in_O302":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20768,8 +20761,8 @@ ORDER BY PROD_REQUEST_NO ASC
           //console.log(checkkq);
           res.send(checkkq);
         })();
-        break;        
-        case "load_Notification_Data":
+        break;
+      case "load_Notification_Data":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20779,8 +20772,7 @@ ORDER BY PROD_REQUEST_NO ASC
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let setpdQuery = ``;
-
-          if(EMPL_NO==='NHU1903') {
+          if (EMPL_NO === 'NHU1903') {
             setpdQuery = `
             SELECT TOP 1000 * FROM ZTB_NOTIFICATION WHERE CTR_CD='${DATA.CTR_CD}' ORDER BY INS_DATE DESC
             `;
@@ -20793,14 +20785,13 @@ ORDER BY PROD_REQUEST_NO ASC
           else {
             setpdQuery = `SELECT  TOP 1000 * FROM ZTB_NOTIFICATION WHERE CTR_CD='${DATA.CTR_CD}' AND MAINDEPTNAME LIKE '%${DATA.MAINDEPTNAME}%' AND SUBDEPTNAME LIKE '%${DATA.SUBDEPTNAME}%' ORDER BY INS_DATE DESC`;
           }
-              
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "insert_Notification_Data":
+      case "insert_Notification_Data":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20818,7 +20809,7 @@ ORDER BY PROD_REQUEST_NO ASC
           res.send(checkkq);
         })();
         break;
-        case "check_G_NAME_2Ver_active":
+      case "check_G_NAME_2Ver_active":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20837,7 +20828,7 @@ SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR
           res.send(checkkq);
         })();
         break;
-        case "loadBTPAuto":
+      case "loadBTPAuto":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20906,7 +20897,7 @@ SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR
           res.send(checkkq);
         })();
         break;
-        case "loadBTPAuto2":
+      case "loadBTPAuto2":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20924,7 +20915,7 @@ SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR
           res.send(checkkq);
         })();
         break;
-        case "loadBTPSummaryAuto":
+      case "loadBTPSummaryAuto":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -20997,7 +20988,7 @@ SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR
           res.send(checkkq);
         })();
         break;
-        case "loadBTPSummaryAuto2":
+      case "loadBTPSummaryAuto2":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21018,7 +21009,7 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
           res.send(checkkq);
         })();
         break;
-        case "setMaterial_YN":
+      case "setMaterial_YN":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21036,7 +21027,7 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
           res.send(checkkq);
         })();
         break;
-        case "setca":
+      case "setca":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21054,7 +21045,7 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
           res.send(checkkq);
         })();
         break;
-        case "setcadiemdanh":
+      case "setcadiemdanh":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21072,7 +21063,7 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
           res.send(checkkq);
         })();
         break;
-        case "updateBTP_M100":
+      case "updateBTP_M100":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21148,7 +21139,6 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
 		  WHEN MATCHED THEN
 		  UPDATE 
 		  SET BTP_QTY = SRC_TB.TOTAL_BTP;
-
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -21156,7 +21146,7 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
           res.send(checkkq);
         })();
         break;
-        case "updateBTP_M1002":
+      case "updateBTP_M1002":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21172,10 +21162,8 @@ SELECT  G_CODE, G_NAME, SUM(CASE WHEN FINAL_XUONG='A' THEN TONBTPTB.TEMP_QTY_EA 
           ),
 		  THIRD AS
 		  (
-
 SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD,G_CODE
 )
-
 		  MERGE INTO M100 
 		  USING 
 		  (
@@ -21187,8 +21175,6 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
 		  WHEN MATCHED THEN
 		  UPDATE 
 		  SET BTP_QTY = SRC_TB.TOTAL_BTP;
-
-
           `;
           //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
@@ -21196,7 +21182,7 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           res.send(checkkq);
         })();
         break;
-        case "updateTONKIEM_M100":
+      case "updateTONKIEM_M100":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21228,7 +21214,7 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           res.send(checkkq);
         })();
         break;
-        case "insert_information":
+      case "insert_information":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21242,12 +21228,12 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           VALUES ('002', '${DATA.DEPT_CODE}', N'${DATA.FILE_NAME}',N'${DATA.TITLE}', N'${DATA.CONTENT}',GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
           `;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery); 
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "getDepartmentList":
+      case "getDepartmentList":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21260,12 +21246,12 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           SELECT * FROM ZTB_DEPARTMENT_TB ORDER BY DEPT_CODE ASC
           `;
           //console.log(insertQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "getlastestPostId":
+      case "getlastestPostId":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21278,12 +21264,12 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           SELECT isnull(MAX(POST_ID),1) AS POST_ID FROM ZTB_POST_TB
           `;
           //console.log(insertQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "loadPost":
+      case "loadPost":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21293,21 +21279,21 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
           let checkkq = "OK";
           let condition = `WHERE 1=1 `;
-          if(DATA.DEPT_CODE !==0)
+          if (DATA.DEPT_CODE !== 0)
             condition += ` AND ZTB_POST_TB.DEPT_CODE=${DATA.DEPT_CODE}`
-          if(DATA.DEPT_CODE ===0)
+          if (DATA.DEPT_CODE === 0)
             condition += ` AND ZTB_POST_TB.IS_PINNED='Y'`
           let setpdQuery = `          
           SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
           ${condition} ORDER BY POST_ID DESC
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "loadPostAll":
+      case "loadPostAll":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21315,19 +21301,18 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
-         
+          let checkkq = "OK";
           let setpdQuery = `          
           SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
           ORDER BY POST_ID DESC
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "loadKHSXDAIHAN":
+      case "loadKHSXDAIHAN":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21344,7 +21329,6 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
               SELECT DISTINCT SUBSTRING(EQ_NAME, 0, 3) AS EQ_NAME
               FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}'
           ) AS AA;
-
           SELECT @query = '
           WITH KQSX AS
           ( SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX, ZTB_QLSXPLAN.CTR_CD FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = ZTB_SX_RESULT.CTR_CD) WHERE ZTB_QLSXPLAN.STEP=0 AND ZTB_QLSXPLAN.CTR_CD=''${DATA.CTR_CD}'' GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.CTR_CD
@@ -21419,12 +21403,12 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           execute(@query)
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "moveKHSXDAIHAN":
+      case "moveKHSXDAIHAN":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21441,7 +21425,6 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
               SELECT DISTINCT SUBSTRING(EQ_NAME, 0, 3) AS EQ_NAME
               FROM ZTB_SX_EQ_STATUS WHERE CTR_CD='${DATA.CTR_CD}'
           ) AS AA;
-
           SELECT @query = '
           WITH KQSX AS
           ( SELECT ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, SUM(isnull(SX_RESULT,0)) AS KETQUASX, ZTB_QLSXPLAN.CTR_CD FROM ZTB_SX_RESULT LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = ZTB_SX_RESULT.CTR_CD) WHERE ZTB_QLSXPLAN.STEP=0 AND ZTB_QLSXPLAN.CTR_CD=''${DATA.CTR_CD}'' GROUP BY ZTB_QLSXPLAN.PROD_REQUEST_NO, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.CTR_CD
@@ -21480,7 +21463,6 @@ SELECT CTR_CD,G_CODE, SUM(TEMP_QTY_EA) AS FINAL_BTP FROM  BTPTB GROUP BY  CTR_CD
           (
           SELECT CTR_CD,G_CODE,G_NAME, PROCESS_NUMBER, EQ_NAME, SUM(PROD_REQUEST_QTY) AS PROD_REQUEST_QTY, SUM(KETQUASX) AS KETQUASX, SUM(TON_YCSX) AS TON_YCSX FROM TON_YCSX_TB  GROUP BY CTR_CD,G_CODE,G_NAME, PROCESS_NUMBER, EQ_NAME
           ),
-         
           TON3_TB AS
           (SELECT * FROM TON2_TB WHERE TON2_TB.TON_YCSX > 0)
           INSERT INTO ZTB_PROD_PLAN_TB
@@ -21489,12 +21471,12 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, ''${DATA.TO_DATE}'' AS PLAN_DA
           execute(@query)
           `;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-       case "insertKHSXDAIHAN":
+      case "insertKHSXDAIHAN":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21502,17 +21484,17 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, ''${DATA.TO_DATE}'' AS PLAN_DA
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `          
           INSERT INTO ZTB_PROD_PLAN_TB (CTR_CD,EQ_SERIES,G_CODE,PROCESS_NUMBER,PLAN_DATE,D1,D2,D3,D4,D5,D6,D7,D8,D9,D10,D11,D12,D13,D14,D15, INS_EMPL, INS_DATE,UPD_EMPL,UPD_DATE) VALUES ('${DATA.CTR_CD}','${DATA.EQ_NAME}','${DATA.G_CODE}',${DATA.PROCESS_NUMBER},'${DATA.PLAN_DATE}',${DATA.D1},${DATA.D2},${DATA.D3},${DATA.D4},${DATA.D5},${DATA.D6},${DATA.D7},${DATA.D8},${DATA.D9},${DATA.D10},${DATA.D11},${DATA.D12},${DATA.D13},${DATA.D14},${DATA.D15},'${EMPL_NO}',GETDATE(), '${EMPL_NO}',GETDATE())
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-       case "updateKHSXDAIHAN":
+      case "updateKHSXDAIHAN":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21543,12 +21525,12 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, ''${DATA.TO_DATE}'' AS PLAN_DA
           WHERE PLAN_DATE='${DATA.PLAN_DATE}' AND G_CODE='${DATA.G_CODE}' AND PROCESS_NUMBER='${DATA.PROCESS_NUMBER}' AND CTR_CD='${DATA.CTR_CD}'
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-       case "moveKHSXDAIHAN_old":
+      case "moveKHSXDAIHAN_old":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21562,12 +21544,12 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, ''${DATA.TO_DATE}'' AS PLAN_DA
 SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE, D2 AS D1, D3 AS D2, D4 AS D3, D5 AS D4, D6 AS D5, D7 AS D6, D8 AS D7, D9 AS D8, D10 AS D9, D11 AS D10, D12 AS D11, D13 AS D12, D14 AS D13, D15 AS D14, 0 AS D15 FROM ZTB_PROD_PLAN_TB WHERE PLAN_DATE ='${DATA.FROM_DATE}'
           `;
           console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-       case "getProductionPlanCapaData":
+      case "getProductionPlanCapaData":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21650,7 +21632,6 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           UnPivot_LeadTime AS (
               SELECT 
                   EQ_SERIES, Attribute AS PROD_DATE,
-                  
                   Value AS LEADTIME
               FROM LEADTIMETB2
               UNPIVOT
@@ -21677,7 +21658,7 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
                     ),
                     RETAIN_WF_BY_SERIES AS
                     (
-                      SELECT EQ_SERIES, COUNT(EQ_SERIES) AS RETAIN_WF, COUNT(EQ_SERIES) * @worktime AS RETAIN_WF_CAPA FROM RETAIN_WF_TB
+                      SELECT EQ_SERIES, COUNT(EQ_SERIES) AS RETAIN_WF, COUNT(EQ_SERIES) * @worktime*1.0/2 AS RETAIN_WF_CAPA FROM RETAIN_WF_TB
                       GROUP BY EQ_SERIES
                     ),
                     ATT_WF_TB AS
@@ -21689,11 +21670,10 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
                     LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.SUBDEPTCODE = ZTBSUBDEPARTMENT.SUBDEPTCODE  AND ZTBWORKPOSITION.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD
                     LEFT JOIN ZTBMAINDEPARMENT ON ZTBSUBDEPARTMENT.MAINDEPTCODE = ZTBMAINDEPARMENT.MAINDEPTCODE AND ZTBSUBDEPARTMENT.CTR_CD = ZTBMAINDEPARMENT.CTR_CD
                     WHERE ZTBATTENDANCETB.ON_OFF=1 AND ZTBJOB.JOB_NAME='Worker' AND ZTBMAINDEPARMENT.MAINDEPTNAME = 'SX' AND ZTBWORKPOSITION.WORK_POSITION_NAME<>'SX_VP' AND ZTBEMPLINFO.WORK_STATUS_CODE = 1 AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}' AND APPLY_DATE = CAST(GETDATE() as date)
-                      
                     ),
                     ATT_WF_BY_SERIES AS
                     (
-                    SELECT EQ_SERIES, COUNT(EQ_SERIES) AS ATT_WF, COUNT(EQ_SERIES) * @worktime AS ATT_WF_CAPA FROM ATT_WF_TB GROUP BY EQ_SERIES
+                    SELECT EQ_SERIES, COUNT(EQ_SERIES) AS ATT_WF, COUNT(EQ_SERIES) * @worktime*1.0/2 AS ATT_WF_CAPA FROM ATT_WF_TB GROUP BY EQ_SERIES
                     )
           SELECT UnPivot_LeadTime.*, EQ_OP_TB.MAN_FULL_CAPA*1.0/60 AS EQ_CAPA, EQ_OP_TB.MAN_FULL_CAPA*1.0/60*1.333333 AS EQ_CAPA_12H, RETAIN_WF_BY_SERIES.RETAIN_WF_CAPA*1.0/60 AS RETAIN_WF_CAPA, ATT_WF_BY_SERIES.ATT_WF_CAPA*1.0/60 AS ATT_WF_CAPA,RETAIN_WF_BY_SERIES.RETAIN_WF_CAPA*1.0/60*1.333333 AS RETAIN_WF_CAPA_12H,ATT_WF_BY_SERIES.ATT_WF_CAPA*1.0/60*1.333333 AS ATT_WF_CAPA_12H  FROM UnPivot_LeadTime 
           LEFT JOIN EQ_OP_TB ON (UnPivot_LeadTime.EQ_SERIES = EQ_OP_TB.EQ_SERIES)
@@ -21702,12 +21682,12 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           ORDER BY UnPivot_LeadTime.EQ_SERIES ASC, UnPivot_LeadTime.PROD_DATE ASC
           `;
           //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);  
+          checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
         })();
         break;
-        case "updatePost":
+      case "updatePost":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21715,7 +21695,7 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
          UPDATE ZTB_POST_TB SET TITLE=N'${DATA.TITLE}', CONTENT=N'${DATA.CONTENT}', IS_PINNED='${DATA.IS_PINNED}' WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
           `;
@@ -21725,7 +21705,7 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           res.send(checkkq);
         })();
         break;
-        case "deletePost":
+      case "deletePost":
         (async () => {
           let DATA = qr["DATA"];
           //console.log(DATA);
@@ -21733,7 +21713,7 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
           let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
-          let checkkq = "OK";          
+          let checkkq = "OK";
           let setpdQuery = `
           DELETE FROM ZTB_POST_TB WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
           `;
