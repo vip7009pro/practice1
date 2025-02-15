@@ -12074,6 +12074,193 @@ ON (DATEADD(day,+1,CHAMCONG0.CHECK_DATE) = ZTBEMPLINFOA.DATE_COLUMN AND CHAMCONG
           }
           let setpdQuery = `
           DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE;         
+           SET @startdate='${DATA.FROM_DATE}';
+           SET @enddate='${DATA.TO_DATE}';
+           -- CTE: Xử lý dữ liệu từ hàm fn_cleanchamcong
+WITH CleanChamCong AS (
+    SELECT 
+        NV_CCID, 
+        CHECK_DATE, 
+        CHECK_DATETIME, 
+        RANK() OVER (PARTITION BY NV_CCID, CHECK_DATE ORDER BY CHECK_DATETIME ASC) AS CHECKNO, 
+        CTR_CD
+    FROM fn_cleanchamcong(10)
+),
+PivotedChamCong AS (
+    SELECT 
+        NV_CCID, 
+        CHECK_DATE, 
+        [1] AS CHECK1, 
+        [2] AS CHECK2, 
+        [3] AS CHECK3,
+        LEAD([1]) OVER (PARTITION BY NV_CCID ORDER BY CHECK_DATE ASC) AS NEXT_CHECK1,
+        LEAD([2]) OVER (PARTITION BY NV_CCID ORDER BY CHECK_DATE ASC) AS NEXT_CHECK2,
+        LEAD([3]) OVER (PARTITION BY NV_CCID ORDER BY CHECK_DATE ASC) AS NEXT_CHECK3,
+        LAG([1]) OVER (PARTITION BY NV_CCID ORDER BY CHECK_DATE ASC) AS PREV_CHECK1,
+        LAG([2]) OVER (PARTITION BY NV_CCID ORDER BY CHECK_DATE ASC) AS PREV_CHECK2,
+        LAG([3]) OVER (PARTITION BY NV_CCID ORDER BY CHECK_DATE ASC) AS PREV_CHECK3,
+        CTR_CD
+    FROM 
+        CleanChamCong
+        PIVOT (
+            MIN(CHECK_DATETIME) FOR CHECKNO IN ([1], [2], [3])
+        ) AS pvtb
+),
+DateAndEmployee AS (
+    SELECT 
+        DATE_COLUMN,
+        CALV,
+        NV_CCID,
+        EMPL_NO,
+        CMS_ID,
+        FIRST_NAME,
+        MIDLAST_NAME,
+        SEX_CODE,
+        WORK_STATUS_CODE,
+        FACTORY_CODE,
+        JOB_CODE,
+        WORK_POSITION_CODE,
+        WORK_SHIFT_CODE,
+        DATETABLE.CTR_CD,
+		PHONE_NUMBER
+    FROM DATETABLE
+    CROSS JOIN ZTBEMPLINFO
+    WHERE 
+        DATETABLE.DATE_COLUMN BETWEEN @startdate AND @enddate 
+        AND ZTBEMPLINFO.CTR_CD = '${DATA.CTR_CD}' ${condition}
+),
+AttendanceData AS (
+    SELECT 
+        DATETABLE.DATE_COLUMN,
+        ZTBATTENDANCETB.EMPL_NO,
+        ZTBATTENDANCETB.IN_TIME, 
+        ZTBATTENDANCETB.OUT_TIME, 
+        ZTBATTENDANCETB.APPLY_DATE, 
+        ZTBATTENDANCETB.ON_OFF, 
+        ZTBATTENDANCETB.REMARK, 
+        ZTBATTENDANCETB.OVERTIME_INFO, 
+        ZTBATTENDANCETB.OVERTIME, 
+        ZTBATTENDANCETB.XACNHAN,
+        CURRENT_TEAM,
+        ZTBATTENDANCETB.CURRENT_CA,
+        DATETABLE.CTR_CD
+    FROM DATETABLE
+    LEFT JOIN ZTBATTENDANCETB 
+        ON DATETABLE.DATE_COLUMN = ZTBATTENDANCETB.APPLY_DATE 
+        AND DATETABLE.CTR_CD = ZTBATTENDANCETB.CTR_CD
+    WHERE 
+        DATETABLE.DATE_COLUMN BETWEEN @startdate AND @enddate 
+        AND DATETABLE.CTR_CD = '${DATA.CTR_CD}'
+)
+-- Truy vấn chính
+SELECT 
+    E.DATE_COLUMN,
+    E.NV_CCID,
+    E.EMPL_NO, 
+    E.CMS_ID, 
+    E.MIDLAST_NAME, 
+    E.FIRST_NAME, 
+    E.PHONE_NUMBER, 
+    S.SEX_NAME, 
+    WS.WORK_STATUS_NAME, 
+    F.FACTORY_NAME, 
+    J.JOB_NAME, 
+    WSH.WORK_SHIF_NAME, 
+    A.CURRENT_CA AS CALV,
+    WP.WORK_POSITION_NAME, 
+    SD.SUBDEPTNAME, 
+    MD.MAINDEPTNAME, 
+    OFFTB.REQUEST_DATE, 
+    A.APPLY_DATE, 
+    OFFTB.APPROVAL_STATUS, 
+    OFFTB.OFF_ID, 
+    OFFTB.CA_NGHI, 
+    A.ON_OFF, 
+    A.OVERTIME_INFO, 
+    A.OVERTIME,  
+    R.REASON_NAME, 
+    OFFTB.REMARK, 
+    A.XACNHAN,
+    A.IN_TIME AS FIXED_IN_TIME,
+    A.OUT_TIME AS FIXED_OUT_TIME,
+    P.CHECK1,
+    P.CHECK2,
+    P.CHECK3,
+    P.PREV_CHECK1,
+    P.PREV_CHECK2,
+    P.PREV_CHECK3,
+    P.NEXT_CHECK1,
+    P.NEXT_CHECK2,
+    P.NEXT_CHECK3
+FROM 
+    DateAndEmployee E
+LEFT JOIN AttendanceData A 
+    ON E.EMPL_NO = A.EMPL_NO 
+    AND E.DATE_COLUMN = A.APPLY_DATE 
+    AND E.CTR_CD = A.CTR_CD
+LEFT JOIN ZTBSEX S 
+    ON S.SEX_CODE = E.SEX_CODE 
+    AND S.CTR_CD = E.CTR_CD
+LEFT JOIN ZTBWORKSTATUS WS 
+    ON WS.WORK_STATUS_CODE = E.WORK_STATUS_CODE 
+    AND WS.CTR_CD = E.CTR_CD
+LEFT JOIN ZTBFACTORY F 
+    ON F.FACTORY_CODE = E.FACTORY_CODE 
+    AND F.CTR_CD = E.CTR_CD
+LEFT JOIN ZTBJOB J 
+    ON J.JOB_CODE = E.JOB_CODE 
+    AND J.CTR_CD = E.CTR_CD
+LEFT JOIN ZTBWORKSHIFT WSH 
+    ON WSH.WORK_SHIFT_CODE = E.WORK_SHIFT_CODE 
+    AND WSH.CTR_CD = E.CTR_CD
+LEFT JOIN ZTBWORKPOSITION WP 
+    ON WP.WORK_POSITION_CODE = E.WORK_POSITION_CODE 
+    AND WP.CTR_CD = E.CTR_CD
+LEFT JOIN ZTBSUBDEPARTMENT SD 
+    ON SD.SUBDEPTCODE = WP.SUBDEPTCODE 
+    AND SD.CTR_CD = WP.CTR_CD
+LEFT JOIN ZTBMAINDEPARMENT MD 
+    ON MD.MAINDEPTCODE = SD.MAINDEPTCODE 
+    AND MD.CTR_CD = SD.CTR_CD
+LEFT JOIN ZTBOFFREGISTRATIONTB OFFTB 
+    ON OFFTB.EMPL_NO = A.EMPL_NO 
+    AND OFFTB.APPLY_DATE = A.APPLY_DATE 
+    AND OFFTB.CTR_CD = A.CTR_CD
+LEFT JOIN ZTBREASON R 
+    ON OFFTB.REASON_CODE = R.REASON_CODE 
+    AND OFFTB.CTR_CD = R.CTR_CD
+LEFT JOIN PivotedChamCong P 
+    ON P.NV_CCID = E.NV_CCID 
+    AND P.CHECK_DATE = E.DATE_COLUMN 
+    AND P.CTR_CD = E.CTR_CD
+WHERE 
+    E.CTR_CD = '${DATA.CTR_CD}'
+          `;
+          //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "loadC0012_bk":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = ``;
+          console.log(DATA.TRUNGHISINH);
+          if (DATA.TRUNGHISINH === true) {
+            condition += ` AND ZTBEMPLINFO.WORK_STATUS_CODE<>2 `;
+          }
+          if (DATA.TRUNGHIVIEC === true) {
+            condition += ` AND ZTBEMPLINFO.WORK_STATUS_CODE<>0 `;
+          }
+          let setpdQuery = `
+          DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE;         
            SET @startdate='${DATA.FROM_DATE}'
            SET @enddate='${DATA.TO_DATE}'
            SELECT 
@@ -18967,7 +19154,7 @@ LEFT JOIN M100 ON M100.G_CODE = SLC_PVTB.G_CODE AND  M100.CTR_CD = SLC_PVTB.CTR_
             condition += ` AND ZTB_PROD_OVER_TB.KD_CFM='P'`
           }
           let setpdQuery = `
-            SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_PROD_OVER_TB.*, M100.PROD_LAST_PRICE,P400.PROD_REQUEST_QTY,(ZTB_PROD_OVER_TB.OVER_QTY*M100.PROD_LAST_PRICE) AS AMOUNT  
+            SELECT P400.EMPL_NO,M110.CUST_NAME_KD, M100.G_NAME, M100.G_NAME_KD, ZTB_PROD_OVER_TB.*, M100.PROD_LAST_PRICE,P400.PROD_REQUEST_QTY,(ZTB_PROD_OVER_TB.OVER_QTY*M100.PROD_LAST_PRICE) AS AMOUNT  
  FROM ZTB_PROD_OVER_TB
             LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTB_PROD_OVER_TB.PROD_REQUEST_NO AND P400.CTR_CD = ZTB_PROD_OVER_TB.CTR_CD
             LEFT JOIN M100 ON M100.G_CODE = P400.G_CODE AND M100.CTR_CD = P400.CTR_CD
