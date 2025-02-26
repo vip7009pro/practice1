@@ -2755,7 +2755,13 @@ LEFT JOIN (
           let EMPL_NO = req.payload_data["EMPL_NO"];
           let JOB_NAME = req.payload_data["JOB_NAME"];
           let kqua;
-          let query = `SELECT * FROM ZTBWORKPOSITION WHERE CTR_CD='${DATA.CTR_CD}'`;
+          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}' `          
+          if(DATA.SUBDEPTCODE) {
+            condition+= ` AND SUBDEPTCODE = ${DATA.SUBDEPTCODE}`
+
+          }
+          let query = `SELECT * FROM ZTBWORKPOSITION ${condition}`;
+          console.log(query)
           kqua = await queryDB(query);
           res.send(kqua);
         })();
@@ -22090,6 +22096,28 @@ SELECT CTR_CD, EQ_SERIES, G_CODE, PROCESS_NUMBER, '${DATA.TO_DATE}' AS PLAN_DATE
           let checkkq = "OK";
           let setpdQuery = `
           UPDATE P501 SET REMARK='HUY TEM', USE_YN='X', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND PROCESS_LOT_NO='${DATA.PROCESS_LOT_NO}'
+          `;
+          console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "getsubdeptall":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";
+          let condition = ` WHERE CTR_CD='${DATA.CTR_CD}' `          
+          if(DATA.MAINDEPTCODE) {
+            condition+= ` AND MAINDEPTCODE = ${DATA.MAINDEPTCODE}`
+          }
+          let setpdQuery = `
+          SELECT * FROM ZTBSUBDEPARTMENT ${condition}
           `;
           console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
