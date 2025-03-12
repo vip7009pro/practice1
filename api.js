@@ -22295,7 +22295,7 @@ SELECT ZTB_G_CODE_PLAN_TB.CTR_CD, ZTB_G_CODE_PLAN_TB.G_CODE, SUM(isnull(WH_OUTPU
           GROUP BY ZTB_G_CODE_PLAN_TB.CTR_CD, ZTB_G_CODE_PLAN_TB.G_CODE
 ),
           INSPECTINGTB AS
-          (SELECT DISTINCT CTR_CD,G_CODE FROM ZTBLOTPRINTHISTORYTB WHERE INS_STATUS ='S'  )
+          (SELECT DISTINCT CTR_CD,G_CODE FROM ZTBLOTPRINTHISTORYTB WHERE INS_STATUS ='S'  AND ZTBLOTPRINTHISTORYTB.LOT_PRINT_DATE >=  DATEADD(DAY,-1,CAST(@plan_date as date)))
 		  
           SELECT M100.BTP_QTY AS CURRENT_BTP_QTY, M100.TONKIEM_QTY AS CURRENT_INSP_STOCK, M100.STOCK_QTY AS CURRENT_WH_STOCK, M100.G_NAME, M100.G_NAME_KD, ZTB_G_CODE_PLAN_TB.*, INSP_INPUT.INPUT_QTY, INSP_INPUT_FIRST.FIRST_INPUT_TIME,
 		  CASE 
@@ -22324,6 +22324,26 @@ SELECT ZTB_G_CODE_PLAN_TB.CTR_CD, ZTB_G_CODE_PLAN_TB.G_CODE, SUM(isnull(WH_OUTPU
           ORDER BY INSPECTINGTB.G_CODE DESC
           `;
           //console.log(setpdQuery);
+          checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
+          res.send(checkkq);
+        })();
+        break;
+      case "temlotktraHistory":
+        (async () => {
+          let DATA = qr["DATA"];
+          //console.log(DATA);
+          let EMPL_NO = req.payload_data["EMPL_NO"];
+          let JOB_NAME = req.payload_data["JOB_NAME"];
+          let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
+          let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
+          let checkkq = "OK";         
+          let setpdQuery = `
+         SELECT M100.G_NAME, M100.G_NAME_KD, M100.DESCR, M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL,ZTBLOTPRINTHISTORYTB.* FROM ZTBLOTPRINTHISTORYTB
+LEFT JOIN M100 ON M100.CTR_CD = ZTBLOTPRINTHISTORYTB.CTR_CD AND M100.G_CODE = ZTBLOTPRINTHISTORYTB.G_CODE 
+WHERE LOT_PRINT_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'
+          `;
+          console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
           //console.log(checkkq);
           res.send(checkkq);
