@@ -1,0 +1,37 @@
+require("dotenv").config();
+
+module.exports = {
+  API_PORT: parseInt(process.env.API_PORT),
+  SOCKET_PORT: parseInt(process.env.SOCKET_PORT),
+  corsOptions: {
+    origin: [
+      "http://192.168.1.136:3001",
+      "https://cms.ddns.net:3004",
+      "http://cms.ddns.net:3010",
+      "https://cms.ddns.net:3010",
+      "https://cms.ddns.net:3001",
+      "https://cms.ddns.net",
+      "http://localhost:3001",
+      "http://192.168.1.192",
+      "http://192.168.1.2",
+      "http://192.168.1.136:3010",
+      "http://222.252.1.63",
+      "http://222.252.1.214",
+      "http://222.252.1.63:3000",
+      "http://192.168.1.22:3000",
+      "http://cms.ddns.net:3000",
+      "http://cms.ddns.net:3010",
+      "http://cms.ddns.net",
+      "http://14.160.33.94:3001",
+      "http://localhost:3000",
+      "http://localhost",
+      "http://14.160.33.94",
+      "http://14.160.33.94:3010",
+      "http://14.160.33.94:3030",
+      "https://script.google.com",
+      "*",
+    ],
+    optionsSuccessStatus: 200,
+    credentials: true,
+  },
+};
