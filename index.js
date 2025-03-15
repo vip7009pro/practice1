@@ -7,7 +7,6 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 require("dotenv").config();
 const { closePool } = require("./config/database");
-
 const { sslConfig } = require("./config/ssl");
 const socketHandler = require("./socket/socketHandler");
 const authRoutes = require("./routes/auth");
@@ -15,18 +14,15 @@ const fileUploadRoutes = require("./routes/fileUpload");
 const apiRoutes = require("./routes/api");
 const csharpRoutes = require("./routes/csharp");
 const { corsOptions } = require("./config/env");
-
 const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
-
 // Middleware
 app.use(compression({ level: 9, threshold: 10 * 1024 }));
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
-
 // Routes
 app.use("/login", authRoutes);
 app.use("/uploadfile", fileUploadRoutes);
@@ -36,7 +32,6 @@ app.use("/csharp", csharpRoutes);
 socketHandler(httpServer, httpsServer);
 const API_PORT = parseInt(process.env.API_PORT);
 const SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
-
 httpServer.listen(API_PORT, () => console.log(`Server listening on ${API_PORT}`));
 httpsServer.listen(SOCKET_PORT, () => console.log(`Socket listening on ${SOCKET_PORT}`));
 // Xử lý lỗi toàn cục
