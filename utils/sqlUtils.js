@@ -1,6 +1,6 @@
-import moment from "moment";
+const moment = require("moment");
 
-function removeVietnameseTones(str) {
+exports.removeVietnameseTones=(str) => {
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
   str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
   str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
@@ -31,7 +31,7 @@ function removeVietnameseTones(str) {
   );
   return str;
 }
-function generate_condition_get_invoice(
+exports.generate_condition_get_invoice = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -44,7 +44,7 @@ function generate_condition_get_invoice(
   $material,
   $invoice_no,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBDelivery.CTR_CD = '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -94,7 +94,7 @@ function generate_condition_get_invoice(
     $invoice_no;
   return $condition;
 }
-function generate_condition_get_plan(
+exports.generate_condition_get_plan = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -105,7 +105,7 @@ function generate_condition_get_plan(
   $empl_name,
   $material,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBPLANTB.CTR_CD= '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -147,7 +147,7 @@ function generate_condition_get_plan(
     $material;
   return $condition;
 }
-function generate_condition_get_fcst(
+exports.generate_condition_get_fcst = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -158,7 +158,7 @@ function generate_condition_get_fcst(
   $empl_name,
   $material,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBFCSTTB.CTR_CD= '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     const start_weeknum = moment($start_date, "YYYY-MM-DD")
@@ -206,7 +206,7 @@ function generate_condition_get_fcst(
     $material;
   return $condition;
 }
-function generate_condition_get_po(
+exports.generate_condition_get_po = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -221,7 +221,7 @@ function generate_condition_get_po(
   $material,
   $justPoBalance,
   $ctr_cd
-) {
+)=> {
   let $condition = " WHERE ZTBPOTable.CTR_CD='" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -282,7 +282,7 @@ function generate_condition_get_po(
     $id;
   return $condition;
 }
-function generate_condition_get_ycsx(
+exports.generate_condition_get_ycsx = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -299,7 +299,7 @@ function generate_condition_get_ycsx(
   $phanloaihang,
   $ctr_cd,
   $material_yes
-) {
+)=> {
   console.log('material yes :::: ', $material_yes)
   let $condition = ` WHERE P400.CTR_CD= '${$ctr_cd}' `;
   let $temp_start_date = moment($start_date).format("YYYYMMDD");
@@ -388,7 +388,7 @@ function generate_condition_get_ycsx(
   console.log($condition)
   return $condition;
 }
-function generate_condition_get_inspection_input(
+exports.generate_condition_get_inspection_input = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -399,7 +399,7 @@ function generate_condition_get_inspection_input(
   $empl_name,
   $ycsx_no,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBINSPECTINPUTTB.CTR_CD= '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -441,7 +441,7 @@ function generate_condition_get_inspection_input(
     $ycsx_no;
   return $condition;
 }
-function generate_condition_get_inspection_output(
+exports.generate_condition_get_inspection_output = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -452,7 +452,7 @@ function generate_condition_get_inspection_output(
   $empl_name,
   $ycsx_no,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBINSPECTOUTPUTTB.CTR_CD='" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -494,7 +494,7 @@ function generate_condition_get_inspection_output(
     $ycsx_no;
   return $condition;
 }
-function generate_condition_get_inspection_inoutycsx(
+exports.generate_condition_get_inspection_inoutycsx = (
   $input_cust_name,
   $input_code_cms,
   $input_code_KD,
@@ -502,7 +502,7 @@ function generate_condition_get_inspection_inoutycsx(
   $empl_name,
   $ycsx_no,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE INPUTTB.CTR_CD= '" + $ctr_cd + "' ";
   if ($input_cust_name != "") {
     $input_cust_name =
@@ -533,7 +533,7 @@ function generate_condition_get_inspection_inoutycsx(
     $ycsx_no;
   return $condition;
 }
-function generate_condition_get_inspection_ng_data(
+exports.generate_condition_get_inspection_ng_data = (
   $inspect_time_checkvalue,
   $fromdate,
   $todate,
@@ -544,7 +544,7 @@ function generate_condition_get_inspection_ng_data(
   $empl_name,
   $ycsx_no,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBINSPECTNGTB.CTR_CD= '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -585,7 +585,7 @@ function generate_condition_get_inspection_ng_data(
     $ycsx_no;
   return $condition;
 }
-function generate_condition_get_dtc_data(
+exports.generate_condition_get_dtc_data = (
   $inspect_time_checkvalue,
   $fromdate,
   $todate,
@@ -598,7 +598,7 @@ function generate_condition_get_dtc_data(
   $test_type,
   $id,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTB_REL_REQUESTTABLE.CTR_CD= '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue === false) {
     $inspect_time_checkvalue =
@@ -651,7 +651,7 @@ function generate_condition_get_dtc_data(
     $id;
   return $condition;
 }
-function generate_condition_pqc1(
+exports.generate_condition_pqc1 = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -663,7 +663,7 @@ function generate_condition_pqc1(
   $inspec_ID,
   $inspect_factory,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBPQC1TABLE.CTR_CD= '" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -712,7 +712,7 @@ function generate_condition_pqc1(
     $inspect_factory;
   return $condition;
 }
-function generate_condition_pqc3(
+exports.generate_condition_pqc3 = (
   $inspect_time_checkvalue,
   $start_date,
   $end_date,
@@ -724,7 +724,7 @@ function generate_condition_pqc3(
   $inspec_ID,
   $inspect_factory,
   $ctr_cd
-) {
+)=> {
   let $condition = "WHERE ZTBPQC3TABLE.CTR_CD ='" + $ctr_cd + "' ";
   if ($inspect_time_checkvalue == false) {
     $inspect_time_checkvalue =
@@ -773,4 +773,3 @@ function generate_condition_pqc3(
     $inspect_factory;
   return $condition;
 }
-export {removeVietnameseTones,generate_condition_get_invoice,generate_condition_get_plan, generate_condition_get_fcst,generate_condition_get_po,generate_condition_get_ycsx,generate_condition_get_inspection_input,generate_condition_get_inspection_output,generate_condition_get_inspection_inoutycsx,generate_condition_get_inspection_ng_data,generate_condition_get_dtc_data,generate_condition_pqc1,generate_condition_pqc3}

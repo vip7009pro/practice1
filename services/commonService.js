@@ -149,7 +149,6 @@ exports.load_Notification_Data = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-
 exports.checkEMPL_NO_mobile = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `SELECT * FROM ZTBEMPLINFO WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}'`;
@@ -265,7 +264,6 @@ exports.loadPostAll = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
-
 };
 exports.loadPost = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -369,17 +367,17 @@ exports.get_file_list = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.delete_file = async (req, res, DATA) => {
-let checkkq = "OK";
-fs.rm(`C:/xampp/htdocs/globalfiles/${DATA.CTR_CD}_${DATA.FILE_NAME}`, (error) => {
-  //you can handle the error here
-  console.log("Loi remove file" + error);
-});
-let setpdQuery = `
+  let checkkq = "OK";
+  fs.rm(`C:/xampp/htdocs/globalfiles/${DATA.CTR_CD}_${DATA.FILE_NAME}`, (error) => {
+    //you can handle the error here
+    console.log("Loi remove file" + error);
+  });
+  let setpdQuery = `
 DELETE FROM ZTB_FILE_TRANSFER WHERE CTR_CD='${DATA.CTR_CD}' AND FILE_NAME='${DATA.FILE_NAME}'
 `;
-checkkq = await queryDB(setpdQuery);
-//console.log(checkkq);
-res.send(checkkq);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.changepassword = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -400,6 +398,4 @@ exports.setWebVer = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
-
 };
-

@@ -1,7 +1,6 @@
 const moment = require("moment");
 const { queryDB } = require("../config/database");
 const { generate_condition_get_ycsx } = require("../utils/sqlUtils");
-
 exports.loadDataSX = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = " WHERE 1=1  ";

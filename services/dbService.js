@@ -1,5 +1,4 @@
 const { login, logout } = require("./authService");
-const { getYcsx, updateYcsx } = require("./ycsxService");
 const { uploadFile } = require("./fileService");
 const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer } = require("./commonService");
 const { workdaycheck, tangcadaycheck, countxacnhanchamcong, countthuongphat, checkWebVer, nghidaycheck, checkLicense } = require("./userService");

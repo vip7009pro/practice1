@@ -1,17 +1,17 @@
 const { queryDB } = require("../config/database");
 exports.updateAmazonBOMCodeInfo = async (req, res, DATA) => {
   let checkkq = "OK";
-          let setpdQuery = `UPDATE BOM_AMAZONE SET  AMZ_PROD_NAME='${DATA.AMZ_PROD_NAME}', AMZ_COUNTRY='${DATA.AMZ_COUNTRY}' WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}'`;
-          ////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          res.send(checkkq);
+  let setpdQuery = `UPDATE BOM_AMAZONE SET  AMZ_PROD_NAME='${DATA.AMZ_PROD_NAME}', AMZ_COUNTRY='${DATA.AMZ_COUNTRY}' WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}'`;
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
 }
 exports.listAmazon = async (req, res, DATA) => {
   let checkkq = "OK";
-          let setpdQuery = `SELECT DISTINCT BOM_AMAZONE.G_CODE, M100.G_NAME, M100.G_NAME_KD FROM BOM_AMAZONE JOIN M100 ON (M100.G_CODE = BOM_AMAZONE.G_CODE AND M100.CTR_CD = BOM_AMAZONE.CTR_CD) WHERE BOM_AMAZONE.CTR_CD='${DATA.CTR_CD}' AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
-          ////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          res.send(checkkq);
+  let setpdQuery = `SELECT DISTINCT BOM_AMAZONE.G_CODE, M100.G_NAME, M100.G_NAME_KD FROM BOM_AMAZONE JOIN M100 ON (M100.G_CODE = BOM_AMAZONE.G_CODE AND M100.CTR_CD = BOM_AMAZONE.CTR_CD) WHERE BOM_AMAZONE.CTR_CD='${DATA.CTR_CD}' AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
 }
 exports.getBOMAMAZON = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -47,10 +47,10 @@ exports.codeinfo = async (req, res, DATA) => {
 }
 exports.loadcodephoi = async (req, res, DATA) => {
   let checkkq = "OK";
-          let setpdQuery = `SELECT DISTINCT DESIGN_AMAZONE.G_CODE_MAU, M100.G_NAME FROM DESIGN_AMAZONE JOIN M100 ON (M100.G_CODE = DESIGN_AMAZONE.G_CODE_MAU) WHERE DESIGN_AMAZONE.CTR_CD='${DATA.CTR_CD}'`;
-          ////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          res.send(checkkq);
+  let setpdQuery = `SELECT DISTINCT DESIGN_AMAZONE.G_CODE_MAU, M100.G_NAME FROM DESIGN_AMAZONE JOIN M100 ON (M100.G_CODE = DESIGN_AMAZONE.G_CODE_MAU) WHERE DESIGN_AMAZONE.CTR_CD='${DATA.CTR_CD}'`;
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
 }
 exports.checkExistBOMAMAZON = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -99,12 +99,12 @@ exports.getMasterMaterialList = async (req, res, DATA) => {
   res.send(checkkq);
 }
 exports.resetbanve = async (req, res, DATA) => {
-let checkkq = "OK";
-          let setpdQuery = ` UPDATE M100 SET BANVE= 'N', PDBV='${DATA.VALUE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', INS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}'  AND G_CODE='${DATA.G_CODE}'`;
-          ////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          ////console.log(checkkq);
-          res.send(checkkq);
+  let checkkq = "OK";
+  let setpdQuery = ` UPDATE M100 SET BANVE= 'N', PDBV='${DATA.VALUE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', INS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}'  AND G_CODE='${DATA.G_CODE}'`;
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  ////console.log(checkkq);
+  res.send(checkkq);
 }
 exports.pdbanve = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -142,7 +142,7 @@ exports.getbomgia = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 }
-exports.codeinforRnD = async (req, res, DATA) => { 
+exports.codeinforRnD = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE M100.CTR_CD='${DATA.CTR_CD}' `
   if (DATA.G_NAME !== '') {
@@ -550,7 +550,7 @@ exports.lockSample = async (req, res, DATA) => {
   res.send(checkkq);
 }
 exports.updateRND_SAMPLE_STATUS = async (req, res, DATA) => {
-  let EMPL_NO = req.payload_data["EMPL_NO"]; 
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = `
     UPDATE ZTB_SAMPLE_MONITOR SET FILE_MAKET='${DATA.FILE_MAKET}', FILM_FILE='${DATA.FILM_FILE}', KNIFE_STATUS='${DATA.KNIFE_STATUS}', KNIFE_CODE=N'${DATA.KNIFE_CODE ?? ''}', FILM='${DATA.FILM}', RND_EMPL='${EMPL_NO}', RND_UPD_DATE=GETDATE() WHERE  CTR_CD='${DATA.CTR_CD}' AND SAMPLE_ID=${DATA.SAMPLE_ID}
@@ -700,14 +700,10 @@ exports.updateLossKT = async (req, res, DATA) => {
   res.send(checkkq);
 }
 exports.common = async (req, res, DATA) => {
-
 }
 exports.common = async (req, res, DATA) => {
-
 }
 exports.common = async (req, res, DATA) => {
-
 }
 exports.common = async (req, res, DATA) => {
-
 }

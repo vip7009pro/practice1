@@ -1834,12 +1834,10 @@ exports.update_empl_image = async (req, res, DATA) => {
       WHERE CTR_CD='${DATA.CTR_CD}' 
       AND EMPL_NO='${DATA.EMPL_NO}'
   `;
-
   let checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-
-exports.getDepartmentList = async (req, res, DATA) => {  
+exports.getDepartmentList = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `          
   SELECT * FROM ZTB_DEPARTMENT_TB ORDER BY DEPT_CODE ASC
@@ -1849,23 +1847,18 @@ exports.getDepartmentList = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-
 exports.checkdiemdanh = async (req, res, DATA) => {
-let EMPL_NO = req.payload_data["EMPL_NO"];
-let checkkq = "OK";
-let setpdQuery = `SELECT * FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO= '${EMPL_NO}' AND APPLY_DATE= '${moment().format(
-  "YYYY-MM-DD"
-)}' `;
-//${moment().format('YYYY-MM-DD')}
-////console.log(setpdQuery);
-checkkq = await queryDB(setpdQuery);
-res.send(checkkq);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `SELECT * FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO= '${EMPL_NO}' AND APPLY_DATE= '${moment().format(
+    "YYYY-MM-DD"
+  )}' `;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
 };
-
 exports.common = async (req, res, DATA) => {
-
 };
-
 exports.common = async (req, res, DATA) => {
-
 };

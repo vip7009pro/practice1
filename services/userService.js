@@ -2,7 +2,7 @@ const { queryDB } = require("../config/database");
 const moment = require("moment");
 exports.workdaycheck = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let startOfYear = moment().startOf("year").format("YYYY-MM-DD"); 
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
   let query = `SELECT COUNT(EMPL_NO) AS WORK_DAY FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND ON_OFF=1 AND APPLY_DATE >='${startOfYear}' `;
   ////console.log(query);
   let kqua = await queryDB(query);
@@ -38,14 +38,14 @@ exports.checkWebVer = async (req, res, DATA) => {
 };
 exports.nghidaycheck = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let startOfYear = moment().startOf("year").format("YYYY-MM-DD"); 
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
   let query = `SELECT COUNT(EMPL_NO) AS NGHI_DAY FROM ZTBOFFREGISTRATIONTB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO = '${EMPL_NO}' AND APPLY_DATE >= '${startOfYear}' AND REASON_CODE <>2`;
   ////console.log(query);
   let kqua = await queryDB(query);
   res.send(kqua);
 };
-exports.checkLicense = async (req, res, DATA) => {   
-let CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec'
+exports.checkLicense = async (req, res, DATA) => {
+  let CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec'
   fetch(CURRENT_API_URL)
     .then(res => res.json())
     .then(body => {

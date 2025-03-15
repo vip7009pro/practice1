@@ -1,20 +1,7 @@
 const { queryDB } = require("../config/database");
 const moment = require("moment");
 const { generate_condition_get_invoice, generate_condition_get_po, generate_condition_get_ycsx, generate_condition_get_plan, generate_condition_get_fcst } = require("../utils/sqlUtils");
-exports.common = async (req, res, DATA) => {
-
-};
-exports.common = async (req, res, DATA) => {
-
-};
-exports.common = async (req, res, DATA) => {
-
-};
 exports.customerpobalancebyprodtype_new = async (req, res, DATA) => {
-  let EMPL_NO = req.payload_data["EMPL_NO"];
-  let JOB_NAME = req.payload_data["JOB_NAME"];
-  let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-  let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
   let checkkq = "OK";
   let setpdQuery = `WITH ZTBDLVR AS 
   (SELECT CUST_CD, G_CODE, PO_NO, CTR_CD, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery WHERE CTR_CD='${DATA.CTR_CD}' GROUP BY CUST_CD, G_CODE, PO_NO, CTR_CD),
@@ -340,7 +327,7 @@ exports.insert_p500 = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.insertDBYCSX_New = async (req, res, DATA) => {
-  let EMPL_NO = req.payload_data["EMPL_NO"];  
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = `
     INSERT INTO ZTB_DM_HISTORY2
@@ -368,22 +355,22 @@ exports.insertDBYCSX = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.checkProcessInNoP500 = async (req, res, DATA) => {
-let in_date = moment().format("YYYYMMDD");
-          let checkkq = "OK";
-          let setpdQuery = `SELECT TOP 1 PROCESS_IN_DATE, PROCESS_IN_NO, EQUIPMENT_CD FROM P500 WHERE CTR_CD='${DATA.CTR_CD}' AND PROCESS_IN_DATE='${in_date}'  ORDER BY INS_DATE DESC`;
-          //////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          ////console.log(checkkq);
-          res.send(checkkq);
+  let in_date = moment().format("YYYYMMDD");
+  let checkkq = "OK";
+  let setpdQuery = `SELECT TOP 1 PROCESS_IN_DATE, PROCESS_IN_NO, EQUIPMENT_CD FROM P500 WHERE CTR_CD='${DATA.CTR_CD}' AND PROCESS_IN_DATE='${in_date}'  ORDER BY INS_DATE DESC`;
+  //////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  ////console.log(checkkq);
+  res.send(checkkq);
 };
 exports.checkLastYCSX = async (req, res, DATA) => {
- let currenttime = moment().format("YYYYMMDD");
-          let checkkq = "OK";
-          let setpdQuery = `SELECT TOP 1 * FROM P400 WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_DATE='${currenttime}' ORDER BY INS_DATE DESC`;
-          //////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
-          res.send(checkkq);
+  let currenttime = moment().format("YYYYMMDD");
+  let checkkq = "OK";
+  let setpdQuery = `SELECT TOP 1 * FROM P400 WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_DATE='${currenttime}' ORDER BY INS_DATE DESC`;
+  //////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.checkYcsxExist = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -428,7 +415,7 @@ SELECT G_NAME_KD FROM M100 WHERE G_CODE='${DATA.G_CODE}') AND USE_YN='Y' AND CTR
   res.send(checkkq);
 };
 exports.deleteAMZ_DATA = async (req, res, DATA) => {
-  let EMPL_NO = req.payload_data["EMPL_NO"]; 
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = `
     DELETE FROM  AMAZONE_DATA WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}' AND INLAI_COUNT = 0 AND INS_EMPL='${EMPL_NO}'
@@ -644,7 +631,7 @@ SET BTP_QTY = SRC_TB.TOTAL_BTP;
   res.send(checkkq);
 };
 exports.updateTONTP_M100_CMS = async (req, res, DATA) => {
-  let checkkq = "OK";         
+  let checkkq = "OK";
   let setpdQuery = `
   WITH CTE_THANHPHAM AS (
       SELECT 
@@ -675,7 +662,7 @@ exports.updateTONTP_M100_CMS = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.tinh_hinh_kiemtra_G_CODE = async (req, res, DATA) => {
-  let checkkq = "OK";         
+  let checkkq = "OK";
   let setpdQuery = `
  DECLARE @plan_date as varchar(max), @next_plan_date as varchar(max);
 SET @plan_date = '${DATA.PLAN_DATE}';
@@ -1069,12 +1056,12 @@ exports.delete_shortage = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.insert_shortage = async (req, res, DATA) => {
-          let checkkq = "OK";
-          let setpdQuery = `INSERT INTO ZTB_SHORTAGE_LIST (CTR_CD,G_CODE,CUST_CD,EMPL_NO,PLAN_DATE,D1_9H,D1_13H,D1_19H,D1_21H,D1_23H,D1_OTHER,D2_9H,D2_13H,D2_21H,D3_SANG,D3_CHIEU,D4_SANG,D4_CHIEU,PRIORITY,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE) VALUES ('${DATA.CTR_CD}','${DATA.G_CODE}','${DATA.CUST_CD}','${DATA.EMPL_NO}','${DATA.PLAN_DATE}','${DATA.D1_9H}','${DATA.D1_13H}','${DATA.D1_19H}','${DATA.D1_21H}','${DATA.D1_23H}','${DATA.D1_OTHER}','${DATA.D2_9H}','${DATA.D2_13H}','${DATA.D2_21H}','${DATA.D3_SANG}','${DATA.D3_CHIEU}','${DATA.D4_SANG}','${DATA.D4_CHIEU}','${DATA.PRIORITY}','${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}',GETDATE())`;
-          //////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
-          res.send(checkkq);
+  let checkkq = "OK";
+  let setpdQuery = `INSERT INTO ZTB_SHORTAGE_LIST (CTR_CD,G_CODE,CUST_CD,EMPL_NO,PLAN_DATE,D1_9H,D1_13H,D1_19H,D1_21H,D1_23H,D1_OTHER,D2_9H,D2_13H,D2_21H,D3_SANG,D3_CHIEU,D4_SANG,D4_CHIEU,PRIORITY,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE) VALUES ('${DATA.CTR_CD}','${DATA.G_CODE}','${DATA.CUST_CD}','${DATA.EMPL_NO}','${DATA.PLAN_DATE}','${DATA.D1_9H}','${DATA.D1_13H}','${DATA.D1_19H}','${DATA.D1_21H}','${DATA.D1_23H}','${DATA.D1_OTHER}','${DATA.D2_9H}','${DATA.D2_13H}','${DATA.D2_21H}','${DATA.D3_SANG}','${DATA.D3_CHIEU}','${DATA.D4_SANG}','${DATA.D4_CHIEU}','${DATA.PRIORITY}','${DATA.INS_EMPL}',GETDATE(),'${DATA.UPD_EMPL}',GETDATE())`;
+  //////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.checkShortageExist = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -1085,16 +1072,16 @@ exports.checkShortageExist = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.deletegia = async (req, res, DATA) => {
-          let checkkq = "OK";
-          let setpdQuery = `DELETE FROM PROD_PRICE_TABLE WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE
-            }' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ
-            } AND PRICE_DATE='${moment
-              .utc(DATA.PRICE_DATE)
-              .format("YYYY-MM-DD")}'`;
-          //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
-          res.send(checkkq);
+  let checkkq = "OK";
+  let setpdQuery = `DELETE FROM PROD_PRICE_TABLE WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE
+    }' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ
+    } AND PRICE_DATE='${moment
+      .utc(DATA.PRICE_DATE)
+      .format("YYYY-MM-DD")}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.updategia = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -1145,7 +1132,7 @@ exports.loadbanggia2 = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.loadbanggia = async (req, res, DATA) => { 
+exports.loadbanggia = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ` WHERE 1=1`;
   if (DATA.ALLTIME !== true) {
@@ -1229,13 +1216,13 @@ exports.loadM100UpGia = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.pheduyetgia = async (req, res, DATA) => {
-let EMPL_NO = req.payload_data["EMPL_NO"];         
-          let checkkq = "OK";
-          let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL='${DATA.FINAL}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND  G_CODE='${DATA.G_CODE}' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ} AND PRICE_DATE='${moment.utc(DATA.PRICE_DATE).format("YYYY-MM-DD")}'`;
-          //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          //console.log(checkkq);
-          res.send(checkkq);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL='${DATA.FINAL}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND  G_CODE='${DATA.G_CODE}' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ} AND PRICE_DATE='${moment.utc(DATA.PRICE_DATE).format("YYYY-MM-DD")}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.updateGiaVLBOM2 = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -1640,17 +1627,17 @@ TONKHOFULL.G_NAME_KD
   res.send(checkkq);
 };
 exports.traPOFullCMS2 = async (req, res, DATA) => {
-let checkkq = "OK";
-          let condition = " WHERE 1=1 ";
-          if (DATA.codeSearch !== "") {
-            condition += ` AND TONKHOFULL.G_NAME LIKE ''%${DATA.codeSearch}%''`;
-          }
-          if (DATA.allcode !== false) {
-            condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
-          }
-          let startdate = moment().add(-7, "month").format("YYYY-MM-01");
-          let enddate = moment().add(0, "day").format("YYYY-MM-DD");
-          let setpdQuery = `
+  let checkkq = "OK";
+  let condition = " WHERE 1=1 ";
+  if (DATA.codeSearch !== "") {
+    condition += ` AND TONKHOFULL.G_NAME LIKE ''%${DATA.codeSearch}%''`;
+  }
+  if (DATA.allcode !== false) {
+    condition += ` AND PO_TABLE_1.PO_BALANCE >0 `;
+  }
+  let startdate = moment().add(-7, "month").format("YYYY-MM-01");
+  let enddate = moment().add(0, "day").format("YYYY-MM-DD");
+  let setpdQuery = `
           DECLARE @StartDate DATE = '${startdate}'; -- Thay đổi start date tại đây
 DECLARE @EndDate DATE = '${enddate}'; -- Thay đổi end date tại đây
 DECLARE @CurrentDate DATE = @StartDate;
@@ -1985,10 +1972,10 @@ SELECT
 print(@query)
 execute(@query)          
           `;
-          //console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          ////console.log(checkkq);
-          res.send(checkkq);
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  ////console.log(checkkq);
+  res.send(checkkq);
 };
 exports.traPOFullCMS_New = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -2181,7 +2168,7 @@ exports.traPlanDataFull = async (req, res, DATA) => {
   ////console.log(kqua);
   res.send(kqua);
 };
-exports.loadMonthlyRevenueByCustomer = async (req, res, DATA) => { 
+exports.loadMonthlyRevenueByCustomer = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
   DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
@@ -2916,26 +2903,26 @@ exports.checkFcstExist = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.edit_customer = async (req, res, DATA) => {
-let EMPL_NO = req.payload_data["EMPL_NO"];
-          let kqua;
-          let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
-          let query = "";
-          query = ` UPDATE M110 SET USE_YN='${DATA.USE_YN}', CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', CUST_ADDR2 =N'${DATA.CUST_ADDR2}',CUST_ADDR3 =N'${DATA.CUST_ADDR3}',CHARGE_EMAIL =N'${DATA.EMAIL}',TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND CUST_CD='${DATA.CUST_CD}'`;
-          //console.log(query);
-          kqua = await queryDB(query);
-          ////console.log(kqua);
-          res.send(kqua);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let kqua;
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+  let query = "";
+  query = ` UPDATE M110 SET USE_YN='${DATA.USE_YN}', CUST_NAME = N'${DATA.CUST_NAME}', CUST_NAME_KD ='${DATA.CUST_NAME_KD}', CUST_ADDR1 =N'${DATA.CUST_ADDR1}', CUST_ADDR2 =N'${DATA.CUST_ADDR2}',CUST_ADDR3 =N'${DATA.CUST_ADDR3}',CHARGE_EMAIL =N'${DATA.EMAIL}',TAX_NO ='${DATA.TAX_NO}', CUST_NUMBER ='${DATA.CUST_NUMBER}',BOSS_NAME =N'${DATA.BOSS_NAME}',  TEL_NO1 ='${DATA.TEL_NO1}', FAX_NO ='${DATA.FAX_NO}', CUST_POSTAL ='${DATA.CUST_POSTAL}', REMK =N'${DATA.REMK}',CUST_TYPE =N'${DATA.CUST_TYPE}', UPD_EMPL ='${EMPL_NO}', UPD_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND CUST_CD='${DATA.CUST_CD}'`;
+  //console.log(query);
+  kqua = await queryDB(query);
+  ////console.log(kqua);
+  res.send(kqua);
 };
 exports.add_customer = async (req, res, DATA) => {
-let EMPL_NO = req.payload_data["EMPL_NO"];
-          let kqua;
-          let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
-          let query = "";
-          query = `INSERT INTO M110 (CTR_CD, CUST_TYPE, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL,CUST_ADDR2, CUST_ADDR3, CHARGE_EMAIL,USE_YN) VALUES ('${DATA.CTR_CD}','${DATA.CUST_TYPE}','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}',N'${DATA.ADDR2}',N'${DATA.ADDR3}',N'${DATA.EMAIL}','${DATA.USE_YN}')`;
-          //console.log(query);
-          kqua = await queryDB(query);
-          //console.log(kqua);
-          res.send(kqua);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let kqua;
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+  let query = "";
+  query = `INSERT INTO M110 (CTR_CD, CUST_TYPE, CUST_CD, CUST_NAME, CUST_NAME_KD, CUST_ADDR1, TAX_NO,CUST_NUMBER, BOSS_NAME, TEL_NO1, FAX_NO, CUST_POSTAL,REMK, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL,CUST_ADDR2, CUST_ADDR3, CHARGE_EMAIL,USE_YN) VALUES ('${DATA.CTR_CD}','${DATA.CUST_TYPE}','${DATA.CUST_CD}', N'${DATA.CUST_NAME}','${DATA.CUST_NAME_KD}',N'${DATA.CUST_ADDR1}','${DATA.TAX_NO}','${DATA.CUST_NUMBER}',N'${DATA.BOSS_NAME}','${DATA.TEL_NO1}','${DATA.FAX_NO}','${DATA.CUST_POSTAL}',N'${DATA.REMK}',GETDATE(), '${EMPL_NO}',GETDATE(), '${EMPL_NO}',N'${DATA.ADDR2}',N'${DATA.ADDR3}',N'${DATA.EMAIL}','${DATA.USE_YN}')`;
+  //console.log(query);
+  kqua = await queryDB(query);
+  //console.log(kqua);
+  res.send(kqua);
 };
 exports.get_listcustomer = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -2964,10 +2951,19 @@ exports.checkcustcd = async (req, res, DATA) => {
 
 exports.POBalanceByCustomer = async (req, res, DATA) => {
   let checkkq = "OK";
-          let setpdQuery = `SELECT XX.CUST_NAME_KD, YY.TOTAL_PO_BALANCE, XX.TSP, XX.LABEL, XX.UV, XX.OLED, XX.TAPE, XX.RIBBON, XX.SPT, (YY.TOTAL_PO_BALANCE- XX.TSP- XX.LABEL- XX.UV- XX.OLED- XX.TAPE- XX.RIBBON- XX.SPT) AS OTHERS FROM  (SELECT  PV.CUST_NAME_KD, (isnull(PV.[TSP],0)+isnull(PV.[LABEL],0)+isnull(PV.[UV],0)+isnull(PV.[TAPE],0) + isnull(PV.[SPT],0)+ isnull(PV.[OLED],0)  + isnull(PV.[RIBBON],0)) As TOTAL_PO_BALANCE, isnull(PV.[TSP],0) As TSP, isnull(PV.[LABEL],0) As LABEL,isnull(PV.[UV],0) As UV, isnull(PV.[OLED],0) As OLED,isnull(PV.[TAPE],0) As TAPE, isnull(PV.[SPT],0) As SPT, isnull(PV.[RIBBON],0) As RIBBON FROM ( SELECT P.PO_BALANCE, P.PROD_TYPE, P.CUST_NAME_KD FROM (   SELECT AA.PO_NO,  M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE, M110.CUST_NAME_KD, M100.G_NAME, M010.EMPL_NAME, AA.G_CODE, ZTBPOTable.PO_QTY, ZTBPOTable.PROD_PRICE, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT,DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, YEAR(PO_DATE) As PO_YEAR, CASE     WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER'        ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, ZTBPOTable.PO_ID FROM (SELECT ZTBPOTable.CTR_CD, ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO AND M010.CTR_CD = AA.CTR_CD) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE AND M100.CTR_CD = AA.CTR_CD) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO AND AA.CTR_CD = ZTBPOTable.CTR_CD) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD AND M110.CTR_CD = AA.CTR_CD) WHERE AA.CTR_CD='${DATA.CTR_CD}' ) AS P ) AS j PIVOT (SUM(j.PO_BALANCE) FOR j.PROD_TYPE IN ([TSP],[LABEL],[UV],[OLED],[TAPE],[SPT],[RIBBON])) AS PV ) AS XX JOIN /*customer sum po balance*/  (SELECT AA.CUST_NAME_KD, SUM(AA.PO_BALANCE) AS TOTAL_PO_BALANCE FROM (SELECT AA.PO_NO,  M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE, M110.CUST_NAME_KD, M100.G_NAME, M010.EMPL_NAME, AA.G_CODE, ZTBPOTable.PO_QTY, ZTBPOTable.PROD_PRICE, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT,DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, YEAR(PO_DATE) As PO_YEAR, CASE     WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER'        ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, ZTBPOTable.PO_ID FROM (SELECT ZTBPOTable.CTR_CD, ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO AND M010.CTR_CD = AA.CTR_CD) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE AND M100.CTR_CD = AA.CTR_CD) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO AND AA.CTR_CD = ZTBPOTable.CTR_CD) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD AND M110.CTR_CD = AA.CTR_CD) WHERE AA.CTR_CD='${DATA.CTR_CD}') AS AA GROUP BY AA.CUST_NAME_KD ) AS YY ON XX.CUST_NAME_KD = YY.CUST_NAME_KD WHERE XX.TOTAL_PO_BALANCE >0 ORDER BY TOTAL_PO_BALANCE DESC`;
-          ////console.log(setpdQuery);
-          checkkq = await queryDB(setpdQuery);
-          res.send(checkkq);
+  let setpdQuery = `SELECT XX.CUST_NAME_KD, YY.TOTAL_PO_BALANCE, XX.TSP, XX.LABEL, XX.UV, XX.OLED, XX.TAPE, XX.RIBBON, XX.SPT, (YY.TOTAL_PO_BALANCE- XX.TSP- XX.LABEL- XX.UV- XX.OLED- XX.TAPE- XX.RIBBON- XX.SPT) AS OTHERS FROM  (SELECT  PV.CUST_NAME_KD, (isnull(PV.[TSP],0)+isnull(PV.[LABEL],0)+isnull(PV.[UV],0)+isnull(PV.[TAPE],0) + isnull(PV.[SPT],0)+ isnull(PV.[OLED],0)  + isnull(PV.[RIBBON],0)) As TOTAL_PO_BALANCE, isnull(PV.[TSP],0) As TSP, isnull(PV.[LABEL],0) As LABEL,isnull(PV.[UV],0) As UV, isnull(PV.[OLED],0) As OLED,isnull(PV.[TAPE],0) As TAPE, isnull(PV.[SPT],0) As SPT, isnull(PV.[RIBBON],0) As RIBBON FROM ( SELECT P.PO_BALANCE, P.PROD_TYPE, P.CUST_NAME_KD FROM (   SELECT AA.PO_NO,  M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE, M110.CUST_NAME_KD, M100.G_NAME, M010.EMPL_NAME, AA.G_CODE, ZTBPOTable.PO_QTY, ZTBPOTable.PROD_PRICE, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT,DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, YEAR(PO_DATE) As PO_YEAR, CASE     WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER'        ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, ZTBPOTable.PO_ID FROM (SELECT ZTBPOTable.CTR_CD, ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO AND M010.CTR_CD = AA.CTR_CD) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE AND M100.CTR_CD = AA.CTR_CD) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO AND AA.CTR_CD = ZTBPOTable.CTR_CD) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD AND M110.CTR_CD = AA.CTR_CD) WHERE AA.CTR_CD='${DATA.CTR_CD}' ) AS P ) AS j PIVOT (SUM(j.PO_BALANCE) FOR j.PROD_TYPE IN ([TSP],[LABEL],[UV],[OLED],[TAPE],[SPT],[RIBBON])) AS PV ) AS XX JOIN /*customer sum po balance*/  (SELECT AA.CUST_NAME_KD, SUM(AA.PO_BALANCE) AS TOTAL_PO_BALANCE FROM (SELECT AA.PO_NO,  M100.PROD_TYPE, M100.PROD_MAIN_MATERIAL, ZTBPOTable.PO_DATE,ZTBPOTable.RD_DATE, M110.CUST_NAME_KD, M100.G_NAME, M010.EMPL_NAME, AA.G_CODE, ZTBPOTable.PO_QTY, ZTBPOTable.PROD_PRICE, AA.TotalDelivered as TOTAL_DELIVERED, (ZTBPOTable.PO_QTY-AA.TotalDelivered) As PO_BALANCE,(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) As PO_AMOUNT , (AA.TotalDelivered*ZTBPOTable.PROD_PRICE) As DELIVERED_AMOUNT, ((ZTBPOTable.PO_QTY-AA.TotalDelivered)*ZTBPOTable.PROD_PRICE) As BALANCE_AMOUNT,DATEPART( MONTH, PO_DATE) AS POMONTH, DATEPART( ISOWK, PO_DATE) AS POWEEKNUM, YEAR(PO_DATE) As PO_YEAR, CASE     WHEN (ZTBPOTable.RD_DATE < GETDATE()-1) AND ((ZTBPOTable.PO_QTY-AA.TotalDelivered) <>0) THEN 'OVER'        ELSE 'OK' END AS OVERDUE, ZTBPOTable.REMARK, ZTBPOTable.PO_ID FROM (SELECT ZTBPOTable.CTR_CD, ZTBPOTable.EMPL_NO, ZTBPOTable.CUST_CD, ZTBPOTable.G_CODE, ZTBPOTable.PO_NO, isnull(SUM(ZTBDelivery.DELIVERY_QTY),0) AS TotalDelivered FROM ZTBPOTable  LEFT JOIN ZTBDelivery ON (ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO) GROUP BY ZTBPOTable.CTR_CD,ZTBPOTable.EMPL_NO,ZTBPOTable.G_CODE,ZTBPOTable.CUST_CD,ZTBPOTable.PO_NO) AS AA LEFT JOIN M010 ON (M010.EMPL_NO = AA.EMPL_NO AND M010.CTR_CD = AA.CTR_CD) LEFT JOIN M100 ON (M100.G_CODE = AA.G_CODE AND M100.CTR_CD = AA.CTR_CD) LEFT JOIN ZTBPOTable ON (AA.CUST_CD = ZTBPOTable.CUST_CD AND AA.G_CODE = ZTBPOTable.G_CODE AND AA.PO_NO = ZTBPOTable.PO_NO AND AA.CTR_CD = ZTBPOTable.CTR_CD) JOIN M110 ON (M110.CUST_CD = AA.CUST_CD AND M110.CTR_CD = AA.CTR_CD) WHERE AA.CTR_CD='${DATA.CTR_CD}') AS AA GROUP BY AA.CUST_NAME_KD ) AS YY ON XX.CUST_NAME_KD = YY.CUST_NAME_KD WHERE XX.TOTAL_PO_BALANCE >0 ORDER BY TOTAL_PO_BALANCE DESC`;
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+
+};
+exports.common = async (req, res, DATA) => {
+
+};
+exports.common = async (req, res, DATA) => {
+
 };
 exports.common = async (req, res, DATA) => {
 

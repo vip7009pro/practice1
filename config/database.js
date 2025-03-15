@@ -1,6 +1,5 @@
 const sql = require("mssql");
 require("dotenv").config();
-
 const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
@@ -15,10 +14,8 @@ const config = {
     idleTimeoutMillis: 30000, // Thời gian tối đa một kết nối không hoạt động trước khi bị đóng
   },
 };
-
 // Khởi tạo pool toàn cục
 let poolPromise;
-
 const openConnection = async () => {
   if (!poolPromise) {
     poolPromise = sql.connect(config).catch((err) => {
@@ -29,7 +26,6 @@ const openConnection = async () => {
   }
   return poolPromise;
 };
-
 // Hàm truy vấn database
 const queryDB = async (query) => {
   try {
@@ -42,7 +38,6 @@ const queryDB = async (query) => {
   }
   // Không gọi sql.close() ở đây nữa
 };
-
 // Đóng pool khi cần (graceful shutdown)
 const closePool = async () => {
   if (poolPromise) {
@@ -51,14 +46,12 @@ const closePool = async () => {
     console.log("Database pool closed");
   }
 };
-
 module.exports = {
   openConnection,
   queryDB,
   closePool,
   config,
 };
-
 // Graceful shutdown khi ứng dụng dừng
 process.on("SIGINT", async () => {
   await closePool();
