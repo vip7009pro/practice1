@@ -255,20 +255,149 @@ exports.check_m_lot_exist_p500 = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.loadPostAll = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `          
+  SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
+  ORDER BY POST_ID DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 
 };
-exports.common = async (req, res, DATA) => {
-
+exports.loadPost = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let condition = `WHERE 1=1 `;
+  if (DATA.DEPT_CODE !== 0)
+    condition += ` AND ZTB_POST_TB.DEPT_CODE=${DATA.DEPT_CODE}`
+  if (DATA.DEPT_CODE === 0)
+    condition += ` AND ZTB_POST_TB.IS_PINNED='Y'`
+  let setpdQuery = `          
+  SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
+  ${condition} ORDER BY POST_ID DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
-
+exports.updatePost = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+ UPDATE ZTB_POST_TB SET TITLE=N'${DATA.TITLE}', CONTENT=N'${DATA.CONTENT}', IS_PINNED='${DATA.IS_PINNED}' WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
-
+exports.deletePost = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  DELETE FROM ZTB_POST_TB WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
-
+exports.updatechamcongdiemdanhauto = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD,EMPL_NO, APPLY_DATE, ON_OFF,CURRENT_TEAM,MCC,CURRENT_CA) 
+  SELECT ZTBEMPLINFO.CTR_CD, ZTBEMPLINFO.EMPL_NO,  CAST(GETDATE() as date) AS CHECK_DATE, 1 AS ON_OFF, ZTBEMPLINFO.WORK_SHIFT_CODE AS CURRENT_TEAM, 'Y' AS MCC , ZTBEMPLINFO.CALV  AS CURRENT_CA
+FROM  
+   ZTBEMPLINFO JOIN
+   (SELECT DISTINCT CTR_CD, CHECK_DATE, NV_CCID FROM C001 WHERE CHECK_DATE = CAST(GETDATE() as date)) AS CC 
+   ON (CC.NV_CCID = ZTBEMPLINFO.NV_CCID AND CC.CTR_CD = ZTBEMPLINFO.CTR_CD)		   
+   WHERE NOT EXISTS 
+   (SELECT CTR_CD, EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO AND ZTBATTENDANCETB.CTR_CD = ZTBEMPLINFO.CTR_CD AND DATEPART(ISO_WEEK, GETDATE()) = ZTBEMPLINFO.CURRENT_WEEK)
+   AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.getlastestPostId = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `          
+  SELECT isnull(MAX(POST_ID),1) AS POST_ID FROM ZTB_POST_TB
+  `;
+  //console.log(insertQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.insert_information = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `          
+  INSERT INTO ZTB_POST_TB (CTR_CD,  DEPT_CODE, FILE_NAME, TITLE, CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) 
+  VALUES ('002', '${DATA.DEPT_CODE}', N'${DATA.FILE_NAME}',N'${DATA.TITLE}', N'${DATA.CONTENT}',GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadWebSetting = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `SELECT * FROM ZTB_WEB_SETTING WHERE CTR_CD='${DATA.CTR_CD}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.update_file_name = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `
+  INSERT INTO ZTB_FILE_TRANSFER (CTR_CD, FILE_NAME, FILE_SIZE, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}',N'${DATA.FILE_NAME}',${DATA.FILE_SIZE ?? 0}, GETDATE(),'${EMPL_NO}',GETDATE(), '${EMPL_NO}')
+  `;
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.get_file_list = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  SELECT * FROM ZTB_FILE_TRANSFER ORDER BY INS_DATE DESC
+  `;
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.delete_file = async (req, res, DATA) => {
+let checkkq = "OK";
+fs.rm(`C:/xampp/htdocs/globalfiles/${DATA.CTR_CD}_${DATA.FILE_NAME}`, (error) => {
+  //you can handle the error here
+  console.log("Loi remove file" + error);
+});
+let setpdQuery = `
+DELETE FROM ZTB_FILE_TRANSFER WHERE CTR_CD='${DATA.CTR_CD}' AND FILE_NAME='${DATA.FILE_NAME}'
+`;
+checkkq = await queryDB(setpdQuery);
+//console.log(checkkq);
+res.send(checkkq);
+};
+exports.changepassword = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `
+  UPDATE ZTBEMPLINFO SET PASSWORD='${DATA.PASSWORD}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}'
+  `;
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.setWebVer = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE ZBTVERTABLE SET VERWEB=${DATA.WEB_VER}`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
 

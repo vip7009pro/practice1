@@ -42,45 +42,45 @@ ZTB_MATERIAL_TB.INS_DATE, ZTB_MATERIAL_TB.INS_EMPL, ZTB_MATERIAL_TB.UPD_DATE, ZT
   res.send(checkkq);
 };
 exports.checkMaterialExist = async (req, res, DATA) => {
-let kqua;
-let query = "";
-query = `SELECT * FROM ZTB_MATERIAL_TB WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME ='${DATA.M_NAME}'`;
-console.log(query);
-kqua = await queryDB(query);
-////console.log(kqua);
-res.send(kqua);
+  let kqua;
+  let query = "";
+  query = `SELECT * FROM ZTB_MATERIAL_TB WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME ='${DATA.M_NAME}'`;
+  console.log(query);
+  kqua = await queryDB(query);
+  ////console.log(kqua);
+  res.send(kqua);
 };
 exports.addMaterial = async (req, res, DATA) => {
- let EMPL_NO = req.payload_data["EMPL_NO"];
-           let kqua;
-           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
-           let query = "";
-           query = `INSERT INTO ZTB_MATERIAL_TB (CTR_CD, M_NAME, DESCR, CUST_CD, SSPRICE, CMSPRICE, SLITTING_PRICE, MASTER_WIDTH, ROLL_LENGTH, USE_YN, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}', '${DATA.M_NAME.trim()}',N'${DATA.DESCR.trim()}','${DATA.CUST_CD.trim()}','${DATA.SSPRICE}','${DATA.CMSPRICE}','${DATA.SLITTING_PRICE}','${DATA.MASTER_WIDTH}','${DATA.ROLL_LENGTH}', 'Y', GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}')`;
-           console.log(query);
-           kqua = await queryDB(query);
-           ////console.log(kqua);
-           res.send(kqua);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let kqua;
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+  let query = "";
+  query = `INSERT INTO ZTB_MATERIAL_TB (CTR_CD, M_NAME, DESCR, CUST_CD, SSPRICE, CMSPRICE, SLITTING_PRICE, MASTER_WIDTH, ROLL_LENGTH, USE_YN, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}', '${DATA.M_NAME.trim()}',N'${DATA.DESCR.trim()}','${DATA.CUST_CD.trim()}','${DATA.SSPRICE}','${DATA.CMSPRICE}','${DATA.SLITTING_PRICE}','${DATA.MASTER_WIDTH}','${DATA.ROLL_LENGTH}', 'Y', GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}')`;
+  console.log(query);
+  kqua = await queryDB(query);
+  ////console.log(kqua);
+  res.send(kqua);
 };
 exports.updateMaterial = async (req, res, DATA) => {
- let EMPL_NO = req.payload_data["EMPL_NO"];
-           let kqua;
-           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
-           let query = "";
-           query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME.trim()}', CUST_CD ='${DATA.CUST_CD.trim()}',DESCR =N'${DATA.DESCR.trim()}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE CTR_CD='${DATA.CTR_CD}' AND M_ID='${DATA.M_ID}' `;
-           kqua = await queryDB(query);
-           ////console.log(kqua);
-           res.send(kqua);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let kqua;
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+  let query = "";
+  query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE='${DATA.EXP_DATE}', M_NAME='${DATA.M_NAME.trim()}', CUST_CD ='${DATA.CUST_CD.trim()}',DESCR =N'${DATA.DESCR.trim()}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE CTR_CD='${DATA.CTR_CD}' AND M_ID='${DATA.M_ID}' `;
+  kqua = await queryDB(query);
+  ////console.log(kqua);
+  res.send(kqua);
 };
 exports.updateM090FSC = async (req, res, DATA) => {
- let EMPL_NO = req.payload_data["EMPL_NO"];
-           let kqua;
-           let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
-           let query = "";
-           query = `UPDATE M090 SET FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME='${DATA.M_NAME}'`;
-           console.log(query);
-           kqua = await queryDB(query);
-           ////console.log(kqua);
-           res.send(kqua);
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let kqua;
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+  let query = "";
+  query = `UPDATE M090 SET FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME='${DATA.M_NAME}'`;
+  console.log(query);
+  kqua = await queryDB(query);
+  ////console.log(kqua);
+  res.send(kqua);
 };
 exports.updateTDSStatus = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -99,7 +99,7 @@ exports.selectVendorList = async (req, res, DATA) => {
   ////console.log(kqua);
   res.send(kqua);
 };
-exports.getFSCList = async (req, res, DATA) => {  
+exports.getFSCList = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
     SELECT * FROM ZTB_FSC_TB WHERE CTR_CD='${DATA.CTR_CD}'
@@ -329,7 +329,7 @@ exports.updateRndApp = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.loadMRPPlan = async (req, res, DATA) => {
-  let checkkq = "OK";         
+  let checkkq = "OK";
   let setpdQuery = `
 WITH BOM2TB AS
 (SELECT DISTINCT CTR_CD, G_CODE, M_CODE FROM ZTB_BOM2),
@@ -388,31 +388,30 @@ LEFT JOIN M090 ON M090.CTR_CD = AGGLIEUTB.CTR_CD AND M090.M_CODE = AGGLIEUTB.M_C
 LEFT JOIN ZTB_MATERIAL_TB ON M090.CTR_CD = ZTB_MATERIAL_TB.CTR_CD AND M090.M_NAME = ZTB_MATERIAL_TB.M_NAME
 LEFT JOIN M110 ON ZTB_MATERIAL_TB.CTR_CD = M110.CTR_CD AND ZTB_MATERIAL_TB.CUST_CD = M110.CUST_CD
 WHERE ZTB_MATERIAL_TB.USE_YN='Y' AND AGGLIEUTB.CTR_CD='${DATA.CTR_CD}' AND M090.CODE_12='A'
-
   `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.workdaycheck = async (req, res, DATA) => {
- 
+exports.checkDocVersion = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `SELECT MAX(VER) AS VER FROM ZTB_DOC_TB WHERE M_ID=${DATA.M_ID} AND DOC_TYPE='${DATA.DOC_TYPE}' AND CTR_CD='${DATA.CTR_CD}' `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.workdaycheck = async (req, res, DATA) => {
- 
 };
 exports.workdaycheck = async (req, res, DATA) => {
- 
 };
 exports.workdaycheck = async (req, res, DATA) => {
- 
 };
 exports.workdaycheck = async (req, res, DATA) => {
- 
 };
 exports.workdaycheck = async (req, res, DATA) => {
- 
 };
 exports.workdaycheck = async (req, res, DATA) => {
- 
+  
 };

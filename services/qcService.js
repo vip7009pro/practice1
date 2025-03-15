@@ -2958,11 +2958,54 @@ exports.getInspectionWorstByCode = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
-
+exports.updateNCRIDForHolding = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE HOLDING_TB SET NCR_ID=${DATA.NCR_ID} WHERE CTR_CD='${DATA.CTR_CD}' AND HOLD_ID=${DATA.HOLD_ID}`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
-
+exports.trainspectionpatrol = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+    SELECT TOP 3
+    ZTBINSPECTION_PATROL.INS_PATROL_ID,
+      ZTBINSPECTION_PATROL.PROD_REQUEST_NO,
+      ZTBINSPECTION_PATROL.PLAN_ID,
+      ZTBINSPECTION_PATROL.PROCESS_LOT_NO,
+      ZTBINSPECTION_PATROL.G_CODE,
+      ZTBINSPECTION_PATROL.ERR_CODE,
+      ZTBINSPECTION_PATROL.INSPECT_QTY,
+      ZTBINSPECTION_PATROL.DEFECT_QTY,
+      ZTBINSPECTION_PATROL.DEFECT_PHENOMENON,
+      ZTBINSPECTION_PATROL.DEFECT_IMAGE_LINK,
+      ZTBINSPECTION_PATROL.LINEQC_PIC,
+      ZTBINSPECTION_PATROL.PROD_PIC,
+      ZTBINSPECTION_PATROL.INSP_PIC,
+      ZTBINSPECTION_PATROL.INS_DATE,
+      ZTBINSPECTION_PATROL.INS_EMPL,
+      ZTBINSPECTION_PATROL.UPD_DATE,
+      ZTBINSPECTION_PATROL.UPD_EMPL,
+      ZTBINSPECTION_PATROL.PHANLOAI,
+      ZTBINSPECTION_PATROL.REMARK,
+      ZTBINSPECTION_PATROL.FACTORY,
+      M100.G_NAME_KD,
+      M110.CUST_NAME_KD,
+      ZTBINSPECTION_PATROL.EQUIPMENT_CD,
+      ZTBINSPECTION_PATROL.OCCURR_TIME,
+      ZTBINSPECTION_PATROL.CTR_CD
+    FROM ZTBINSPECTION_PATROL 
+    LEFT JOIN M100 ON M100.G_CODE = ZTBINSPECTION_PATROL.G_CODE AND M100.CTR_CD = ZTBINSPECTION_PATROL.CTR_CD
+    LEFT JOIN M110 ON M110.CUST_CD = ZTBINSPECTION_PATROL.CUST_CD AND M110.CTR_CD = ZTBINSPECTION_PATROL.CTR_CD
+    WHERE ZTBINSPECTION_PATROL.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'
+      AND ZTBINSPECTION_PATROL.CTR_CD='${DATA.CTR_CD}'
+    ORDER BY ZTBINSPECTION_PATROL.OCCURR_TIME DESC        
+    `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
 
