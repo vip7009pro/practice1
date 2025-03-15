@@ -624,7 +624,6 @@ exports.processApi = async (req, res) => {
   if (!handler) {
     return res.send({ tk_status: "NG", message: `Command '${command}' not supported` });
   }
-
   try {
     // Gọi hàm xử lý tương ứng
     await handler(req, res, DATA);

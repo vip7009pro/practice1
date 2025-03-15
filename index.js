@@ -32,16 +32,13 @@ app.use("/login", authRoutes);
 app.use("/uploadfile", fileUploadRoutes);
 app.use("/api", apiRoutes);
 app.use("/csharp", csharpRoutes);
-
 // Socket.IO
 socketHandler(httpServer, httpsServer);
-
 const API_PORT = parseInt(process.env.API_PORT);
 const SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
 
 httpServer.listen(API_PORT, () => console.log(`Server listening on ${API_PORT}`));
 httpsServer.listen(SOCKET_PORT, () => console.log(`Socket listening on ${SOCKET_PORT}`));
-
 // Xử lý lỗi toàn cục
 process.on("uncaughtException", (error) => {
   console.log("Uncaught Exception:", error);
