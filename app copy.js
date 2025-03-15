@@ -54,10 +54,10 @@ try {
   ca_bundle = fs.readFileSync(SSL_CA_BUNDLE, 'utf8');
 } catch (err) {
   if (err.code === 'ENOENT') {
-    console.error('SSL File not found!');
+    console.log('SSL File not found!');
   } else {
     // Xử lý các loại ngoại lệ khác nếu cần
-    console.error('Error reading SSL file:', err.message);
+    console.log('Error reading SSL file:', err.message);
   }
 }
 var credentials = { key: privateKey, cert: certificate, ca: ca_bundle };

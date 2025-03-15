@@ -5,7 +5,7 @@ async function readFile(filePath) {
       const data = await fs.readFile(filePath);
       console.log(data.toString());
     } catch (error) {
-      console.error(`Got an error trying to read the file: ${error.message}`);
+      console.log(`Got an error trying to read the file: ${error.message}`);
     }
   }
 
@@ -14,7 +14,7 @@ async function readFile(filePath) {
       const csvHeaders = 'name,quantity,price'
       await fs.writeFile('\\\\192.168.1.55\\qc\\IMAGE\\groceries.csv', csvHeaders);
     } catch (error) {
-      console.error(`Got an error trying to write to a file: ${error.message}`);
+      console.log(`Got an error trying to write to a file: ${error.message}`);
     }
   }
 
@@ -23,7 +23,7 @@ async function readFile(filePath) {
       const csvLine = `\n${name},${quantity},${price}`
       await fs.writeFile('\\\\192.168.1.55\\qc\\IMAGE\\groceries.csv', csvLine, { flag: 'a' });
     } catch (error) {
-      console.error(`Got an error trying to write to a file: ${error.message}`);      
+      console.log(`Got an error trying to write to a file: ${error.message}`);      
     }
   }
 

@@ -28,17 +28,30 @@ const openConnection = async () => {
 };
 // Hàm truy vấn database
 const queryDB = async (query) => {
+  let kq = "";
   try {
     const pool = await openConnection();
     const result = await pool.request().query(query);
-    return { tk_status: "OK", data: result.recordset };
+    if (result.rowsAffected[0] > 0) {
+      if (result.recordset) {
+        kq = { tk_status: "OK", data: result.recordset };
+      } else {
+        kq = { tk_status: "OK", message: "Modify data thanh cong" };
+      }
+    } else {
+      kq = { tk_status: "NG", message: "Không có dòng dữ liệu nào" };
+    }
+  
+
   } catch (error) {
     console.log("Query error:", error);
-    return { tk_status: "NG", message: error.message };
+    kq = { tk_status: "NG", message: error + " " };
   }
+  return kq;
   // Không gọi sql.close() ở đây nữa
 };
 // Đóng pool khi cần (graceful shutdown)
+
 const closePool = async () => {
   if (poolPromise) {
     await sql.close();
@@ -46,9 +59,41 @@ const closePool = async () => {
     console.log("Database pool closed");
   }
 };
+
+function asyncQuery(queryString) {
+  return new Promise((resolve, reject) => {
+    sql.connect(config, (err) => {
+      if (err) console.log(err);
+      let sqlRequest = new sql.Request();
+      sqlRequest.query(queryString, function (err, data) {
+        if (err) {
+          //console.log(err);
+          return reject(err);
+        }
+        var rs = data.recordset;
+        if (rs.hasOwnProperty("length")) {
+          // //console.log("co property");
+        } else {
+          //  //console.log("khong co property");
+        }
+        ////console.log('length of dataset: ' + rs.length);
+        let kk;
+        if (rs.length != 0) {
+          kk = JSON.stringify(rs);
+          resolve(kk);
+        } else {
+          resolve(0);
+        }
+      });
+    });
+  }).catch((err) => {
+    //console.log("Loi dc catch: " + err + ' ');
+  });
+}
 module.exports = {
   openConnection,
   queryDB,
+  asyncQuery,
   closePool,
   config,
 };

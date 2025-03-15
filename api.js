@@ -8608,8 +8608,9 @@ LEFT JOIN RETURN_NVL ON (IN_KHO_SX_SUB.PLAN_ID_INPUT = RETURN_NVL.LAST_PLAN_ID A
           let checkkq = "OK";
           let setpdQuery = `SELECT TOP 1 * FROM OUT_KHO_SX WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID_OUTPUT='${DATA.PLAN_ID}' AND M_LOT_NO='${DATA.M_LOT_NO}'`;
           //${moment().format('YYYY-MM-DD')}
-          console.log(setpdQuery);
+          //console.log(setpdQuery);
           checkkq = await queryDB(setpdQuery);
+          //console.log(checkkq);
           res.send(checkkq);
         })();
         break;

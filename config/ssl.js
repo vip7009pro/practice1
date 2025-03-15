@@ -7,7 +7,7 @@ try {
   certificate = fs.readFileSync(process.env.SSL_CERTIFICATE, "utf8");
   ca_bundle = fs.readFileSync(process.env.SSL_CA_BUNDLE, "utf8");
 } catch (err) {
-  console.error("SSL Error:", err.message);
+  console.log("SSL Error:", err.message);
 }
 
 module.exports = {

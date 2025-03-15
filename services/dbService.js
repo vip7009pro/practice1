@@ -1,6 +1,6 @@
-const { login, logout } = require("./authService");
+const { login, logout, login2 } = require("./authService");
 const { uploadFile } = require("./fileService");
-const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer } = require("./commonService");
+const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer, check_chua_pd } = require("./commonService");
 const { workdaycheck, tangcadaycheck, countxacnhanchamcong, countthuongphat, checkWebVer, nghidaycheck, checkLicense } = require("./userService");
 const moment = require("moment");
 const { diemdanhnhom, diemdanhnhomBP, diemdanhnhomNS, setdiemdanhnhom, setdiemdanhnhom2, setteamnhom, dangkytangcanhom, dangkynghi2, dangkynghi2_AUTO, dangkytangcacanhan, pheduyetnhom, pheduyetnhomBP, pheduyetnhomNS, setpheduyetnhom, mydiemdanhnhom, diemdanhsummarynhom, getmaindeptlist, workpositionlist, workpositionlist_BP, workpositionlist_NS, diemdanhhistorynhom, diemdanhfull, getemployee_full, insertemployee, updateemployee, getmaindept, insertmaindept, updatemaindept, deletemaindept, getsubdept, insertsubdept, updatesubdept, deletesubdept, getworkposition, insertworkposition, updateworkposition, deleteworkposition, getsubdeptall, getddmaindepttb, loadDiemDanhFullSummaryTable, xoadangkynghi_AUTO, setca, setnhamay, setEMPL_WORK_POSITION, updateM010, loadC001, loadC0012, loadCaInfo, fixTime, update_empl_image, getDepartmentList, checkdiemdanh } = require("./nhansuService");
@@ -11,6 +11,7 @@ const { loadDataSX, nhapkhoao, resetKhoSX_IQC1, resetKhoSX_IQC2, loadtiledat, ge
 const { updateAmazonBOMCodeInfo, listAmazon, getBOMAMAZON, getBOMAMAZON_EMPTY, codeinfo, loadcodephoi, checkExistBOMAMAZON, insertAmazonBOM, updateAmazonBOM, checkGNAMEKDExist, update_appsheet_value, getMasterMaterialList, resetbanve, pdbanve, getbomsx, codeinforRnD, getcodefullinfo, getNextSEQ_G_CODE, insertM100BangTinhGia, updateM100BangTinhGia, insertM100, insertM100_AddVer, updateM100, deleteM140_2, checkGSEQ_M140, update_M140, insertM140, deleteM140, checkMaterialInfo, checkMassG_CODE, deleteBOM2, insertBOM2, checkTBGExist, getlastestCODKH, getAMAZON_DESIGN, deleteAMZDesign, insertAMZDesign, update_material_info, loadbarcodemanager, checkbarcodeExist, addBarcode, updateBarcode, deleteBarcode, loadquanlygiaonhan, addbangiaodaofilmtailieu, rnddailynewcode, rndweeklynewcode, rndmonthlynewcode, rndyearlynewcode, rndNewCodeByCustomer, rndNewCodeByProdType, loadSampleMonitorTable, lockSample, updateRND_SAMPLE_STATUS, updateSX_SAMPLE_STATUS, updateQC_SAMPLE_STATUS, updateMATERIAL_STATUS, updateAPPROVE_SAMPLE_STATUS, addMonitoringSample, updateProdProcessData, addProdProcessData, deleteProcessNotInCurrentListFromDataBase, deleteProdProcessData, getmachinelist, loadProdProcessData, saveLOSS_SETTING_SX, saveQLSX, setngoaiquan, updateBEP, updateLossKT } = require("./rndService");
 const { insert_O302, updateStockM090, tranhaplieu, traxuatlieu, tratonlieu, updatelieuncc, checkMNAMEfromLotI222XuatKho, checksolanout_O302, xuatpackkhotp, trakhotpInOut, traSTOCKCMS_NEW, traSTOCKCMS, traSTOCKKD_NEW, traSTOCKKD, traSTOCKTACH, loadKTP_IN, loadKTP_OUT, loadStockFull, loadSTOCKG_CODE, loadSTOCKG_NAME_KD, loadSTOCK_YCSX, updatePheDuyetHuyO660, cancelPheDuyetHuyO660 } = require("./warehouseService");
 const commandHandlers = {
+  login2,
   login,
   logout, 
   uploadFile,
@@ -610,7 +611,8 @@ const commandHandlers = {
   checkdiemdanh,
   POBalanceByCustomer,
   changepassword,
-  setWebVer
+  setWebVer,
+  check_chua_pd
 };
 
 exports.processApi = async (req, res) => {
@@ -627,7 +629,7 @@ exports.processApi = async (req, res) => {
     // Gọi hàm xử lý tương ứng
     await handler(req, res, DATA);
   } catch (error) {
-    console.error(`Error processing ${command}:`, error);
+    console.log(`Error processing ${command}:`, error);
     res.send({ tk_status: "ng", message: "Internal server error" });
   }
 };
