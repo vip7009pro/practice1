@@ -187,7 +187,7 @@ exports.tranhaplieu = async (req, res, DATA) => {
             ${condition}
             AND I222.CTR_CD='${DATA.CTR_CD}'
             ORDER BY I222.INS_DATE DESC`;
-  console.log(setpdQuery);
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
