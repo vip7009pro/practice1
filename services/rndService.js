@@ -1,4 +1,5 @@
 const { queryDB } = require("../config/database");
+const moment = require("moment");
 exports.updateAmazonBOMCodeInfo = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `UPDATE BOM_AMAZONE SET  AMZ_PROD_NAME='${DATA.AMZ_PROD_NAME}', AMZ_COUNTRY='${DATA.AMZ_COUNTRY}' WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}'`;
@@ -102,7 +103,7 @@ exports.resetbanve = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = ` UPDATE M100 SET BANVE= 'N', PDBV='${DATA.VALUE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', INS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}'  AND G_CODE='${DATA.G_CODE}'`;
-  ////console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
