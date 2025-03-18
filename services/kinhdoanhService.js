@@ -2956,8 +2956,14 @@ exports.POBalanceByCustomer = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
-
+exports.insert_po = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `INSERT INTO ZTBPOTable (CTR_CD, CUST_CD, EMPL_NO,G_CODE, PO_NO, PO_QTY, PO_DATE, RD_DATE, PROD_PRICE,BEP,REMARK) VALUES ('${DATA.CTR_CD}','${DATA.CUST_CD
+    }', '${DATA.EMPL_NO}','${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.PO_QTY}', '${DATA.PO_DATE}', '${DATA.RD_DATE}', '${DATA.PROD_PRICE}','${DATA.BEP}',N'${DATA.REMARK ?? ""}')`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  ////console.log(checkkq);
+  res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
 
