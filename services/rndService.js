@@ -701,7 +701,13 @@ exports.updateLossKT = async (req, res, DATA) => {
   ////console.log(checkkq);
   res.send(checkkq);
 }
-exports.common = async (req, res, DATA) => {
+exports.check_m_code_m140 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `select * from M140 WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE = '${DATA.G_CODE}' AND M_CODE ='${DATA.M_CODE}'`;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
 }
 exports.common = async (req, res, DATA) => {
 }
