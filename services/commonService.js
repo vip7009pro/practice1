@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { queryDB, asyncQuery } = require("../config/database");
+const fs = require("fs");
 exports.getCommonData = async (req, res, DATA) => {
   const { table_name } = DATA || req.body;
   const query = `SELECT * FROM ${table_name}`;
@@ -379,6 +380,14 @@ kqua = await asyncQuery(query);
 let chuapdqty = JSON.parse(kqua)[0]["CPD"];
 //console.log(chuapdqty);
 res.send(chuapdqty + "");
+};
+exports.setMobileVer = async (req, res, DATA) => { 
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE ZBTVERTABLE SET VERMOBILE=${DATA.VERMOBILE}`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
 };

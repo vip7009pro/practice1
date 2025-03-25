@@ -1136,10 +1136,6 @@ exports.getsubdeptall = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.getddmaindepttb = async (req, res, DATA) => {
-  let EMPL_NO = req.payload_data["EMPL_NO"];
-  let JOB_NAME = req.payload_data["JOB_NAME"];
-  let MAINDEPTNAME = req.payload_data["MAINDEPTNAME"];
-  let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
   let checkkq = "OK";
   let setpdQuery = `DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE        
   SET @startdate='${DATA.FROM_DATE}'
