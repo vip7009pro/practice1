@@ -958,7 +958,7 @@ exports.loadrecentRegisteredDTCData = async (req, res, DATA) => {
 };
 exports.getLastDTCID = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ` SELECT MAX(DTC_ID) AS LAST_DCT_ID FROM CTR_CD='${DATA.CTR_CD}' AND ZTB_REL_REQUESTTABLE`;
+  let setpdQuery = ` SELECT MAX(DTC_ID) AS LAST_DCT_ID FROM ZTB_REL_REQUESTTABLE WHERE CTR_CD='${DATA.CTR_CD}'`;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -2997,6 +2997,25 @@ exports.trainspectionpatrol = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
+};
+exports.copyXRFSpec = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  INSERT INTO ZTB_REL_SPECTTABLE
+SELECT CTR_CD, '${DATA.G_CODE}' AS G_CODE, 3, POINT_CODE, PRI, CENTER_VALUE, UPPER_TOR, LOWER_TOR, BARCODE_CONTENT, REMARK, INS_EMPL_NO, UPD_EMPL_NO, INS_DATE,UPD_DATE, '${DATA.M_CODE}' AS M_CODE FROM ZTB_REL_SPECTTABLE WHERE G_CODE='7C03925A' AND M_CODE='B0000035' AND TEST_CODE = 3 AND CTR_CD='${DATA.CTR_CD}'
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+};
+exports.common = async (req, res, DATA) => {
+};
+exports.common = async (req, res, DATA) => {
+};
+exports.common = async (req, res, DATA) => {
 };
 exports.common = async (req, res, DATA) => {
 };
