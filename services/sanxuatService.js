@@ -3359,12 +3359,12 @@ exports.deleteNotExistKHSXDAIHAN = async (req, res, DATA) => {
 };
 exports.cancelProductionLot = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let checkkq = "OK";
-  let setpdQuery = `
+  let checkkq = {tk_status: 'NG', tk_message: 'Tính năng tạm thời gián đoạn'};
+/*   let setpdQuery = `
   UPDATE P501 SET REMARK='HUY TEM', USE_YN='X', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND PROCESS_LOT_NO='${DATA.PROCESS_LOT_NO}'
-  `;
+  `; */
   //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
+  //checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
 };

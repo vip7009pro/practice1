@@ -3009,15 +3009,104 @@ SELECT CTR_CD, '${DATA.G_CODE}' AS G_CODE, 3, POINT_CODE, PRI, CENTER_VALUE, UPP
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.loadDocuments = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let condition = ``;
+  if (DATA.CAT_ID !== 0) {
+    condition += ` AND ZTB_ALL_DOC_TB.CAT_ID='${DATA.CAT_ID}'`
+  }
+  if (DATA.DOC_CAT_ID !== 0) {
+    condition += ` AND ZTB_ALL_DOC_TB.DOC_CAT_ID='${DATA.DOC_CAT_ID}'`
+  }
+  if (DATA.DOC_ID !== 0) {
+    condition += ` AND ZTB_ALL_DOC_TB.DOC_ID='${DATA.DOC_ID}'`
+  }
+  if (DATA.DOC_NAME !== '') {
+    condition += ` AND ZTB_ALL_DOC_TB.DOC_NAME LIKE '%${DATA.DOC_NAME}%'`
+  }
+  let setpdQuery = `
+SELECT ZTB_ALL_FILE_TB.FILE_ID, ZTB_ALL_FILE_TB.REG_DATE, ZTB_ALL_FILE_TB.EXP_DATE, ZTB_ALL_FILE_TB.FORMAT_X,  ZTB_ALL_DOC_TB.DOC_ID, ZTB_ALL_DOC_TB.CAT_ID, ZTB_DOC_CATEGORY1_TB.CAT_NAME,ZTB_DOC_CATEGORY2_TB.DOC_CAT_NAME,   ZTB_ALL_DOC_TB.DOC_CAT_ID, ZTB_ALL_DOC_TB.DOC_NAME, ZTB_ALL_DOC_TB.HSD_YN, ZTB_ALL_DOC_TB.USE_YN, ZTB_ALL_FILE_TB.INS_DATE, ZTB_ALL_FILE_TB.INS_EMPL 
+FROM ZTB_ALL_FILE_TB
+LEFT JOIN ZTB_ALL_DOC_TB  ON ZTB_ALL_DOC_TB.CTR_CD = ZTB_ALL_FILE_TB.CTR_CD AND ZTB_ALL_DOC_TB.DOC_ID = ZTB_ALL_FILE_TB.DOC_ID  AND ZTB_ALL_DOC_TB.DOC_CAT_ID = ZTB_ALL_FILE_TB.DOC_CAT_ID  AND ZTB_ALL_DOC_TB.CAT_ID = ZTB_ALL_FILE_TB.CAT_ID
+LEFT JOIN ZTB_DOC_CATEGORY1_TB ON ZTB_ALL_DOC_TB.CTR_CD = ZTB_DOC_CATEGORY1_TB.CTR_CD AND ZTB_ALL_DOC_TB.CAT_ID = ZTB_DOC_CATEGORY1_TB.CAT_ID
+LEFT JOIN ZTB_DOC_CATEGORY2_TB ON ZTB_ALL_DOC_TB.CTR_CD = ZTB_DOC_CATEGORY2_TB.CTR_CD AND ZTB_ALL_DOC_TB.DOC_CAT_ID = ZTB_DOC_CATEGORY2_TB.DOC_CAT_ID
+WHERE ZTB_ALL_DOC_TB.CTR_CD='${DATA.CTR_CD}' ${condition}
+ORDER BY ZTB_ALL_DOC_TB.INS_DATE DESC
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+
+exports.loadDocCategory1 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT * FROM ZTB_DOC_CATEGORY1_TB ORDER BY CAT_ID ASC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadDocCategory2 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT * FROM ZTB_DOC_CATEGORY2_TB ORDER BY DOC_CAT_ID ASC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.checkLastFileID = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(FILE_ID) AS FILE_ID FROM  ZTB_ALL_FILE_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.insertFileData = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `
+INSERT INTO ZTB_ALL_FILE_TB (CTR_CD, DOC_ID, DOC_CAT_ID, CAT_ID, REG_DATE, EXP_DATE, FORMAT_X, INS_EMPL, INS_DATE) VALUES ('${DATA.CTR_CD}',${DATA.DOC_ID},${DATA.DOC_CAT_ID},${DATA.CAT_ID},'${DATA.REG_DATE}','${DATA.EXP_DATE}','${DATA.FORMAT_X}','${EMPL_NO}',GETDATE())
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadDocList = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT * FROM  ZTB_ALL_DOC_TB ORDER BY CAT_ID ASC, DOC_CAT_ID ASC, DOC_ID ASC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT * FROM ZTB_DOC_CATEGORY2_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
 exports.common = async (req, res, DATA) => {
-};
-exports.common = async (req, res, DATA) => {
-};
-exports.common = async (req, res, DATA) => {
-};
-exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT * FROM ZTB_DOC_CATEGORY2_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
 };
