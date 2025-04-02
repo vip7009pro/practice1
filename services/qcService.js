@@ -3009,6 +3009,17 @@ SELECT CTR_CD, '${DATA.G_CODE}' AS G_CODE, 3, POINT_CODE, PRI, CENTER_VALUE, UPP
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.copyXRFSpecSDI = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  INSERT INTO ZTB_REL_SPECTTABLE
+SELECT CTR_CD, '${DATA.G_CODE}' AS G_CODE, 3, POINT_CODE, PRI, CENTER_VALUE, UPPER_TOR, LOWER_TOR, BARCODE_CONTENT, REMARK, INS_EMPL_NO, UPD_EMPL_NO, INS_DATE,UPD_DATE, '${DATA.M_CODE}' AS M_CODE FROM ZTB_REL_SPECTTABLE WHERE G_CODE='7B09266A' AND M_CODE='B0000035' AND TEST_CODE = 3 AND CTR_CD='${DATA.CTR_CD}'
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.loadDocuments = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
