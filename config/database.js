@@ -32,6 +32,7 @@ const queryDB = async (query) => {
   try {
     const pool = await openConnection();
     const result = await pool.request().query(query);
+    //console.log("Query result:", result); 
     if (result.rowsAffected[0] > 0) {
       if (result.recordset) {
         kq = { tk_status: "OK", data: result.recordset };
