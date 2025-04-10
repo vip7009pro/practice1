@@ -1,5 +1,6 @@
 const { queryDB } = require("../config/database");
 const moment = require("moment");
+const { removeVietnameseTones } = require("../utils/sqlUtils");
 exports.diemdanhnhom = async (req, res, DATA) => {
   let kqua;
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -940,28 +941,16 @@ exports.insertemployee = async (req, res, DATA) => {
   let JOB_NAME = req.payload_data["JOB_NAME"];
   if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
     let checkkq = "OK";
-    let setpdQuery = `INSERT INTO ZTBEMPLINFO 
-          (CTR_CD, EMPL_NO, CMS_ID, FIRST_NAME, MIDLAST_NAME, DOB, HOMETOWN, SEX_CODE, 
-          ADD_PROVINCE, ADD_DISTRICT, ADD_COMMUNE, ADD_VILLAGE, PHONE_NUMBER, WORK_START_DATE, 
-          PASSWORD, EMAIL, WORK_POSITION_CODE, WORK_SHIFT_CODE, POSITION_CODE, JOB_CODE, 
-          FACTORY_CODE, WORK_STATUS_CODE, NV_CCID) 
-      VALUES 
-          ('${DATA.CTR_CD}', N'${DATA.EMPL_NO}', N'${DATA.CMS_ID}', N'${DATA.FIRST_NAME}', 
-          N'${DATA.MIDLAST_NAME}', N'${DATA.DOB}', N'${DATA.HOMETOWN}', N'${DATA.SEX_CODE}', 
-          N'${DATA.ADD_PROVINCE}', N'${DATA.ADD_DISTRICT}', N'${DATA.ADD_COMMUNE}', 
-          N'${DATA.ADD_VILLAGE}', N'${DATA.PHONE_NUMBER}', N'${DATA.WORK_START_DATE}', 
-          N'${DATA.PASSWORD}', N'${DATA.EMAIL}', N'${DATA.WORK_POSITION_CODE}', 
-          N'${DATA.WORK_SHIFT_CODE}', N'${DATA.POSITION_CODE}', N'${DATA.JOB_CODE}', 
-          N'${DATA.FACTORY_CODE}', N'${DATA.WORK_STATUS_CODE}', ${DATA.NV_CCID})`;
-    let insertoldempl = `INSERT INTO M010 
-          (CTR_CD, EMPL_NO, EMPL_NAME, PASSWD) 
-      VALUES 
-          ('${DATA.CTR_CD}', '${DATA.EMPL_NO}', 
-          '${removeVietnameseTones(DATA.MIDLAST_NAME)} ${removeVietnameseTones(DATA.FIRST_NAME)}', 
-          '${DATA.PASSWORD}')`;
+    let setpdQuery = `INSERT INTO ZTBEMPLINFO (CTR_CD,EMPL_NO,CMS_ID,FIRST_NAME,MIDLAST_NAME,DOB,HOMETOWN,SEX_CODE,ADD_PROVINCE,ADD_DISTRICT,ADD_COMMUNE,ADD_VILLAGE,PHONE_NUMBER,WORK_START_DATE,PASSWORD,EMAIL,WORK_POSITION_CODE,WORK_SHIFT_CODE,POSITION_CODE,JOB_CODE,FACTORY_CODE,WORK_STATUS_CODE,NV_CCID) VALUES ('${DATA.CTR_CD}',N'${DATA.EMPL_NO}' ,N'${DATA.CMS_ID}' ,N'${DATA.FIRST_NAME}' ,N'${DATA.MIDLAST_NAME}' ,N'${DATA.DOB}' ,N'${DATA.HOMETOWN}' ,N'${DATA.SEX_CODE}' ,N'${DATA.ADD_PROVINCE}' ,N'${DATA.ADD_DISTRICT}' ,N'${DATA.ADD_COMMUNE}' ,N'${DATA.ADD_VILLAGE}' ,N'${DATA.PHONE_NUMBER}' ,N'${DATA.WORK_START_DATE}' ,N'${DATA.PASSWORD}' ,N'${DATA.EMAIL}' ,N'${DATA.WORK_POSITION_CODE}' ,N'${DATA.WORK_SHIFT_CODE}' ,N'${DATA.POSITION_CODE}' ,N'${DATA.JOB_CODE}' ,N'${DATA.FACTORY_CODE}' ,N'${DATA.WORK_STATUS_CODE}',${DATA.NV_CCID})`;
+    ////console.log(setpdQuery);
+    let insertoldempl = `INSERT INTO M010 (CTR_CD,EMPL_NO, EMPL_NAME, PASSWD) VALUES ('${DATA.CTR_CD}','${DATA.EMPL_NO
+      }','${removeVietnameseTones(
+        DATA.MIDLAST_NAME
+      )} ${removeVietnameseTones(DATA.FIRST_NAME)}','${DATA.PASSWORD}')`;
     console.log(insertoldempl);
-    await queryDB(insertoldempl);
+    checkkq = await queryDB(insertoldempl);
     checkkq = await queryDB(setpdQuery);
+    //console.log(checkkq);
     res.send(checkkq);
   } else {
     res.send({ tk_status: "NG", message: "Bạn không phải leader" });
@@ -972,32 +961,10 @@ exports.updateemployee = async (req, res, DATA) => {
   if (JOB_NAME === "Leader" || JOB_NAME === "ADMIN") {
     let checkkq = "OK";
     let checkresigndate =
-      DATA.WORK_STATUS_CODE === 0 ? `, RESIGN_DATE='${DATA.RESIGN_DATE}'` : ``;
-    let setpdQuery = `UPDATE ZTBEMPLINFO 
-          SET CMS_ID= N'${DATA.CMS_ID}', 
-              FIRST_NAME= N'${DATA.FIRST_NAME}', 
-              MIDLAST_NAME= N'${DATA.MIDLAST_NAME}', 
-              DOB= N'${DATA.DOB}', 
-              HOMETOWN= N'${DATA.HOMETOWN}', 
-              SEX_CODE= N'${DATA.SEX_CODE}', 
-              ADD_PROVINCE= N'${DATA.ADD_PROVINCE}', 
-              ADD_DISTRICT= N'${DATA.ADD_DISTRICT}', 
-              ADD_COMMUNE= N'${DATA.ADD_COMMUNE}', 
-              ADD_VILLAGE= N'${DATA.ADD_VILLAGE}', 
-              PHONE_NUMBER= N'${DATA.PHONE_NUMBER}', 
-              WORK_START_DATE= N'${DATA.WORK_START_DATE}', 
-              PASSWORD= N'${DATA.PASSWORD}', 
-              EMAIL= N'${DATA.EMAIL}', 
-              WORK_POSITION_CODE= N'${DATA.WORK_POSITION_CODE}', 
-              WORK_SHIFT_CODE= N'${DATA.WORK_SHIFT_CODE}', 
-              POSITION_CODE= N'${DATA.POSITION_CODE}', 
-              JOB_CODE= N'${DATA.JOB_CODE}', 
-              FACTORY_CODE= N'${DATA.FACTORY_CODE}', 
-              WORK_STATUS_CODE= N'${DATA.WORK_STATUS_CODE}', 
-              NV_CCID=${DATA.NV_CCID} 
-              ${checkresigndate}
-          WHERE CTR_CD='${DATA.CTR_CD}' 
-          AND EMPL_NO= '${DATA.EMPL_NO}'`;
+      DATA.WORK_STATUS_CODE === 0
+        ? `, RESIGN_DATE='${DATA.RESIGN_DATE}'`
+        : ``;
+    let setpdQuery = `UPDATE ZTBEMPLINFO SET CMS_ID= N'${DATA.CMS_ID}' ,FIRST_NAME= N'${DATA.FIRST_NAME}' ,MIDLAST_NAME= N'${DATA.MIDLAST_NAME}' ,DOB= N'${DATA.DOB}' ,HOMETOWN= N'${DATA.HOMETOWN}' ,SEX_CODE= N'${DATA.SEX_CODE}' ,ADD_PROVINCE= N'${DATA.ADD_PROVINCE}' ,ADD_DISTRICT= N'${DATA.ADD_DISTRICT}' ,ADD_COMMUNE= N'${DATA.ADD_COMMUNE}' ,ADD_VILLAGE= N'${DATA.ADD_VILLAGE}' ,PHONE_NUMBER= N'${DATA.PHONE_NUMBER}' ,WORK_START_DATE= N'${DATA.WORK_START_DATE}' ,PASSWORD= N'${DATA.PASSWORD}' ,EMAIL= N'${DATA.EMAIL}' ,WORK_POSITION_CODE= N'${DATA.WORK_POSITION_CODE}' ,WORK_SHIFT_CODE= N'${DATA.WORK_SHIFT_CODE}' ,POSITION_CODE= N'${DATA.POSITION_CODE}' ,JOB_CODE= N'${DATA.JOB_CODE}' ,FACTORY_CODE= N'${DATA.FACTORY_CODE}' ,WORK_STATUS_CODE= N'${DATA.WORK_STATUS_CODE}', NV_CCID=${DATA.NV_CCID} ${checkresigndate} WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO= '${DATA.EMPL_NO}'`;
     console.log(setpdQuery);
     checkkq = await queryDB(setpdQuery);
     console.log(checkkq);
