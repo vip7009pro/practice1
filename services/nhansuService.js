@@ -947,7 +947,8 @@ exports.insertemployee = async (req, res, DATA) => {
       }','${removeVietnameseTones(
         DATA.MIDLAST_NAME
       )} ${removeVietnameseTones(DATA.FIRST_NAME)}','${DATA.PASSWORD}')`;
-    console.log(insertoldempl);
+    //console.log(insertoldempl);
+    //console.log(setpdQuery);
     checkkq = await queryDB(insertoldempl);
     checkkq = await queryDB(setpdQuery);
     //console.log(checkkq);
