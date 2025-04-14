@@ -303,6 +303,14 @@ exports.resetKhoSX_IQC2 = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
+
+exports.updateLOT_SX_STATUS = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE P501 SET P501.LOT_STATUS='${DATA.LOT_STATUS}' WHERE P501.PROCESS_LOT_NO='${DATA.PROCESS_LOT_NO}' AND P501.CTR_CD='${DATA.CTR_CD}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery); 
+  res.send(checkkq);
+};
 exports.loadtiledat = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE P400.CODE_55 <> '04'  AND SX_DATE ='${DATA.PLAN_DATE}'`
@@ -5301,7 +5309,7 @@ exports.tinhluongP3 = async (req, res, DATA) => {
   LEFT JOIN ZTB_DM_HISTORY ON ZTB_DM_HISTORY.CTR_CD = ZTB_QLSXPLAN.CTR_CD AND  ZTB_DM_HISTORY.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO
   WHERE ZTB_SX_RESULT.PLAN_ID is not null AND P400.PL_HANG='TT' AND P400.CODE_55 <> '04' AND ZTB_QLSXPLAN.STEP = 0 AND ZTB_SX_RESULT.MASS_END_TIME is not null AND ZTB_QLSXPLAN.PLAN_DATE > '2024-01-01' AND P500A.M_CODE is not null ${condition}
   )
-  SELECT P3_1.*, (DM_SETTING - SETTING_MET) AS THUA_THIEU_MET, (DM_SETTING - SETTING_MET)*WIDTH_CD*1.0/1000 AS THUA_THIEU_M2, ((DM_SETTING - SETTING_MET)*WIDTH_CD*1.0/1000)* M_PRICE*0.3 AS THUA_THIEU_AMOUNT, OK_EA*PD*DON_GIA_IN*1.0/1000 AS PRINT_QTY_AMOUNT, PROD_PRINT_TIMES * 5000 AS  OUT_FILM_AMOUNT,(((DM_SETTING - SETTING_MET)*WIDTH_CD*1.0/1000)* M_PRICE*0.3 + OK_EA*PD*DON_GIA_IN*1.0/1000 + PROD_PRINT_TIMES * 5000) AS TOTAL_P3_AMOUNT   FROM P3_1
+  SELECT P3_1.*, (DM_SETTING - SETTING_MET) AS THUA_THIEU_MET, (DM_SETTING - SETTING_MET)*WIDTH_CD*1.0/1000 AS THUA_THIEU_M2, ((DM_SETTING - SETTING_MET)*WIDTH_CD*1.0/1000)* M_PRICE*0.3 AS THUA_THIEU_AMOUNT, OK_MET*PD*DON_GIA_IN*1.0/1000 AS PRINT_QTY_AMOUNT, isnull(FILM_OUT_TIMES,0)*PROD_PRINT_TIMES * 5000 AS  OUT_FILM_AMOUNT,(((DM_SETTING - SETTING_MET)*WIDTH_CD*1.0/1000)* M_PRICE*0.3 + OK_MET*PD*DON_GIA_IN*1.0/1000 + isnull(FILM_OUT_TIMES,0)*PROD_PRINT_TIMES * 5000) AS TOTAL_P3_AMOUNT   FROM P3_1
   
   `;
   //${moment().format('YYYY-MM-DD')}
@@ -5323,9 +5331,9 @@ exports.update_M_PRICE_P500 = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.checkProcessLotNoInfo = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTB_QLSXCHITHI WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`;
+  let setpdQuery = `SELECT P501.*, CAST(P501.TEMP_QTY * ZTB_SX_RESULT.PD * 1.0 /ZTB_SX_RESULT.CAVITY/1000 AS int) AS BTP_MET FROM P501 LEFT JOIN ZTB_SX_RESULT ON ZTB_SX_RESULT.PLAN_ID = P501.PLAN_ID WHERE PROCESS_LOT_NO = '${DATA.PROCESS_LOT_NO}' AND P501.CTR_CD = '${DATA.CTR_CD}'`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
