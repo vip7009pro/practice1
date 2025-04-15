@@ -467,11 +467,12 @@ exports.mydiemdanhnhom = async (req, res, DATA) => {
   let START_DATE = DATA.from_date;
   let END_DATE = DATA.to_date;
   let kqua;
-  let query = `DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE        
-     SET @startdate='${START_DATE}';
-     SET @enddate='${END_DATE}';
-     SET @empl='${EMPL_NO}';
-    WITH DT AS 
+  let query = `
+  DECLARE @empl varchar(10); DECLARE @startdate DATE; DECLARE @enddate DATE        
+SET @startdate='${START_DATE}';
+SET @enddate='${END_DATE}';
+SET @empl='${EMPL_NO}';
+WITH DT AS 
 (
 SELECT * FROM DATETABLE WHERE DATE_COLUMN BETWEEN @startdate AND @enddate
 ),
@@ -485,7 +486,158 @@ CTE_ZTBATTENDANCETB AS (
       ATT.OVERTIME,
       ATT.XACNHAN,
       ATT.CURRENT_CA,
-      ATT.CTR_CD
+      ATT.CTR_CD,
+      ATT.IN_TIME,
+      ATT.OUT_TIME,
+	   CASE 
+        WHEN ATT.IN_TIME != 'OFF' AND (
+            (ATT.CURRENT_CA = 0 AND ATT.IN_TIME < '08:00') OR  -- Ca hành chính/ngày
+            (ATT.CURRENT_CA = 1 AND ATT.IN_TIME < '08:00') OR  -- Ca ngày
+            (ATT.CURRENT_CA = 2 AND ATT.IN_TIME < '20:00')     -- Ca đêm
+        )
+        THEN DATEDIFF(MINUTE, 
+            ATT.IN_TIME, 
+            CASE 
+                WHEN ATT.CURRENT_CA IN (0, 1) THEN '08:00' 
+                WHEN ATT.CURRENT_CA = 2 THEN '20:00' 
+            END)
+        ELSE 0 
+    END AS EARLY_IN_MINUTES,
+    -- Thời gian đến muộn
+    CASE 
+        WHEN ATT.IN_TIME != 'OFF' AND (
+            (ATT.CURRENT_CA = 0 AND ATT.IN_TIME > '08:00') OR  -- Ca hành chính/ngày
+            (ATT.CURRENT_CA = 1 AND ATT.IN_TIME > '08:00') OR  -- Ca ngày
+            (ATT.CURRENT_CA = 2 AND ATT.IN_TIME > '20:00')     -- Ca đêm
+        )
+        THEN DATEDIFF(MINUTE, 
+            CASE 
+                WHEN ATT.CURRENT_CA IN (0, 1) THEN '08:00' 
+                WHEN ATT.CURRENT_CA = 2 THEN '20:00' 
+            END, 
+            ATT.IN_TIME)
+        ELSE 0 
+    END AS LATE_IN_MINUTES,
+    -- Thời gian về sớm
+    CASE 
+        WHEN ATT.OUT_TIME != 'OFF' AND (
+            (ATT.CURRENT_CA = 0 AND ATT.OUT_TIME < '17:00') OR  -- Ca hành chính/ngày
+            (ATT.CURRENT_CA = 1 AND ATT.OUT_TIME < '17:00') OR  -- Ca ngày
+            (ATT.CURRENT_CA = 2 AND ATT.OUT_TIME < '05:00')     -- Ca đêm
+        )
+        THEN DATEDIFF(MINUTE, 
+            ATT.OUT_TIME, 
+            CASE 
+                WHEN ATT.CURRENT_CA IN (0, 1) THEN '17:00' 
+                WHEN ATT.CURRENT_CA = 2 THEN '05:00' 
+            END)
+        ELSE 0 
+    END AS EARLY_OUT_MINUTES,
+    -- Thời gian tăng ca
+    CASE 
+        WHEN ATT.OUT_TIME != 'OFF' AND (
+            (ATT.CURRENT_CA = 0 AND ATT.OUT_TIME > '17:00') OR  -- Ca hành chính/ngày
+            (ATT.CURRENT_CA = 1 AND ATT.OUT_TIME > '17:00') OR  -- Ca ngày
+            (ATT.CURRENT_CA = 2 AND ATT.OUT_TIME > '05:00')     -- Ca đêm
+        )
+        THEN DATEDIFF(MINUTE, 
+            CASE 
+                WHEN ATT.CURRENT_CA IN (0, 1) THEN '17:00' 
+                WHEN ATT.CURRENT_CA = 2 THEN '05:00' 
+            END, 
+            ATT.OUT_TIME)
+        ELSE 0 
+    END AS OVERTIME_MINUTES,
+    -- Số phút làm việc hành chính (trừ 1 tiếng ăn trưa/đêm nếu OUT_TIME sau 13h hoặc 1h15)
+    CASE 
+        WHEN ATT.IN_TIME != 'OFF' AND ATT.OUT_TIME != 'OFF' AND ATT.CURRENT_CA IN (0, 1) THEN 
+            CASE 
+                -- Trường hợp 1: Từ 8h (hoặc sớm hơn) đến 17h (hoặc muộn hơn)
+                WHEN ATT.IN_TIME <= '08:00' AND ATT.OUT_TIME >= '17:00' 
+                THEN 480  -- 8h đến 17h = 540 phút, trừ 60 phút ăn trưa
+                -- Trường hợp 2: Từ sau 8h đến 17h (hoặc muộn hơn)
+                WHEN ATT.IN_TIME > '08:00' AND ATT.OUT_TIME >= '17:00' 
+                THEN 
+                    CASE 
+                        WHEN DATEDIFF(MINUTE, ATT.IN_TIME, '17:00') > 60 
+                        THEN DATEDIFF(MINUTE, ATT.IN_TIME, '17:00') - 60 
+                        ELSE DATEDIFF(MINUTE, ATT.IN_TIME, '17:00') 
+                    END
+                -- Trường hợp 3: Từ 8h (hoặc sớm hơn) đến trước 17h
+                WHEN ATT.IN_TIME <= '08:00' AND ATT.OUT_TIME < '17:00' 
+                THEN 
+                    CASE 
+                        WHEN ATT.OUT_TIME > '13:00' AND DATEDIFF(MINUTE, '08:00', ATT.OUT_TIME) > 60 
+                        THEN DATEDIFF(MINUTE, '08:00', ATT.OUT_TIME) - 60 
+                        ELSE DATEDIFF(MINUTE, '08:00', ATT.OUT_TIME) 
+                    END
+                -- Trường hợp 4: Từ sau 8h đến trước 17h
+                WHEN ATT.IN_TIME > '08:00' AND ATT.OUT_TIME < '17:00' 
+                THEN 
+                    CASE 
+                        WHEN ATT.OUT_TIME > '13:00' AND DATEDIFF(MINUTE, ATT.IN_TIME, ATT.OUT_TIME) > 60 
+                        THEN DATEDIFF(MINUTE, ATT.IN_TIME, ATT.OUT_TIME) - 60 
+                        ELSE DATEDIFF(MINUTE, ATT.IN_TIME, ATT.OUT_TIME) 
+                    END
+                ELSE 0 
+            END
+        WHEN ATT.IN_TIME != 'OFF' AND ATT.OUT_TIME != 'OFF' AND ATT.CURRENT_CA = 2 THEN 
+            CASE 
+                -- Ca đêm: Từ 20h (hoặc sớm hơn) đến 5h (hoặc muộn hơn)
+                WHEN ATT.IN_TIME <= '20:00' AND ATT.OUT_TIME >= '05:00' 
+                THEN 480  -- 20h đến 5h = 540 phút, trừ 60 phút ăn đêm
+                -- Từ sau 20h đến 5h (hoặc muộn hơn)
+                WHEN ATT.IN_TIME > '20:00' AND ATT.OUT_TIME >= '05:00' 
+                THEN 
+                    CASE 
+                        WHEN DATEDIFF(MINUTE, ATT.IN_TIME, '05:00') + 1440 > 60 
+                        THEN DATEDIFF(MINUTE, ATT.IN_TIME, '05:00') + 1440 - 60 
+                        ELSE DATEDIFF(MINUTE, ATT.IN_TIME, '05:00') + 1440 
+                    END
+                -- Từ 20h (hoặc sớm hơn) đến trước 5h
+                WHEN ATT.IN_TIME <= '20:00' AND ATT.OUT_TIME < '05:00' 
+                THEN 
+                    CASE 
+                        WHEN ATT.OUT_TIME > '01:15' AND DATEDIFF(MINUTE, '20:00', ATT.OUT_TIME) + 1440 > 60 
+                        THEN DATEDIFF(MINUTE, '20:00', ATT.OUT_TIME) + 1440 - 60 
+                        ELSE DATEDIFF(MINUTE, '20:00', ATT.OUT_TIME) + 1440 
+                    END
+                -- Từ sau 20h đến trước 5h
+                WHEN ATT.IN_TIME > '20:00' AND ATT.OUT_TIME < '05:00' 
+                THEN 
+                    CASE 
+                        WHEN ATT.OUT_TIME > '01:15' AND DATEDIFF(MINUTE, ATT.IN_TIME, ATT.OUT_TIME) + 1440 > 60 
+                        THEN DATEDIFF(MINUTE, ATT.IN_TIME, ATT.OUT_TIME) + 1440 - 60 
+                        ELSE DATEDIFF(MINUTE, ATT.IN_TIME, ATT.OUT_TIME) + 1440 
+                    END
+                ELSE 0 
+            END
+        ELSE 0 
+    END AS WORKING_MINUTES,
+    -- Thời gian tăng ca cuối cùng (FINAL_OVERTIMES)
+    CASE 
+        WHEN ATT.OUT_TIME != 'OFF' AND (
+            (ATT.CURRENT_CA = 0 AND ATT.OUT_TIME > '17:00') OR  -- Ca hành chính/ngày
+            (ATT.CURRENT_CA = 1 AND ATT.OUT_TIME > '17:00') OR  -- Ca ngày
+            (ATT.CURRENT_CA = 2 AND ATT.OUT_TIME > '05:00')     -- Ca đêm
+        ) THEN 
+            CASE 
+                WHEN DATEDIFF(MINUTE, 
+                    CASE 
+                        WHEN ATT.CURRENT_CA IN (0, 1) THEN '17:00' 
+                        WHEN ATT.CURRENT_CA = 2 THEN '05:00' 
+                    END, 
+                    ATT.OUT_TIME) >= 30 
+                THEN FLOOR(DATEDIFF(MINUTE, 
+                    CASE 
+                        WHEN ATT.CURRENT_CA IN (0, 1) THEN '17:00' 
+                        WHEN ATT.CURRENT_CA = 2 THEN '05:00' 
+                    END, 
+                    ATT.OUT_TIME) / 15) * 15 
+                ELSE 0 
+            END
+        ELSE 0 
+    END AS FINAL_OVERTIMES
   FROM 
       DATETABLE DT
   LEFT JOIN 
@@ -528,6 +680,14 @@ SELECT
   ATT.ON_OFF,
   ATT.OVERTIME_INFO,
   ATT.OVERTIME,
+  ATT.EARLY_IN_MINUTES,
+  ATT.EARLY_OUT_MINUTES,
+  ATT.LATE_IN_MINUTES,
+  ATT.OVERTIME_MINUTES,
+  ATT.WORKING_MINUTES,
+  ATT.FINAL_OVERTIMES,
+  ATT.IN_TIME,
+  ATT.OUT_TIME,
   REASON.REASON_NAME,
   OFFREG.REMARK,
   ATT.XACNHAN,
