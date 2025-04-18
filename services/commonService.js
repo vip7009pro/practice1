@@ -1,47 +1,34 @@
 const jwt = require("jsonwebtoken");
-const { queryDB, asyncQuery } = require("../config/database");
+const { queryDB_New, asyncQuery, queryDB } = require("../config/database");
 const fs = require("fs");
+const moment = require("moment");
+
 exports.getCommonData = async (req, res, DATA) => {
   const { table_name } = DATA || req.body;
   const query = `SELECT * FROM ${table_name}`;
   const result = await queryDB(query);
   res.send({ tk_status: result.tk_status, data: result.data });
 };
+
 exports.checklogin = async (req, res, DATA) => {
-  const { token_string } = DATA || req.body; // Lấy token từ body hoặc cookie
+  const { token_string } = DATA || req.body;
   const token = token_string || req.cookies.token;
-  if (!token) {
-    return res.send({ tk_status: "ng", message: "No token provided" });
-  }
+  if (!token) return res.send({ tk_status: "ng", message: "No token provided" });
   try {
-    // Giải mã token
-    const decoded = jwt.verify(token, "nguyenvanhung"); // Sử dụng secret key giống với login
-    const payload = JSON.parse(decoded.payload); // Giả định payload là JSON từ login
-    // Kiểm tra thông tin người dùng trong database (tùy chọn)
-    const userQuery = `
-      SELECT EMPL_NO, WORK_STATUS_CODE 
-      FROM ZTBEMPLINFO 
-      WHERE EMPL_NO = '${payload[0].EMPL_NO}'
-    `;
-    //console.log(userQuery);
-    const result = await queryDB(userQuery);
-    //console.log(result);
+    const decoded = jwt.verify(token, "nguyenvanhung");
+    const payload = JSON.parse(decoded.payload);
+    const userQuery = `SELECT EMPL_NO, WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO = @EMPL_NO`;
+    const result = await queryDB_New(userQuery, { EMPL_NO: payload[0].EMPL_NO });
     if (result.tk_status === "OK" && result.data.length > 0) {
-      const user = result.data[0];
-      const status = user.WORK_STATUS_CODE === 0 ? "coloi" : "kocoloi";
-      res.send({
-        tk_status: "ok",
-        message: "User is logged in",
-        data: payload[0],
-      });
+      res.send({ tk_status: "ok", message: "User is logged in", data: payload[0] });
     } else {
       res.send({ tk_status: "ng", message: "User not found" });
     }
   } catch (error) {
-    console.log("Check login error:", error);
     res.send({ tk_status: "ng", message: "Invalid or expired token" });
   }
 };
+
 exports.checkMYCHAMCONG = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let PASSWORD = req.payload_data["PASSWORD"];
@@ -91,303 +78,332 @@ exports.checkMYCHAMCONG = async (req, res, DATA) => {
 };
 exports.insert_Notification_Data = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let checkkq = "OK";
-  let setpdQuery = `
-            INSERT INTO ZTB_NOTIFICATION (CTR_CD, TITLE, CONTENT, SUBDEPTNAME, MAINDEPTNAME, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, NOTI_TYPE) VALUES ('${DATA.CTR_CD}', N'${DATA.TITLE}', N'${DATA.CONTENT}', N'${DATA.SUBDEPTNAME}', N'${DATA.MAINDEPTNAME}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}', '${DATA.NOTI_TYPE}')
-          `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `INSERT INTO ZTB_NOTIFICATION (CTR_CD, TITLE, CONTENT, SUBDEPTNAME, MAINDEPTNAME, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, NOTI_TYPE)
+     VALUES (@ctr_cd, @title, @content, @subdeptname, @maindeptname, GETDATE(), @empl_no, GETDATE(), @empl_no, @noti_type)`,
+    {
+      ctr_cd: DATA.CTR_CD,
+      title: DATA.TITLE,
+      content: DATA.CONTENT,
+      subdeptname: DATA.SUBDEPTNAME,
+      maindeptname: DATA.MAINDEPTNAME,
+      empl_no: EMPL_NO,
+      noti_type: DATA.NOTI_TYPE
+    }
+  );
   res.send(checkkq);
 };
+
 exports.load_Notification_Data = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let JOB_NAME = req.payload_data["JOB_NAME"];
-  let checkkq = "OK";
-  let setpdQuery = ``;
-  if (EMPL_NO === 'NHU1903') {
-    setpdQuery = `
-    SELECT TOP 1000 * FROM ZTB_NOTIFICATION WHERE CTR_CD='${DATA.CTR_CD}' ORDER BY INS_DATE DESC
-    `;
+  let query = `SELECT TOP 1000 * FROM ZTB_NOTIFICATION WHERE CTR_CD=@ctr_cd`;
+  let params = { ctr_cd: DATA.CTR_CD };
+  if (EMPL_NO !== "NHU1903" && JOB_NAME === "Leader") {
+    query += ` AND MAINDEPTNAME LIKE @main_dept`;
+    params.main_dept = `%${DATA.MAINDEPTNAME}%`;
+  } else if (EMPL_NO !== "NHU1903") {
+    query += ` AND MAINDEPTNAME LIKE @main_dept AND SUBDEPTNAME LIKE @sub_dept`;
+    params.main_dept = `%${DATA.MAINDEPTNAME}%`;
+    params.sub_dept = `%${DATA.SUBDEPTNAME}%`;
   }
-  else if (JOB_NAME === 'Leader') {
-    setpdQuery = `
-    SELECT  TOP 1000 * FROM ZTB_NOTIFICATION WHERE CTR_CD='${DATA.CTR_CD}' AND MAINDEPTNAME LIKE '%${DATA.MAINDEPTNAME}%' ORDER BY INS_DATE DESC
-    `;
-  }
-  else {
-    setpdQuery = `SELECT  TOP 1000 * FROM ZTB_NOTIFICATION WHERE CTR_CD='${DATA.CTR_CD}' AND MAINDEPTNAME LIKE '%${DATA.MAINDEPTNAME}%' AND SUBDEPTNAME LIKE '%${DATA.SUBDEPTNAME}%' ORDER BY INS_DATE DESC`;
-  }
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  query += ` ORDER BY INS_DATE DESC`;
+  let checkkq = await queryDB_New(query, params);
   res.send(checkkq);
 };
+
 exports.checkEMPL_NO_mobile = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTBEMPLINFO WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}'`;
-  //${moment().format('YYYY-MM-DD')}
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT * FROM ZTBEMPLINFO WHERE CTR_CD=@ctr_cd AND EMPL_NO=@empl_no`,
+    { ctr_cd: DATA.CTR_CD, empl_no: DATA.EMPL_NO }
+  );
   res.send(checkkq);
 };
+
 exports.checkMNAMEfromLotI222 = async (req, res, DATA) => {
-  let kqua;
-  let query = `SELECT I221.EXP_DATE, I222.LOTNCC, M110.CUST_NAME_KD, I222.CUST_CD, I222.M_CODE, M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY, I222.ROLL_QTY FROM I222 JOIN M090 ON (M090.M_CODE = I222.M_CODE AND M090.CTR_CD = I222.CTR_CD) LEFT JOIN M110 ON (M110.CUST_CD = I222.CUST_CD AND M110.CTR_CD = I222.CTR_CD) LEFT JOIN I221 ON (I221.IN_DATE=I222.IN_DATE AND I221.IN_NO=I222.IN_NO AND I221.IN_SEQ=I222.IN_SEQ AND I221.CTR_CD = I222.CTR_CD) WHERE I222.M_LOT_NO='${DATA.M_LOT_NO}' AND I222.CTR_CD='${DATA.CTR_CD}'`;
-  ////console.log(query);
-  kqua = await queryDB(query);
+  let kqua = await queryDB_New(
+    `SELECT I221.EXP_DATE, I222.LOTNCC, M110.CUST_NAME_KD, I222.CUST_CD, I222.M_CODE, M090.M_NAME, M090.WIDTH_CD, I222.IN_CFM_QTY, I222.ROLL_QTY 
+     FROM I222 JOIN M090 ON (M090.M_CODE = I222.M_CODE AND M090.CTR_CD = I222.CTR_CD) 
+     LEFT JOIN M110 ON (M110.CUST_CD = I222.CUST_CD AND M110.CTR_CD = I222.CTR_CD) 
+     LEFT JOIN I221 ON (I221.IN_DATE=I222.IN_DATE AND I221.IN_NO=I222.IN_NO AND I221.IN_SEQ=I222.IN_SEQ AND I221.CTR_CD = I222.CTR_CD) 
+     WHERE I222.M_LOT_NO=@m_lot_no AND I222.CTR_CD=@ctr_cd`,
+    { m_lot_no: DATA.M_LOT_NO, ctr_cd: DATA.CTR_CD }
+  );
   res.send(kqua);
 };
+
 exports.checkMNAMEfromLotI222Total = async (req, res, DATA) => {
-  let kqua;
-  let query = ` SELECT  M_CODE, SUBSTRING(M_LOT_NO,1,6) AS LOTCMS, SUM(IN_CFM_QTY* ROLL_QTY) AS TOTAL_CFM_QTY, SUM(ROLL_QTY) AS TOTAL_ROLL FROM I222 WHERE I222.CTR_CD='${DATA.CTR_CD}' AND M_CODE='${DATA.M_CODE}' AND  SUBSTRING(M_LOT_NO,1,6)='${DATA.LOTCMS}' GROUP BY  M_CODE, SUBSTRING(M_LOT_NO,1,6)  `;
-  console.log(query);
-  kqua = await queryDB(query);
-  console.log(kqua);
+  let kqua = await queryDB_New(
+    `SELECT M_CODE, SUBSTRING(M_LOT_NO,1,6) AS LOTCMS, SUM(IN_CFM_QTY* ROLL_QTY) AS TOTAL_CFM_QTY, SUM(ROLL_QTY) AS TOTAL_ROLL 
+     FROM I222 WHERE I222.CTR_CD=@ctr_cd AND M_CODE=@m_code AND SUBSTRING(M_LOT_NO,1,6)=@lotcms 
+     GROUP BY M_CODE, SUBSTRING(M_LOT_NO,1,6)`,
+    { ctr_cd: DATA.CTR_CD, m_code: DATA.M_CODE, lotcms: DATA.LOTCMS }
+  );
   res.send(kqua);
 };
+
 exports.checkMNAMEfromLot = async (req, res, DATA) => {
-  let kqua;
-  let query = `SELECT O302.PLAN_ID, I222.LOTNCC, O302.LOC_CD, O302.WAHS_CD, O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.OUT_CFM_QTY, O302.ROLL_QTY, O302.LIEUQL_SX, O302.OUT_DATE FROM O302 JOIN M090 ON (M090.M_CODE = O302.M_CODE AND M090.CTR_CD = O302.CTR_CD) LEFT JOIN I222 ON (I222.M_LOT_NO = O302.M_LOT_NO AND I222.CTR_CD = O302.CTR_CD AND I222.CTR_CD = M090.CTR_CD) WHERE O302.M_LOT_NO='${DATA.M_LOT_NO}' AND O302.CTR_CD='${DATA.CTR_CD}'`;
-  //console.log(query);
-  kqua = await queryDB(query);
+  let kqua = await queryDB_New(
+    `SELECT O302.PLAN_ID, I222.LOTNCC, O302.LOC_CD, O302.WAHS_CD, O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, O302.OUT_CFM_QTY, O302.ROLL_QTY, O302.LIEUQL_SX, O302.OUT_DATE 
+     FROM O302 JOIN M090 ON (M090.M_CODE = O302.M_CODE AND M090.CTR_CD = O302.CTR_CD) 
+     LEFT JOIN I222 ON (I222.M_LOT_NO = O302.M_LOT_NO AND I222.CTR_CD = O302.CTR_CD AND I222.CTR_CD = M090.CTR_CD) 
+     WHERE O302.M_LOT_NO=@m_lot_no AND O302.CTR_CD=@ctr_cd`,
+    { m_lot_no: DATA.M_LOT_NO, ctr_cd: DATA.CTR_CD }
+  );
   res.send(kqua);
 };
+
 exports.checkPLAN_ID = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `SELECT ZTB_QLSXPLAN.XUATDAOFILM, ZTB_QLSXPLAN.EQ_STATUS, ZTB_QLSXPLAN.MAIN_MATERIAL, ZTB_QLSXPLAN.INT_TEM, ZTB_QLSXPLAN.CHOTBC, ZTB_QLSXPLAN.DKXL,ZTB_QLSXPLAN.NEXT_PLAN_ID, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.PLAN_ORDER, ZTB_QLSXPLAN.STEP, ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE,ZTB_QLSXPLAN.PROD_REQUEST_NO,ZTB_QLSXPLAN.PLAN_QTY,ZTB_QLSXPLAN.PLAN_EQ,ZTB_QLSXPLAN.PLAN_FACTORY,ZTB_QLSXPLAN.PLAN_LEADTIME,ZTB_QLSXPLAN.INS_EMPL,ZTB_QLSXPLAN.INS_DATE,ZTB_QLSXPLAN.UPD_EMPL,ZTB_QLSXPLAN.UPD_DATE, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, isnull(BB.CD1,0) AS CD1 ,isnull(BB.CD2,0) AS CD2, CASE WHEN (M100.EQ1 <> 'FR' AND M100.EQ1 <> 'SR' AND  M100.EQ1 <> 'DC' AND M100.EQ1 <> 'ED') THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD1,0) END AS TON_CD1,CASE WHEN (M100.EQ2 <> 'FR' AND M100.EQ2 <> 'SR' AND  M100.EQ2 <> 'DC' AND M100.EQ2 <> 'ED') THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD2,0) END AS TON_CD2, M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, M100.LOSS_SETTING1, M100.LOSS_SETTING2, M100.NOTE, M100.FSC, M100.FSC_CODE
-            FROM ZTB_QLSXPLAN JOIN P400 ON (P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO AND P400.CTR_CD = ZTB_QLSXPLAN.CTR_CD) JOIN M100 ON (P400.G_CODE = M100.G_CODE AND P400.CTR_CD = M100.CTR_CD)
-            LEFT JOIN 
-            (
-            SELECT PVTB.PROD_REQUEST_NO, PVTB.[1] AS CD1, PVTB.[2] AS CD2, PVTB.CTR_CD FROM 
-            (
-            SELECT PROD_REQUEST_NO, PROCESS_NUMBER, SUM(KETQUASX) AS KETQUASX, CTR_CD FROM ZTB_QLSXPLAN WHERE STEP =0 GROUP BY PROD_REQUEST_NO, PROCESS_NUMBER, CTR_CD
-            )
-            AS PV
-            PIVOT
-            ( 
-            SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2])
-            ) 
-            AS PVTB
-            ) AS BB ON (BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO AND BB.CTR_CD = ZTB_QLSXPLAN.CTR_CD) 
-            WHERE ZTB_QLSXPLAN.PLAN_ID='${DATA.PLAN_ID}' AND ZTB_QLSXPLAN.CTR_CD='${DATA.CTR_CD}'`;
-  //${moment().format('YYYY-MM-DD')}
-  ////console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT ZTB_QLSXPLAN.XUATDAOFILM, ZTB_QLSXPLAN.EQ_STATUS, ZTB_QLSXPLAN.MAIN_MATERIAL, ZTB_QLSXPLAN.INT_TEM, ZTB_QLSXPLAN.CHOTBC, ZTB_QLSXPLAN.DKXL,
+     ZTB_QLSXPLAN.NEXT_PLAN_ID, ZTB_QLSXPLAN.KQ_SX_TAM, ZTB_QLSXPLAN.KETQUASX, ZTB_QLSXPLAN.PROCESS_NUMBER, ZTB_QLSXPLAN.PLAN_ORDER, ZTB_QLSXPLAN.STEP, 
+     ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE,ZTB_QLSXPLAN.PROD_REQUEST_NO,ZTB_QLSXPLAN.PLAN_QTY,ZTB_QLSXPLAN.PLAN_EQ,ZTB_QLSXPLAN.PLAN_FACTORY,
+     ZTB_QLSXPLAN.PLAN_LEADTIME,ZTB_QLSXPLAN.INS_EMPL,ZTB_QLSXPLAN.INS_DATE,ZTB_QLSXPLAN.UPD_EMPL,ZTB_QLSXPLAN.UPD_DATE, 
+     M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, P400.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, 
+     isnull(BB.CD1,0) AS CD1 ,isnull(BB.CD2,0) AS CD2, 
+     CASE WHEN (M100.EQ1 <> 'FR' AND M100.EQ1 <> 'SR' AND  M100.EQ1 <> 'DC' AND M100.EQ1 <> 'ED') THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD1,0) END AS TON_CD1,
+     CASE WHEN (M100.EQ2 <> 'FR' AND M100.EQ2 <> 'SR' AND  M100.EQ2 <> 'DC' AND M100.EQ2 <> 'ED') THEN 0 ELSE P400.PROD_REQUEST_QTY-isnull(BB.CD2,0) END AS TON_CD2, 
+     M100.FACTORY, M100.EQ1, M100.EQ2, M100.Setting1, M100.Setting2, M100.UPH1, M100.UPH2, M100.Step1, M100.Step2, M100.LOSS_SX1, M100.LOSS_SX2, 
+     M100.LOSS_SETTING1, M100.LOSS_SETTING2, M100.NOTE, M100.FSC, M100.FSC_CODE
+     FROM ZTB_QLSXPLAN 
+     JOIN P400 ON (P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO AND P400.CTR_CD = ZTB_QLSXPLAN.CTR_CD) 
+     JOIN M100 ON (P400.G_CODE = M100.G_CODE AND P400.CTR_CD = M100.CTR_CD)
+     LEFT JOIN 
+     (
+     SELECT PVTB.PROD_REQUEST_NO, PVTB.[1] AS CD1, PVTB.[2] AS CD2, PVTB.CTR_CD 
+     FROM 
+     (
+     SELECT PROD_REQUEST_NO, PROCESS_NUMBER, SUM(KETQUASX) AS KETQUASX, CTR_CD 
+     FROM ZTB_QLSXPLAN 
+     WHERE STEP =0 
+     GROUP BY PROD_REQUEST_NO, PROCESS_NUMBER, CTR_CD
+     )
+     AS PV
+     PIVOT
+     ( 
+     SUM(PV.KETQUASX) FOR PV.PROCESS_NUMBER IN ([1],[2])
+     ) 
+     AS PVTB
+     ) AS BB 
+     ON (BB.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO AND BB.CTR_CD = ZTB_QLSXPLAN.CTR_CD) 
+     WHERE ZTB_QLSXPLAN.PLAN_ID=@plan_id AND ZTB_QLSXPLAN.CTR_CD=@ctr_cd`,
+    { plan_id: DATA.PLAN_ID, ctr_cd: DATA.CTR_CD }
+  );
   res.send(checkkq);
 };
+
 exports.checkPlanIdP501 = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `SELECT TOP 1 * FROM P501 WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}'`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT TOP 1 * FROM P501 WHERE CTR_CD=@ctr_cd AND PLAN_ID=@plan_id`,
+    { ctr_cd: DATA.CTR_CD, plan_id: DATA.PLAN_ID }
+  );
   res.send(checkkq);
 };
+
 exports.checkProcessLotNo_Prod_Req_No = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `SELECT TOP 1 P500.M_LOT_NO, P501.PROCESS_LOT_NO FROM P501 LEFT JOIN P500 ON (P500.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500.PROCESS_IN_NO = P501.PROCESS_IN_NO AND P500.PROCESS_IN_SEQ = P501.PROCESS_IN_SEQ AND P500.CTR_CD = P501.CTR_CD) WHERE P501.CTR_CD='${DATA.CTR_CD}' AND P500.PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT TOP 1 P500.M_LOT_NO, P501.PROCESS_LOT_NO 
+     FROM P501 
+     LEFT JOIN P500 ON (P500.PROCESS_IN_DATE = P501.PROCESS_IN_DATE AND P500.PROCESS_IN_NO = P501.PROCESS_IN_NO AND P500.PROCESS_IN_SEQ = P501.PROCESS_IN_SEQ AND P500.CTR_CD = P501.CTR_CD) 
+     WHERE P501.CTR_CD=@ctr_cd AND P500.PROD_REQUEST_NO=@prod_request_no`,
+    { ctr_cd: DATA.CTR_CD, prod_request_no: DATA.PROD_REQUEST_NO }
+  );
   res.send(checkkq);
 };
+
 exports.checkPROCESS_LOT_NO = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `SELECT PLAN_ID FROM P501 WHERE CTR_CD='${DATA.CTR_CD}' AND  PROCESS_LOT_NO='${DATA.PROCESS_LOT_NO}'`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT PLAN_ID FROM P501 WHERE CTR_CD=@ctr_cd AND PROCESS_LOT_NO=@process_lot_no`,
+    { ctr_cd: DATA.CTR_CD, process_lot_no: DATA.PROCESS_LOT_NO }
+  );
   res.send(checkkq);
 };
+
 exports.check_m_code_m140_main = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `select * from M140 WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE = '${DATA.G_CODE}' AND M_CODE ='${DATA.M_CODE}' AND LIEUQL_SX=1`;
-  //${moment().format('YYYY-MM-DD')}
-  console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
+  let checkkq = await queryDB_New(
+    `SELECT * FROM M140 WHERE CTR_CD=@ctr_cd AND G_CODE = @g_code AND M_CODE =@m_code AND LIEUQL_SX=1`,
+    { ctr_cd: DATA.CTR_CD, g_code: DATA.G_CODE, m_code: DATA.M_CODE }
+  );
   res.send(checkkq);
 };
+
 exports.isM_LOT_NO_in_IN_KHO_SX = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
-  SELECT * FROM IN_KHO_SX WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}' AND PLAN_ID_INPUT='${DATA.PLAN_ID}'
-  `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT * FROM IN_KHO_SX WHERE M_LOT_NO=@m_lot_no AND CTR_CD=@ctr_cd AND PLAN_ID_INPUT=@plan_id`,
+    { m_lot_no: DATA.M_LOT_NO, ctr_cd: DATA.CTR_CD, plan_id: DATA.PLAN_ID }
+  );
   res.send(checkkq);
 };
+
 exports.check_m_lot_exist_p500 = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = ` SELECT TOP 1 * FROM P500 WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND PLAN_ID ='${DATA.PLAN_ID_INPUT}'`;
-  //${moment().format('YYYY-MM-DD')}
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
+  let checkkq = await queryDB_New(
+    `SELECT TOP 1 * FROM P500 WHERE CTR_CD=@ctr_cd AND M_LOT_NO=@m_lot_no AND PLAN_ID =@plan_id`,
+    { ctr_cd: DATA.CTR_CD, m_lot_no: DATA.M_LOT_NO, plan_id: DATA.PLAN_ID_INPUT }
+  );
   res.send(checkkq);
 };
+
 exports.loadPostAll = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `          
-  SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
-  ORDER BY POST_ID DESC
-  `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY 
+     FROM ZTB_POST_TB 
+     LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
+     ORDER BY POST_ID DESC`
+  );
   res.send(checkkq);
 };
+
 exports.loadPost = async (req, res, DATA) => {
-  let checkkq = "OK";
   let condition = `WHERE 1=1 `;
   if (DATA.DEPT_CODE !== 0)
-    condition += ` AND ZTB_POST_TB.DEPT_CODE=${DATA.DEPT_CODE}`
+    condition += ` AND ZTB_POST_TB.DEPT_CODE=@dept_code`
   if (DATA.DEPT_CODE === 0)
     condition += ` AND ZTB_POST_TB.IS_PINNED='Y'`
-  let setpdQuery = `          
-  SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY FROM ZTB_POST_TB LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
-  ${condition} ORDER BY POST_ID DESC
-  `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT ZTB_POST_TB.*, ZTB_DEPARTMENT_TB.SUBDEPT, ZTB_DEPARTMENT_TB.MAINDEPT,ZTB_DEPARTMENT_TB.PIN_QTY 
+     FROM ZTB_POST_TB 
+     LEFT JOIN ZTB_DEPARTMENT_TB ON ZTB_POST_TB.DEPT_CODE = ZTB_DEPARTMENT_TB.DEPT_CODE 
+     ${condition} 
+     ORDER BY POST_ID DESC`,
+    { dept_code: DATA.DEPT_CODE }
+  );
   res.send(checkkq);
 };
+
 exports.updatePost = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
- UPDATE ZTB_POST_TB SET TITLE=N'${DATA.TITLE}', CONTENT=N'${DATA.CONTENT}', IS_PINNED='${DATA.IS_PINNED}' WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
-  `;
-  console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `UPDATE ZTB_POST_TB SET TITLE=@title, CONTENT=@content, IS_PINNED=@is_pinned 
+     WHERE POST_ID=@post_id AND CTR_CD=@ctr_cd`,
+    { title: DATA.TITLE, content: DATA.CONTENT, is_pinned: DATA.IS_PINNED, post_id: DATA.POST_ID, ctr_cd: DATA.CTR_CD }
+  );
   res.send(checkkq);
 };
+
 exports.deletePost = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
-  DELETE FROM ZTB_POST_TB WHERE POST_ID='${DATA.POST_ID}' AND CTR_CD='${DATA.CTR_CD}'
-  `;
-  console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `DELETE FROM ZTB_POST_TB WHERE POST_ID=@post_id AND CTR_CD=@ctr_cd`,
+    { post_id: DATA.POST_ID, ctr_cd: DATA.CTR_CD }
+  );
   res.send(checkkq);
 };
+
 exports.updatechamcongdiemdanhauto = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD,EMPL_NO, APPLY_DATE, ON_OFF,CURRENT_TEAM,MCC,CURRENT_CA) 
-  SELECT ZTBEMPLINFO.CTR_CD, ZTBEMPLINFO.EMPL_NO,  CAST(GETDATE() as date) AS CHECK_DATE, 1 AS ON_OFF, ZTBEMPLINFO.WORK_SHIFT_CODE AS CURRENT_TEAM, 'Y' AS MCC , ZTBEMPLINFO.CALV  AS CURRENT_CA
-FROM  
-   ZTBEMPLINFO JOIN
-   (SELECT DISTINCT CTR_CD, CHECK_DATE, NV_CCID FROM C001 WHERE CHECK_DATE = CAST(GETDATE() as date)) AS CC 
-   ON (CC.NV_CCID = ZTBEMPLINFO.NV_CCID AND CC.CTR_CD = ZTBEMPLINFO.CTR_CD)		   
-   WHERE NOT EXISTS 
-   (SELECT CTR_CD, EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO AND ZTBATTENDANCETB.CTR_CD = ZTBEMPLINFO.CTR_CD AND DATEPART(ISO_WEEK, GETDATE()) = ZTBEMPLINFO.CURRENT_WEEK)
-   AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}'`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `INSERT INTO ZTBATTENDANCETB (CTR_CD,EMPL_NO, APPLY_DATE, ON_OFF,CURRENT_TEAM,MCC,CURRENT_CA) 
+     SELECT ZTBEMPLINFO.CTR_CD, ZTBEMPLINFO.EMPL_NO,  CAST(GETDATE() as date) AS CHECK_DATE, 1 AS ON_OFF, 
+     ZTBEMPLINFO.WORK_SHIFT_CODE AS CURRENT_TEAM, 'Y' AS MCC , ZTBEMPLINFO.CALV  AS CURRENT_CA
+     FROM  
+      ZTBEMPLINFO 
+      JOIN 
+      (SELECT DISTINCT CTR_CD, CHECK_DATE, NV_CCID FROM C001 WHERE CHECK_DATE = CAST(GETDATE() as date)) AS CC 
+      ON (CC.NV_CCID = ZTBEMPLINFO.NV_CCID AND CC.CTR_CD = ZTBEMPLINFO.CTR_CD)		   
+      WHERE NOT EXISTS 
+      (SELECT CTR_CD, EMPL_NO FROM ZTBATTENDANCETB WHERE ZTBATTENDANCETB.APPLY_DATE=CAST(GETDATE() as date) AND ZTBATTENDANCETB.EMPL_NO = ZTBEMPLINFO.EMPL_NO AND ZTBATTENDANCETB.CTR_CD = ZTBEMPLINFO.CTR_CD AND DATEPART(ISO_WEEK, GETDATE()) = ZTBEMPLINFO.CURRENT_WEEK)
+      AND ZTBEMPLINFO.CTR_CD=@ctr_cd`,
+    { ctr_cd: DATA.CTR_CD }
+  );
   res.send(checkkq);
 };
+
 exports.getlastestPostId = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `          
-  SELECT isnull(MAX(POST_ID),1) AS POST_ID FROM ZTB_POST_TB
-  `;
-  //console.log(insertQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT isnull(MAX(POST_ID),1) AS POST_ID FROM ZTB_POST_TB`
+  );
   res.send(checkkq);
 };
+
 exports.insert_information = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let checkkq = "OK";
-  let setpdQuery = `          
-  INSERT INTO ZTB_POST_TB (CTR_CD,  DEPT_CODE, FILE_NAME, TITLE, CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) 
-  VALUES ('002', '${DATA.DEPT_CODE}', N'${DATA.FILE_NAME}',N'${DATA.TITLE}', N'${DATA.CONTENT}',GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
-  `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `INSERT INTO ZTB_POST_TB (CTR_CD,  DEPT_CODE, FILE_NAME, TITLE, CONTENT, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) 
+     VALUES (@ctr_cd, @dept_code, @file_name, @title, @content, GETDATE(), @empl_no, GETDATE(), @empl_no)`,
+    {
+      ctr_cd: DATA.CTR_CD,
+      dept_code: DATA.DEPT_CODE,
+      file_name: DATA.FILE_NAME,
+      title: DATA.TITLE,
+      content: DATA.CONTENT,
+      empl_no: EMPL_NO
+    }
+  );
   res.send(checkkq);
 };
+
 exports.loadWebSetting = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTB_WEB_SETTING WHERE CTR_CD='${DATA.CTR_CD}'`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT * FROM ZTB_WEB_SETTING WHERE CTR_CD=@ctr_cd`,
+    { ctr_cd: DATA.CTR_CD }
+  );
   res.send(checkkq);
 };
+
 exports.update_file_name = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let checkkq = "OK";
-  let setpdQuery = `
-  INSERT INTO ZTB_FILE_TRANSFER (CTR_CD, FILE_NAME, FILE_SIZE, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) VALUES ('${DATA.CTR_CD}',N'${DATA.FILE_NAME}',${DATA.FILE_SIZE ?? 0}, GETDATE(),'${EMPL_NO}',GETDATE(), '${EMPL_NO}')
-  `;
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `INSERT INTO ZTB_FILE_TRANSFER (CTR_CD, FILE_NAME, FILE_SIZE, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL) 
+     VALUES (@ctr_cd, @file_name, @file_size, GETDATE(), @empl_no, GETDATE(), @empl_no)`,
+    {
+      ctr_cd: DATA.CTR_CD,
+      file_name: DATA.FILE_NAME,
+      file_size: DATA.FILE_SIZE,
+      empl_no: EMPL_NO
+    }
+  );
   res.send(checkkq);
 };
+
 exports.get_file_list = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
-  SELECT * FROM ZTB_FILE_TRANSFER ORDER BY INS_DATE DESC
-  `;
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `SELECT * FROM ZTB_FILE_TRANSFER ORDER BY INS_DATE DESC`
+  );
   res.send(checkkq);
 };
+
 exports.delete_file = async (req, res, DATA) => {
-  let checkkq = "OK";
   fs.rm(`C:/xampp/htdocs/globalfiles/${DATA.CTR_CD}_${DATA.FILE_NAME}`, (error) => {
-    //you can handle the error here
     console.log("Loi remove file" + error);
   });
-  let setpdQuery = `
-DELETE FROM ZTB_FILE_TRANSFER WHERE CTR_CD='${DATA.CTR_CD}' AND FILE_NAME='${DATA.FILE_NAME}'
-`;
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `DELETE FROM ZTB_FILE_TRANSFER WHERE CTR_CD=@ctr_cd AND FILE_NAME=@file_name`,
+    { ctr_cd: DATA.CTR_CD, file_name: DATA.FILE_NAME }
+  );
   res.send(checkkq);
 };
+
 exports.changepassword = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let checkkq = "OK";
-  let setpdQuery = `
-  UPDATE ZTBEMPLINFO SET PASSWORD='${DATA.PASSWORD}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}'
-  `;
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `UPDATE ZTBEMPLINFO SET PASSWORD=@password WHERE CTR_CD=@ctr_cd AND EMPL_NO=@empl_no`,
+    { password: DATA.PASSWORD, ctr_cd: DATA.CTR_CD, empl_no: EMPL_NO }
+  );
   res.send(checkkq);
 };
+
 exports.setWebVer = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `UPDATE ZBTVERTABLE SET VERWEB=${DATA.WEB_VER}`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+  let checkkq = await queryDB_New(
+    `UPDATE ZBTVERTABLE SET VERWEB=@web_ver`,
+    { web_ver: DATA.WEB_VER }
+  );
   res.send(checkkq);
 };
+
 exports.check_chua_pd = async (req, res, DATA) => {
-var today_format = moment().format("YYYY-MM-DD");
-//console.log(today_format);
-let kqua;
-let query = `SELECT COUNT(EMPL_NO) AS CPD FROM ZTBOFFREGISTRATIONTB WHERE CTR_CD='${DATA.CTR_CD}' AND APPLY_DATE = '${today_format}' AND APPROVAL_STATUS = 2`;
-kqua = await asyncQuery(query);
-let chuapdqty = JSON.parse(kqua)[0]["CPD"];
-//console.log(chuapdqty);
-res.send(chuapdqty + "");
+  var today_format = moment().format("YYYY-MM-DD");
+  let kqua = await queryDB_New(
+    `SELECT COUNT(EMPL_NO) AS CPD FROM ZTBOFFREGISTRATIONTB WHERE CTR_CD=@ctr_cd AND APPLY_DATE = @today AND APPROVAL_STATUS = 2`,
+    { ctr_cd: DATA.CTR_CD, today: today_format }
+  );
+  let chuapdqty = kqua.data && kqua.data.length > 0 ? kqua.data[0]["CPD"] : 0;
+  res.send(chuapdqty + "");
 };
-exports.setMobileVer = async (req, res, DATA) => { 
-  let checkkq = "OK";
-  let setpdQuery = `UPDATE ZBTVERTABLE SET VERMOBILE=${DATA.VERMOBILE}`;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
+
+exports.setMobileVer = async (req, res, DATA) => {
+  let checkkq = await queryDB_New(
+    `UPDATE ZBTVERTABLE SET VERMOBILE=@vermobile`,
+    { vermobile: DATA.VERMOBILE }
+  );
   res.send(checkkq);
 };
+
 exports.common = async (req, res, DATA) => {
 };
