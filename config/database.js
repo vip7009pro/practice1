@@ -27,6 +27,42 @@ const openConnection = async () => {
   return poolPromise;
 };
 // Hàm truy vấn database
+const queryDB_New = async (query, params = {}) => {
+  let kq = "";
+  try {
+    const pool = await openConnection();
+    const request = pool.request();
+    // Binding các tham số nếu có
+    if (params && typeof params === 'object') {
+      for (const key in params) {
+        if (params[key] && typeof params[key] === 'object' && 'type' in params[key] && 'value' in params[key]) {
+          // Nếu truyền kiểu { type, value }
+          request.input(key, params[key].type, params[key].value);
+        } else {
+          // Nếu chỉ truyền value, tự động đoán kiểu
+          request.input(key, params[key]);
+        }
+      }
+    }
+    const result = await request.query(query);
+    //console.log("Query result:", result); 
+    if (result.rowsAffected[0] > 0) {
+      if (result.recordset) {
+        kq = { tk_status: "OK", data: result.recordset };
+      } else {
+        kq = { tk_status: "OK", message: "Modify data thanh cong" };
+      }
+    } else {
+      kq = { tk_status: "NG", message: "Không có dòng dữ liệu nào" };
+    }
+  } catch (error) {
+    console.log("Query error:", error);
+    kq = { tk_status: "NG", message: error + " " };
+  }
+  return kq;
+  // Không gọi sql.close() ở đây nữa
+};
+
 const queryDB = async (query) => {
   let kq = "";
   try {
@@ -94,6 +130,7 @@ function asyncQuery(queryString) {
 module.exports = {
   openConnection,
   queryDB,
+  queryDB_New,
   asyncQuery,
   closePool,
   config,
