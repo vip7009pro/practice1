@@ -979,7 +979,7 @@ exports.checkLabelID2 = async (req, res, DATA) => {
 exports.registerDTCTest = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = ` INSERT INTO ZTB_REL_REQUESTTABLE (CTR_CD,DTC_ID,TEST_CODE,TEST_TYPE_CODE,REQUEST_DEPT_CODE,PROD_REQUEST_NO,PROD_REQUEST_DATE,REQUEST_EMPL_NO,REQUEST_DATETIME,REMARK,G_CODE,M_CODE,M_LOT_NO) VALUES ('${DATA.CTR_CD}',${DATA.DTC_ID}, ${DATA.TEST_CODE},  ${DATA.TEST_TYPE_CODE},  ${DATA.REQUEST_DEPT_CODE}, '${DATA.PROD_REQUEST_NO}', '${DATA.PROD_REQUEST_DATE}', '${DATA.REQUEST_EMPL_NO}',GETDATE(),'${DATA.REMARK}','${DATA.G_CODE}','${DATA.M_CODE}','${DATA.M_LOT_NO}')`;
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -2154,7 +2154,7 @@ exports.insertIQC1table = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = `INSERT INTO IQC1_TABLE (CTR_CD,M_CODE,M_LOT_NO,LOT_CMS,LOT_VENDOR,CUST_CD,EXP_DATE,INPUT_LENGTH,TOTAL_ROLL,NQ_CHECK_ROLL,DTC_ID,TEST_EMPL,INS_DATE,INS_EMPL,REMARK) VALUES ('${DATA.CTR_CD}','${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.LOT_CMS}','${DATA.LOT_VENDOR}','${DATA.CUST_CD}','${DATA.EXP_DATE}','${DATA.INPUT_LENGTH}','${DATA.TOTAL_ROLL}','${DATA.NQ_CHECK_ROLL}','${DATA.DTC_ID}','${DATA.TEST_EMPL}',GETDATE(),'${EMPL_NO}','${DATA.REMARK}')`;
-  ////console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -3261,7 +3261,7 @@ exports.lichSuTestM_CODE = async (req, res, DATA) => {
   let setpdQuery = `
 SELECT DISTINCT TEST_CODE FROM ZTB_REL_REQUESTTABLE WHERE M_CODE='${DATA.M_CODE}' AND CTR_CD='${DATA.CTR_CD}'
   `;
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -3291,6 +3291,24 @@ exports.checkDTC_ID_FROM_M_LOT_NO = async (req, res, DATA) => {
   let setpdQuery = `
 SELECT DISTINCT DTC_ID FROM ZTB_REL_REQUESTTABLE WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'
   `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.updateIncomingData_web = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE IQC1_TABLE SET TOTAL_RESULT= '${DATA.TOTAL_RESULT}',NQ_CHECK_ROLL= ${DATA.NQ_CHECK_ROLL}, IQC_TEST_RESULT='${DATA.IQC_TEST_RESULT}', UPD_EMPL='${EMPL_NO}', UPD_DATE = GETDATE(), REMARK=N'${DATA.REMARK}' WHERE CTR_CD='${DATA.CTR_CD}' AND IQC1_ID=${DATA.IQC1_ID}`;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.updateIncomingChecksheet = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE IQC1_TABLE SET CHECKSHEET ='${DATA.CHECKSHEET}' WHERE CTR_CD='${DATA.CTR_CD}' AND IQC1_ID=${DATA.IQC1_ID}`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
