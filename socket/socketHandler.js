@@ -1,8 +1,9 @@
 const { Server } = require("socket.io");
+const { corsOptions } = require("../config/env");
 
 module.exports = (httpServer, httpsServer) => {
-  const io = new Server(httpServer, { cors: { origin: "*" } });
-  const ios = new Server(httpsServer, { cors: { origin: "*" } });
+  const io = new Server(httpServer, { cors: { origin: corsOptions.origin } });
+  const ios = new Server(httpsServer, { cors: { origin: corsOptions.origin } });
   let client_array = [];
 
   const handleConnection = (client, ioInstance) => {
