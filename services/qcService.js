@@ -3317,7 +3317,7 @@ exports.updateIncomingChecksheet = async (req, res, DATA) => {
 exports.updateIncomingData = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE IQC1_TABLE SET TOTAL_RESULT= '${DATA.TOTAL_RESULT}',NQ_CHECK_ROLL= ${DATA.NQ_CHECK_ROLL}, IQC_TEST_RESULT='${DATA.IQC_TEST_RESULT}', UPD_EMPL='${EMPL_NO}', UPD_DATE = GETDATE(), REMARK=N'${DATA.REMARK}', CHECKSHEET='Y' WHERE CTR_CD='${DATA.CTR_CD}' AND IQC1_ID=${DATA.IQC1_ID}`;
+  let setpdQuery = `UPDATE IQC1_TABLE SET TOTAL_RESULT= '${DATA.TOTAL_RESULT}',NQ_CHECK_ROLL= ${DATA.NQ_CHECK_ROLL}, IQC_TEST_RESULT='${DATA.IQC_TEST_RESULT}', DTC_RESULT='${DATA.DTC_RESULT}', UPD_EMPL='${EMPL_NO}', UPD_DATE = GETDATE(), REMARK=N'${DATA.REMARK}'  WHERE CTR_CD='${DATA.CTR_CD}' AND IQC1_ID=${DATA.IQC1_ID}`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
