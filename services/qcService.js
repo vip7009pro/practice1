@@ -3344,6 +3344,28 @@ UPDATE ZTB_MATERIAL_TB SET M_THICKNESS=${DATA.M_THICKNESS} WHERE CTR_CD='${DATA.
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.getidDTCfromlotNVL = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT * FROM ZTB_REL_REQUESTTABLE WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.checkM_NAME_IQC = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  SELECT IQC1_TABLE.*, M090.M_NAME, M090.WIDTH_CD  FROM IQC1_TABLE
+  LEFT JOIN M090 ON M090.CTR_CD = IQC1_TABLE.CTR_CD AND M090.M_CODE = IQC1_TABLE.M_CODE 
+  WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND IQC1_TABLE.CTR_CD='${DATA.CTR_CD}'
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.common = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
