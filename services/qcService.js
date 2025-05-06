@@ -3376,6 +3376,19 @@ SELECT * FROM ZTB_DOC_CATEGORY2_TB
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.loadIQC1Table_Mobile = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT IQC1_TABLE.*, M090.M_NAME, M090.WIDTH_CD, IQC1_TABLE.LOT_VENDOR AS LOT_VENDOR_IQC  FROM IQC1_TABLE
+LEFT JOIN M090 ON M090.CTR_CD = IQC1_TABLE.CTR_CD AND M090.M_CODE = IQC1_TABLE.M_CODE 
+WHERE IQC1_TABLE.CTR_CD='${DATA.CTR_CD}'
+ORDER BY IQC1_TABLE.IQC1_ID DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.common = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
