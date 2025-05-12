@@ -38,8 +38,11 @@ const queryDB_New = async (query, params = {}) => {
         if (params[key] && typeof params[key] === 'object' && 'type' in params[key] && 'value' in params[key]) {
           // Nếu truyền kiểu { type, value }
           request.input(key, params[key].type, params[key].value);
+        } else if (typeof params[key] === 'string') {
+          // Nếu là chuỗi, luôn dùng NVarChar
+          request.input(key, sql.NVarChar, params[key]);
         } else {
-          // Nếu chỉ truyền value, tự động đoán kiểu
+          // Các kiểu khác giữ nguyên
           request.input(key, params[key]);
         }
       }
