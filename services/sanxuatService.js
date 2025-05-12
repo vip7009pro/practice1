@@ -2445,7 +2445,7 @@ exports.insertO300 = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `INSERT INTO O300 (CTR_CD,OUT_DATE,OUT_NO,CODE_03,CODE_50,CODE_52,PROD_REQUEST_DATE,PROD_REQUEST_NO,USE_YN,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,FACTORY,PLAN_ID) VALUES('${DATA.CTR_CD}','${DATA.OUT_DATE}','${DATA.OUT_NO}','${DATA.CODE_03}','${DATA.CODE_50}','${DATA.CODE_52}','${DATA.PROD_REQUEST_DATE}','${DATA.PROD_REQUEST_NO}','${DATA.USE_YN}',GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}','${DATA.FACTORY}','${DATA.PLAN_ID}')`;
   //${moment().format('YYYY-MM-DD')}
-  console.log(setpdQuery);
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
