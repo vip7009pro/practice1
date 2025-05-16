@@ -1,5 +1,13 @@
 const { queryDB } = require("../config/database");
-const { generate_condition_get_dtc_data, generate_condition_get_inspection_ng_data, generate_condition_get_inspection_output, generate_condition_get_inspection_input, generate_condition_get_inspection_inoutycsx, generate_condition_pqc3, generate_condition_pqc1 } = require("../utils/sqlUtils");
+const {
+  generate_condition_get_dtc_data,
+  generate_condition_get_inspection_ng_data,
+  generate_condition_get_inspection_output,
+  generate_condition_get_inspection_input,
+  generate_condition_get_inspection_inoutycsx,
+  generate_condition_pqc3,
+  generate_condition_pqc1,
+} = require("../utils/sqlUtils");
 const moment = require("moment");
 exports.updatenndscs = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -42,10 +50,13 @@ exports.updateCSDoiSachKRStatus = async (req, res, DATA) => {
 exports.tracsconfirm = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
-  if (DATA.G_CODE !== '') condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`
-  if (DATA.PROD_REQUEST_NO !== '') condition += ` AND CS_CONFIRM_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.G_CODE !== "") condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+  if (DATA.PROD_REQUEST_NO !== "")
+    condition += ` AND CS_CONFIRM_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = ` 
   SELECT CONCAT(datepart(YEAR,CS_CONFIRM_TABLE.CONFIRM_DATE),'_',datepart(ISO_WEEK,DATEADD(day,1,CS_CONFIRM_TABLE.CONFIRM_DATE))) AS YEAR_WEEK,CS_CONFIRM_TABLE.CONFIRM_ID,CS_CONFIRM_TABLE.CONFIRM_DATE,CS_CONFIRM_TABLE.CONTACT_ID,CS_CONFIRM_TABLE.CS_EMPL_NO,M010.EMPL_NAME,CS_CONFIRM_TABLE.G_CODE,M100.G_NAME,M100.G_NAME_KD,CS_CONFIRM_TABLE.PROD_REQUEST_NO,CS_CONFIRM_TABLE.CUST_CD,M110.CUST_NAME_KD,CS_CONFIRM_TABLE.CONTENT,CS_CONFIRM_TABLE.INSPECT_QTY,CS_CONFIRM_TABLE.NG_QTY,CS_CONFIRM_TABLE.REPLACE_RATE,CS_CONFIRM_TABLE.REDUCE_QTY,CS_CONFIRM_TABLE.FACTOR,CS_CONFIRM_TABLE.RESULT,CS_CONFIRM_TABLE.CONFIRM_STATUS,CS_CONFIRM_TABLE.REMARK,CS_CONFIRM_TABLE.INS_DATETIME,CS_CONFIRM_TABLE.PHANLOAI,CS_CONFIRM_TABLE.LINK,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_CONFIRM_TABLE.REDUCE_QTY) AS REDUCE_AMOUNT, DS_VN, DS_KR, NG_NHAN, DOI_SACH
   FROM CS_CONFIRM_TABLE
@@ -62,10 +73,13 @@ exports.tracsconfirm = async (req, res, DATA) => {
 exports.tracsrma = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
-  if (DATA.G_CODE !== '') condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`
-  if (DATA.PROD_REQUEST_NO !== '') condition += ` AND CS_RMA_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.G_CODE !== "") condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+  if (DATA.PROD_REQUEST_NO !== "")
+    condition += ` AND CS_RMA_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = ` 
   SELECT CS_RMA_TABLE.RMA_ID,CS_RMA_TABLE.CONFIRM_ID,M100.G_NAME_KD, CS_RMA_TABLE.RETURN_DATE,CS_RMA_TABLE.PROD_REQUEST_NO,CS_RMA_TABLE.G_CODE,CS_RMA_TABLE.RMA_TYPE,CS_RMA_TABLE.RMA_EMPL_NO,CS_RMA_TABLE.INS_DATETIME,CS_RMA_TABLE.FACTORY,CS_RMA_TABLE.RETURN_QTY,isnull(SORTING_TB.SORTING_OK_QTY,0) AS SORTING_OK_QTY,isnull(CS_RMA_TABLE.RETURN_QTY-SORTING_TB.SORTING_OK_QTY,0) AS SORTING_NG_QTY,isnull(DELIV_TB.RMA_DELIVERY_QTY,0) AS RMA_DELIVERY_QTY,
   M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE*CS_RMA_TABLE.RETURN_QTY) AS RETURN_AMOUNT,
@@ -89,10 +103,13 @@ exports.tracsrma = async (req, res, DATA) => {
 exports.tracsCNDB = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
-  if (DATA.G_CODE !== '') condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`
-  if (DATA.PROD_REQUEST_NO !== '') condition += ` AND CS_SPECIAL_APPROVE_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.G_CODE !== "") condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+  if (DATA.PROD_REQUEST_NO !== "")
+    condition += ` AND CS_SPECIAL_APPROVE_TABLE.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = ` 
   SELECT CS_SPECIAL_APPROVE_TABLE.SA_ID, CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE, CS_SPECIAL_APPROVE_TABLE.CONTACT_ID, CS_SPECIAL_APPROVE_TABLE.CS_EMPL_NO,CS_SPECIAL_APPROVE_TABLE.G_CODE,M100.G_NAME, M110.CUST_NAME_KD, CS_SPECIAL_APPROVE_TABLE.PROD_REQUEST_NO, CS_SPECIAL_APPROVE_TABLE.REQUEST_DATETIME, CS_SPECIAL_APPROVE_TABLE.CONTENT, CS_SPECIAL_APPROVE_TABLE.SA_QTY, CS_SPECIAL_APPROVE_TABLE.RESULT, CS_SPECIAL_APPROVE_TABLE.SA_STATUS, CS_SPECIAL_APPROVE_TABLE.SA_REMARK, CS_SPECIAL_APPROVE_TABLE.INS_DATETIME, SA_CUST_CD 
   FROM CS_SPECIAL_APPROVE_TABLE
@@ -109,7 +126,8 @@ exports.tracsCNDB = async (req, res, DATA) => {
 exports.tracsTAXI = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_TAXI_TABLE.TAXI_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110_A.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110_A.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = ` 
   SELECT CS_TAXI_TABLE.TAXI_ID, CS_TAXI_TABLE.CONFIRM_ID, CS_TAXI_TABLE.SA_ID, CS_TAXI_TABLE.CHIEU, CS_TAXI_TABLE.CONG_VIEC, CS_TAXI_TABLE.TAXI_DATE, CS_TAXI_TABLE.TAXI_SHIFT, CS_TAXI_TABLE.CS_EMPL_NO, M110.CUST_NAME_KD AS DIEM_DI, M110_A.CUST_NAME_KD AS DIEM_DEN, CS_TAXI_TABLE.TAXI_AMOUNT, CS_TAXI_TABLE.TRANSPORTATION, CS_TAXI_TABLE.TAXI_REMARK,CS_TAXI_TABLE.INS_DATETIME  FROM CS_TAXI_TABLE
   LEFT JOIN M110 ON M110.CUST_CD = CS_TAXI_TABLE.DEPARTURE AND M110.CTR_CD = CS_TAXI_TABLE.CTR_CD
@@ -126,15 +144,14 @@ exports.csdailyconfirmdata = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -163,15 +180,14 @@ exports.csweeklyconfirmdata = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -200,15 +216,14 @@ exports.csmonthlyconfirmdata = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -237,15 +252,14 @@ exports.csyearlyconfirmdata = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -274,15 +288,14 @@ exports.csConfirmDataByCustomer = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -306,15 +319,14 @@ exports.csConfirmDataByPIC = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -338,24 +350,22 @@ exports.csdailyreduceamount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -397,24 +407,22 @@ exports.csweeklyreduceamount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -458,24 +466,22 @@ exports.csmonthlyreduceamount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -519,24 +525,22 @@ exports.csyearlyreduceamount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE PHANLOAI <>'' AND  CS_CONFIRM_TABLE.CONFIRM_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_CONFIRM_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_CONFIRM_TABLE.G_CODE IN (${codeArStr})`;
   }
-  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `
+  let condition2 = ` WHERE RESULT = 'OK' AND  CS_SPECIAL_APPROVE_TABLE.SA_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition2 += ` AND CS_SPECIAL_APPROVE_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH CS_DATA AS
@@ -580,15 +584,14 @@ exports.csdailyRMAAmount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH RMA_DATA AS
@@ -630,15 +633,14 @@ exports.csweeklyRMAAmount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH RMA_DATA AS
@@ -681,15 +683,14 @@ exports.csmonthlyRMAAmount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH RMA_DATA AS
@@ -732,15 +733,14 @@ exports.csyearlyRMAAmount = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE CS_RMA_TABLE.RETURN_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND CS_RMA_TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND CS_RMA_TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
     WITH RMA_DATA AS
@@ -1034,11 +1034,14 @@ exports.updateDTC_TEST_EMPL = async (req, res, DATA) => {
 };
 exports.loadXbarData = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE ZTB_REL_RESULT.TEST_CODE = ${DATA.TEST_CODE} `
-  if (DATA.G_CODE !== '') condition += ` AND ZTB_REL_REQUESTTABLE.G_CODE ='${DATA.G_CODE}'`
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
-  if (DATA.TEST_CODE === 1) condition += ` AND ZTB_REL_RESULT.POINT_CODE =${DATA.POINT_CODE}`
-  if (DATA.M_NAME !== '') condition += ` AND M090.M_NAME ='${DATA.M_NAME}'`
+  let condition = ` WHERE ZTB_REL_RESULT.TEST_CODE = ${DATA.TEST_CODE} `;
+  if (DATA.G_CODE !== "")
+    condition += ` AND ZTB_REL_REQUESTTABLE.G_CODE ='${DATA.G_CODE}'`;
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.TEST_CODE === 1)
+    condition += ` AND ZTB_REL_RESULT.POINT_CODE =${DATA.POINT_CODE}`;
+  if (DATA.M_NAME !== "") condition += ` AND M090.M_NAME ='${DATA.M_NAME}'`;
   let setpdQuery = `WITH DTCTB AS (
   SELECT  ZTB_REL_SPECTTABLE.BARCODE_CONTENT, ZTB_REL_RESULT.DTC_ID, (CASE ZTBEMPLINFO.FACTORY_CODE WHEN 1 THEN 'NM1' WHEN 2 THEN 'NM2' END) AS FACTORY , ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME, ZTB_REL_REQUESTTABLE.TEST_EMPL_NO, ZTB_REL_RESULT.G_CODE, ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO, M100.G_NAME, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_SPECTTABLE.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,LOWER_TOR , ZTB_REL_RESULT.RESULT, ZTB_REL_SPECTTABLE.REMARK , ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME , ZTB_REL_RESULT.SAMPLE_NO, ZTB_REL_REQUESTTABLE.REQUEST_DATETIME , ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO ,ZTB_REL_RESULT.M_CODE ,M090.M_NAME , M090.WIDTH_CD AS SIZE, NHAP_NVL.LOTCMS , ZTB_REL_RESULT.TEST_CODE,M090.TDS, M090.TDS_EMPL ,TDS_UPD_DATE, ZTB_REL_RESULT.CTR_CD FROM ZTB_REL_RESULT LEFT JOIN M100 ON(M100.G_CODE = ZTB_REL_RESULT.G_CODE AND M100.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN M090 ON (M090.M_CODE = ZTB_REL_RESULT.M_CODE AND M090.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN ZTB_REL_SPECTTABLE ON (  ZTB_REL_SPECTTABLE.G_CODE = ZTB_REL_RESULT.G_CODE AND ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_RESULT.POINT_CODE AND ZTB_REL_SPECTTABLE.M_CODE = ZTB_REL_RESULT.M_CODE AND ZTB_REL_SPECTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  LEFT JOIN ZTB_REL_REQUESTTABLE ON (ZTB_REL_REQUESTTABLE.DTC_ID = ZTB_REL_RESULT.DTC_ID AND ZTB_REL_REQUESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_REQUESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  LEFT JOIN ZTB_REL_TESTTABLE ON (ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_TESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN ZTB_REL_TESTTYPE ON (ZTB_REL_TESTTYPE.TEST_TYPE_CODE = ZTB_REL_REQUESTTABLE.TEST_TYPE_CODE AND ZTB_REL_TESTTYPE.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO AND ZTBEMPLINFO.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE AND ZTBWORKPOSITION.CTR_CD = ZTBEMPLINFO.CTR_CD) LEFT JOIN NHAP_NVL ON(NHAP_NVL.LOTNCC = ZTB_REL_REQUESTTABLE.REMARK AND NHAP_NVL.SIZE = M090.WIDTH_CD AND NHAP_NVL.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD)
     ${condition}
@@ -1084,11 +1087,14 @@ exports.loadXbarData = async (req, res, DATA) => {
 };
 exports.loadCPKTrend = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE ZTB_REL_RESULT.TEST_CODE = ${DATA.TEST_CODE} `
-  if (DATA.G_CODE !== '') condition += ` AND ZTB_REL_REQUESTTABLE.G_CODE ='${DATA.G_CODE}'`
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
-  if (DATA.TEST_CODE === 1) condition += ` AND ZTB_REL_RESULT.POINT_CODE =${DATA.POINT_CODE}`
-  if (DATA.M_NAME !== '') condition += ` AND M090.M_NAME ='${DATA.M_NAME}'`
+  let condition = ` WHERE ZTB_REL_RESULT.TEST_CODE = ${DATA.TEST_CODE} `;
+  if (DATA.G_CODE !== "")
+    condition += ` AND ZTB_REL_REQUESTTABLE.G_CODE ='${DATA.G_CODE}'`;
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.TEST_CODE === 1)
+    condition += ` AND ZTB_REL_RESULT.POINT_CODE =${DATA.POINT_CODE}`;
+  if (DATA.M_NAME !== "") condition += ` AND M090.M_NAME ='${DATA.M_NAME}'`;
   let setpdQuery = `WITH DTCTB AS (
   SELECT  ZTB_REL_SPECTTABLE.BARCODE_CONTENT, ZTB_REL_RESULT.DTC_ID, (CASE ZTBEMPLINFO.FACTORY_CODE WHEN 1 THEN 'NM1' WHEN 2 THEN 'NM2' END) AS FACTORY , ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME, ZTB_REL_REQUESTTABLE.TEST_EMPL_NO, ZTB_REL_RESULT.G_CODE, ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO, M100.G_NAME, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_SPECTTABLE.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,LOWER_TOR , ZTB_REL_RESULT.RESULT, ZTB_REL_SPECTTABLE.REMARK , ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME , ZTB_REL_RESULT.SAMPLE_NO, ZTB_REL_REQUESTTABLE.REQUEST_DATETIME , ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO ,ZTB_REL_RESULT.M_CODE ,M090.M_NAME , M090.WIDTH_CD AS SIZE, NHAP_NVL.LOTCMS , ZTB_REL_RESULT.TEST_CODE,M090.TDS, M090.TDS_EMPL ,TDS_UPD_DATE, ZTB_REL_RESULT.CTR_CD FROM ZTB_REL_RESULT LEFT JOIN M100 ON(M100.G_CODE = ZTB_REL_RESULT.G_CODE AND M100.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN M090 ON (M090.M_CODE = ZTB_REL_RESULT.M_CODE AND M090.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN ZTB_REL_SPECTTABLE ON (  ZTB_REL_SPECTTABLE.G_CODE = ZTB_REL_RESULT.G_CODE AND ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_RESULT.POINT_CODE AND ZTB_REL_SPECTTABLE.M_CODE = ZTB_REL_RESULT.M_CODE AND ZTB_REL_SPECTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  LEFT JOIN ZTB_REL_REQUESTTABLE ON (ZTB_REL_REQUESTTABLE.DTC_ID = ZTB_REL_RESULT.DTC_ID AND ZTB_REL_REQUESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_REQUESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  LEFT JOIN ZTB_REL_TESTTABLE ON (ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_TESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN ZTB_REL_TESTTYPE ON (ZTB_REL_TESTTYPE.TEST_TYPE_CODE = ZTB_REL_REQUESTTABLE.TEST_TYPE_CODE AND ZTB_REL_TESTTYPE.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO AND ZTBEMPLINFO.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE AND ZTBWORKPOSITION.CTR_CD = ZTBEMPLINFO.CTR_CD) LEFT JOIN NHAP_NVL ON(NHAP_NVL.LOTNCC = ZTB_REL_REQUESTTABLE.REMARK AND NHAP_NVL.SIZE = M090.WIDTH_CD AND NHAP_NVL.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD)
   ${condition} AND ZTB_REL_RESULT.CTR_CD='${DATA.CTR_CD}'
@@ -1147,11 +1153,14 @@ exports.loadCPKTrend = async (req, res, DATA) => {
 };
 exports.loadHistogram = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE ZTB_REL_RESULT.TEST_CODE = ${DATA.TEST_CODE} `
-  if (DATA.G_CODE !== '') condition += ` AND ZTB_REL_REQUESTTABLE.G_CODE ='${DATA.G_CODE}'`
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
-  if (DATA.TEST_CODE === 1) condition += ` AND ZTB_REL_RESULT.POINT_CODE =${DATA.POINT_CODE}`
-  if (DATA.M_NAME !== '') condition += ` AND M090.M_NAME ='${DATA.M_NAME}'`
+  let condition = ` WHERE ZTB_REL_RESULT.TEST_CODE = ${DATA.TEST_CODE} `;
+  if (DATA.G_CODE !== "")
+    condition += ` AND ZTB_REL_REQUESTTABLE.G_CODE ='${DATA.G_CODE}'`;
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.TEST_CODE === 1)
+    condition += ` AND ZTB_REL_RESULT.POINT_CODE =${DATA.POINT_CODE}`;
+  if (DATA.M_NAME !== "") condition += ` AND M090.M_NAME ='${DATA.M_NAME}'`;
   let setpdQuery = `WITH DTCTB AS (
   SELECT  ZTB_REL_SPECTTABLE.BARCODE_CONTENT, ZTB_REL_RESULT.DTC_ID, (CASE ZTBEMPLINFO.FACTORY_CODE WHEN 1 THEN 'NM1' WHEN 2 THEN 'NM2' END) AS FACTORY , ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME, ZTB_REL_REQUESTTABLE.TEST_EMPL_NO, ZTB_REL_RESULT.G_CODE, ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO, M100.G_NAME, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_SPECTTABLE.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,LOWER_TOR , ZTB_REL_RESULT.RESULT, ZTB_REL_SPECTTABLE.REMARK , ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME , ZTB_REL_RESULT.SAMPLE_NO, ZTB_REL_REQUESTTABLE.REQUEST_DATETIME , ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO ,ZTB_REL_RESULT.M_CODE ,M090.M_NAME , M090.WIDTH_CD AS SIZE, NHAP_NVL.LOTCMS , ZTB_REL_RESULT.TEST_CODE,M090.TDS, M090.TDS_EMPL ,TDS_UPD_DATE, ZTB_REL_RESULT.CTR_CD FROM ZTB_REL_RESULT LEFT JOIN M100 ON(M100.G_CODE = ZTB_REL_RESULT.G_CODE AND M100.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN M090 ON (M090.M_CODE = ZTB_REL_RESULT.M_CODE AND M090.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN ZTB_REL_SPECTTABLE ON (  ZTB_REL_SPECTTABLE.G_CODE = ZTB_REL_RESULT.G_CODE AND ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_RESULT.POINT_CODE AND ZTB_REL_SPECTTABLE.M_CODE = ZTB_REL_RESULT.M_CODE AND ZTB_REL_SPECTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  LEFT JOIN ZTB_REL_REQUESTTABLE ON (ZTB_REL_REQUESTTABLE.DTC_ID = ZTB_REL_RESULT.DTC_ID AND ZTB_REL_REQUESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_REQUESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  LEFT JOIN ZTB_REL_TESTTABLE ON (ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_TESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD) LEFT JOIN ZTB_REL_TESTTYPE ON (ZTB_REL_TESTTYPE.TEST_TYPE_CODE = ZTB_REL_REQUESTTABLE.TEST_TYPE_CODE AND ZTB_REL_TESTTYPE.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO AND ZTBEMPLINFO.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE AND ZTBWORKPOSITION.CTR_CD = ZTBEMPLINFO.CTR_CD) LEFT JOIN NHAP_NVL ON(NHAP_NVL.LOTNCC = ZTB_REL_REQUESTTABLE.REMARK AND NHAP_NVL.SIZE = M090.WIDTH_CD AND NHAP_NVL.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD)
   ${condition} AND ZTB_REL_RESULT.CTR_CD='${DATA.CTR_CD}'
@@ -1164,15 +1173,17 @@ exports.loadHistogram = async (req, res, DATA) => {
 };
 exports.dtcdata = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ` SELECT  ZTB_REL_SPECTTABLE.BARCODE_CONTENT, ZTB_REL_RESULT.DTC_ID, (CASE ZTBEMPLINFO.FACTORY_CODE WHEN 1 THEN 'NM1' WHEN 2 THEN 'NM2' END) AS FACTORY , ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME, ZTB_REL_REQUESTTABLE.TEST_EMPL_NO, ZTB_REL_RESULT.G_CODE, ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO, M100.G_NAME, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_SPECTTABLE.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,LOWER_TOR , ZTB_REL_RESULT.RESULT, ZTB_REL_SPECTTABLE.REMARK ,ZTB_REL_RESULT.REMARK, ZTB_REL_SPECTTABLE.REMARK , ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME , ZTB_REL_RESULT.SAMPLE_NO, ZTB_REL_REQUESTTABLE.REQUEST_DATETIME , ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO ,ZTB_REL_RESULT.M_CODE ,M090.M_NAME , M090.WIDTH_CD AS SIZE, ZTB_REL_REQUESTTABLE.REMARK, ZTB_REL_RESULT.TEST_CODE,M090.TDS, M090.TDS_EMPL ,TDS_UPD_DATE, SUBSTRING(ZTB_REL_REQUESTTABLE.M_LOT_NO,1,8) AS LOTCMS FROM ZTB_REL_RESULT 
+  let setpdQuery = `  SELECT ZTB_REL_SPECTTABLE.BARCODE_CONTENT, ZTB_REL_RESULT.DTC_ID, (CASE ZTBEMPLINFO.FACTORY_CODE WHEN 1 THEN 'NM1' WHEN 2 THEN 'NM2' END) AS FACTORY , ZTB_REL_REQUESTTABLE.TEST_FINISH_TIME, ZTB_REL_REQUESTTABLE.TEST_EMPL_NO, ZTB_REL_RESULT.G_CODE, ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO, M100.G_NAME, ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_SPECTTABLE.POINT_CODE, ZTB_REL_SPECTTABLE.CENTER_VALUE , ZTB_REL_SPECTTABLE.UPPER_TOR,LOWER_TOR , ZTB_REL_RESULT.RESULT, ZTB_REL_SPECTTABLE.REMARK ,ZTB_REL_RESULT.REMARK, ZTB_REL_SPECTTABLE.REMARK , ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME , ZTB_REL_RESULT.SAMPLE_NO, ZTB_REL_REQUESTTABLE.REQUEST_DATETIME , ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO ,ZTB_REL_RESULT.M_CODE ,M090.M_NAME , M090.WIDTH_CD AS SIZE, ZTB_REL_REQUESTTABLE.REMARK, ZTB_REL_RESULT.TEST_CODE,M090.TDS, M090.TDS_EMPL ,TDS_UPD_DATE, SUBSTRING(ZTB_REL_REQUESTTABLE.M_LOT_NO,1,8) AS LOTCMS, ZTB_REL_TESTPOINT.POINT_NAME FROM ZTB_REL_RESULT 
   LEFT JOIN M100 ON(M100.G_CODE = ZTB_REL_RESULT.G_CODE AND M100.CTR_CD = ZTB_REL_RESULT.CTR_CD) 
   LEFT JOIN M090 ON (M090.M_CODE = ZTB_REL_RESULT.M_CODE AND M090.CTR_CD = ZTB_REL_RESULT.CTR_CD) 
   LEFT JOIN ZTB_REL_SPECTTABLE ON (  ZTB_REL_SPECTTABLE.G_CODE = ZTB_REL_RESULT.G_CODE AND ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_RESULT.POINT_CODE AND ZTB_REL_SPECTTABLE.M_CODE = ZTB_REL_RESULT.M_CODE AND ZTB_REL_SPECTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  
   LEFT JOIN ZTB_REL_REQUESTTABLE ON (ZTB_REL_REQUESTTABLE.DTC_ID = ZTB_REL_RESULT.DTC_ID AND ZTB_REL_REQUESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_REQUESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD)  
   LEFT JOIN ZTB_REL_TESTTABLE ON (ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_RESULT.TEST_CODE AND ZTB_REL_TESTTABLE.CTR_CD = ZTB_REL_RESULT.CTR_CD) 
+   LEFT JOIN ZTB_REL_TESTPOINT ON ( ZTB_REL_SPECTTABLE.TEST_CODE = ZTB_REL_TESTPOINT.TEST_CODE AND ZTB_REL_SPECTTABLE.POINT_CODE = ZTB_REL_TESTPOINT.POINT_CODE AND ZTB_REL_SPECTTABLE.CTR_CD = ZTB_REL_TESTPOINT.CTR_CD)  
   LEFT JOIN ZTB_REL_TESTTYPE ON (ZTB_REL_TESTTYPE.TEST_TYPE_CODE = ZTB_REL_REQUESTTABLE.TEST_TYPE_CODE AND ZTB_REL_TESTTYPE.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) 
   LEFT JOIN ZTBEMPLINFO ON (ZTBEMPLINFO.EMPL_NO = ZTB_REL_REQUESTTABLE.REQUEST_EMPL_NO AND ZTBEMPLINFO.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD) 
   LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE AND ZTBWORKPOSITION.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+
   ${generate_condition_get_dtc_data(
     DATA.ALLTIME,
     DATA.FROM_DATE,
@@ -1217,8 +1228,8 @@ exports.dtcspec = async (req, res, DATA) => {
 exports.getpatrolheader = async (req, res, DATA) => {
   let checkkq = "OK";
   let today = moment().format("YYYY-MM-DD");
-  let condition = ``
-  if (DATA.NG_TYPE !== 'ALL')
+  let condition = ``;
+  if (DATA.NG_TYPE !== "ALL")
     condition += ` AND ERROR_TABLE.ERR_TYPE='${DATA.NG_TYPE}'`;
   let setpdQuery = `
           WITH INSPECTION_DATA_DOC1 AS
@@ -1290,28 +1301,26 @@ exports.getInspectionWorstTable = async (req, res, DATA) => {
   let SUBDEPTNAME = req.payload_data["SUBDEPTNAME"];
   let checkkq = "OK";
   let condition = ``;
-  if (DATA.WORSTBY === 'AMOUNT')
-    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_AMOUNT as bigint)) DESC`
-  if (DATA.WORSTBY === 'QTY')
-    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) DESC`
+  if (DATA.WORSTBY === "AMOUNT")
+    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_AMOUNT as bigint)) DESC`;
+  if (DATA.WORSTBY === "QTY")
+    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) DESC`;
   let condition2 = ``;
-  if (DATA.NG_TYPE !== 'ALL') {
-    condition2 += ` AND ERROR_TABLE.ERR_TYPE ='${DATA.NG_TYPE}'`
-  }
-  else {
+  if (DATA.NG_TYPE !== "ALL") {
+    condition2 += ` AND ERROR_TABLE.ERR_TYPE ='${DATA.NG_TYPE}'`;
+  } else {
     condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P')`;
   }
   let condition3 = `WHERE 1=1 `;
   if (DATA.codeArray.length === 1) {
-    condition3 += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition3 += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition3 += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition3 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition3 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH INSPECTION_DATA_DOC AS
@@ -1337,22 +1346,23 @@ exports.getInspectionWorstTable = async (req, res, DATA) => {
 };
 exports.inspect_daily_ppm = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT CAST(INSPECT_START_TIME as date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS PROCESS_PPM  FROM 
   ZTBINSPECTNGTB 
@@ -1368,22 +1378,23 @@ exports.inspect_daily_ppm = async (req, res, DATA) => {
 };
 exports.inspect_weekly_ppm = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_',  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))) AS YEAR_WEEK, YEAR(INSPECT_START_TIME) AS YEAR_NUM,  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME)) AS WEEK_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
   LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO AND P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD
@@ -1398,22 +1409,23 @@ exports.inspect_weekly_ppm = async (req, res, DATA) => {
 };
 exports.inspect_monthly_ppm = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_', MONTH(INSPECT_START_TIME)) AS YEAR_MONTH, YEAR(INSPECT_START_TIME) AS YEAR_NUM, MONTH(INSPECT_START_TIME) AS MONTH_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
   LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO AND P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD
@@ -1428,23 +1440,24 @@ exports.inspect_monthly_ppm = async (req, res, DATA) => {
 };
 exports.inspect_yearly_ppm = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += `
      AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM,  SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY-ERR32) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
   LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO AND P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD
@@ -1459,22 +1472,23 @@ exports.inspect_yearly_ppm = async (req, res, DATA) => {
 };
 exports.inspect_daily_ppm_oqc = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT CAST(INSPECT_START_TIME as date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR1+ERR2+ERR3+ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM 
   ZTBINSPECTNGTB 
@@ -1490,23 +1504,24 @@ exports.inspect_daily_ppm_oqc = async (req, res, DATA) => {
 };
 exports.inspect_weekly_ppm_oqc = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
   //condition += ` AND M110.CUST_NAME_KD IN('SEV','SEVT','SAMSUNG NETWORK')`
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_',  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME))) AS YEAR_WEEK, YEAR(INSPECT_START_TIME) AS YEAR_NUM,  DATEPART(iso_week, DATEADD(DAY, 2, INSPECT_START_TIME)) AS WEEK_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
   LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO AND P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD
@@ -1521,22 +1536,23 @@ exports.inspect_weekly_ppm_oqc = async (req, res, DATA) => {
 };
 exports.inspect_monthly_ppm_oqc = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT CONCAT(YEAR(INSPECT_START_TIME),'_', MONTH(INSPECT_START_TIME)) AS YEAR_MONTH, YEAR(INSPECT_START_TIME) AS YEAR_NUM, MONTH(INSPECT_START_TIME) AS MONTH_NUM, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
   LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO AND P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD
@@ -1551,23 +1567,24 @@ exports.inspect_monthly_ppm_oqc = async (req, res, DATA) => {
 };
 exports.inspect_yearly_ppm_oqc = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`
+  let condition = ` WHERE INSPECT_START_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' AND ZTBINSPECTNGTB.INSPECT_TOTAL_QTY <>0`;
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND ZTBINSPECTNGTB.FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += `
      AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
+  if (DATA.CUST_NAME_KD !== "") {
     //join customer name from string splitted by  comma  example: SEV, SEVT, SAMSUNG NETWORK to 'SEV','SEVT','SAMSUNG NETWORK'
-    let custNameAr = DATA.CUST_NAME_KD.split(',').map(item => `'${item.trim()}'`).join(",");
-    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`    
+    let custNameAr = DATA.CUST_NAME_KD.split(",")
+      .map((item) => `'${item.trim()}'`)
+      .join(",");
+    condition += ` AND M110.CUST_NAME_KD IN (${custNameAr})`;
   }
   let setpdQuery = `SELECT YEAR(INSPECT_START_TIME) AS YEAR_NUM,  SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) AS MATERIAL_NG, SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS PROCESS_NG, SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS TOTAL_NG, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS TOTAL_PPM, CAST(SUM(ERR1+ ERR2 + ERR3 + ERR32+ERR4+ ERR5+ ERR6+ ERR7 +ERR8 +ERR9 +ERR10+ERR11) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS MATERIAL_PPM, CAST(SUM(ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) as float)/CAST(SUM(INSPECT_TOTAL_QTY) as float)*1000000 AS PROCESS_PPM  FROM ZTBINSPECTNGTB 
   LEFT JOIN P400 ON P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO AND P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD
@@ -1584,15 +1601,14 @@ exports.getInspectionSummary = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   SELECT SUM(CAST((INSPECT_TOTAL_QTY -ERR32)as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -1615,15 +1631,14 @@ exports.dailyFcost = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   SELECT CAST(ZTBINSPECTNGTB.INSPECT_START_TIME AS DATE) AS INSPECT_DATE, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -1649,15 +1664,14 @@ exports.weeklyFcost = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   SELECT CONCAT(YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),'_',DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME)) AS INSPECT_YW, YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR,DATEPART(ISO_WEEK,ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_WEEK, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -1683,15 +1697,14 @@ exports.monthlyFcost = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   SELECT CONCAT(YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME),'_',MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME)) AS INSPECT_YM, YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR,MONTH(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_MONTH, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -1717,15 +1730,14 @@ exports.annuallyFcost = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   SELECT YEAR(ZTBINSPECTNGTB.INSPECT_START_TIME) AS INSPECT_YEAR, SUM(CAST(INSPECT_TOTAL_QTY as bigint)) AS ISP_TT_QTY, SUM(CAST(INSPECT_OK_QTY as bigint)) AS INSP_OK_QTY , SUM(CAST(ERR4 AS bigint)+CAST(ERR5 AS bigint)+CAST(ERR6 AS bigint)+CAST(ERR7 AS bigint)+CAST(ERR8 AS bigint)+CAST(ERR9 AS bigint)+CAST(ERR10 AS bigint)+CAST(ERR11 AS bigint)) AS M_NG_QTY, SUM(CAST(ERR12 AS bigint)+CAST(ERR13 AS bigint)+CAST(ERR14 AS bigint)+CAST(ERR15 AS bigint)+CAST(ERR16 AS bigint)+CAST(ERR17 AS bigint)+CAST(ERR18 AS bigint)+CAST(ERR19 AS bigint)+CAST(ERR20 AS bigint)+CAST(ERR21 AS bigint)+CAST(ERR22 AS bigint)+CAST(ERR23 AS bigint)+CAST(ERR24 AS bigint)+CAST(ERR25 AS bigint)+CAST(ERR26 AS bigint)+CAST(ERR27 AS bigint)+CAST(ERR28 AS bigint)+CAST(ERR29 AS bigint)+CAST(ERR30 AS bigint)+CAST(ERR31 AS bigint)) AS P_NG_QTY, 
@@ -1750,15 +1762,14 @@ exports.dailyDefectTrending = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE ZTBINSPECTNGTB.INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   SELECT CAST(INSPECT_DATETIME AS date) AS INSPECT_DATE, SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY , SUM(INSPECT_OK_QTY) AS INSPECT_OK_QTY , SUM(ERR4+ERR5+ERR6+ERR7+ERR8+ERR9+ERR10+ERR11+ERR12+ERR13+ERR14+ERR15+ERR16+ERR17+ERR18+ERR19+ERR20+ERR21+ERR22+ERR23+ERR24+ERR25+ERR26+ERR27+ERR28+ERR29+ERR30+ERR31) AS INSPECT_NG_QTY,
@@ -1790,17 +1801,17 @@ exports.get_inspection = async (req, res, DATA) => {
               LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD AND M110.CTR_CD = P400.CTR_CD)
               LEFT JOIN I222 ON P501_A.M_LOT_NO = I222.M_LOT_NO AND  P501_A.CTR_CD = I222.CTR_CD
                 ${generate_condition_get_inspection_input(
-        DATA.ALLTIME,
-        DATA.FROM_DATE,
-        DATA.TO_DATE,
-        DATA.CUST_NAME,
-        DATA.G_CODE,
-        DATA.G_NAME,
-        DATA.PROD_TYPE,
-        DATA.EMPL_NAME,
-        DATA.PROD_REQUEST_NO,
-        DATA.CTR_CD
-      )}
+                  DATA.ALLTIME,
+                  DATA.FROM_DATE,
+                  DATA.TO_DATE,
+                  DATA.CUST_NAME,
+                  DATA.G_CODE,
+                  DATA.G_NAME,
+                  DATA.PROD_TYPE,
+                  DATA.EMPL_NAME,
+                  DATA.PROD_REQUEST_NO,
+                  DATA.CTR_CD
+                )}
                             ORDER BY ZTBINSPECTINPUTTB.INSPECT_INPUT_ID DESC`;
       //console.log(query);
       kqua = await queryDB(query);
@@ -1822,17 +1833,17 @@ exports.get_inspection = async (req, res, DATA) => {
               LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD AND M110.CTR_CD = P400.CTR_CD)
               LEFT JOIN I222 ON P501_A.M_LOT_NO = I222.M_LOT_NO AND P501_A.CTR_CD = I222.CTR_CD
               ${generate_condition_get_inspection_output(
-        DATA.ALLTIME,
-        DATA.FROM_DATE,
-        DATA.TO_DATE,
-        DATA.CUST_NAME,
-        DATA.G_CODE,
-        DATA.G_NAME,
-        DATA.PROD_TYPE,
-        DATA.EMPL_NAME,
-        DATA.PROD_REQUEST_NO,
-        DATA.CTR_CD
-      )} ORDER BY ZTBINSPECTOUTPUTTB.INSPECT_OUTPUT_ID DESC`;
+                DATA.ALLTIME,
+                DATA.FROM_DATE,
+                DATA.TO_DATE,
+                DATA.CUST_NAME,
+                DATA.G_CODE,
+                DATA.G_NAME,
+                DATA.PROD_TYPE,
+                DATA.EMPL_NAME,
+                DATA.PROD_REQUEST_NO,
+                DATA.CTR_CD
+              )} ORDER BY ZTBINSPECTOUTPUTTB.INSPECT_OUTPUT_ID DESC`;
       //console.log(query);
       kqua = await queryDB(query);
       ////console.log(kqua);
@@ -1849,14 +1860,14 @@ exports.get_inspection = async (req, res, DATA) => {
             LEFT JOIN M010 ON (M010.EMPL_NO = P400.EMPL_NO AND M010.CTR_CD = P400.CTR_CD)
             LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD AND M110.CTR_CD = P400.CTR_CD) 
                              ${generate_condition_get_inspection_inoutycsx(
-        DATA.CUST_NAME,
-        DATA.G_CODE,
-        DATA.G_NAME,
-        DATA.PROD_TYPE,
-        DATA.EMPL_NAME,
-        DATA.PROD_REQUEST_NO,
-        DATA.CTR_CD
-      )} ORDER BY P400.PROD_REQUEST_DATE DESC`;
+                               DATA.CUST_NAME,
+                               DATA.G_CODE,
+                               DATA.G_NAME,
+                               DATA.PROD_TYPE,
+                               DATA.EMPL_NAME,
+                               DATA.PROD_REQUEST_NO,
+                               DATA.CTR_CD
+                             )} ORDER BY P400.PROD_REQUEST_DATE DESC`;
       //console.log(query);
       kqua = await queryDB(query);
       ////console.log(kqua);
@@ -1869,17 +1880,17 @@ exports.get_inspection = async (req, res, DATA) => {
               LEFT JOIN M090 ON(ZTBINSPECTNGTB.M_CODE = M090.M_CODE AND ZTBINSPECTNGTB.CTR_CD = M090.CTR_CD)
               LEFT JOIN I222 ON(I222.M_LOT_NO = ZTBINSPECTNGTB.M_LOT_NO AND I222.CTR_CD = ZTBINSPECTNGTB.CTR_CD)      
                              ${generate_condition_get_inspection_ng_data(
-        DATA.ALLTIME,
-        DATA.FROM_DATE,
-        DATA.TO_DATE,
-        DATA.CUST_NAME,
-        DATA.G_CODE,
-        DATA.G_NAME,
-        DATA.PROD_TYPE,
-        DATA.EMPL_NAME,
-        DATA.PROD_REQUEST_NO,
-        DATA.CTR_CD
-      )} ORDER BY INSPECT_ID DESC`;
+                               DATA.ALLTIME,
+                               DATA.FROM_DATE,
+                               DATA.TO_DATE,
+                               DATA.CUST_NAME,
+                               DATA.G_CODE,
+                               DATA.G_NAME,
+                               DATA.PROD_TYPE,
+                               DATA.EMPL_NAME,
+                               DATA.PROD_REQUEST_NO,
+                               DATA.CTR_CD
+                             )} ORDER BY INSPECT_ID DESC`;
       //console.log(query);
       kqua = await queryDB(query);
       ////console.log(kqua);
@@ -1967,7 +1978,9 @@ exports.updateIQCConfirm_FAILING = async (req, res, DATA) => {
   //console.log(DATA);
   let checkkq = "OK";
   let setpdQuery = `
-  UPDATE ZTB_SX_NG_MATERIAL SET IN2_EMPL='${DATA.IN2_EMPL.toUpperCase()}', UPD_EMPL='${DATA.IN2_EMPL.toUpperCase()}', UPD_DATE= GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND FAIL_ID=${DATA.FAIL_ID} 
+  UPDATE ZTB_SX_NG_MATERIAL SET IN2_EMPL='${DATA.IN2_EMPL.toUpperCase()}', UPD_EMPL='${DATA.IN2_EMPL.toUpperCase()}', UPD_DATE= GETDATE() WHERE CTR_CD='${
+    DATA.CTR_CD
+  }' AND FAIL_ID=${DATA.FAIL_ID} 
   `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
@@ -1977,8 +1990,7 @@ exports.updateIQCConfirm_FAILING = async (req, res, DATA) => {
 exports.loadQCFailData = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
-  if(DATA.ONLY_PENDING=== true)
-  {
+  if (DATA.ONLY_PENDING === true) {
     condition = ` AND ZTB_SX_NG_MATERIAL.PROCESS_STATUS='P'`;
   }
   let setpdQuery = ` SELECT ZTB_SX_NG_MATERIAL.PROCESS_STATUS, ZTB_SX_NG_MATERIAL.PROCESS_EMPL, ZTB_SX_NG_MATERIAL.PROCESS_DATE,ZTB_SX_NG_MATERIAL.PROCESS_LOT_NO, ZTB_SX_NG_MATERIAL.CTR_CD, ZTB_SX_NG_MATERIAL.FAIL_ID, ZTB_SX_NG_MATERIAL.FACTORY,ZTB_SX_NG_MATERIAL.PLAN_ID_SUDUNG,M100.G_NAME,M100.G_CODE, ZTB_SX_NG_MATERIAL.LIEUQL_SX,ZTB_SX_NG_MATERIAL.M_CODE,ZTB_SX_NG_MATERIAL.M_LOT_NO,ZTB_SX_NG_MATERIAL.VENDOR_LOT, 
@@ -2070,7 +2082,11 @@ exports.traholdingmaterial = async (req, res, DATA) => {
 exports.updateQCPASSI222 = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.LOT_CMS}'`;
+  let update_USE_YN = "";
+  if (DATA.VALUE === "N") {
+    update_USE_YN = `, USE_YN='B'`;
+  }
+  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.LOT_CMS}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -2079,7 +2095,11 @@ exports.updateQCPASSI222 = async (req, res, DATA) => {
 exports.updateQCPASSI222_M_LOT_NO = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
+  let update_USE_YN = "";
+  if (DATA.VALUE === "N") {
+    update_USE_YN = `, USE_YN='B'`;
+  }
+  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -2097,10 +2117,12 @@ exports.updateIQC1Table = async (req, res, DATA) => {
 exports.loadIQC1table = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE IQCTB.INS_DATE BETWEEN ''${DATA.FROM_DATE}'' AND ''${DATA.TO_DATE} 23:59:59'' `;
-  if (DATA.M_CODE !== '') condition += ` AND IQCTB.M_CODE =''${DATA.M_CODE}'' `;
-  if (DATA.LOTNCC !== '') condition += ` AND IQCTB.LOTNCC =''${DATA.LOTNCC}'' `;
-  if (DATA.M_NAME !== '') condition += ` AND IQCTB.M_NAME LIKE ''%${DATA.M_NAME}%'' `;
-  if (DATA.VENDOR_NAME !== '') condition += ` AND IQCTB.CUST_NAME_KD LIKE ''%${DATA.VENDOR_NAME}%'' `;
+  if (DATA.M_CODE !== "") condition += ` AND IQCTB.M_CODE =''${DATA.M_CODE}'' `;
+  if (DATA.LOTNCC !== "") condition += ` AND IQCTB.LOTNCC =''${DATA.LOTNCC}'' `;
+  if (DATA.M_NAME !== "")
+    condition += ` AND IQCTB.M_NAME LIKE ''%${DATA.M_NAME}%'' `;
+  if (DATA.VENDOR_NAME !== "")
+    condition += ` AND IQCTB.CUST_NAME_KD LIKE ''%${DATA.VENDOR_NAME}%'' `;
   let setpdQuery = `
   DECLARE @str1 nvarchar(max), @str2 nvarchar(max), @str3 nvarchar(max)
 SET @str1  =(   SELECT '(' + STRING_AGG('[' + TEST_NAME + ']', ',') + ')' AS ConcatenatedString
@@ -2158,7 +2180,7 @@ LEFT JOIN INPUT_LENGTH_TB ON (INPUT_LENGTH_TB.CTR_CD = IQC1_TABLE.CTR_CD AND INP
   ORDER BY IQCTB.IQC1_ID DESC
 '
 execute(@query)
-  `
+  `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -2339,7 +2361,11 @@ exports.createNewAudit = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = `
-  INSERT INTO AUDIT_RESULT_TABLE (CTR_CD, AUDIT_ID, AUDIT_NAME, AUDIT_DATE, REMARK, INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}',${DATA.AUDIT_ID},'${DATA.AUDIT_NAME}','${moment().format('YYYY-MM-DD')}','',GETDATE(),'${EMPL_NO}')
+  INSERT INTO AUDIT_RESULT_TABLE (CTR_CD, AUDIT_ID, AUDIT_NAME, AUDIT_DATE, REMARK, INS_DATE, INS_EMPL) VALUES ('${
+    DATA.CTR_CD
+  }',${DATA.AUDIT_ID},'${DATA.AUDIT_NAME}','${moment().format(
+    "YYYY-MM-DD"
+  )}','',GETDATE(),'${EMPL_NO}')
   `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
@@ -2379,21 +2405,21 @@ exports.updatechecksheetResultRow = async (req, res, DATA) => {
 };
 exports.loadRNRchitiet = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = `WHERE  SUBDEPTNAME is not null  `
+  let condition = `WHERE  SUBDEPTNAME is not null  `;
   if (DATA.ALLTIME === false) {
     condition += ` AND ZTB_RNR_TEST.TEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
   }
-  if (DATA.EMPL_NAME !== '') {
-    condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`
+  if (DATA.EMPL_NAME !== "") {
+    condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`;
   }
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`;
   }
-  if (DATA.TEST_TYPE !== 'ALL') {
-    condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`
+  if (DATA.TEST_TYPE !== "ALL") {
+    condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`;
   }
-  if (DATA.TEST_ID !== '') {
-    condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`
+  if (DATA.TEST_ID !== "") {
+    condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`;
   }
   let setpdQuery = `
     SELECT ZTB_RNR_TEST.TEST_DATE, ZTB_RNR_TEST.TEST_ID, ZTB_RNR_TEST.TEST_NO, ZTB_RNR_TEST.TEST_TYPE, CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END AS FACTORY, CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) AS FULL_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME, ZTB_RNR_TEST.TEST_EMPL_NO, 
@@ -2415,21 +2441,21 @@ exports.loadRNRchitiet = async (req, res, DATA) => {
 };
 exports.RnRtheonhanvien = async (req, res, DATA) => {
   let checkkq = "OK";
-  let condition = `WHERE SUBDEPTNAME is not null  `
+  let condition = `WHERE SUBDEPTNAME is not null  `;
   if (DATA.ALLTIME === false) {
     condition += ` AND ZTB_RNR_TEST.TEST_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
   }
-  if (DATA.EMPL_NAME !== '') {
-    condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`
+  if (DATA.EMPL_NAME !== "") {
+    condition += ` AND CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ',ZTBEMPLINFO.FIRST_NAME) LIKE N'%${DATA.EMPL_NAME}%'`;
   }
-  if (DATA.FACTORY !== 'ALL') {
-    condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`
+  if (DATA.FACTORY !== "ALL") {
+    condition += ` AND CASE WHEN ZTBEMPLINFO.FACTORY_CODE=1 THEN 'NM1' ELSE 'NM2' END='${DATA.FACTORY}'`;
   }
-  if (DATA.TEST_TYPE !== 'ALL') {
-    condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`
+  if (DATA.TEST_TYPE !== "ALL") {
+    condition += ` AND ZTB_RNR_TEST.TEST_TYPE='${DATA.TEST_TYPE}'`;
   }
-  if (DATA.TEST_ID !== '') {
-    condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`
+  if (DATA.TEST_ID !== "") {
+    condition += ` AND ZTB_RNR_TEST.TEST_ID='${DATA.TEST_ID}'`;
   }
   let setpdQuery = `
   WITH RNR_DATA AS
@@ -2459,10 +2485,13 @@ exports.RnRtheonhanvien = async (req, res, DATA) => {
 exports.traOQCData = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.G_NAME !== '') condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
-  if (DATA.G_CODE !== '') condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
-  if (DATA.PROD_REQUEST_NO !== '') condition += ` AND P400.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.G_NAME !== "")
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  if (DATA.G_CODE !== "") condition += ` AND M100.G_CODE = '${DATA.G_CODE}'`;
+  if (DATA.PROD_REQUEST_NO !== "")
+    condition += ` AND P400.PROD_REQUEST_NO = '${DATA.PROD_REQUEST_NO}'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
   SELECT OQC_ID, DELIVERY_DATE, SHIFT_CODE, ZTBFACTORY.FACTORY_NAME, CONCAT(ZTBEMPLINFO.MIDLAST_NAME,' ', ZTBEMPLINFO.FIRST_NAME)AS FULL_NAME, M110.CUST_NAME_KD, ZTB_OQC_TB.PROD_REQUEST_NO, ZTB_OQC_TB.PROCESS_LOT_NO, P501_A.M_LOT_NO, I222.LOTNCC, ZTB_OQC_TB.LABEL_ID,　ZTB_OQC_TB.PROD_REQUEST_DATE, P400.PROD_REQUEST_QTY, M100.G_CODE, M100.G_NAME, M100.G_NAME_KD, ZTB_OQC_TB.DELIVERY_QTY, ZTB_OQC_TB.SAMPLE_QTY, ZTB_OQC_TB.SAMPLE_NG_QTY,M100.PROD_LAST_PRICE, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.DELIVERY_QTY) AS DELIVERY_AMOUNT, (M100.PROD_LAST_PRICE* ZTB_OQC_TB.SAMPLE_NG_QTY) AS SAMPLE_NG_AMOUNT, ZTB_OQC_TB.REMARK, COUNT(M100.G_CODE) OVER(PARTITION BY M100.G_CODE ORDER BY OQC_ID ASC) AS RUNNING_COUNT
   FROM 
@@ -2486,7 +2515,8 @@ exports.traOQCData = async (req, res, DATA) => {
 exports.ngbyCustomerOQC = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
    WITH OQC_TB AS
   (
@@ -2513,7 +2543,8 @@ exports.ngbyCustomerOQC = async (req, res, DATA) => {
 exports.ngbyProTypeOQC = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
     WITH OQC_TB AS
     (
@@ -2540,7 +2571,8 @@ exports.ngbyProTypeOQC = async (req, res, DATA) => {
 exports.dailyOQCTrendingData = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
    WITH OQC_TB AS
   (
@@ -2564,7 +2596,8 @@ exports.dailyOQCTrendingData = async (req, res, DATA) => {
 exports.weeklyOQCTrendingData = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
   WITH OQC_TB AS
   (
@@ -2587,7 +2620,8 @@ exports.weeklyOQCTrendingData = async (req, res, DATA) => {
 exports.monthlyOQCTrendingData = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
   WITH OQC_TB AS
   (
@@ -2610,7 +2644,8 @@ exports.monthlyOQCTrendingData = async (req, res, DATA) => {
 exports.yearlyOQCTrendingData = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE DELIVERY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
-  if (DATA.CUST_NAME_KD !== '') condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  if (DATA.CUST_NAME_KD !== "")
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   let setpdQuery = `
   WITH OQC_TB AS
   (
@@ -2669,15 +2704,14 @@ exports.pqcdailyppm = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH PQC_DATA AS
@@ -2701,15 +2735,14 @@ exports.pqcweeklyppm = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH PQC_DATA AS
@@ -2732,15 +2765,14 @@ exports.pqcmonthlyppm = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH PQC_DATA AS
@@ -2763,15 +2795,14 @@ exports.pqcyearlyppm = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE ZTBPQC1TABLE.SETTING_OK_TIME BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBPQC1TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBPQC1TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH PQC_DATA AS
@@ -2794,15 +2825,14 @@ exports.getPQCSummary = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE 1=1 `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBINSPECTNGTB.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBINSPECTNGTB.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH PQC_DATA AS
@@ -2825,15 +2855,14 @@ exports.dailyPQCDefectTrending = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE ERR_CODE is not null AND OCCURR_TIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59' `;
   if (DATA.codeArray.length === 1) {
-    condition += ` AND ZTBPQC3TABLE.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition += ` AND ZTBPQC3TABLE.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition += ` AND ZTBPQC3TABLE.G_CODE IN (${codeArStr})`;
   }
-  if (DATA.CUST_NAME_KD !== '') {
-    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH PQC3_DATA AS
@@ -2868,18 +2897,18 @@ exports.trapqc3data = async (req, res, DATA) => {
                LEFT JOIN P400 ON (P400.PROD_REQUEST_NO = ZTBPQC3TABLE.PROD_REQUEST_NO AND P400.CTR_CD = ZTBPQC3TABLE.CTR_CD)
                LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD AND M110.CTR_CD = P400.CTR_CD)
                ${generate_condition_pqc3(
-    DATA.ALLTIME,
-    DATA.FROM_DATE,
-    DATA.TO_DATE,
-    DATA.CUST_NAME,
-    DATA.G_CODE,
-    DATA.G_NAME,
-    DATA.PROD_REQUEST_NO,
-    DATA.PROCESS_LOT_NO,
-    DATA.ID,
-    DATA.FACTORY,
-    DATA.CTR_CD
-  )} 
+                 DATA.ALLTIME,
+                 DATA.FROM_DATE,
+                 DATA.TO_DATE,
+                 DATA.CUST_NAME,
+                 DATA.G_CODE,
+                 DATA.G_NAME,
+                 DATA.PROD_REQUEST_NO,
+                 DATA.PROCESS_LOT_NO,
+                 DATA.ID,
+                 DATA.FACTORY,
+                 DATA.CTR_CD
+               )} 
                ORDER BY ZTBPQC3TABLE.PQC3_ID DESC`;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
@@ -2895,18 +2924,18 @@ exports.trapqc1data = async (req, res, DATA) => {
                LEFT JOIN M110 ON (M110.CUST_CD = P400.CUST_CD AND M110.CTR_CD = P400.CTR_CD)
                LEFT JOIN  ZTBPQC3TABLE  ON (ZTBPQC1TABLE.PQC1_ID= ZTBPQC3TABLE.PQC1_ID AND ZTBPQC1TABLE.CTR_CD= ZTBPQC3TABLE.CTR_CD)
                ${generate_condition_pqc1(
-    DATA.ALLTIME,
-    DATA.FROM_DATE,
-    DATA.TO_DATE,
-    DATA.CUST_NAME,
-    DATA.G_CODE,
-    DATA.G_NAME,
-    DATA.PROD_REQUEST_NO,
-    DATA.PROCESS_LOT_NO,
-    DATA.ID,
-    DATA.FACTORY,
-    DATA.CTR_CD
-  )} 
+                 DATA.ALLTIME,
+                 DATA.FROM_DATE,
+                 DATA.TO_DATE,
+                 DATA.CUST_NAME,
+                 DATA.G_CODE,
+                 DATA.G_NAME,
+                 DATA.PROD_REQUEST_NO,
+                 DATA.PROCESS_LOT_NO,
+                 DATA.ID,
+                 DATA.FACTORY,
+                 DATA.CTR_CD
+               )} 
                ORDER BY ZTBPQC1TABLE.PQC1_ID DESC`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
@@ -2959,16 +2988,16 @@ exports.tradaofilm = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = `WHERE 1=1 `;
   if (DATA.ALLTIME !== true) {
-    condition += ` AND NGAYBANGIAO BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`
+    condition += ` AND NGAYBANGIAO BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
   }
-  if (DATA.G_CODE !== '') {
-    condition += ` AND KNIFE_FILM.G_CODE ='${DATA.G_CODE}'`
+  if (DATA.G_CODE !== "") {
+    condition += ` AND KNIFE_FILM.G_CODE ='${DATA.G_CODE}'`;
   }
-  if (DATA.G_NAME !== '') {
-    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`
+  if (DATA.G_NAME !== "") {
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
   }
-  if (DATA.FACTORY !== 'All') {
-    condition += ` AND KNIFE_FILM.FACTORY_NAME = '${DATA.FACTORY}'`
+  if (DATA.FACTORY !== "All") {
+    condition += ` AND KNIFE_FILM.FACTORY_NAME = '${DATA.FACTORY}'`;
   }
   let setpdQuery = `
     SELECT KNIFE_FILM_ID,FACTORY_NAME,NGAYBANGIAO,KNIFE_FILM.G_CODE, M100.G_NAME, LOAIBANGIAO_PDP,LOAIPHATHANH,SOLUONG,SOLUONGOHP,LYDOBANGIAO,PQC_EMPL_NO,RND_EMPL_NO,SX_EMPL_NO,MA_DAO, CFM_GIAONHAN, CFM_INS_EMPL, CFM_DATE, KNIFE_FILM_STATUS, KNIFE_FILM.G_WIDTH, KNIFE_FILM.G_LENGTH,  M110.CUST_NAME_KD AS VENDOR, KNIFE_FILM.TOTAL_PRESS, REMARK 
@@ -3005,11 +3034,10 @@ exports.loadDtcTestList = async (req, res, DATA) => {
 };
 exports.addTestItem = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ''
+  let setpdQuery = "";
   if (DATA.TEST_CODE === -1) {
-    setpdQuery = `INSERT INTO ZTB_REL_TESTTABLE (CTR_CD, TEST_NAME) VALUES ('${DATA.CTR_CD}',N'${DATA.TEST_NAME}')`
-  }
-  else {
+    setpdQuery = `INSERT INTO ZTB_REL_TESTTABLE (CTR_CD, TEST_NAME) VALUES ('${DATA.CTR_CD}',N'${DATA.TEST_NAME}')`;
+  } else {
     setpdQuery = `
     INSERT INTO ZTB_REL_TESTTABLE (CTR_CD, TEST_CODE, TEST_NAME) VALUES ('${DATA.CTR_CD}','${DATA.TEST_CODE}',N'${DATA.TEST_NAME}')
   `;
@@ -3072,29 +3100,27 @@ exports.updateNCRIDForFailing = async (req, res, DATA) => {
 exports.getInspectionWorstByCode = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
-  if (DATA.WORSTBY === 'AMOUNT')
-    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_AMOUNT as bigint)) DESC`
-  if (DATA.WORSTBY === 'QTY')
-    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) DESC`
+  if (DATA.WORSTBY === "AMOUNT")
+    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_AMOUNT as bigint)) DESC`;
+  if (DATA.WORSTBY === "QTY")
+    condition = `ORDER BY SUM(CAST(INSPECTION_DATA_DOC.NG_QTY as bigint)) DESC`;
   let condition2 = ``;
-  if (DATA.NG_TYPE !== 'ALL') {
-    condition2 += ` AND ERROR_TABLE.ERR_TYPE ='${DATA.NG_TYPE}'`
-  }
-  else {
+  if (DATA.NG_TYPE !== "ALL") {
+    condition2 += ` AND ERROR_TABLE.ERR_TYPE ='${DATA.NG_TYPE}'`;
+  } else {
     condition2 += ` AND (ERROR_TABLE.ERR_TYPE ='M' OR ERROR_TABLE.ERR_TYPE='P') `;
   }
   let condition3 = ``;
   if (DATA.codeArray.length === 1) {
-    condition3 += ` AND INSPECTION_DATA_DOC.G_CODE='${DATA.codeArray[0]}'`
-  }
-  else if (DATA.codeArray.length > 1) {
+    condition3 += ` AND INSPECTION_DATA_DOC.G_CODE='${DATA.codeArray[0]}'`;
+  } else if (DATA.codeArray.length > 1) {
     let codeString = ``;
     let codeArStr = DATA.codeArray.map((ele, index) => `'${ele}'`).join(",");
     condition3 += ` AND INSPECTION_DATA_DOC.G_CODE IN (${codeArStr})`;
   }
   let condition4 = `WHERE ZTBINSPECTNGTB2.ERR_CODE='${DATA.ERR_CODE}' `;
-  if (DATA.CUST_NAME_KD !== '') {
-    condition4 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`
+  if (DATA.CUST_NAME_KD !== "") {
+    condition4 += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
   }
   let setpdQuery = `
   WITH INSPECTION_DATA_DOC AS
@@ -3193,16 +3219,16 @@ exports.loadDocuments = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = ``;
   if (DATA.CAT_ID !== 0) {
-    condition += ` AND ZTB_ALL_DOC_TB.CAT_ID='${DATA.CAT_ID}'`
+    condition += ` AND ZTB_ALL_DOC_TB.CAT_ID='${DATA.CAT_ID}'`;
   }
   if (DATA.DOC_CAT_ID !== 0) {
-    condition += ` AND ZTB_ALL_DOC_TB.DOC_CAT_ID='${DATA.DOC_CAT_ID}'`
+    condition += ` AND ZTB_ALL_DOC_TB.DOC_CAT_ID='${DATA.DOC_CAT_ID}'`;
   }
   if (DATA.DOC_ID !== 0) {
-    condition += ` AND ZTB_ALL_DOC_TB.DOC_ID='${DATA.DOC_ID}'`
+    condition += ` AND ZTB_ALL_DOC_TB.DOC_ID='${DATA.DOC_ID}'`;
   }
-  if (DATA.DOC_NAME !== '') {
-    condition += ` AND ZTB_ALL_DOC_TB.DOC_NAME LIKE '%${DATA.DOC_NAME}%'`
+  if (DATA.DOC_NAME !== "") {
+    condition += ` AND ZTB_ALL_DOC_TB.DOC_NAME LIKE '%${DATA.DOC_NAME}%'`;
   }
   let setpdQuery = `
 SELECT ZTB_ALL_FILE_TB.FILE_ID, ZTB_ALL_FILE_TB.REG_DATE, ZTB_ALL_FILE_TB.EXP_DATE, ZTB_ALL_FILE_TB.FORMAT_X,  ZTB_ALL_DOC_TB.DOC_ID, ZTB_ALL_DOC_TB.CAT_ID, ZTB_DOC_CATEGORY1_TB.CAT_NAME,ZTB_DOC_CATEGORY2_TB.DOC_CAT_NAME,   ZTB_ALL_DOC_TB.DOC_CAT_ID, ZTB_ALL_DOC_TB.DOC_NAME, ZTB_ALL_DOC_TB.HSD_YN, ZTB_ALL_DOC_TB.USE_YN, ZTB_ALL_FILE_TB.INS_DATE, ZTB_ALL_FILE_TB.INS_EMPL 
@@ -3347,7 +3373,7 @@ SELECT * FROM ZTB_MATERIAL_TB WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME='${DATA.M
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.updateMThickness   = async (req, res, DATA) => {
+exports.updateMThickness = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
 UPDATE ZTB_MATERIAL_TB SET M_THICKNESS=${DATA.M_THICKNESS}, M_THICKNESS_UPPER=${DATA.M_THICKNESS_UPPER},M_THICKNESS_LOWER=${DATA.M_THICKNESS_LOWER}  WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME='${DATA.M_NAME}'
@@ -3470,13 +3496,12 @@ exports.updateCLOSE_HOLDING = async (req, res, DATA) => {
   res.send(checkkq);
 };
 
-
 exports.insertHoldingFromI222 = async (req, res, DATA) => {
   let checkkq = "OK";
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let setpdQuery = `
   INSERT INTO HOLDING_TB
-  SELECT '${DATA.CTR_CD}' AS CTR_CD, FORMAT(GETDATE(),'yyyyMM') AS HOLDING_MONTH,${DATA.ID} AS ID, FACTORY,WAHS_CD, LOC_CD, M_LOT_NO, M_CODE, ROLL_QTY AS HOLDING_ROLL_QTY, (ROLL_QTY*IN_CFM_QTY) AS HOLDING_QTY,FORMAT(GETDATE(),'yyyyMMdd') AS HOLDING_IN_DATE, null AS HOLDING_OUT_DATE, LOTNCC AS VENDOR_LOT, USE_YN, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, '${DATA.REASON}' AS REASON, null AS NCR_ID, 'P' AS PROCESS_STATUS, null AS PROCESS_EMPL, null AS PROCESS_DATE  FROM I222 WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.M_LOT_NO}'
+  SELECT '${DATA.CTR_CD}' AS CTR_CD, FORMAT(GETDATE(),'yyyyMM') AS HOLDING_MONTH,${DATA.ID} AS ID, FACTORY,WAHS_CD, LOC_CD, M_LOT_NO, M_CODE, ROLL_QTY AS HOLDING_ROLL_QTY, (ROLL_QTY*IN_CFM_QTY) AS HOLDING_QTY,FORMAT(GETDATE(),'yyyyMMdd') AS HOLDING_IN_DATE, null AS HOLDING_OUT_DATE, LOTNCC AS VENDOR_LOT, USE_YN, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, '${DATA.REASON}' AS REASON, null AS NCR_ID, 'P' AS PROCESS_STATUS, null AS PROCESS_EMPL, null AS PROCESS_DATE  FROM I222 WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.M_LOT_NO}' AND USE_YN <> 'X'
   `;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
