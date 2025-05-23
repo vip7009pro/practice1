@@ -851,12 +851,12 @@ exports.checkPOExist = async (req, res, DATA) => {
 exports.checktonkho_tdycsx = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `SELECT 
-  M100.G_CODE, 
-  M100.TONKIEM_QTY AS CHO_KIEM, 
+ M100.G_CODE, 
+  isnull(M100.TONKIEM_QTY,0) AS CHO_KIEM, 
   0 AS CHO_CS_CHECK, 
   0 CHO_KIEM_RMA, 
-  M100.TONKIEM_QTY AS TONG_TON_KIEM, 
-  M100.BTP_QTY AS BTP, 
+  isnull(M100.TONKIEM_QTY,0) AS TONG_TON_KIEM, 
+  isnull(M100.BTP_QTY,0) AS BTP, 
   isnull(THANHPHAM.TONKHO, 0) AS TON_TP, 
   isnull(tbl_Block_table2.Block_Qty, 0) AS BLOCK_QTY, 
   (
