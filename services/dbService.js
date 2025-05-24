@@ -1,6 +1,6 @@
-const { login, logout, login2 } = require("./authService");
+const { login, logout, login2, loginVendors, logoutVendors } = require("./authService");
 const { uploadFile } = require("./fileService");
-const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer, check_chua_pd, setMobileVer } = require("./commonService");
+const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer, check_chua_pd, setMobileVer, checkloginVendors, checkMYCHAMCONGVendors } = require("./commonService");
 const { workdaycheck, tangcadaycheck, countxacnhanchamcong, countthuongphat, checkWebVer, nghidaycheck, checkLicense } = require("./userService");
 const moment = require("moment");
 const { diemdanhnhom, diemdanhnhomBP, diemdanhnhomNS, setdiemdanhnhom, setdiemdanhnhom2, setteamnhom, dangkytangcanhom, dangkynghi2, dangkynghi2_AUTO, dangkytangcacanhan, pheduyetnhom, pheduyetnhomBP, pheduyetnhomNS, setpheduyetnhom, mydiemdanhnhom, diemdanhsummarynhom, getmaindeptlist, workpositionlist, workpositionlist_BP, workpositionlist_NS, diemdanhhistorynhom, diemdanhfull, getemployee_full, insertemployee, updateemployee, getmaindept, insertmaindept, updatemaindept, deletemaindept, getsubdept, insertsubdept, updatesubdept, deletesubdept, getworkposition, insertworkposition, updateworkposition, deleteworkposition, getsubdeptall, getddmaindepttb, loadDiemDanhFullSummaryTable, xoadangkynghi_AUTO, setca, setnhamay, setEMPL_WORK_POSITION, updateM010, loadC001, loadC0012, loadCaInfo, fixTime, update_empl_image, getDepartmentList, checkdiemdanh } = require("./nhansuService");
@@ -12,6 +12,10 @@ const { updateAmazonBOMCodeInfo, listAmazon, getBOMAMAZON, getBOMAMAZON_EMPTY, c
 const { insert_O302, updateStockM090, tranhaplieu, traxuatlieu, tratonlieu, updatelieuncc, checkMNAMEfromLotI222XuatKho, checksolanout_O302, xuatpackkhotp, trakhotpInOut, traSTOCKCMS_NEW, traSTOCKCMS, traSTOCKKD_NEW, traSTOCKKD, traSTOCKTACH, loadKTP_IN, loadKTP_OUT, loadStockFull, loadSTOCKG_CODE, loadSTOCKG_NAME_KD, loadSTOCK_YCSX, updatePheDuyetHuyO660, cancelPheDuyetHuyO660 } = require("./warehouseService");
 const { loadFormList, insertForm, updateForm, deleteForm, loadFormDetail, loadFieldList, insertField, updateField, deleteField, testSQL } = require("./lowcodenocodeService");
 const commandHandlers = {
+  checkMYCHAMCONGVendors,
+  logoutVendors,
+  loginVendors,
+  checkloginVendors,
   testSQL,
   loadFieldList,
   insertField,

@@ -29,6 +29,25 @@ exports.checklogin = async (req, res, DATA) => {
   }
 };
 
+exports.checkloginVendors = async (req, res, DATA) => {
+  const { token_string } = DATA || req.body;
+  const token = token_string || req.cookies.token;
+  if (!token) return res.send({ tk_status: "ng", message: "No token provided" });
+  try {
+    const decoded = jwt.verify(token, "vendors");
+    const payload = JSON.parse(decoded.payload);
+    const userQuery = `SELECT EMPL_NO, WORK_STATUS_CODE FROM ZTBEMPLINFO WHERE EMPL_NO = @EMPL_NO`;
+    const result = await queryDB_New(userQuery, { EMPL_NO: payload[0].EMPL_NO });
+    if (result.tk_status === "OK" && result.data.length > 0) {
+      res.send({ tk_status: "ok", message: "User is logged in", data: payload[0] });
+    } else {
+      res.send({ tk_status: "ng", message: "User not found" });
+    }
+  } catch (error) {
+    res.send({ tk_status: "ng", message: "Invalid or expired token" });
+  }
+};
+
 exports.checkMYCHAMCONG = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let PASSWORD = req.payload_data["PASSWORD"];
@@ -73,6 +92,47 @@ exports.checkMYCHAMCONG = async (req, res, DATA) => {
   } else {
     checkkq_token = { ...checkkq, REFRESH_TOKEN: token };
   }
+  //console.log(checkkq_token);
+  res.send(checkkq_token);
+};
+exports.checkMYCHAMCONGVendors = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let PASSWORD = req.payload_data["PASSWORD"];
+  let checkkq = "OK";
+  let setpdQuery = `SELECT MIN(C001.CHECK_DATETIME) AS MIN_TIME, MAX(C001.CHECK_DATETIME) AS MAX_TIME  FROM C001 LEFT JOIN ZTBEMPLINFO ON (C001.NV_CCID = ZTBEMPLINFO.NV_CCID AND C001.CTR_CD = ZTBEMPLINFO.CTR_CD) WHERE C001.CHECK_DATE = CAST(GETDATE() as date) AND ZTBEMPLINFO.EMPL_NO='${EMPL_NO}' AND C001.CTR_CD='${DATA.CTR_CD}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  let kqua;
+  let query =
+    `SELECT ZTBEMPLINFO.EMPL_IMAGE,ZTBEMPLINFO.CTR_CD,ZTBEMPLINFO.EMPL_NO,ZTBEMPLINFO.CMS_ID,ZTBEMPLINFO.FIRST_NAME,ZTBEMPLINFO.MIDLAST_NAME,ZTBEMPLINFO.DOB,ZTBEMPLINFO.HOMETOWN,ZTBEMPLINFO.SEX_CODE,ZTBEMPLINFO.ADD_PROVINCE,ZTBEMPLINFO.ADD_DISTRICT,ZTBEMPLINFO.ADD_COMMUNE,ZTBEMPLINFO.ADD_VILLAGE,ZTBEMPLINFO.PHONE_NUMBER,ZTBEMPLINFO.WORK_START_DATE,ZTBEMPLINFO.PASSWORD,ZTBEMPLINFO.EMAIL,ZTBEMPLINFO.WORK_POSITION_CODE,ZTBEMPLINFO.WORK_SHIFT_CODE,ZTBEMPLINFO.POSITION_CODE,ZTBEMPLINFO.JOB_CODE,ZTBEMPLINFO.FACTORY_CODE,ZTBEMPLINFO.WORK_STATUS_CODE,ZTBEMPLINFO.REMARK,ZTBEMPLINFO.ONLINE_DATETIME,ZTBSEX.SEX_NAME,ZTBSEX.SEX_NAME_KR,ZTBWORKSTATUS.WORK_STATUS_NAME,ZTBWORKSTATUS.WORK_STATUS_NAME_KR,ZTBFACTORY.FACTORY_NAME,ZTBFACTORY.FACTORY_NAME_KR,ZTBJOB.JOB_NAME,ZTBJOB.JOB_NAME_KR,ZTBPOSITION.POSITION_NAME,ZTBPOSITION.POSITION_NAME_KR,ZTBWORKSHIFT.WORK_SHIF_NAME,ZTBWORKSHIFT.WORK_SHIF_NAME_KR,ZTBWORKPOSITION.SUBDEPTCODE,ZTBWORKPOSITION.WORK_POSITION_NAME,ZTBWORKPOSITION.WORK_POSITION_NAME_KR,ZTBWORKPOSITION.ATT_GROUP_CODE,ZTBSUBDEPARTMENT.MAINDEPTCODE,ZTBSUBDEPARTMENT.SUBDEPTNAME,ZTBSUBDEPARTMENT.SUBDEPTNAME_KR,ZTBMAINDEPARMENT.MAINDEPTNAME,ZTBMAINDEPARMENT.MAINDEPTNAME_KR FROM ZTBEMPLINFO 
+              LEFT JOIN ZTBSEX ON (ZTBSEX.SEX_CODE = ZTBEMPLINFO.SEX_CODE AND ZTBSEX.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBWORKSTATUS ON(ZTBWORKSTATUS.WORK_STATUS_CODE = ZTBEMPLINFO.WORK_STATUS_CODE AND ZTBWORKSTATUS.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBFACTORY ON (ZTBFACTORY.FACTORY_CODE = ZTBEMPLINFO.FACTORY_CODE AND ZTBFACTORY.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBJOB ON (ZTBJOB.JOB_CODE = ZTBEMPLINFO.JOB_CODE AND ZTBJOB.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBPOSITION ON (ZTBPOSITION.POSITION_CODE = ZTBEMPLINFO.POSITION_CODE AND ZTBPOSITION.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBWORKSHIFT ON (ZTBWORKSHIFT.WORK_SHIFT_CODE = ZTBEMPLINFO.WORK_SHIFT_CODE AND ZTBWORKSHIFT.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBWORKPOSITION ON (ZTBWORKPOSITION.WORK_POSITION_CODE = ZTBEMPLINFO.WORK_POSITION_CODE AND ZTBWORKPOSITION.CTR_CD = ZTBEMPLINFO.CTR_CD) 
+              LEFT JOIN ZTBSUBDEPARTMENT ON (ZTBSUBDEPARTMENT.SUBDEPTCODE = ZTBWORKPOSITION.SUBDEPTCODE AND ZTBSUBDEPARTMENT.CTR_CD = ZTBWORKPOSITION.CTR_CD) 
+              LEFT JOIN ZTBMAINDEPARMENT ON (ZTBMAINDEPARMENT.MAINDEPTCODE = ZTBSUBDEPARTMENT.MAINDEPTCODE AND ZTBMAINDEPARMENT.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD) 
+              WHERE ZTBEMPLINFO.EMPL_NO = '${EMPL_NO}' AND PASSWORD = '${PASSWORD}' AND ZTBEMPLINFO.CTR_CD='${DATA.CTR_CD}'`;
+  kqua = await asyncQuery(query);
+  //console.log('kqua',kqua);
+  loginResult = kqua;
+  //console.log("KET QUA LOGIN = " + loginResult);
+  var token = "";
+  if (loginResult != 0) {
+    token = jwt.sign({ payload: loginResult }, "vendors", {
+      expiresIn: 3600 * 24 * 1,
+    });
+  } else if (loginResult === 0 && EMPL_NO === "NHU1903") {
+    token = req.cookies.token_vendors;
+  }
+  //res.cookie("token", token);
+  let checkkq_token;
+  //console.log(checkkq);
+ 
+    checkkq_token = { ...checkkq, REFRESH_TOKEN: token };
+  
   //console.log(checkkq_token);
   res.send(checkkq_token);
 };

@@ -12,6 +12,7 @@ const socketHandler = require("./socket/socketHandler");
 const authRoutes = require("./routes/auth");
 const fileUploadRoutes = require("./routes/fileUpload");
 const apiRoutes = require("./routes/api");
+const apiVendorsRoutes = require("./routes/apivendors");
 const csharpRoutes = require("./routes/csharp");
 const { corsOptions } = require("./config/env");
 const app = express();
@@ -27,6 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 app.use("/login", authRoutes);
 app.use("/uploadfile", fileUploadRoutes);
 app.use("/api", apiRoutes);
+app.use("/apivendors", apiVendorsRoutes);
 app.use("/csharp", csharpRoutes);
 // Socket.IO
 socketHandler(httpServer, httpsServer);
