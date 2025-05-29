@@ -66,6 +66,96 @@ const queryDB_New = async (query, params = {}) => {
   // Không gọi sql.close() ở đây nữa
 };
 
+
+const queryDB_New2 = async (baseQuery, params = {}, conditions = []) => {
+  let kq = "";
+  try {
+    const pool = await openConnection();
+    const request = pool.request();
+    let finalQuery = baseQuery;
+    let queryParams = {};
+
+    console.log("conditions", conditions)
+    console.log("params", params)
+
+    // Nếu có conditions (dùng cho select/filter), xử lý điều kiện động
+    if (Array.isArray(conditions) && conditions.length > 0) {
+      for (const condition of conditions) {
+        const { placeholder, clause, paramName, like, skipValues = [] } = condition;
+        console.log("condition", condition)
+        if (
+          params[paramName] !== undefined &&
+          params[paramName] !== null &&
+          !skipValues.includes(params[paramName])
+        ) {
+          let paramValue = params[paramName];
+          if (like) {
+            if (like === 'both') {
+              paramValue = `%${paramValue}%`;
+            } else if (like === 'left') {
+              paramValue = `%${paramValue}`;
+            } else if (like === 'right') {
+              paramValue = `${paramValue}%`;
+            }
+          }
+          queryParams[paramName] = paramValue;
+          finalQuery = finalQuery.replace(placeholder, clause);
+        } else {
+          finalQuery = finalQuery.replace(placeholder, "");
+        }
+        console.log("finalQuery", finalQuery)
+      }
+      // Sau khi xử lý điều kiện, binding các param thực tế được dùng
+      for (const key in queryParams) {
+        if (
+          queryParams[key] &&
+          typeof queryParams[key] === 'object' &&
+          'type' in queryParams[key] &&
+          'value' in queryParams[key]
+        ) {
+          request.input(key, queryParams[key].type, queryParams[key].value);
+        } else if (typeof queryParams[key] === 'string') {
+          request.input(key, sql.NVarChar, queryParams[key]);
+        } else {
+          request.input(key, queryParams[key]);
+        }
+      }
+      console.log("Final query:", finalQuery);
+      console.log("queryParams:", queryParams);
+    } else {
+      // Không có conditions: binding toàn bộ params (dùng cho insert/update/delete)
+      if (params && typeof params === 'object') {
+        for (const key in params) {
+          if (params.hasOwnProperty(key)) {
+            request.input(key, params[key]);
+          }
+        }
+      }
+      console.log("Final query:", finalQuery);
+      if (params && Object.keys(params).length > 0) {
+        console.log("params:", params);
+      }
+    }
+
+    // Thực thi truy vấn
+    const result = await request.query(finalQuery);
+    if (result.rowsAffected[0] > 0) {
+      if (result.recordset) {
+        kq = { tk_status: "OK", data: result.recordset };
+      } else {
+        kq = { tk_status: "OK", message: "Modify data thanh cong" };
+      }
+    } else {
+      kq = { tk_status: "NG", message: "Không có dòng dữ liệu nào" };
+    }
+  } catch (error) {
+    console.log("Query error:", error);
+    kq = { tk_status: "NG", message: error.toString() };
+  }
+  return kq;
+};
+
+
 const queryDB = async (query) => {
   let kq = "";
   try {
@@ -134,6 +224,7 @@ module.exports = {
   openConnection,
   queryDB,
   queryDB_New,
+  queryDB_New2,
   asyncQuery,
   closePool,
   config,

@@ -5,8 +5,16 @@ module.exports = {
   SOCKET_PORT: parseInt(process.env.SOCKET_PORT),
   corsOptions: {
     origin: [
-      "http://192.168.1.136:3001",
-      "https://cms.ddns.net:3004",
+      "https://www.cmsvina4285.com",
+      "http://www.cmsvina4285.com",
+      "http://cmsvina4285.com",
+      "https://cmsvina4285.com",
+      "https://cmsvina4285.com:3001",
+      "https://cmsvina4285.com:3006",
+      "http://cmsvina4285.com:3006",
+      "http://cmsvina4285.com:3001",
+      /* "http://192.168.1.136:3001", */
+      /* "https://cms.ddns.net:3004",
       "http://cms.ddns.net:3010",
       "https://cms.ddns.net:3010",
       "https://cms.ddns.net:3001",
@@ -23,21 +31,21 @@ module.exports = {
       "http://cms1.ddns.net:3000",
       "http://cms1.ddns.net:3001",
       "http://cms1.ddns.net:3010",
-      "http://cms1.ddns.net",
+      "http://cms1.ddns.net", */
       "http://localhost:3001",
-      "http://192.168.1.192",
-      "http://192.168.1.2",
+      /* "http://192.168.1.192",
+      "http://192.168.1.2", */
       "http://192.168.1.136:3010",
       "http://222.252.1.63",
       "http://222.252.1.214",
       "http://222.252.1.63:3000",
-      "http://192.168.1.22:3000",  
-      "http://14.160.33.94:3001",
+      /* "http://192.168.1.22:3000",   */
+      /* "http://14.160.33.94:3001", */
       "http://localhost:3000",
       "http://localhost",
-      "http://14.160.33.94",
+      /* "http://14.160.33.94",
       "http://14.160.33.94:3010",
-      "http://14.160.33.94:3030",
+      "http://14.160.33.94:3030", */
       "https://script.google.com",
       "*",
     ],

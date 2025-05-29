@@ -1,4 +1,4 @@
-const { queryDB } = require("../config/database");
+const { queryDB, queryDB_New, queryDB_New2 } = require("../config/database");
 const {
   generate_condition_get_dtc_data,
   generate_condition_get_inspection_ng_data,
@@ -2099,7 +2099,7 @@ exports.updateQCPASSI222_M_LOT_NO = async (req, res, DATA) => {
   if (DATA.VALUE === "N") {
     update_USE_YN = `, USE_YN='B'`;
   }
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
+  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE === 'Y'? 'T':'N'}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -3430,6 +3430,162 @@ ORDER BY IQC1_TABLE.IQC1_ID DESC
 };
 exports.loadBlockingData = async (req, res, DATA) => {
   let checkkq = "OK";
+
+  const filters = [
+    {
+      placeholder: "{{CTR_CD}}",
+      clause: "AND BANGGOP.CTR_CD = @CTR_CD",
+      paramName: "CTR_CD", 
+    },
+    {
+      placeholder: "{{LOT_VENDOR}}",
+      clause: "AND I222.LOTNCC = @LOT_VENDOR",
+      paramName: "LOT_VENDOR",    
+      skipValues: ['']  
+    },
+    {
+      placeholder: "{{M_LOT_NO}}",
+      clause: "AND BANGGOP.M_LOT_NO = @M_LOT_NO",
+      paramName: "M_LOT_NO",    
+      skipValues: ['']  
+    },
+    {
+      placeholder: "{{DEFECT}}",
+      clause: "AND BANGGOP.DEFECT LIKE @DEFECT",
+      paramName: "DEFECT",
+      like: "both",
+      skipValues: ['']
+    },
+    {
+      placeholder: "{{NCR_ID}}",
+      clause: "AND BANGGOP.NCR_ID = @NCR_ID",
+      paramName: "NCR_ID",    
+      skipValues: ['0',null,0]  
+    },
+    {
+      placeholder: "{{PLSP}}",
+      clause: "AND BANGGOP.PLSP = @PLSP",
+      paramName: "PLSP", 
+      skipValues: ['ALL']     
+    },
+    {
+      placeholder: "{{ONLY_PENDING}}",
+      clause: "AND PROCESS_STATUS = 'P'",
+      paramName: "ONLY_PENDING",    
+      skipValues: [false]  
+    }
+  ]
+  let baseQuery = `
+   WITH FAILINGTB AS
+    (
+    SELECT CTR_CD, NCR_ID, 'PROCESS' AS PHAN_LOAI, 'FAILING' AS PL_BLOCK, FAIL_ID AS BLOCK_ID, PLAN_ID_SUDUNG AS PLAN_ID, M_CODE, M_LOT_NO, PROCESS_LOT_NO,ROLL_QTY AS BLOCK_ROLL_QTY, TOTAL_IN_QTY AS BLOCK_TOTAL_QTY, USE_YN, DEFECT_PHENOMENON AS DEFECT, PROCESS_STATUS, PROCESS_EMPL,  FACTORY, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, PHANLOAI AS PLSP  FROM ZTB_SX_NG_MATERIAL
+    ),
+    HOLDINGTB AS
+    (
+    SELECT CTR_CD, NCR_ID, 'INCOMING' AS PHAN_LOAI, 'HOLDING' AS PL_BLOCK, HOLD_ID AS BLOCK_ID, null AS PLAN_ID, M_CODE, M_LOT_NO, null AS PROCESS_LOT_NO, HOLDING_ROLL_QTY AS BLOCK_ROLL_QTY, HOLDING_QTY AS BLOCK_TOTAL_QTY, USE_YN, REASON AS DEFECT, PROCESS_STATUS, PROCESS_EMPL, FACTORY, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, 'NVL' AS PLSP  FROM HOLDING_TB 
+    ),
+    BANGGOP AS
+    (
+    SELECT * FROM FAILINGTB 
+    UNION ALL
+    SELECT * FROM HOLDINGTB
+    )
+    SELECT BANGGOP.FACTORY,BANGGOP.BLOCK_ID, BANGGOP.PHAN_LOAI, M110.CUST_NAME_KD AS SUPPLIER,M110_2.CUST_NAME_KD AS MAKER, BANGGOP.M_CODE, M090.M_NAME, M090.WIDTH_CD,BANGGOP.M_LOT_NO, I222.LOTNCC AS LOT_VENDOR,BLOCK_ROLL_QTY,BLOCK_TOTAL_QTY,DEFECT,
+    BANGGOP.QC_PASS, BANGGOP.QC_PASS_DATE, BANGGOP.QC_PASS_EMPL,
+    PL_BLOCK, 
+    (CASE WHEN PROCESS_STATUS ='C' THEN 'CLOSED' WHEN PROCESS_STATUS ='P' THEN 'PENDING'  END) AS STATUS, PROCESS_EMPL, PLSP
+    , BANGGOP.USE_YN , NCR_ID , BANGGOP.INS_DATE, BANGGOP.INS_EMPL , BANGGOP.UPD_DATE, BANGGOP.UPD_EMPL
+    , BANGGOP.PLAN_ID, BANGGOP.PROCESS_LOT_NO
+    FROM BANGGOP
+    LEFT JOIN I222 ON I222.CTR_CD = BANGGOP.CTR_CD AND I222.M_LOT_NO = BANGGOP.M_LOT_NO
+    LEFT JOIN M090 ON M090.CTR_CD = BANGGOP.CTR_CD AND M090.M_CODE = BANGGOP.M_CODE
+    LEFT JOIN M110 ON M110.CTR_CD = I222.CTR_CD AND M110.CUST_CD = I222.CUST_CD
+    LEFT JOIN ZTB_MATERIAL_TB ON M090.CTR_CD = ZTB_MATERIAL_TB.CTR_CD AND M090.M_NAME = ZTB_MATERIAL_TB.M_NAME
+    LEFT JOIN M110 M110_2 ON M110_2.CUST_CD= ZTB_MATERIAL_TB.CUST_CD
+    WHERE 1=1 {{CTR_CD}} {{LOT_VENDOR}} {{M_LOT_NO}} {{DEFECT}} {{NCR_ID}} {{PLSP}} {{ONLY_PENDING}}
+    ORDER BY PL_BLOCK ASC
+  `;
+  //console.log(baseQuery);
+  let params = {
+    CTR_CD: DATA.CTR_CD,
+    LOT_VENDOR: DATA.LOT_VENDOR,
+    M_LOT_NO: DATA.M_LOT_NO,
+    DEFECT: DATA.DEFECT,
+    NCR_ID: DATA.NCR_ID,
+    PLSP: DATA.PLSP,
+    ONLY_PENDING: DATA.ONLY_PENDING
+  }
+  checkkq = await queryDB_New2(baseQuery, params, filters);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadBlockingData1 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let condition = `WHERE 1=1`;
+  if (DATA.ONLY_PENDING === true) {
+    condition += ` AND PROCESS_STATUS = 'P'`;
+  }
+  if (DATA.LOT_VENDOR !== "") {
+    condition += ` AND I222.LOTNCC = @LOT_VENDOR`;
+  }
+  if (DATA.M_LOT_NO !== "") {
+    condition += ` AND BANGGOP.M_LOT_NO = @M_LOT_NO`;
+  }
+  if (DATA.DEFECT !== "") {
+    condition += ` AND BANGGOP.DEFECT LIKE @DEFECT`;
+  }
+  if (DATA.NCR_ID !== 0 && DATA.NCR_ID !== null) {
+    condition += ` AND BANGGOP.NCR_ID = @NCR_ID`;
+  }
+  if (DATA.PLSP !== "ALL") {
+    condition += ` AND BANGGOP.PLSP = @PLSP`;
+  }
+
+  let setpdQuery = `
+   WITH FAILINGTB AS
+    (
+    SELECT CTR_CD, NCR_ID, 'PROCESS' AS PHAN_LOAI, 'FAILING' AS PL_BLOCK, FAIL_ID AS BLOCK_ID, PLAN_ID_SUDUNG AS PLAN_ID, M_CODE, M_LOT_NO, PROCESS_LOT_NO,ROLL_QTY AS BLOCK_ROLL_QTY, TOTAL_IN_QTY AS BLOCK_TOTAL_QTY, USE_YN, DEFECT_PHENOMENON AS DEFECT, PROCESS_STATUS, PROCESS_EMPL,  FACTORY, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, PHANLOAI AS PLSP  FROM ZTB_SX_NG_MATERIAL
+    ),
+    HOLDINGTB AS
+    (
+    SELECT CTR_CD, NCR_ID, 'INCOMING' AS PHAN_LOAI, 'HOLDING' AS PL_BLOCK, HOLD_ID AS BLOCK_ID, null AS PLAN_ID, M_CODE, M_LOT_NO, null AS PROCESS_LOT_NO, HOLDING_ROLL_QTY AS BLOCK_ROLL_QTY, HOLDING_QTY AS BLOCK_TOTAL_QTY, USE_YN, REASON AS DEFECT, PROCESS_STATUS, PROCESS_EMPL, FACTORY, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, 'NVL' AS PLSP  FROM HOLDING_TB 
+    ),
+    BANGGOP AS
+    (
+    SELECT * FROM FAILINGTB 
+    UNION ALL
+    SELECT * FROM HOLDINGTB
+    )
+    SELECT BANGGOP.FACTORY,BANGGOP.BLOCK_ID, BANGGOP.PHAN_LOAI, M110.CUST_NAME_KD AS SUPPLIER,M110_2.CUST_NAME_KD AS MAKER, BANGGOP.M_CODE, M090.M_NAME, M090.WIDTH_CD,BANGGOP.M_LOT_NO, I222.LOTNCC AS LOT_VENDOR,BLOCK_ROLL_QTY,BLOCK_TOTAL_QTY,DEFECT,
+    BANGGOP.QC_PASS, BANGGOP.QC_PASS_DATE, BANGGOP.QC_PASS_EMPL,
+    PL_BLOCK, 
+    (CASE WHEN PROCESS_STATUS ='C' THEN 'CLOSED' WHEN PROCESS_STATUS ='P' THEN 'PENDING'  END) AS STATUS, PROCESS_EMPL, PLSP
+    , BANGGOP.USE_YN , NCR_ID , BANGGOP.INS_DATE, BANGGOP.INS_EMPL , BANGGOP.UPD_DATE, BANGGOP.UPD_EMPL
+    , BANGGOP.PLAN_ID, BANGGOP.PROCESS_LOT_NO
+    FROM BANGGOP
+    LEFT JOIN I222 ON I222.CTR_CD = BANGGOP.CTR_CD AND I222.M_LOT_NO = BANGGOP.M_LOT_NO
+    LEFT JOIN M090 ON M090.CTR_CD = BANGGOP.CTR_CD AND M090.M_CODE = BANGGOP.M_CODE
+    LEFT JOIN M110 ON M110.CTR_CD = I222.CTR_CD AND M110.CUST_CD = I222.CUST_CD
+    LEFT JOIN ZTB_MATERIAL_TB ON M090.CTR_CD = ZTB_MATERIAL_TB.CTR_CD AND M090.M_NAME = ZTB_MATERIAL_TB.M_NAME
+    LEFT JOIN M110 M110_2 ON M110_2.CUST_CD= ZTB_MATERIAL_TB.CUST_CD
+    ${condition}
+    ORDER BY PL_BLOCK ASC
+  `;
+  //console.log(setpdQuery);
+  let params = {
+    CTR_CD: DATA.CTR_CD,
+    LOT_VENDOR: DATA.LOT_VENDOR,
+    M_LOT_NO: DATA.M_LOT_NO,
+    DEFECT: '%' + DATA.DEFECT + '%',
+    NCR_ID: DATA.NCR_ID,
+    PLSP: DATA.PLSP,
+  }
+  checkkq = await queryDB_New(setpdQuery, params);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadBlockingData2 = async (req, res, DATA) => {
+  let checkkq = "OK";
   let condition = `WHERE 1=1`;
   if (DATA.ONLY_PENDING === true) {
     condition += ` AND PROCESS_STATUS = 'P'`;
@@ -3485,7 +3641,6 @@ exports.loadBlockingData = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-
 exports.updateCLOSE_HOLDING = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
@@ -3495,13 +3650,12 @@ exports.updateCLOSE_HOLDING = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-
 exports.insertHoldingFromI222 = async (req, res, DATA) => {
   let checkkq = "OK";
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let setpdQuery = `
   INSERT INTO HOLDING_TB
-  SELECT '${DATA.CTR_CD}' AS CTR_CD, FORMAT(GETDATE(),'yyyyMM') AS HOLDING_MONTH,${DATA.ID} AS ID, FACTORY,WAHS_CD, LOC_CD, M_LOT_NO, M_CODE, ROLL_QTY AS HOLDING_ROLL_QTY, (ROLL_QTY*IN_CFM_QTY) AS HOLDING_QTY,FORMAT(GETDATE(),'yyyyMMdd') AS HOLDING_IN_DATE, null AS HOLDING_OUT_DATE, LOTNCC AS VENDOR_LOT, USE_YN, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, QC_PASS, QC_PASS_DATE, QC_PASS_EMPL, '${DATA.REASON}' AS REASON, null AS NCR_ID, 'P' AS PROCESS_STATUS, null AS PROCESS_EMPL, null AS PROCESS_DATE  FROM I222 WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.M_LOT_NO}' AND USE_YN <> 'X'
+  SELECT '${DATA.CTR_CD}' AS CTR_CD, FORMAT(GETDATE(),'yyyyMM') AS HOLDING_MONTH,${DATA.ID} AS ID, FACTORY,WAHS_CD, LOC_CD, M_LOT_NO, M_CODE, ROLL_QTY AS HOLDING_ROLL_QTY, (ROLL_QTY*IN_CFM_QTY) AS HOLDING_QTY,FORMAT(GETDATE(),'yyyyMMdd') AS HOLDING_IN_DATE, null AS HOLDING_OUT_DATE, LOTNCC AS VENDOR_LOT, USE_YN, GETDATE() AS INS_DATE, '${EMPL_NO}' AS INS_EMPL, GETDATE() AS UPD_DATE, '${EMPL_NO}' AS UPD_EMPL, 'P' AS QC_PASS, null AS QC_PASS_DATE, null AS QC_PASS_EMPL, '${DATA.REASON}' AS REASON, null AS NCR_ID, 'P' AS PROCESS_STATUS, null AS PROCESS_EMPL, null AS PROCESS_DATE  FROM I222 WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.M_LOT_NO}' AND USE_YN <> 'X'
   `;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
