@@ -74,15 +74,10 @@ const queryDB_New2 = async (baseQuery, params = {}, conditions = []) => {
     const request = pool.request();
     let finalQuery = baseQuery;
     let queryParams = {};
-
-    console.log("conditions", conditions)
-    console.log("params", params)
-
     // Nếu có conditions (dùng cho select/filter), xử lý điều kiện động
     if (Array.isArray(conditions) && conditions.length > 0) {
       for (const condition of conditions) {
         const { placeholder, clause, paramName, like, skipValues = [] } = condition;
-        console.log("condition", condition)
         if (
           params[paramName] !== undefined &&
           params[paramName] !== null &&
@@ -103,7 +98,6 @@ const queryDB_New2 = async (baseQuery, params = {}, conditions = []) => {
         } else {
           finalQuery = finalQuery.replace(placeholder, "");
         }
-        console.log("finalQuery", finalQuery)
       }
       // Sau khi xử lý điều kiện, binding các param thực tế được dùng
       for (const key in queryParams) {
@@ -120,8 +114,7 @@ const queryDB_New2 = async (baseQuery, params = {}, conditions = []) => {
           request.input(key, queryParams[key]);
         }
       }
-      console.log("Final query:", finalQuery);
-      console.log("queryParams:", queryParams);
+
     } else {
       // Không có conditions: binding toàn bộ params (dùng cho insert/update/delete)
       if (params && typeof params === 'object') {
@@ -130,10 +123,6 @@ const queryDB_New2 = async (baseQuery, params = {}, conditions = []) => {
             request.input(key, params[key]);
           }
         }
-      }
-      console.log("Final query:", finalQuery);
-      if (params && Object.keys(params).length > 0) {
-        console.log("params:", params);
       }
     }
 

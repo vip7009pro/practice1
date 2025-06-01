@@ -242,7 +242,7 @@ exports.addQueryFilter = async (req, res, DATA) => {
     Clause: DATA.Clause,
     ParamName: DATA.ParamName,
     LikeType: DATA.LikeType,
-    SkipValues:  JSON.stringify(DATA.SkipValues),
+    SkipValues:  DATA.SkipValues,
   };
   //console.log(params)
   let checkkq = await queryDB_New2(query, params, []);
@@ -250,15 +250,14 @@ exports.addQueryFilter = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.updateQueryFilter = async (req, res, DATA) => {
-  let query = `UPDATE ZTB_QUERY_FILTER SET Placeholder = @Placeholder, Clause = @Clause, ParamName = @ParamName, LikeType = @LikeType, SkipValues = @SkipValues, UpdatedAt = GETDATE(), IsActive = @IsActive WHERE FilterID = @FilterID`;
+  let query = `UPDATE ZTB_QUERY_FILTER SET Placeholder = @Placeholder, Clause = @Clause, ParamName = @ParamName, LikeType = @LikeType, SkipValues = @SkipValues, UpdatedAt = GETDATE() WHERE FilterID = @FilterID`;
   let params = {
     FilterID: DATA.FilterID,
     Placeholder: DATA.Placeholder,
     Clause: DATA.Clause,
     ParamName: DATA.ParamName,
     LikeType: DATA.LikeType,
-    SkipValues: DATA.SkipValues,
-    IsActive: DATA.IsActive
+    SkipValues: DATA.SkipValues,    
   };
   //console.log(params)
   let checkkq = await queryDB_New2(query, params, []);
@@ -273,5 +272,204 @@ exports.deleteQueryFilter = async (req, res, DATA) => {
   //console.log(params)
   let checkkq = await queryDB_New2(query, params, []);
   //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.runQuery = async (req, res, DATA) => {
+  let query = `SELECT * FROM ZTB_QUERYTB WHERE 1=1 AND {{QueryName}}`;
+  let filters = [
+    {
+      placeholder: "{{QueryName}}",
+      clause: "QueryName = @QueryName",
+      paramName: "QueryName",    
+    }
+  ]
+  let params = {
+    QueryName: DATA.QueryName
+  };
+
+
+
+  let checkQuery = await queryDB_New2(query, params, filters);
+
+
+  let filterQuery = `SELECT * FROM ZTB_QUERY_FILTER WHERE 1=1 AND {{QueryID}}`;
+  let filtersQuery = [
+    {
+      placeholder: "{{QueryID}}",
+      clause: "QueryID = @QueryID",
+      paramName: "QueryID",    
+    }
+  ]
+  let paramsQuery = { 
+    QueryID: checkQuery.data[0].QueryID
+  };
+  let checkQueryFilter = await queryDB_New2(filterQuery, paramsQuery, filtersQuery);
+  let finalQuery = checkQuery.data[0].BaseQuery;
+  let finalFilter = (checkQueryFilter.data.length > 0 ? checkQueryFilter.data : []).map(item => {
+    return {
+      placeholder: item.Placeholder,
+      clause: item.Clause,
+      paramName: item.ParamName,
+      like: item.LikeType,
+      skipValues: JSON.parse(JSON.stringify(item.SkipValues))
+    }
+  });
+  let finalParams = DATA.PARAMS;
+
+  let checkkq = await queryDB_New2(finalQuery, finalParams, finalFilter);
+  res.send(checkkq);
+};
+
+
+exports.insertData = async (req, res, DATA) => {
+  let filteredFields = DATA.FIELDS.filter(item => item.isIdentity !== 'YES');
+  let query = `INSERT INTO ${DATA.TABLE_NAME} (${filteredFields.map(item => item.name).join(",")}) VALUES (${filteredFields.map(item => `@${item.name}`).join(",")})`;
+  let params = filteredFields.reduce((acc, item) => {
+    acc[item.name] = item.value ?? "";
+    return acc;
+  }, {});
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.insertData2 = async (req, res, DATA) => {
+  let filteredFields = DATA.FIELDS.filter(item => item.isIdentity !== 'YES');
+  let filteredDATA = filteredFields.reduce((acc, item) => {
+    if (DATA.DATA.hasOwnProperty(item.name)) {
+      acc[item.name] = DATA.DATA[item.name];
+    }
+    return acc;
+  }, {});
+  let query = `INSERT INTO ${DATA.TABLE_NAME} (${Object.keys(filteredDATA).join(",")}) VALUES (${Object.keys(filteredDATA).map(item => `@${item}`).join(",")})`;
+  console.log(query);
+  let params = Object.keys(filteredDATA).reduce((acc, item) => {
+    acc[item] = filteredDATA[item] ?? "";
+    return acc;
+  }, {});
+  console.log(params);
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.loadData = async (req, res, DATA) => {
+  let query = `SELECT TOP 1000 * FROM ${DATA.TABLE_NAME}`;
+  console.log(query);
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.loadMenuData = async (req, res, DATA) => {
+  let query = `SELECT ZTB_MENU_TB.*,ZTB_SUBMENU_TB.SubMenuID, ZTB_SUBMENU_TB.SubMenuName, ZTB_SUBMENU_TB.Text as SubText, ZTB_SUBMENU_TB.Link as SubLink, ZTB_SUBMENU_TB.CreateAt as SubCreateAt, ZTB_SUBMENU_TB.UpdatedAt as SubUpdatedAt, ZTB_SUBMENU_TB.MenuCode, ZTB_SUBMENU_TB.SubMenuIcon, ZTB_SUBMENU_TB.SubIconColor FROM ZTB_MENU_TB
+LEFT JOIN ZTB_SUBMENU_TB ON (ZTB_MENU_TB.MenuID = ZTB_SUBMENU_TB.MenuID) ORDER BY ZTB_MENU_TB.MenuID ASC, ZTB_SUBMENU_TB.SubMenuID ASC`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadMainMenus = async (req, res, DATA) => {
+  let query = `SELECT * FROM ZTB_MENU_TB ORDER BY MenuID ASC`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadSubMenus = async (req, res, DATA) => {
+  let query = `SELECT * FROM ZTB_SUBMENU_TB ORDER BY SubMenuID ASC`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.updateMainMenu = async (req, res, DATA) => {
+  let query =` UPDATE ZTB_MENU_TB SET MenuName = @MenuName, MenuIcon = @MenuIcon, IconColor = @IconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE() WHERE MenuID = @MenuID`;
+  let params = {
+    MenuName: DATA.MenuName,
+    MenuIcon: DATA.MenuIcon,
+    IconColor: DATA.IconColor,
+    MenuID: DATA.MenuID,
+    Text: DATA.Text,
+    Link: DATA.Link,   
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.updateSubMenu = async (req, res, DATA) => {
+  let query =` UPDATE ZTB_SUBMENU_TB SET SubMenuName = @SubMenuName, SubMenuIcon = @SubMenuIcon, SubIconColor = @SubIconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE() WHERE SubMenuID = @SubMenuID`;
+  let params = {
+    SubMenuID: DATA.SubMenuID,
+    SubMenuName: DATA.SubMenuName,
+    SubMenuIcon: DATA.SubMenuIcon,
+    SubIconColor: DATA.SubIconColor,   
+    Text: DATA.Text,
+    Link: DATA.Link
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.createSubMenu = async (req, res, DATA) => {
+  let query = `INSERT INTO ZTB_SUBMENU_TB (MenuID,SubMenuName,SubMenuIcon,SubIconColor,MenuCode,Text,Link,CreateAt,UpdatedAt) VALUES (@MenuID,@SubMenuName,@SubMenuIcon,@SubIconColor,@MenuCode,@Text,@Link,GETDATE(),GETDATE())`;
+  let params = {
+    MenuID: DATA.MenuID,
+    SubMenuName: DATA.SubMenuName,
+    SubMenuIcon: DATA.SubMenuIcon,
+    SubIconColor: DATA.SubIconColor,   
+    MenuCode: DATA.MenuCode,
+    Text: DATA.Text,
+    Link: DATA.Link
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.deleteSubMenu = async (req, res, DATA) => {
+  let query = `DELETE FROM ZTB_SUBMENU_TB WHERE SubMenuID = @SubMenuID`;
+  let params = {
+    SubMenuID: DATA.SubMenuID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.createMainMenu = async (req, res, DATA) => {
+  let query = `INSERT INTO ZTB_MENU_TB (MenuName,MenuIcon,IconColor,Text,Link,CreateAt,UpdatedAt) VALUES (@MenuName,@MenuIcon,@IconColor,@Text,@Link,GETDATE(),GETDATE())`;
+  let params = {
+    MenuName: DATA.MenuName,
+    MenuIcon: DATA.MenuIcon,
+    IconColor: DATA.IconColor,   
+    Text: DATA.Text,
+    Link: DATA.Link
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.deleteMainMenu = async (req, res, DATA) => {
+  let query = `DELETE FROM ZTB_MENU_TB WHERE MenuID = @MenuID`;
+  let params = {
+    MenuID: DATA.MenuID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.updateMainMenu = async (req, res, DATA) => {
+  let query =` UPDATE ZTB_MENU_TB SET MenuName = @MenuName, MenuIcon = @MenuIcon, IconColor = @IconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE() WHERE MenuID = @MenuID`;
+  let params = {
+    MenuName: DATA.MenuName,
+    MenuIcon: DATA.MenuIcon,
+    IconColor: DATA.IconColor,   
+    Text: DATA.Text,
+    Link: DATA.Link,
+    MenuID: DATA.MenuID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.updateSubMenu = async (req, res, DATA) => {
+  let query =` UPDATE ZTB_SUBMENU_TB SET SubMenuName = @SubMenuName, SubMenuIcon = @SubMenuIcon, SubIconColor = @SubIconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE(), MenuCode = @MenuCode WHERE SubMenuID = @SubMenuID`;
+  let params = {
+    SubMenuID: DATA.SubMenuID,
+    SubMenuName: DATA.SubMenuName,
+    SubMenuIcon: DATA.SubMenuIcon,
+    SubIconColor: DATA.SubIconColor,   
+    MenuCode: DATA.MenuCode,
+    Text: DATA.Text,
+    Link: DATA.Link
+  };
+  let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };

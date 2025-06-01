@@ -1,5 +1,7 @@
 const { queryDB_New } = require("../config/database");
 const moment = require("moment");
+const https = require('https');
+const { default: axios } = require("axios");
 
 exports.workdaycheck = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -52,28 +54,36 @@ exports.nghidaycheck = async (req, res, DATA) => {
 };
 
 exports.checkLicense = async (req, res, DATA) => {
-  let CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec'
-  fetch(CURRENT_API_URL)
-    .then(res => res.json())
-    .then(body => {
-      let resp = body;
-      let fil = resp.filter((e) => e[0] === DATA.COMPANY)
-      if (fil.length = 0) {
-        res.send({ tk_status: 'NG', message: 'Chưa có license !' });
-      }
-      else {
-        let fil = resp.filter((e) => e[0] === DATA.COMPANY)
-        let now = moment();
-        let exp_date = moment(fil[0][1]);
-        if (now >= exp_date) {
-          res.send({ tk_status: 'NG', message: 'Hết hạn sử dụng' });
-        }
-        else {
-          res.send({ tk_status: 'OK', message: 'Còn hạn sử dụng' });
-        }
-      }
-    })
-    .catch((e) => {
-      res.send({ tk_status: 'NG', message: 'Kiểm tra license thất bại !' + e });
-    })
+  const CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec';
+
+  // Tạo agent để bỏ qua kiểm tra chứng chỉ tự ký
+  const agent = new https.Agent({
+    rejectUnauthorized: false // Chỉ dùng trong môi trường dev/test
+  });
+
+  try {
+    // Gọi API bằng axios
+    const response = await axios.get(CURRENT_API_URL, {
+      httpsAgent: agent // Sử dụng agent để bỏ qua chứng chỉ tự ký
+    });
+
+    const resp = response.data;
+    const fil = resp.filter((e) => e[0] === DATA.COMPANY);
+    
+
+    if (fil.length === 0) {
+      return res.send({ tk_status: 'NG', message: 'Chưa có license !' });
+    }
+
+    const now = moment();
+    const exp_date = moment(fil[0][1]);
+
+    if (now >= exp_date) {
+      return res.send({ tk_status: 'NG', message: 'Hết hạn sử dụng' });
+    }
+
+    return res.send({ tk_status: 'OK', message: 'Còn hạn sử dụng' });
+  } catch (error) {
+    return res.send({ tk_status: 'NG', message: `Kiểm tra license thất bại ! ${error.message}` });
+  }
 };

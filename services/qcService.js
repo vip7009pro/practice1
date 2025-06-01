@@ -3672,6 +3672,91 @@ SELECT MAX(ID) AS MAX_ID FROM HOLDING_TB
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.updateReasonHoldingFromIQC1 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+    WITH IQC1TB AS (SELECT LOT_CMS, M_CODE, REMARK FROM IQC1_TABLE WHERE TOTAL_RESULT ='NG')
+    UPDATE HOLDING_TB
+    SET HOLDING_TB.REASON = IQC1TB.REMARK
+    FROM HOLDING_TB
+    INNER JOIN IQC1TB ON SUBSTRING(HOLDING_TB.M_LOT_NO,1,6) = IQC1TB.LOT_CMS AND HOLDING_TB.M_CODE = IQC1TB.M_CODE
+    WHERE HOLDING_TB.REASON = ''
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.common = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
