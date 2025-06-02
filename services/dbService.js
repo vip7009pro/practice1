@@ -700,6 +700,8 @@ const commandHandlers = {
 exports.processApi = async (req, res) => {
   const qr = req.body;
   const { command, DATA } = qr;
+  //console.log(DATA.COMPANY)
+  //console.log(req.payload_data["EMPL_NO"])
   console.log(moment().format('YYYY-MM-DD HH:mm:ss'), command);
 
 

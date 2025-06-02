@@ -1,7 +1,7 @@
 const { queryDB_New } = require("../config/database");
 const moment = require("moment");
 const https = require('https');
-const { default: axios } = require("axios");
+const axios = require('axios');
 
 exports.workdaycheck = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -68,6 +68,7 @@ exports.checkLicense = async (req, res, DATA) => {
     });
 
     const resp = response.data;
+    //console.log(resp);
     const fil = resp.filter((e) => e[0] === DATA.COMPANY);
     
 

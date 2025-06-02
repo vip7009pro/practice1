@@ -9,7 +9,7 @@
   "author": "Hung Nguyen Page",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.5.1",
+    "axios": "^0.27.2",
     "body-parser": "^1.20.2",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
@@ -34,5 +34,8 @@
     "pug": "^3.0.2",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2"
+  },
+  "devDependencies": {
+    "nexe": "^5.0.0-beta.4"
   }
 }
