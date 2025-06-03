@@ -6,7 +6,6 @@ exports.login = async (req, res, DATA) => {
   let username = user;
   let password = pass;
   var loginResult = false;
-  //console.log(user,pass,ctr_cd)
   let maxLoginAttempt = 3;
   let queryCheckLoginAttempt = `SELECT * FROM ZTBEMPLINFO WHERE CTR_CD = @CTR_CD AND EMPL_NO = @EMPL_NO`;
   let queryIncreaseLoginAttempt = `UPDATE ZTBEMPLINFO SET LOGIN_ATTEMPT = LOGIN_ATTEMPT + 1, ONLINE_DATETIME = GETDATE() WHERE CTR_CD = @CTR_CD AND EMPL_NO = @EMPL_NO`;
@@ -26,11 +25,8 @@ exports.login = async (req, res, DATA) => {
       let lastOnlineDateTime = moment(
         moment.utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
       );
-      console.log("lastOnlineDateTime", lastOnlineDateTime);
       let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
-      console.log("now", now);
       let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
-      console.log("diffMinutes", diffMinutes);
       if (diffMinutes < 5) {
         loginResult = false;
       } else {

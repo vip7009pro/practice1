@@ -1,6 +1,7 @@
 const { queryDB } = require("../config/database");
 const moment = require("moment");
 const { generate_condition_get_invoice, generate_condition_get_po, generate_condition_get_ycsx, generate_condition_get_plan, generate_condition_get_fcst } = require("../utils/sqlUtils");
+const { checkPermission } = require("../utils/permissionUtils");
 exports.customerpobalancebyprodtype_new = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `WITH ZTBDLVR AS 
@@ -478,6 +479,11 @@ exports.checkYCSXQLSXPLAN = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.update_po = async (req, res, DATA) => {
+  let userData = req.payload_data;  
+  let isGranted = await checkPermission(userData, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL']);
+  if(!isGranted) {
+    return res.send({ tk_status: "NG", message: "Permission insufficent" });   
+  }
   let checkkq = "OK";
   let setpdQuery = `UPDATE ZTBPOTable SET PO_QTY=${DATA.PO_QTY}, PO_DATE='${DATA.PO_DATE}', RD_DATE='${DATA.RD_DATE}', PROD_PRICE=${DATA.PROD_PRICE},BEP=${DATA.BEP}, REMARK='${DATA.REMARK}', G_CODE='${DATA.G_CODE}',CUST_CD='${DATA.CUST_CD}', EMPL_NO='${DATA.EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND PO_ID=${DATA.PO_ID}`;
   //////console.log(setpdQuery);
@@ -486,6 +492,8 @@ exports.update_po = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.traPODataFull = async (req, res, DATA) => {
+  //if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
+
   let kqua;
   let query = `WITH ZTBDLVR AS 
 (SELECT CTR_CD,CUST_CD, G_CODE, PO_NO, SUM(DELIVERY_QTY) AS DELIVERY_QTY FROM ZTBDelivery GROUP BY CTR_CD,CUST_CD, G_CODE, PO_NO),
@@ -555,6 +563,7 @@ LEFT JOIN FULLBOM ON FULLBOM.G_CODE = ZTBPOTable.G_CODE AND FULLBOM.CTR_CD = ZTB
   res.send(kqua);
 };
 exports.delete_po = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `DELETE FROM ZTBPOTable WHERE CTR_CD='${DATA.CTR_CD}' AND PO_ID=${DATA.PO_ID}`;
   //////console.log(setpdQuery);
@@ -563,6 +572,7 @@ exports.delete_po = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.autopheduyetgiaall = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL = 'Y' WHERE CTR_CD='${DATA.CTR_CD}'`;
   //console.log(setpdQuery);
@@ -570,7 +580,7 @@ exports.autopheduyetgiaall = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.checkcustomerpono = async (req, res, DATA) => {
+exports.checkcustomerpono = async (req, res, DATA) => {  
   let checkkq = "OK";
   let setpdQuery = `
   SELECT TOP 1 PO_NO FROM ZTBPOTable WHERE CTR_CD='${DATA.CTR_CD}' AND PO_NO LIKE '%${DATA.CHECK_PO_NO}%' ORDER BY PO_NO DESC
@@ -749,6 +759,11 @@ exports.updateProdOverData = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.loadProdOverData = async (req, res, DATA) => {
+  let userData = req.payload_data;  
+  let isGranted = await checkPermission(userData, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL']);
+  if(!isGranted) {
+    return res.send({ tk_status: "NG", message: "Permission insufficent" });   
+  }
   let checkkq = "OK";
   let condition = `WHERE ZTB_PROD_OVER_TB.CTR_CD='${DATA.CTR_CD}' `
   console.log(DATA.ONLY_PENDING);
@@ -770,6 +785,11 @@ FROM ZTB_PROD_OVER_TB
   res.send(checkkq);
 };
 exports.update_invoice_no = async (req, res, DATA) => {
+  let userData = req.payload_data;  
+  let isGranted = await checkPermission(userData, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL']);
+  if(!isGranted) {
+    return res.send({ tk_status: "NG", message: "Permission insufficent" });   
+  }
   let checkkq = "OK";
   let setpdQuery = `UPDATE ZTBDelivery SET INVOICE_NO='${DATA.INVOICE_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND DELIVERY_ID=${DATA.DELIVERY_ID}`;
   console.log(setpdQuery);
@@ -778,6 +798,7 @@ exports.update_invoice_no = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.update_invoice = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `UPDATE ZTBDelivery SET CUST_CD='${DATA.CUST_CD}', G_CODE='${DATA.G_CODE}', PO_NO='${DATA.PO_NO}',  DELIVERY_DATE='${DATA.DELIVERY_DATE}', EMPL_NO='${DATA.EMPL_NO}', DELIVERY_QTY='${DATA.DELIVERY_QTY}', REMARK='${DATA.REMARK}' WHERE CTR_CD='${DATA.CTR_CD}' AND DELIVERY_ID=${DATA.DELIVERY_ID}`;
   //////console.log(setpdQuery);
@@ -786,6 +807,7 @@ exports.update_invoice = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.traInvoiceDataFull = async (req, res, DATA) => {
+  //if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let kqua;
   query = `SELECT  ZTBDelivery.DELIVERY_ID, ZTBDelivery.CUST_CD,M110.CUST_NAME_KD,ZTBDelivery.EMPL_NO,M010.EMPL_NAME,ZTBDelivery.G_CODE,M100.G_NAME,M100.G_NAME_KD, M100.DESCR,ZTBPOTable.PO_ID, ZTBDelivery.PO_NO,ZTBPOTable.PO_DATE, ZTBPOTable.RD_DATE, ZTBDelivery.DELIVERY_DATE,ZTBDelivery.DELIVERY_QTY,isnull(ZTBPOTable.BEP,0) AS BEP, ZTBPOTable.PROD_PRICE,  (ZTBDelivery.DELIVERY_QTY*ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT,(isnull(ZTBPOTable.BEP,0)*ZTBDelivery.DELIVERY_QTY) AS DELIVERED_BEP_AMOUNT ,ZTBDelivery.REMARK,ZTBDelivery.INVOICE_NO,M100.PROD_MAIN_MATERIAL,M100.PROD_TYPE,M100.PROD_MODEL,M100.PROD_PROJECT, DATEPART(YEAR,DELIVERY_DATE) AS YEARNUM,DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE)) AS WEEKNUM,CASE WHEN ZTBPOTable.RD_DATE < ZTBDelivery.DELIVERY_DATE THEN 'OVER' ELSE 'OK' END AS OVERDUE
   FROM ZTBDelivery
@@ -812,6 +834,7 @@ exports.traInvoiceDataFull = async (req, res, DATA) => {
   res.send(kqua);
 };
 exports.insert_invoice = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `INSERT INTO ZTBDelivery (CTR_CD, CUST_CD, EMPL_NO, G_CODE, PO_NO, DELIVERY_QTY, DELIVERY_DATE, NOCANCEL, REMARK, INVOICE_NO) VALUES ('${DATA.CTR_CD}','${DATA.CUST_CD
     }', '${DATA.EMPL_NO}', '${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.DELIVERY_QTY}', '${DATA.DELIVERY_DATE}', 1,'${DATA.REMARK}', '${DATA.INVOICE_NO === undefined ? "" : DATA.INVOICE_NO
@@ -833,6 +856,7 @@ exports.selectcodeList = async (req, res, DATA) => {
   res.send(kqua);
 };
 exports.delete_invoice = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `DELETE FROM ZTBDelivery WHERE CTR_CD='${DATA.CTR_CD}' AND DELIVERY_ID=${DATA.DELIVERY_ID}`;
   //////console.log(setpdQuery);
@@ -961,6 +985,7 @@ exports.check_inventorydate = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.traDataAMZ = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let condition = " WHERE 1=1";
   if (DATA.ALLTIME !== true)
     condition += ` AND AMAZONE_DATA.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE} 23:59:59'`;
@@ -1020,6 +1045,7 @@ exports.setpending_ycsx = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.setMaterial_YN = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['MUA'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `
   UPDATE P400 SET MATERIAL_YN='${DATA.MATERIAL_YN}' WHERE PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'
@@ -1030,6 +1056,7 @@ exports.setMaterial_YN = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.pheduyet_ycsx = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let setpdQuery = `UPDATE P400 SET PDUYET='${DATA.PDUYET}' WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_REQUEST_NO='${DATA.PROD_REQUEST_NO}'`;
   //////console.log(setpdQuery);
@@ -1038,6 +1065,7 @@ exports.pheduyet_ycsx = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.insertData_Amazon_SuperFast = async (req, res, DATA) => {
+  if (!await checkPermission(req.payload_data, ['KD','RND'], ['Leader','ADMIN', 'Dept Staff'], ['ALL'])) return res.send({ tk_status: "NG", message: "Permission insufficent" });
   let checkkq = "OK";
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let uploadAmazonData = DATA.AMZDATA;
@@ -2823,10 +2851,75 @@ exports.traPOSummaryTotal = async (req, res, DATA) => {
 };
 exports.kd_annuallyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ` SELECT  YEAR(ZTBDelivery.DELIVERY_DATE) AS YEAR_NUM, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY,  SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
-  LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) 
-WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DATE}' 
-  GROUP BY YEAR(ZTBDelivery.DELIVERY_DATE)  ORDER BY YEAR_NUM ASC `;
+  let setpdQuery = ` DECLARE @FROM_DATE date;
+DECLARE @TO_DATE date;
+DECLARE @KPI_NAME varchar(100);
+DECLARE @CTR_CD  varchar(3);
+
+SET @FROM_DATE = '${DATA.START_DATE}';
+SET @TO_DATE = '${DATA.END_DATE}';
+SET @KPI_NAME = 'DoanhThu';
+SET @CTR_CD ='${DATA.CTR_CD}';
+
+WITH DateRange AS (
+    -- Lấy các ngày từ DATETABLE trong khoảng FROM_DATE đến TO_DATE
+    SELECT 
+        DATE_COLUMN AS KPI_DATE
+    FROM DATETABLE
+    WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+WorkingDays AS (
+    -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
+    SELECT 
+        YEAR(DATE_COLUMN) AS KPI_YEAR,
+        MONTH(DATE_COLUMN) AS KPI_MONTH,
+        COUNT(*) AS WORKING_DAYS
+    FROM DATETABLE
+    WHERE DATEPART(dw, DATE_COLUMN) != 1  -- Loại bỏ Chủ Nhật
+    AND DATE_COLUMN BETWEEN 
+        DATEADD(month, DATEDIFF(month, 0, CAST(@FROM_DATE AS DATE)), 0) 
+        AND EOMONTH(CAST(@TO_DATE AS DATE))
+    GROUP BY YEAR(DATE_COLUMN), MONTH(DATE_COLUMN)
+),
+KPI_TB AS
+(
+SELECT 
+    d.KPI_DATE,
+    CASE 
+        WHEN DATEPART(dw, d.KPI_DATE) = 1 THEN 0  -- Chủ Nhật
+        WHEN k.VALUE_TYPE = 'Number' THEN 
+            ISNULL(k.KPI_VALUE / NULLIF(w.WORKING_DAYS, 0), 0)
+        WHEN k.VALUE_TYPE = 'Percentage' THEN 
+            ISNULL(k.KPI_VALUE, 0)
+        ELSE 0
+    END AS KPI_VALUE
+FROM DateRange d
+LEFT JOIN ZTB_KPI_TB k 
+    ON k.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND k.KPI_MONTH = MONTH(d.KPI_DATE)
+LEFT JOIN WorkingDays w
+    ON w.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND w.KPI_MONTH = MONTH(d.KPI_DATE)
+WHERE  k.KPI_NAME= @KPI_NAME
+),
+DATETB AS
+(
+SELECT * FROM DATETABLE WHERE DATE_COLUMN BETWEEN @FROM_DATE  AND @TO_DATE
+),
+DAILY_CLOSING_TB AS
+(
+SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
+FROM ZTBDelivery 
+LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+GROUP BY DELIVERY_DATE
+)
+SELECT  YEAR(DATETB.DATE_COLUMN) AS YEAR_NUM, SUM(isnull(DELIVERY_QTY,0)) AS DELIVERY_QTY, SUM(isnull(DELIVERED_AMOUNT,0)) AS DELIVERED_AMOUNT, SUM(isnull(KPI_VALUE,0)) AS KPI_VALUE 
+FROM DATETB LEFT JOIN
+DAILY_CLOSING_TB ON DATETB.DATE_COLUMN = DAILY_CLOSING_TB.DELIVERY_DATE 
+LEFT JOIN KPI_TB ON KPI_TB.KPI_DATE =DATETB.DATE_COLUMN
+GROUP BY YEAR(DATETB.DATE_COLUMN)
+ORDER BY YEAR(DATETB.DATE_COLUMN) ASC `;
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
@@ -2834,33 +2927,226 @@ WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN 
 };
 exports.kd_monthlyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `  SELECT  CONCAT(YEAR(ZTBDelivery.DELIVERY_DATE),'_', MONTH(ZTBDelivery.DELIVERY_DATE)) AS MONTH_YW, YEAR(ZTBDelivery.DELIVERY_DATE) AS MONTH_YEAR,  MONTH(ZTBDelivery.DELIVERY_DATE) AS MONTH_NUM, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY,  SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT FROM ZTBDelivery 
-  LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)		
-WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DATE}' 
-  GROUP BY YEAR(ZTBDelivery.DELIVERY_DATE), MONTH(ZTBDelivery.DELIVERY_DATE) 	
-ORDER BY  YEAR(ZTBDelivery.DELIVERY_DATE) DESC, MONTH(ZTBDelivery.DELIVERY_DATE)  DESC`;
+  let setpdQuery = ` DECLARE @FROM_DATE date;
+DECLARE @TO_DATE date;
+DECLARE @KPI_NAME varchar(100);
+DECLARE @CTR_CD  varchar(3);
+
+SET @FROM_DATE = '${DATA.START_DATE}';
+SET @TO_DATE = '${DATA.END_DATE}';
+SET @KPI_NAME = 'DoanhThu';
+SET @CTR_CD ='${DATA.CTR_CD}';
+
+WITH DateRange AS (
+    -- Lấy các ngày từ DATETABLE trong khoảng FROM_DATE đến TO_DATE
+    SELECT 
+        DATE_COLUMN AS KPI_DATE
+    FROM DATETABLE
+    WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+WorkingDays AS (
+    -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
+    SELECT 
+        YEAR(DATE_COLUMN) AS KPI_YEAR,
+        MONTH(DATE_COLUMN) AS KPI_MONTH,
+        COUNT(*) AS WORKING_DAYS
+    FROM DATETABLE
+    WHERE DATEPART(dw, DATE_COLUMN) != 1  -- Loại bỏ Chủ Nhật
+    AND DATE_COLUMN BETWEEN 
+        DATEADD(month, DATEDIFF(month, 0, CAST(@FROM_DATE AS DATE)), 0) 
+        AND EOMONTH(CAST(@TO_DATE AS DATE))
+    GROUP BY YEAR(DATE_COLUMN), MONTH(DATE_COLUMN)
+),
+KPI_TB AS
+(
+SELECT 
+    d.KPI_DATE,
+    CASE 
+        WHEN DATEPART(dw, d.KPI_DATE) = 1 THEN 0  -- Chủ Nhật
+        WHEN k.VALUE_TYPE = 'Number' THEN 
+            ISNULL(k.KPI_VALUE / NULLIF(w.WORKING_DAYS, 0), 0)
+        WHEN k.VALUE_TYPE = 'Percentage' THEN 
+            ISNULL(k.KPI_VALUE, 0)
+        ELSE 0
+    END AS KPI_VALUE
+FROM DateRange d
+LEFT JOIN ZTB_KPI_TB k 
+    ON k.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND k.KPI_MONTH = MONTH(d.KPI_DATE)
+LEFT JOIN WorkingDays w
+    ON w.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND w.KPI_MONTH = MONTH(d.KPI_DATE)
+WHERE  k.KPI_NAME= @KPI_NAME
+),
+DATETB AS
+(
+SELECT * FROM DATETABLE WHERE DATE_COLUMN BETWEEN @FROM_DATE  AND @TO_DATE
+),
+DAILY_CLOSING_TB AS
+(
+SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
+FROM ZTBDelivery 
+LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+GROUP BY DELIVERY_DATE
+)
+SELECT  CONCAT(YEAR(DATETB.DATE_COLUMN),'_', MONTH(DATETB.DATE_COLUMN)) AS MONTH_YW, YEAR(DATETB.DATE_COLUMN) AS MONTH_YEAR, MONTH(DATETB.DATE_COLUMN) AS MONTH_NUM, SUM(isnull(DELIVERY_QTY,0)) AS DELIVERY_QTY, SUM(isnull(DELIVERED_AMOUNT,0)) AS DELIVERED_AMOUNT, SUM(isnull(KPI_VALUE,0)) AS KPI_VALUE 
+FROM DATETB LEFT JOIN
+DAILY_CLOSING_TB ON DATETB.DATE_COLUMN = DAILY_CLOSING_TB.DELIVERY_DATE 
+LEFT JOIN KPI_TB ON KPI_TB.KPI_DATE =DATETB.DATE_COLUMN
+GROUP BY YEAR(DATETB.DATE_COLUMN), MONTH(DATETB.DATE_COLUMN) 
+ORDER BY YEAR(DATETB.DATE_COLUMN) DESC, MONTH(DATETB.DATE_COLUMN) DESC`;
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
 };
 exports.kd_weeklyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `  SELECT  AA.DEL_YEAR, AA.DEL_WEEK, CONCAT(AA.DEL_YEAR,'_', AA.DEL_WEEK) AS DEL_YW, AA.DELIVERY_QTY, AA.DELIVERED_AMOUNT FROM 
-  (SELECT TOP 1000 DATEPART(YYYY, DATEADD(day,1,DELIVERY_DATE)) AS DEL_YEAR ,DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE)) AS DEL_WEEK, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM(ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERED_AMOUNT 
-   FROM ZTBDelivery 
-     LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) 
-WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DATE}' 
-   GROUP BY  DATEPART(YYYY, DATEADD(day,1,DELIVERY_DATE)), DATEPART( ISOWK, DATEADD(day,1,DELIVERY_DATE))  
-   ORDER BY DEL_WEEK DESC) AS AA 
- ORDER BY AA.DEL_YEAR DESC, AA.DEL_WEEK DESC `;
+  let setpdQuery = ` DECLARE @FROM_DATE date;
+DECLARE @TO_DATE date;
+DECLARE @KPI_NAME varchar(100);
+DECLARE @CTR_CD  varchar(3);
+
+SET @FROM_DATE = '${DATA.START_DATE}';
+SET @TO_DATE = '${DATA.END_DATE}';
+SET @KPI_NAME = 'DoanhThu';
+SET @CTR_CD ='${DATA.CTR_CD}';
+
+WITH DateRange AS (
+    -- Lấy các ngày từ DATETABLE trong khoảng FROM_DATE đến TO_DATE
+    SELECT 
+        DATE_COLUMN AS KPI_DATE
+    FROM DATETABLE
+    WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+WorkingDays AS (
+    -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
+    SELECT 
+        YEAR(DATE_COLUMN) AS KPI_YEAR,
+        MONTH(DATE_COLUMN) AS KPI_MONTH,
+        COUNT(*) AS WORKING_DAYS
+    FROM DATETABLE
+    WHERE DATEPART(dw, DATE_COLUMN) != 1  -- Loại bỏ Chủ Nhật
+    AND DATE_COLUMN BETWEEN 
+        DATEADD(month, DATEDIFF(month, 0, CAST(@FROM_DATE AS DATE)), 0) 
+        AND EOMONTH(CAST(@TO_DATE AS DATE))
+    GROUP BY YEAR(DATE_COLUMN), MONTH(DATE_COLUMN)
+),
+KPI_TB AS
+(
+SELECT 
+    d.KPI_DATE,
+    CASE 
+        WHEN DATEPART(dw, d.KPI_DATE) = 1 THEN 0  -- Chủ Nhật
+        WHEN k.VALUE_TYPE = 'Number' THEN 
+            ISNULL(k.KPI_VALUE / NULLIF(w.WORKING_DAYS, 0), 0)
+        WHEN k.VALUE_TYPE = 'Percentage' THEN 
+            ISNULL(k.KPI_VALUE, 0)
+        ELSE 0
+    END AS KPI_VALUE
+FROM DateRange d
+LEFT JOIN ZTB_KPI_TB k 
+    ON k.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND k.KPI_MONTH = MONTH(d.KPI_DATE)
+LEFT JOIN WorkingDays w
+    ON w.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND w.KPI_MONTH = MONTH(d.KPI_DATE)
+WHERE  k.KPI_NAME= @KPI_NAME
+),
+DATETB AS
+(
+SELECT * FROM DATETABLE WHERE DATE_COLUMN BETWEEN @FROM_DATE  AND @TO_DATE
+),
+DAILY_CLOSING_TB AS
+(
+SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
+FROM ZTBDelivery 
+LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+GROUP BY DELIVERY_DATE
+)
+
+SELECT  CONCAT(DATEPART(YYYY, DATEADD(day,1,DATETB.DATE_COLUMN)),'_',DATEPART( ISOWK, DATEADD(day,1,DATETB.DATE_COLUMN))) AS DEL_YW, DATEPART(YYYY, DATEADD(day,1,DATETB.DATE_COLUMN)) AS DEL_YEAR, DATEPART( ISOWK, DATEADD(day,1,DATETB.DATE_COLUMN)) AS DEL_WEEK, SUM(isnull(DELIVERY_QTY,0)) AS DELIVERY_QTY, SUM(isnull(DELIVERED_AMOUNT,0)) AS DELIVERED_AMOUNT, SUM(isnull(KPI_VALUE,0)) AS KPI_VALUE 
+FROM DATETB LEFT JOIN
+DAILY_CLOSING_TB ON DATETB.DATE_COLUMN = DAILY_CLOSING_TB.DELIVERY_DATE
+LEFT JOIN KPI_TB ON KPI_TB.KPI_DATE =DATETB.DATE_COLUMN
+GROUP BY DATEPART(YYYY, DATEADD(day,1,DATETB.DATE_COLUMN)), DATEPART( ISOWK, DATEADD(day,1,DATETB.DATE_COLUMN)) 
+ORDER BY DATEPART(YYYY, DATEADD(day,1,DATETB.DATE_COLUMN)) DESC, DATEPART( ISOWK, DATEADD(day,1,DATETB.DATE_COLUMN)) DESC`;
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
 };
 exports.kd_dailyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ` SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT FROM ZTBDelivery 
-            LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO) WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND ZTBDelivery.DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND  '${DATA.END_DATE}' GROUP BY DELIVERY_DATE ORDER BY  DELIVERY_DATE ASC `;
+  let setpdQuery = ` -- daily closing
+DECLARE @FROM_DATE date;
+DECLARE @TO_DATE date;
+DECLARE @KPI_NAME varchar(100);
+DECLARE @CTR_CD  varchar(3);
+
+SET @FROM_DATE = '${DATA.START_DATE}';
+SET @TO_DATE = '${DATA.END_DATE}';
+SET @KPI_NAME = 'DoanhThu';
+SET @CTR_CD ='${DATA.CTR_CD}';
+
+WITH DateRange AS (
+    -- Lấy các ngày từ DATETABLE trong khoảng FROM_DATE đến TO_DATE
+    SELECT 
+        DATE_COLUMN AS KPI_DATE
+    FROM DATETABLE
+    WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+WorkingDays AS (
+    -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
+    SELECT 
+        YEAR(DATE_COLUMN) AS KPI_YEAR,
+        MONTH(DATE_COLUMN) AS KPI_MONTH,
+        COUNT(*) AS WORKING_DAYS
+    FROM DATETABLE
+    WHERE DATEPART(dw, DATE_COLUMN) != 1  -- Loại bỏ Chủ Nhật
+    AND DATE_COLUMN BETWEEN 
+        DATEADD(month, DATEDIFF(month, 0, CAST(@FROM_DATE AS DATE)), 0) 
+        AND EOMONTH(CAST(@TO_DATE AS DATE))
+    GROUP BY YEAR(DATE_COLUMN), MONTH(DATE_COLUMN)
+),
+KPI_TB AS
+(
+SELECT 
+    d.KPI_DATE,
+    CASE 
+        WHEN DATEPART(dw, d.KPI_DATE) = 1 THEN 0  -- Chủ Nhật
+        WHEN k.VALUE_TYPE = 'Number' THEN 
+            ISNULL(k.KPI_VALUE / NULLIF(w.WORKING_DAYS, 0), 0)
+        WHEN k.VALUE_TYPE = 'Percentage' THEN 
+            ISNULL(k.KPI_VALUE, 0)
+        ELSE 0
+    END AS KPI_VALUE
+FROM DateRange d
+LEFT JOIN ZTB_KPI_TB k 
+    ON k.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND k.KPI_MONTH = MONTH(d.KPI_DATE)
+LEFT JOIN WorkingDays w
+    ON w.KPI_YEAR = YEAR(d.KPI_DATE)
+    AND w.KPI_MONTH = MONTH(d.KPI_DATE)
+WHERE  k.KPI_NAME= @KPI_NAME
+),
+DATETB AS
+(
+SELECT * FROM DATETABLE WHERE DATE_COLUMN BETWEEN @FROM_DATE  AND @TO_DATE
+),
+DAILY_CLOSING_TB AS
+(
+SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
+FROM ZTBDelivery 
+LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+GROUP BY DELIVERY_DATE
+)
+SELECT DATETB.DATE_COLUMN AS DELIVERY_DATE, isnull(DAILY_CLOSING_TB.DELIVERY_QTY,0) AS DELIVERY_QTY,isnull(DAILY_CLOSING_TB.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, isnull(KPI_TB.KPI_VALUE,0) AS KPI_VALUE FROM 
+DATETB LEFT JOIN
+DAILY_CLOSING_TB ON DATETB.DATE_COLUMN = DAILY_CLOSING_TB.DELIVERY_DATE
+LEFT JOIN KPI_TB ON KPI_TB.KPI_DATE =DATETB.DATE_COLUMN
+ORDER BY  DELIVERY_DATE ASC `;
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);

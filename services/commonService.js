@@ -50,7 +50,7 @@ exports.checkloginVendors = async (req, res, DATA) => {
 
 exports.checkMYCHAMCONG = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
-  let PASSWORD = req.payload_data["PASSWORD"];
+  let PASSWORD = req.payload_data["PASSWORD"]; 
   let checkkq = "OK";
   let setpdQuery = `SELECT MIN(C001.CHECK_DATETIME) AS MIN_TIME, MAX(C001.CHECK_DATETIME) AS MAX_TIME  FROM C001 LEFT JOIN ZTBEMPLINFO ON (C001.NV_CCID = ZTBEMPLINFO.NV_CCID AND C001.CTR_CD = ZTBEMPLINFO.CTR_CD) WHERE C001.CHECK_DATE = CAST(GETDATE() as date) AND ZTBEMPLINFO.EMPL_NO='${EMPL_NO}' AND C001.CTR_CD='${DATA.CTR_CD}'`;
   //console.log(setpdQuery);
