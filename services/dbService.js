@@ -11,8 +11,11 @@ const { loadDataSX, nhapkhoao, resetKhoSX_IQC1, resetKhoSX_IQC2, loadtiledat, ge
 const { updateAmazonBOMCodeInfo, listAmazon, getBOMAMAZON, getBOMAMAZON_EMPTY, codeinfo, loadcodephoi, checkExistBOMAMAZON, insertAmazonBOM, updateAmazonBOM, checkGNAMEKDExist, update_appsheet_value, getMasterMaterialList, resetbanve, pdbanve, getbomsx, codeinforRnD, getcodefullinfo, getNextSEQ_G_CODE, insertM100BangTinhGia, updateM100BangTinhGia, insertM100, insertM100_AddVer, updateM100, deleteM140_2, checkGSEQ_M140, update_M140, insertM140, deleteM140, checkMaterialInfo, checkMassG_CODE, deleteBOM2, insertBOM2, checkTBGExist, getlastestCODKH, getAMAZON_DESIGN, deleteAMZDesign, insertAMZDesign, update_material_info, loadbarcodemanager, checkbarcodeExist, addBarcode, updateBarcode, deleteBarcode, loadquanlygiaonhan, addbangiaodaofilmtailieu, rnddailynewcode, rndweeklynewcode, rndmonthlynewcode, rndyearlynewcode, rndNewCodeByCustomer, rndNewCodeByProdType, loadSampleMonitorTable, lockSample, updateRND_SAMPLE_STATUS, updateSX_SAMPLE_STATUS, updateQC_SAMPLE_STATUS, updateMATERIAL_STATUS, updateAPPROVE_SAMPLE_STATUS, addMonitoringSample, updateProdProcessData, addProdProcessData, deleteProcessNotInCurrentListFromDataBase, deleteProdProcessData, getmachinelist, loadProdProcessData, saveLOSS_SETTING_SX, saveQLSX, setngoaiquan, updateBEP, updateLossKT, check_m_code_m140 } = require("./rndService");
 const { insert_O302, updateStockM090, tranhaplieu, traxuatlieu, tratonlieu, updatelieuncc, checkMNAMEfromLotI222XuatKho, checksolanout_O302, xuatpackkhotp, trakhotpInOut, traSTOCKCMS_NEW, traSTOCKCMS, traSTOCKKD_NEW, traSTOCKKD, traSTOCKTACH, loadKTP_IN, loadKTP_OUT, loadStockFull, loadSTOCKG_CODE, loadSTOCKG_NAME_KD, loadSTOCK_YCSX, updatePheDuyetHuyO660, cancelPheDuyetHuyO660 } = require("./warehouseService");
 const { loadFormList, insertForm, updateForm, deleteForm, loadFormDetail, loadFieldList, insertField, updateField, deleteField, testSQL, loadTableList, createTable, renameTable, deleteTable, deleteColumn, loadColumnList, addColumn, renameColumn, updateColumn, addQuery, getQueryList, getQueryFilter, addQueryFilter, deleteQueryFilter, updateQueryFilter, runQuery, insertData, loadData, insertData2, loadMenuData, loadMainMenus, loadSubMenus, updateMainMenu, updateSubMenu, createSubMenu, createMainMenu, deleteMainMenu, deleteSubMenu } = require("./lowcodenocodeService");
-const { loadKPI } = require("./kpiService");
+const { loadKPI, insertKPI, deleteKPI, updateKPI } = require("./kpiService");
 const commandHandlers = {
+  deleteKPI,
+  updateKPI,
+  insertKPI,
   loadKPI,
   deleteSubMenu,
   deleteMainMenu,
@@ -705,7 +708,7 @@ exports.processApi = async (req, res) => {
   //console.log(DATA.COMPANY)
   //console.log(req.payload_data["EMPL_NO"])
   console.log(moment().format('YYYY-MM-DD HH:mm:ss'), command);
-
+ 
 
   // Kiểm tra command có tồn tại không
   const handler = commandHandlers[command];
