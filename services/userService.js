@@ -78,12 +78,10 @@ const fetchGitHubFile = async () => {
 exports.checkLicense = async (req, res, DATA) => {
 
   let data = await fetchGitHubFile();
-  console.log('data', data);
   let resp = JSON.parse(data);
-  console.log(resp);
-
   const today = new Date().toISOString().split('T')[0];
   const found = resp.find(element => element.COMPANY === DATA.COMPANY);
+
   if (found) {
     if (found.EXP_DATE > today) {
       return res.send({ tk_status: "OK", message: "License is valid" });
