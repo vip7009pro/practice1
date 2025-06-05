@@ -53,9 +53,10 @@ exports.nghidaycheck = async (req, res, DATA) => {
   res.send(kqua);
 };
 
-async function fetchGitHubFile() {
+const fetchGitHubFile = async () => {
+  let data = "";
   try {
-    const response = await fetch('https://raw.githubusercontent.com/octocat/hello-world/main/README.md', {
+    const response = await fetch('https://raw.githubusercontent.com/vip7009pro/practice1/refs/heads/master/ERPLicense.json', {
       method: 'GET',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124 Safari/537.36'
@@ -66,16 +67,35 @@ async function fetchGitHubFile() {
     }
     const content = await response.text();
     console.log('Nội dung file:', content);
-    return content;
+    data = content;
   } catch (error) {
     console.error('Lỗi:', error.message);
     throw error;
   }
+  return data;
 }
 
 exports.checkLicense = async (req, res, DATA) => {
-  
-  fetchGitHubFile();
+
+  let data = await fetchGitHubFile();
+  console.log('data', data);
+  let resp = JSON.parse(data);
+  console.log(resp);
+
+  const today = new Date().toISOString().split('T')[0];
+  const found = resp.find(element => element.COMPANY === DATA.COMPANY);
+  if (found) {
+    if (found.EXP_DATE > today) {
+      return res.send({ tk_status: "OK", message: "License is valid" });
+    } else {
+      return res.send({ tk_status: "NG", message: "License is expired" });
+    }
+  } else {
+    return res.send({ tk_status: "NG", message: "License is not found" });
+  }
+
+
+
 
   return res.send({ tk_status: "OK", message: "License is valid" });
   const CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec';
