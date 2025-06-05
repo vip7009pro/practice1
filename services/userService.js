@@ -66,7 +66,7 @@ const fetchGitHubFile = async () => {
       throw new Error(`Lỗi khi fetch: ${response.status} ${response.statusText}`);
     }
     const content = await response.text();
-    console.log('Nội dung file:', content);
+    //console.log('Nội dung file:', content);
     data = content;
   } catch (error) {
     console.error('Lỗi:', error.message);
