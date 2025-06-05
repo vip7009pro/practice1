@@ -53,7 +53,30 @@ exports.nghidaycheck = async (req, res, DATA) => {
   res.send(kqua);
 };
 
+async function fetchGitHubFile() {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/octocat/hello-world/main/README.md', {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Lỗi khi fetch: ${response.status} ${response.statusText}`);
+    }
+    const content = await response.text();
+    console.log('Nội dung file:', content);
+    return content;
+  } catch (error) {
+    console.error('Lỗi:', error.message);
+    throw error;
+  }
+}
+
 exports.checkLicense = async (req, res, DATA) => {
+  
+  fetchGitHubFile();
+
   return res.send({ tk_status: "OK", message: "License is valid" });
   const CURRENT_API_URL = 'https://script.google.com/macros/s/AKfycbyD_LRqVLETu8IvuiqDSsbItdmzRw3p_q9gCv12UOer0V-5OnqtbJvKjK86bfgGbUM1NA/exec';
 
