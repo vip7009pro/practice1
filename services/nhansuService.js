@@ -1,4 +1,4 @@
-const { queryDB } = require("../config/database");
+const { queryDB, queryDB_New } = require("../config/database");
 const moment = require("moment");
 const { removeVietnameseTones } = require("../utils/sqlUtils");
 exports.diemdanhnhom = async (req, res, DATA) => {
@@ -1951,6 +1951,25 @@ exports.fixTime = async (req, res, DATA) => {
   `;
   let checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
+};
+exports.fixTime2 = async (req, res, DATA) => {
+  let TIME_DATA = DATA.TIME_DATA; //array
+  let queries = [];
+  for (let i = 0; i < TIME_DATA.length; i++) {    
+    queries.push(`UPDATE ZTBATTENDANCETB SET IN_TIME = @IN_TIME_${i}, OUT_TIME = @OUT_TIME_${i} WHERE CTR_CD = @CTR_CD_${i} AND EMPL_NO = @EMPL_NO_${i} AND APPLY_DATE = @APPLY_DATE_${i}`);
+  }
+  let query = queries.join(";");
+  let params = {};
+  for (let i = 0; i < TIME_DATA.length; i++) {
+    let element = TIME_DATA[i];
+    params[`CTR_CD_${i}`] = DATA.CTR_CD;
+    params[`EMPL_NO_${i}`] = element.EMPL_NO;
+    params[`APPLY_DATE_${i}`] = element.APPLY_DATE;
+    params[`IN_TIME_${i}`] = element.IN_TIME;
+    params[`OUT_TIME_${i}`] = element.OUT_TIME;
+  }
+  let kq = await queryDB_New(query, params);
+  res.send(kq);
 };
 exports.update_empl_image = async (req, res, DATA) => {
   let setpdQuery = `
