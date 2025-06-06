@@ -2581,8 +2581,8 @@ exports.updateQCFailTableData = async (req, res, DATA) => {
 exports.updateQCPASS_HOLDING = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE HOLDING_TB SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND HOLDING_TB.ID=${DATA.ID} AND M_LOT_NO='${DATA.M_LOT_NO}'`;
-  //console.log(setpdQuery);
+  let setpdQuery = `UPDATE HOLDING_TB SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}', USE_YN='${DATA.VALUE === 'Y' ? 'T' : 'B'}' WHERE CTR_CD='${DATA.CTR_CD}' AND HOLDING_TB.HOLD_ID=${DATA.ID} AND M_LOT_NO='${DATA.M_LOT_NO}'`;
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -2640,7 +2640,7 @@ exports.updateQCPASSI222_M_LOT_NO = async (req, res, DATA) => {
   if (DATA.VALUE === "N") {
     update_USE_YN = `, USE_YN='B'`;
   }
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE === 'Y'? 'T':'N'}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
+  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE(), USE_YN='${DATA.VALUE === 'Y' ? 'T' : 'B'}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
