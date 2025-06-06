@@ -77,7 +77,7 @@ exports.updateM090FSC = async (req, res, DATA) => {
   let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
   let query = "";
   query = `UPDATE M090 SET FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_NAME='${DATA.M_NAME}'`;
-  console.log(query);
+  //console.log(query);
   kqua = await queryDB(query);
   ////console.log(kqua);
   res.send(kqua);
