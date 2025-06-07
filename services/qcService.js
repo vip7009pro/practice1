@@ -2500,8 +2500,13 @@ exports.getIns_Status = async (req, res, DATA) => {
 exports.updateQCPASS_FAILING = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE ZTB_SX_NG_MATERIAL SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND  AND ZTB_SX_NG_MATERIAL.FAIL_ID=${DATA.FAIL_ID}`;
-  //console.log(setpdQuery);
+  let updateProcessStatus = ``;
+
+  if(DATA.VALUE === "Y"){
+    updateProcessStatus = `, PROCESS_STATUS='C', PROCESS_EMPL='${EMPL_NO}', PROCESS_DATE=GETDATE() `;
+  }
+  let setpdQuery = `UPDATE ZTB_SX_NG_MATERIAL SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}' ${updateProcessStatus} WHERE CTR_CD='${DATA.CTR_CD}' AND ZTB_SX_NG_MATERIAL.FAIL_ID=${DATA.FAIL_ID}`;
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -2581,7 +2586,12 @@ exports.updateQCFailTableData = async (req, res, DATA) => {
 exports.updateQCPASS_HOLDING = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE HOLDING_TB SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}', USE_YN='${DATA.VALUE === 'Y' ? 'T' : 'B'}' WHERE CTR_CD='${DATA.CTR_CD}' AND HOLDING_TB.HOLD_ID=${DATA.ID} AND M_LOT_NO='${DATA.M_LOT_NO}'`;
+  let updateProcessStatus = ``;
+
+  if(DATA.VALUE === "Y"){
+    updateProcessStatus = `, PROCESS_STATUS='C', PROCESS_EMPL='${EMPL_NO}', PROCESS_DATE=GETDATE() `;
+  }
+  let setpdQuery = `UPDATE HOLDING_TB SET QC_PASS='${DATA.VALUE}', QC_PASS_DATE=GETDATE(), QC_PASS_EMPL='${EMPL_NO}', USE_YN='${DATA.USE_YN === 'X' ? 'X' :DATA.VALUE === 'Y' ? 'T' : 'B'}' ${updateProcessStatus} WHERE CTR_CD='${DATA.CTR_CD}' AND HOLDING_TB.HOLD_ID=${DATA.ID} AND M_LOT_NO='${DATA.M_LOT_NO}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -2640,7 +2650,7 @@ exports.updateQCPASSI222_M_LOT_NO = async (req, res, DATA) => {
   if (DATA.VALUE === "N") {
     update_USE_YN = `, USE_YN='B'`;
   }
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE(), USE_YN='${DATA.VALUE === 'Y' ? 'T' : 'B'}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
+  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE(), USE_YN='${DATA.USE_YN === 'X' ? 'X' :DATA.VALUE === 'Y' ? 'T' : 'B'}' ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -4225,7 +4235,7 @@ exports.updateReasonHoldingFromIQC1 = async (req, res, DATA) => {
     SET HOLDING_TB.REASON = IQC1TB.REMARK
     FROM HOLDING_TB
     INNER JOIN IQC1TB ON SUBSTRING(HOLDING_TB.M_LOT_NO,1,6) = IQC1TB.LOT_CMS AND HOLDING_TB.M_CODE = IQC1TB.M_CODE
-    WHERE HOLDING_TB.REASON = ''
+    WHERE (HOLDING_TB.REASON = '' OR HOLDING_TB.REASON IS NULL) AND HOLDING_TB.CTR_CD='${DATA.CTR_CD}'
   `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
