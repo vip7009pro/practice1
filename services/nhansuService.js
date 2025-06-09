@@ -1879,7 +1879,7 @@ exports.loadC0012 = async (req, res, DATA) => {
   WHERE 
       E.CTR_CD = '${DATA.CTR_CD}'
   `;
-  console.log(setpdQuery);
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
@@ -1952,24 +1952,36 @@ exports.fixTime = async (req, res, DATA) => {
   let checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.fixTime2 = async (req, res, DATA) => {
+
+exports.fixTimehangloat = async (req, res, DATA) => {
   let TIME_DATA = DATA.TIME_DATA; //array
+  let queries2 = [];
+  let TIME_DATA_ATT = TIME_DATA.filter((item) => item.ON_OFF === null);
+  for (let i = 0; i < TIME_DATA_ATT.length; i++) {        
+    queries2.push(`INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${TIME_DATA_ATT[i].EMPL_NO}', '${TIME_DATA_ATT[i].DATE_COLUMN}', ${TIME_DATA_ATT[i].IN_TIME.includes("Thiếu") && TIME_DATA_ATT[i].OUT_TIME.includes("Thiếu") ? 0 : 1}, ${TIME_DATA_ATT[i].WORK_SHIF_NAME === "Hành Chính" ? 0 : TIME_DATA_ATT[i].WORK_SHIF_NAME === "TEAM 1" ? 1 : 2}, ${TIME_DATA_ATT[i].CALV === 'Hành Chính' ? 0 : TIME_DATA_ATT[i].CALV === 'Ca Ngày' ? 1 : TIME_DATA_ATT[i].CALV === 'Ca Đêm' ? 2 : 0})`);
+  }
+  let query2 = queries2.join(";");
+  //console.log('query2',query2);
+  let kq2 = await queryDB(query2);
+
+  let queries3 = [];
+  let TIME_DATA_ATT2 = TIME_DATA.filter((item) => item.ON_OFF !== null);
+  for (let i = 0; i < TIME_DATA_ATT2.length; i++) {        
+    queries3.push(`UPDATE ZTBATTENDANCETB SET ON_OFF = ${TIME_DATA_ATT2[i].IN_TIME.includes("Thiếu") && TIME_DATA_ATT2[i].OUT_TIME.includes("Thiếu") ? 0 : 1}, CURRENT_TEAM = ${TIME_DATA_ATT2[i].WORK_SHIF_NAME === "Hành Chính" ? 0 : TIME_DATA_ATT2[i].WORK_SHIF_NAME === "TEAM 1" ? 1 : 2}, CURRENT_CA = ${TIME_DATA_ATT2[i].CALV === 'Hành Chính' ? 0 : TIME_DATA_ATT2[i].CALV === 'Ca Ngày' ? 1 : TIME_DATA_ATT2[i].CALV === 'Ca Đêm' ? 2 : 0} WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${TIME_DATA_ATT2[i].EMPL_NO}' AND APPLY_DATE = '${TIME_DATA_ATT2[i].DATE_COLUMN}'`);
+  }
+  let query3 = queries3.join(";");
+  //console.log('query3',query3);
+  let kq3 = await queryDB(query3);
+
   let queries = [];
   for (let i = 0; i < TIME_DATA.length; i++) {    
-    queries.push(`UPDATE ZTBATTENDANCETB SET IN_TIME = @IN_TIME_${i}, OUT_TIME = @OUT_TIME_${i} WHERE CTR_CD = @CTR_CD_${i} AND EMPL_NO = @EMPL_NO_${i} AND APPLY_DATE = @APPLY_DATE_${i}`);
+    queries.push(`UPDATE ZTBATTENDANCETB SET IN_TIME = ${TIME_DATA[i].IN_TIME.includes("Thiếu") ? 'NULL' : `'${TIME_DATA[i].IN_TIME}'`}, OUT_TIME = ${TIME_DATA[i].OUT_TIME.includes("Thiếu") ? 'NULL' : `'${TIME_DATA[i].OUT_TIME}'`} WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${TIME_DATA[i].EMPL_NO}' AND APPLY_DATE = '${TIME_DATA[i].DATE_COLUMN}'`);
   }
   let query = queries.join(";");
-  let params = {};
-  for (let i = 0; i < TIME_DATA.length; i++) {
-    let element = TIME_DATA[i];
-    params[`CTR_CD_${i}`] = DATA.CTR_CD;
-    params[`EMPL_NO_${i}`] = element.EMPL_NO;
-    params[`APPLY_DATE_${i}`] = element.APPLY_DATE;
-    params[`IN_TIME_${i}`] = element.IN_TIME;
-    params[`OUT_TIME_${i}`] = element.OUT_TIME;
-  }
-  let kq = await queryDB_New(query, params);
-  res.send(kq);
+  //console.log('query',query);
+  let kq = await queryDB(query);
+
+  res.send({tk_status:"OK", data:{kq,kq2,kq3}});
 };
 exports.update_empl_image = async (req, res, DATA) => {
   let setpdQuery = `
