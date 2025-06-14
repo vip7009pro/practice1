@@ -5,6 +5,7 @@ const compression = require("compression");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const crypto = require("crypto");
 require("dotenv").config();
 const { closePool } = require("./config/database");
 const { sslConfig } = require("./config/ssl");
@@ -47,3 +48,5 @@ process.on("SIGINT", async () => {
   httpsServer.close(() => console.log("HTTPS server closed"));
   process.exit(0);
 });
+
+
