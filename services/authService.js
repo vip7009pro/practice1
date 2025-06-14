@@ -445,6 +445,7 @@ exports.login2 = async (req, res, DATA) => {
             tk_status: "ok",
             token_content: token,
             user_data: loginResult,
+            publicKey: publicKey,
           });
           //console.log('login thanh cong');
         } else {

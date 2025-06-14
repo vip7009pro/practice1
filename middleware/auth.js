@@ -6,7 +6,7 @@ const checkLoginIndex = (req, res, next) => {
   // Lấy command từ body
   const { command } = req.body || {};
   // Nếu command là "login" hoặc "logout", bỏ qua kiểm tra JWT
-  if (command === "login" || command === "logout") {
+  if (command === "login" || command === "login2" ||  command === "logout") {
     req.coloiko = "kocoloi"; // Gán mặc định để tránh lỗi ở các bước sau
     return next();
   }
