@@ -2650,7 +2650,7 @@ exports.updateQCPASSI222_M_LOT_NO = async (req, res, DATA) => {
   if (DATA.VALUE === "N") {
     update_USE_YN = `, USE_YN='B'`;
   }
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE(), USE_YN='${DATA.USE_YN === 'X' ? 'X' :DATA.VALUE === 'Y' ? 'T' : 'B'}' ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
+  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE(), USE_YN='${DATA.USE_YN === 'X' ? 'X' :DATA.VALUE === 'Y' ? 'T' : 'B'}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_LOT_NO = '${DATA.M_LOT_NO}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -2698,7 +2698,7 @@ IQCTB AS
 (
 SELECT  IQC1_TABLE.IQC1_ID, IQC1_TABLE.M_CODE, M090.M_NAME, M090.WIDTH_CD, IQC1_TABLE.M_LOT_NO, IQC1_TABLE.LOT_CMS,IQC1_TABLE.LOT_VENDOR AS LOT_VENDOR_IQC, I222.LOTNCC, IQC1_TABLE.CUST_CD, M110.CUST_NAME_KD, I222.EXP_DATE, INPUT_LENGTH_TB.TOTAL_CFM_QTY AS INPUT_LENGTH, INPUT_LENGTH_TB.TOTAL_ROLL, IQC1_TABLE.NQ_CHECK_ROLL,IQC1_TABLE.IQC_TEST_RESULT,IQC1_TABLE.DTC_RESULT, IQC1_TABLE.CHECKSHEET, IQC1_TABLE.DTC_ID, IQC1_TABLE.TEST_EMPL, IQC1_TABLE.TOTAL_RESULT,'+@str3 +'
 , 
-IQC1_TABLE.INS_DATE, IQC1_TABLE.INS_EMPL, IQC1_TABLE.UPD_DATE, IQC1_TABLE.UPD_EMPL, IQC1_TABLE.REMARK, ZTB_MATERIAL_TB2.M_THICKNESS FROM IQC1_TABLE 
+IQC1_TABLE.INS_DATE, IQC1_TABLE.INS_EMPL, IQC1_TABLE.UPD_DATE, IQC1_TABLE.UPD_EMPL, IQC1_TABLE.REMARK, ZTB_MATERIAL_TB2.M_THICKNESS, IQC1_TABLE.THICKNESS, IQC1_TABLE.M_WIDTH FROM IQC1_TABLE 
 LEFT JOIN 
   (SELECT PVTB.DTC_ID, '+@str2+'
    FROM 
@@ -2744,7 +2744,11 @@ execute(@query)
 exports.insertIQC1table = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `INSERT INTO IQC1_TABLE (CTR_CD,M_CODE,M_LOT_NO,LOT_CMS,LOT_VENDOR,CUST_CD,EXP_DATE,INPUT_LENGTH,TOTAL_ROLL,NQ_CHECK_ROLL,DTC_ID,TEST_EMPL,INS_DATE,INS_EMPL,REMARK, TOTAL_RESULT, IQC_TEST_RESULT) VALUES ('${DATA.CTR_CD}','${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.LOT_CMS}','${DATA.LOT_VENDOR}','${DATA.CUST_CD}','${DATA.EXP_DATE}','${DATA.INPUT_LENGTH}','${DATA.TOTAL_ROLL}','${DATA.NQ_CHECK_ROLL}','${DATA.DTC_ID}','${DATA.TEST_EMPL}',GETDATE(),'${EMPL_NO}','${DATA.REMARK}','PD','PD')`;
+  let LOT_VENDOR = DATA.LOT_VENDOR;
+  if(LOT_VENDOR.indexOf("SLITTING") > -1){
+    LOT_VENDOR= LOT_VENDOR.substring(29,LOT_VENDOR.length);    
+  }
+  let setpdQuery = `INSERT INTO IQC1_TABLE (CTR_CD,M_CODE,M_LOT_NO,LOT_CMS,LOT_VENDOR,CUST_CD,EXP_DATE,INPUT_LENGTH,TOTAL_ROLL,NQ_CHECK_ROLL,DTC_ID,TEST_EMPL,INS_DATE,INS_EMPL,REMARK, TOTAL_RESULT, IQC_TEST_RESULT) VALUES ('${DATA.CTR_CD}','${DATA.M_CODE}','${DATA.M_LOT_NO}','${DATA.LOT_CMS}','${LOT_VENDOR}','${DATA.CUST_CD}','${DATA.EXP_DATE}','${DATA.INPUT_LENGTH}','${DATA.TOTAL_ROLL}','${DATA.NQ_CHECK_ROLL}','${DATA.DTC_ID}','${DATA.TEST_EMPL}',GETDATE(),'${EMPL_NO}','${DATA.REMARK}','PD','PD')`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -4242,62 +4246,86 @@ exports.updateReasonHoldingFromIQC1 = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.loadDTCPatrol = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
-SELECT MAX(ID) FROM HOLDING_TB
+  SELECT TOP 3 ZTB_DTC_PATROL.*, M100.G_NAME_KD, M100.G_NAME, M090.M_NAME, M090.WIDTH_CD,ZTB_REL_TESTTYPE.TEST_TYPE_NAME,ZTB_REL_TESTTABLE.TEST_NAME, ZTB_REL_REQUESTTABLE.G_CODE, ZTB_REL_REQUESTTABLE.M_LOT_NO, ZTB_REL_REQUESTTABLE.M_CODE, ZTB_REL_REQUESTTABLE.WORK_POSITION_CODE , ZTBWORKPOSITION.WORK_POSITION_NAME, M110.CUST_NAME_KD, M1102.CUST_NAME_KD AS VENDOR,I222.FACTORY AS M_FACTORY, P400.FACTORY
+FROM ZTB_DTC_PATROL
+LEFT JOIN ZTB_REL_REQUESTTABLE ON ZTB_DTC_PATROL.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD AND ZTB_DTC_PATROL.TEST_CODE = ZTB_REL_REQUESTTABLE.TEST_CODE AND ZTB_DTC_PATROL.TEST_TYPE_CODE = ZTB_REL_REQUESTTABLE.TEST_TYPE_CODE AND ZTB_DTC_PATROL.DTC_ID = ZTB_REL_REQUESTTABLE.DTC_ID
+LEFT JOIN M100 ON M100.CTR_CD = ZTB_DTC_PATROL.CTR_CD AND M100.G_CODE = ZTB_REL_REQUESTTABLE.G_CODE
+LEFT JOIN M090 ON M090.CTR_CD =ZTB_DTC_PATROL.CTR_CD AND M090.M_CODE = ZTB_REL_REQUESTTABLE.M_CODE
+LEFT JOIN ZTB_REL_TESTTYPE ON ZTB_DTC_PATROL.TEST_TYPE_CODE = ZTB_REL_TESTTYPE.TEST_TYPE_CODE AND ZTB_DTC_PATROL.CTR_CD = ZTB_REL_TESTTYPE.CTR_CD
+LEFT JOIN ZTB_REL_TESTTABLE ON ZTB_REL_TESTTABLE.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD AND  ZTB_REL_TESTTABLE.TEST_CODE = ZTB_REL_REQUESTTABLE.TEST_CODE
+LEFT JOIN ZTBWORKPOSITION ON ZTBWORKPOSITION.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD AND ZTBWORKPOSITION.WORK_POSITION_CODE = ZTB_REL_REQUESTTABLE.WORK_POSITION_CODE
+LEFT JOIN P400 ON ZTB_REL_REQUESTTABLE.CTR_CD = P400.CTR_CD AND ZTB_REL_REQUESTTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND ZTB_REL_REQUESTTABLE.PROD_REQUEST_DATE = P400.PROD_REQUEST_DATE
+LEFT JOIN M110 ON P400.CTR_CD = M110.CTR_CD AND P400.CUST_CD = M110.CUST_CD
+LEFT JOIN I222 ON I222.CTR_CD = ZTB_REL_REQUESTTABLE.CTR_CD AND I222.M_LOT_NO = ZTB_REL_REQUESTTABLE.M_LOT_NO
+LEFT JOIN M110 M1102 ON M1102.CTR_CD = I222.CTR_CD AND M1102.CUST_CD = I222.CUST_CD
+WHERE ZTB_DTC_PATROL.CTR_CD='${DATA.CTR_CD}' AND ZTB_DTC_PATROL.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'
+ORDER BY ZTB_DTC_PATROL.INS_DATE DESC
   `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.updateMWidthResult = async (req, res, DATA) => {
+  console.log('vao update mwidth')
   let checkkq = "OK";
   let setpdQuery = `
-SELECT MAX(ID) FROM HOLDING_TB
+      UPDATE IQC1_TABLE SET M_WIDTH = '${DATA.M_WIDTH}' WHERE IQC1_ID = ${DATA.IQC1_ID}
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.updateThickness = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+UPDATE IQC1_TABLE SET THICKNESS = '${DATA.THICKNESS}' WHERE IQC1_ID = ${DATA.IQC1_ID}
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.getMWidthAndThicknessResult = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT M_WIDTH, THICKNESS FROM IQC1_TABLE WHERE IQC1_ID = ${DATA.IQC1_ID}
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.update_M_WIDTH_AUTO_IQC1 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  MERGE INTO IQC1_TABLE 
+  USING
+  (
+  SELECT IQC1_TABLE.IQC1_ID, IQC1_TABLE.M_CODE, M090.WIDTH_CD FROM IQC1_TABLE
+  LEFT JOIN M090 ON IQC1_TABLE.M_CODE = M090.M_CODE
+  WHERE IQC1_ID = ${DATA.IQC1_ID}
+  ) AS SRC_TB
+  ON (IQC1_TABLE.IQC1_ID = SRC_TB.IQC1_ID)
+  WHEN MATCHED THEN
+  UPDATE
+  SET IQC1_TABLE.M_WIDTH = SRC_TB.WIDTH_CD;
   `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.checkM_LOT_NO = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
-SELECT MAX(ID) FROM HOLDING_TB
+SELECT * FROM I222 WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'
   `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
-  res.send(checkkq);
-};
-exports.common = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
-SELECT MAX(ID) FROM HOLDING_TB
-  `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
-  res.send(checkkq);
-};
-exports.common = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
-SELECT MAX(ID) FROM HOLDING_TB
-  `;
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  //console.log(checkkq);
-  res.send(checkkq);
-};
-exports.common = async (req, res, DATA) => {
-  let checkkq = "OK";
-  let setpdQuery = `
-SELECT MAX(ID) FROM HOLDING_TB
-  `;
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
