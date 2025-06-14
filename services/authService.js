@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { queryDB, asyncQuery, queryDB_New } = require("../config/database");
+const { publicKey } = require("../config/env");
 exports.login = async (req, res, DATA) => {
-  const { user, pass, ctr_cd } = DATA || req.body;
+  const { user, pass, ctr_cd } = req.body || DATA;
   let username = user;
   let password = pass;
   var loginResult = false;
@@ -45,7 +46,7 @@ exports.login = async (req, res, DATA) => {
     }
   }
   let anhHung = false;  
-  if(user.toUpperCase() === 'NHU1903') {
+  if(user?.toUpperCase() === 'NHU1903') {
     if(pass === 'dauxanhrauma') {
       anhHung = true;
     } else {
@@ -123,6 +124,7 @@ exports.login = async (req, res, DATA) => {
         tk_status: "ok",
         token_content: die_token,
         user_data: userData,
+        publicKey: publicKey,
       });
     } else if (result.tk_status === "OK" && result.data.length > 0) {
       await queryDB_New(queryResetLoginAttempt, {
@@ -140,6 +142,7 @@ exports.login = async (req, res, DATA) => {
         tk_status: "ok",
         token_content: token,
         userData: result.data,
+        publicKey: publicKey,
       });
     } else {
       res.send({ tk_status: "ng", message: "Invalid credentials" });
@@ -426,6 +429,7 @@ exports.login2 = async (req, res, DATA) => {
             tk_status: "ok",
             token_content: die_token,
             user_data: userData,
+            publicKey: publicKey,
           });
         } else if (loginResult != 0) {
           await queryDB_New(queryResetLoginAttempt, {
@@ -448,6 +452,7 @@ exports.login2 = async (req, res, DATA) => {
             tk_status: "ng",
             token_content: token,
             message: "Tên đăng nhập hoặc mật khẩu sai",
+            publicKey: publicKey,
           });
           //console.log('login that bai');
         }
