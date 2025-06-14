@@ -1,4 +1,7 @@
 const jwt = require("jsonwebtoken");
+const { decryptData} = require("../utils/cryptoUtils");
+const { privateKey } = require("../config/env");
+
 const checkLoginIndex = (req, res, next) => {
   // Lấy command từ body
   const { command } = req.body || {};
@@ -7,8 +10,12 @@ const checkLoginIndex = (req, res, next) => {
     req.coloiko = "kocoloi"; // Gán mặc định để tránh lỗi ở các bước sau
     return next();
   }
-  // Lấy token từ cookie hoặc body
-  const token = req.cookies.token || req.body.DATA?.token_string || req.body.token_string;
+  if(req.body.DATA !== undefined){
+    let decrypted = decryptData(privateKey, req.body.DATA);    
+    req.body.DATA = decrypted;
+  }
+
+    const token = req.cookies.token || req.body.DATA?.token_string || req.body.token_string;  
   try {
     if (!token) {
       throw new Error("No token provided");
@@ -32,6 +39,10 @@ const checkLoginVendorsIndex = (req, res, next) => {
   if (command === "loginVendors" || command === "logoutVendors") {
     req.coloiko = "kocoloi"; // Gán mặc định để tránh lỗi ở các bước sau
     return next();
+  }
+  if(req.body.DATA !== undefined){
+    let decrypted = decryptData(privateKey, req.body.DATA);    
+    req.body.DATA = decrypted;
   }
   // Lấy token từ cookie hoặc body
   const token = req.cookies.token_vendors || req.body.DATA?.token_string || req.body.token_string;
