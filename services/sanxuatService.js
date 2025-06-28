@@ -2118,9 +2118,10 @@ exports.setUSE_YN_KHO_AO_INPUT = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   /* let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE PLAN_ID_INPUT= '${DATA.PLAN_ID_INPUT}' AND M_CODE='${DATA.M_CODE}' AND M_LOT_NO='${DATA.M_LOT_NO}' AND TOTAL_IN_QTY=${DATA.TOTAL_IN_QTY}`;  */
-  let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG.toUpperCase()}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W', PLAN_ID_SUDUNG_TEST='${DATA.PLAN_ID_SUDUNG_TEST.toUpperCase()}', USE_YN_TEST='${DATA.USE_YN_TEST}' WHERE CTR_CD='${DATA.CTR_CD}' AND IN_KHO_ID=${DATA.IN_KHO_ID}`;
+  console.log('DATA',DATA)
+  let setpdQuery = `UPDATE IN_KHO_SX SET USE_YN ='${DATA.USE_YN}', PLAN_ID_SUDUNG='${DATA.PLAN_ID_SUDUNG.toUpperCase()}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', REMARK2='W', PLAN_ID_SUDUNG_TEST='${DATA.PLAN_ID_SUDUNG_TEST}', USE_YN_TEST='${DATA.USE_YN_TEST}' WHERE CTR_CD='${DATA.CTR_CD}' AND IN_KHO_ID=${DATA.IN_KHO_ID}`;
   //${moment().format('YYYY-MM-DD')}
-  ////console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
