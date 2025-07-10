@@ -2637,7 +2637,13 @@ exports.updateQCPASSI222 = async (req, res, DATA) => {
   if (DATA.VALUE === "N") {
     update_USE_YN = `, USE_YN='B'`;
   }
-  let setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.LOT_CMS}'`;
+  let setpdQuery  = '';
+  if(DATA.VALUE === 'Y'){
+    setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.LOT_CMS}' AND USE_YN <> 'X'`;
+  }
+  else if(DATA.VALUE ==='N'){
+    setpdQuery = `UPDATE  I222  SET QC_PASS= '${DATA.VALUE}', QC_PASS_EMPL='${EMPL_NO}', QC_PASS_DATE = GETDATE() ${update_USE_YN} WHERE CTR_CD='${DATA.CTR_CD}' AND M_CODE ='${DATA.M_CODE}' AND SUBSTRING(M_LOT_NO,1,6) = '${DATA.LOT_CMS}' AND USE_YN <> 'X'`;
+  }
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -4813,6 +4819,168 @@ exports.checkM_LOT_NO = async (req, res, DATA) => {
 SELECT * FROM I222 WHERE M_LOT_NO='${DATA.M_LOT_NO}' AND CTR_CD='${DATA.CTR_CD}'
   `;
   console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.trendNguoi_Hang_Ktra_daily = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+    WITH INSP_TB AS
+    (
+    SELECT CAST(INSPECT_DATETIME AS DATE) AS INSPECT_DATE, *, DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME) AS INSPECT_GAP FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+    )
+    SELECT INSPECT_DATE, YEAR(INSPECT_DATE) AS INSPECT_YEAR, MONTH(INSPECT_DATE) AS INSPECT_MONTH, DATEPART(ISO_WEEK,INSPECT_DATE) AS INSPECT_WEEK, CONCAT(YEAR(INSPECT_DATE),'_',MONTH(INSPECT_DATE)) AS INSPECT_YM, CONCAT(YEAR(INSPECT_DATE),'_',DATEPART(ISO_WEEK,INSPECT_DATE)) AS INSPECT_YW,  COUNT(DISTINCT EMPL_NO) AS EMPL_NUMBER, SUM(INSPECT_GAP)/60 AS INSPECT_HOUR,SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY  FROM INSP_TB GROUP BY INSPECT_DATE ORDER BY INSPECT_DATE DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.trendNguoi_Hang_Ktra_weekly = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `     
+    WITH INSP_TB AS
+    (
+    SELECT CAST(INSPECT_DATETIME AS DATE) AS INSPECT_DATE, *, DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME) AS INSPECT_GAP FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+    )
+    SELECT  YEAR(INSPECT_DATE) AS INSPECT_YEAR, DATEPART(ISO_WEEK,INSPECT_DATE) AS INSPECT_WEEK, CONCAT(YEAR(INSPECT_DATE),'_',DATEPART(ISO_WEEK,INSPECT_DATE)) AS INSPECT_YW,  COUNT(DISTINCT EMPL_NO) AS EMPL_NUMBER, SUM(INSPECT_GAP)/60 AS INSPECT_HOUR,SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY  FROM INSP_TB 
+    GROUP BY YEAR(INSPECT_DATE), DATEPART(ISO_WEEK,INSPECT_DATE)
+    ORDER BY YEAR(INSPECT_DATE) DESC, DATEPART(ISO_WEEK,INSPECT_DATE) DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.trendNguoi_Hang_Ktra_monthly = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+    WITH INSP_TB AS
+    (
+    SELECT CAST(INSPECT_DATETIME AS DATE) AS INSPECT_DATE, *, DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME) AS INSPECT_GAP FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+    )
+    SELECT  YEAR(INSPECT_DATE) AS INSPECT_YEAR, MONTH(INSPECT_DATE) AS INSPECT_MONTH, CONCAT(YEAR(INSPECT_DATE),'_',MONTH(INSPECT_DATE)) AS INSPECT_YM,  COUNT(DISTINCT EMPL_NO) AS EMPL_NUMBER, SUM(INSPECT_GAP)/60 AS INSPECT_HOUR,SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY  FROM INSP_TB 
+    GROUP BY YEAR(INSPECT_DATE), MONTH(INSPECT_DATE)
+    ORDER BY YEAR(INSPECT_DATE) DESC, MONTH(INSPECT_DATE) DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.trendNguoi_Hang_Ktra_yearly = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+    WITH INSP_TB AS
+    (
+    SELECT CAST(INSPECT_DATETIME AS DATE) AS INSPECT_DATE, *, DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME) AS INSPECT_GAP FROM ZTBINSPECTNGTB WHERE INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+    )
+    SELECT  YEAR(INSPECT_DATE) AS INSPECT_YEAR, COUNT(DISTINCT EMPL_NO) AS EMPL_NUMBER, SUM(INSPECT_GAP)/60 AS INSPECT_HOUR,SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY  FROM INSP_TB 
+    GROUP BY YEAR(INSPECT_DATE)
+    ORDER BY YEAR(INSPECT_DATE) DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadAUDIT_HISTORY_DATA = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let condition = ``;
+  if(DATA.ALLTIME){
+    condition = `AND AUDIT_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+  }
+  let setpdQuery = `
+        SELECT ZTB_AUDIT_HISTORY.*, M110.CUST_NAME_KD, CASE WHEN AUDIT_SCORE >= AUDIT_PASS_SCORE THEN 'PASS' ELSE 'FAIL' END AS AUDIT_RESULT FROM ZTB_AUDIT_HISTORY
+        LEFT JOIN M110 ON M110.CTR_CD = ZTB_AUDIT_HISTORY.CTR_CD AND M110.CUST_CD = ZTB_AUDIT_HISTORY.CUST_CD
+        WHERE ZTB_AUDIT_HISTORY.CTR_CD='${DATA.CTR_CD}' ${condition}
+        ORDER BY AUDIT_ID DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.add_AUDIT_HISTORY_DATA = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let setpdQuery = `
+INSERT INTO ZTB_AUDIT_HISTORY (CTR_CD,CUST_CD,AUDIT_DATE,AUDIT_NAME,AUDIT_MAX_SCORE,AUDIT_SCORE,AUDIT_PASS_SCORE,AUDIT_FILE_EXT,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL) VALUES ('${DATA.CTR_CD}', '${DATA.CUST_CD}', '${DATA.AUDIT_DATE}', '${DATA.AUDIT_NAME}', '${DATA.AUDIT_MAX_SCORE}', '${DATA.AUDIT_SCORE}', '${DATA.AUDIT_PASS_SCORE}', '${DATA.AUDIT_FILE_EXT}', GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}')
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.delete_AUDIT_HISTORY_DATA = async (req, res, DATA) => {
+  let checkkq = "OK";
+    let setpdQuery = `
+DELETE FROM ZTB_AUDIT_HISTORY WHERE AUDIT_ID = ${DATA.AUDIT_ID}
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.update_AUDIT_HISTORY_DATA = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let setpdQuery = `
+UPDATE ZTB_AUDIT_HISTORY SET CUST_CD = '${DATA.CUST_CD}', AUDIT_DATE = '${DATA.AUDIT_DATE}', AUDIT_NAME = '${DATA.AUDIT_NAME}', AUDIT_MAX_SCORE = '${DATA.AUDIT_MAX_SCORE}', AUDIT_SCORE = '${DATA.AUDIT_SCORE}', AUDIT_PASS_SCORE = '${DATA.AUDIT_PASS_SCORE}', AUDIT_FILE_EXT = '${DATA.AUDIT_FILE_EXT}', UPD_DATE = GETDATE(), UPD_EMPL = '${EMPL_NO}' WHERE AUDIT_ID = ${DATA.AUDIT_ID}
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.updateFileInfo_AUDIT_HISTORY = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let setpdQuery = `
+UPDATE ZTB_AUDIT_HISTORY SET AUDIT_FILE_EXT = '${DATA.AUDIT_FILE_EXT}', UPD_DATE = GETDATE(), UPD_EMPL = '${EMPL_NO}' WHERE AUDIT_ID = ${DATA.AUDIT_ID}
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+SELECT MAX(ID) FROM HOLDING_TB
+  `;
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
