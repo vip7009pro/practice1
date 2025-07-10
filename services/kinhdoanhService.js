@@ -2371,6 +2371,131 @@ exports.loadMonthlyRevenueByCustomer = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.baocaodanhthutheokhachtheonguoimonthly = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+ DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
+  DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
+  DECLARE @CurrentDate DATE = @StartDate;
+  DECLARE @str1 VARCHAR(MAX) = '';
+  WHILE @CurrentDate <= @EndDate
+  BEGIN
+      SET  @str1 =  @str1 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) + ';
+      SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+  END
+  -- Xóa dấu phẩy cuối cùng
+  SET  @str1 = LEFT( @str1, LEN( @str1) - 1);
+  SET @CurrentDate = @StartDate;
+  DECLARE @str2 VARCHAR(MAX) = '';
+  WHILE @CurrentDate <= @EndDate
+  BEGIN
+      SET  @str2 =  @str2 + 'ISNULL([' + FORMAT(@CurrentDate, 'yyyy_MM') + '],0) AS [' + FORMAT(@CurrentDate, 'yyyy_MM') + '], ';
+      SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+  END
+  -- Xóa dấu phẩy cuối cùng
+  SET  @str2 = LEFT( @str2, LEN( @str2) - 1);
+  SET @CurrentDate = @StartDate;
+  DECLARE @str3 VARCHAR(MAX) = '';
+  WHILE @CurrentDate <= @EndDate
+  BEGIN
+      SET  @str3 =  @str3 + '[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
+      SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+  END
+  -- Xóa dấu phẩy cuối cùng
+  SET  @str3 = LEFT( @str3, LEN( @str3) - 1);
+  SET @CurrentDate = @StartDate;
+  DECLARE @str4 VARCHAR(MAX) = '';
+  WHILE @CurrentDate <= @EndDate
+  BEGIN
+      SET  @str4 =  @str4 + 'B5.[' + FORMAT(@CurrentDate, 'yyyy_MM')+'], ';
+      SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+  END
+  -- Xóa dấu phẩy cuối cùng
+  SET  @str4 = LEFT( @str4, LEN( @str4) - 1);
+  SET @CurrentDate = @StartDate;
+  DECLARE @str5 VARCHAR(MAX) = '';
+  WHILE @CurrentDate <= @EndDate
+  BEGIN
+      SET  @str5 =  @str5 + 'B6.[' + FORMAT(@CurrentDate, 'yyyy_MM')+'] AS [' + FORMAT(@CurrentDate, 'yyyy_MM')+'_QTY], ';
+      SET @CurrentDate = DATEADD(MONTH, 1, @CurrentDate);
+  END
+  -- Xóa dấu phẩy cuối cùng
+  SET  @str5 = LEFT( @str5, LEN( @str5) - 1);
+  declare @query varchar(max) 
+  select 
+  @query = '
+  WITH ZTBDLVR AS 
+  (
+  SELECT M110.CUST_NAME_KD, ZTBDelivery.EMPL_NO, ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT, ZTBDelivery.CTR_CD	
+  FROM ZTBDelivery 
+  LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD)	
+  LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD)
+  ),
+  DL2TB AS
+  (
+  SELECT CUST_NAME_KD,ZTBDLVR.EMPL_NO, CONCAT(YEAR(DELIVERY_DATE),''_'', FORMAT(DELIVERY_DATE,''MM'')) AS DL_YM, YEAR(DELIVERY_DATE) AS DL_YEAR, FORMAT(DELIVERY_DATE,''MM'') AS DL_MONTH, DELIVERED_AMOUNT, DELIVERY_QTY, CTR_CD FROM ZTBDLVR
+  ), 
+  B1 as
+  (
+    SELECT pvtb.CUST_NAME_KD,pvtb.EMPL_NO, (+ ' + @str1 + ') AS TOTAL, '+ @str2 +' FROM 
+    (
+    SELECT CUST_NAME_KD,EMPL_NO, DL_YM, DELIVERED_AMOUNT, CTR_CD FROM DL2TB)
+    AS src
+    PIVOT
+    (
+    SUM(DELIVERED_AMOUNT) FOR DL_YM IN ('+@str3+')
+    ) as pvtb
+    WHERE (' +@str1+') <> 0 AND pvtb.CTR_CD=''${DATA.CTR_CD}''
+  ),
+  B2 as
+  (
+    SELECT ''TOTAL'' AS CUST_NAME_KD,''TOTAL'' AS EMPL_NO, (+ ' + @str1 + ') AS TOTAL, '+ @str2 +' FROM 
+    (
+    SELECT DL_YM, DELIVERED_AMOUNT, CTR_CD FROM DL2TB)
+    AS src
+    PIVOT
+    (
+    SUM(DELIVERED_AMOUNT) FOR DL_YM IN ('+@str3+')
+    ) as pvtb
+    WHERE (' +@str1+') <> 0 AND pvtb.CTR_CD=''${DATA.CTR_CD}''
+  ), 
+  B3 as
+  (
+  SELECT pvtb.CUST_NAME_KD,pvtb.EMPL_NO, ('+ @str1 +' ) AS TOTAL, '+ @str2 +' FROM 
+  (
+  SELECT CUST_NAME_KD,EMPL_NO, DL_YM, DELIVERY_QTY, CTR_CD FROM DL2TB)
+  AS src
+  PIVOT
+  (
+  SUM(DELIVERY_QTY) FOR DL_YM IN ('+@str3+')
+  ) as pvtb
+  WHERE  (' +@str1+') <> 0 AND pvtb.CTR_CD=''${DATA.CTR_CD}''
+  ),
+  B4 as
+  (
+  SELECT ''TOTAL'' AS CUST_NAME_KD,''TOTAL'' AS EMPL_NO, ('+ @str1 +') AS TOTAL, '+ @str2 +' FROM 
+  (
+  SELECT DL_YM, DELIVERY_QTY, CTR_CD FROM DL2TB)
+  AS src
+  PIVOT
+  (
+  SUM(DELIVERY_QTY) FOR DL_YM IN ('+@str3+')
+  ) as pvtb
+  WHERE  (' +@str1+') <> 0 AND pvtb.CTR_CD=''${DATA.CTR_CD}''
+  ),
+  B5 AS (SELECT * FROM B2 UNION ALL SELECT * FROM B1),
+  B6 AS (SELECT * FROM B4 UNION ALL SELECT * FROM B3)
+  SELECT B5.CUST_NAME_KD,B5.EMPL_NO, B5.TOTAL AS TOTAL_AMOUNT, '+@str4+', B6.TOTAL AS TOTAL_QTY, '+@str5+'  FROM B5 LEFT JOIN B6 ON (B5.CUST_NAME_KD = B6.CUST_NAME_KD)
+  ORDER BY B5.TOTAL DESC
+  '
+  print(@query)
+  execute(@query)
+    `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.kd_runningpobalance = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = ` SELECT  BB.PO_YEAR, BB.PO_WEEK, BB.YEAR_WEEK, 
