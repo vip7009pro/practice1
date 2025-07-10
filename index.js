@@ -15,7 +15,8 @@ const fileUploadRoutes = require("./routes/fileUpload");
 const apiRoutes = require("./routes/api");
 const apiVendorsRoutes = require("./routes/apivendors");
 const csharpRoutes = require("./routes/csharp");
-const { corsOptions } = require("./config/env");
+const { corsOptions } = require("./config/env");  
+const pushUtil = require("./utils/pushUtils");
 const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
@@ -48,5 +49,5 @@ process.on("SIGINT", async () => {
   httpsServer.close(() => console.log("HTTPS server closed"));
   process.exit(0);
 });
-
+pushUtil.setVapidDetails();
 
