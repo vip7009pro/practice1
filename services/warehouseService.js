@@ -1019,6 +1019,289 @@ exports.cancelPheDuyetHuyO660 = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.loadMSTOCK_BY_POPULAR = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const previousMonth = moment().subtract(1, 'month');
+  // Lấy ngày đầu tiên của tháng trước
+const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+
+// Lấy ngày cuối cùng của tháng trước
+const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  let setpdQuery = `
+  WITH OUTTB AS
+(
+SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+),
+OUTTB2 AS
+(
+SELECT OUTTB.*, CASE WHEN OUT_SQM > 3000 THEN 'A' WHEN OUT_SQM <=3000 AND OUT_SQM >1000 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+),
+TONPHANLOAI AS
+(
+SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0) + isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0))*M090.WIDTH_CD*1.0/1000 AS TOTAL_OK, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI FROM  M090
+LEFT JOIN OUTTB2 ON M090.M_CODE = OUTTB2.M_CODE
+)
+SELECT PHANLOAI, SUM(TOTAL_OK) AS TOTAL_STOCK FROM TONPHANLOAI GROUP BY PHANLOAI ORDER BY PHANLOAI ASC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadMSTOCK_BY_POPULAR_DETAIL = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const previousMonth = moment().subtract(1, 'month');
+  // Lấy ngày đầu tiên của tháng trước
+const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+
+// Lấy ngày cuối cùng của tháng trước
+const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  let setpdQuery = `
+    WITH OUTTB AS
+    (
+    SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+    LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+    WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+    GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+    ),
+    OUTTB2 AS
+    (
+    SELECT OUTTB.*, CASE WHEN OUT_SQM > 3000 THEN 'A' WHEN OUT_SQM <=3000 AND OUT_SQM >1000 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+    )
+    SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0) + isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0))*M090.WIDTH_CD*1.0/1000 AS STOCK_SQM, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI FROM  M090
+    LEFT JOIN OUTTB2 ON M090.M_CODE = OUTTB2.M_CODE
+    ORDER BY STOCK_SQM DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_M_INPUT_BY_POPULAR = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const previousMonth = moment().subtract(1, 'month');
+  // Lấy ngày đầu tiên của tháng trước
+const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+
+// Lấy ngày cuối cùng của tháng trước
+const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  let setpdQuery = `
+  WITH OUTTB AS
+  (
+  SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+  LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+  WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+  GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+  ),
+  OUTTB2 AS
+  (
+  SELECT OUTTB.*, CASE WHEN OUT_SQM > 3000 THEN 'A' WHEN OUT_SQM <=3000 AND OUT_SQM >1000 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+  ),
+  INTB AS 
+  (
+  SELECT I222.*, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI, M090.M_NAME, M090.WIDTH_CD FROM I222
+  LEFT JOIN OUTTB2 ON  I222.M_CODE =  OUTTB2.M_CODE
+  LEFT JOIN M090 ON M090.M_CODE = I222.M_CODE AND M090.CTR_CD = I222.CTR_CD
+  WHERE I222.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+  )
+  SELECT PHANLOAI, SUM(IN_CFM_QTY*WIDTH_CD*1.0/1000) AS IN_SQM  FROM INTB GROUP BY PHANLOAI
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_M_INPUT_BY_POPULAR_DETAIL = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const previousMonth = moment().subtract(1, 'month');
+  // Lấy ngày đầu tiên của tháng trước
+const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+
+// Lấy ngày cuối cùng của tháng trước
+const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  let setpdQuery = `
+  WITH OUTTB AS
+  (
+  SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+  LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+  WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+  GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+  ),
+  OUTTB2 AS
+  (
+  SELECT OUTTB.*, CASE WHEN OUT_SQM > 3000 THEN 'A' WHEN OUT_SQM <=3000 AND OUT_SQM >1000 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+  ),
+  INTB AS 
+  (
+  SELECT I222.*, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI, M090.M_NAME, M090.WIDTH_CD FROM I222
+  LEFT JOIN OUTTB2 ON  I222.M_CODE =  OUTTB2.M_CODE
+  LEFT JOIN M090 ON M090.M_CODE = I222.M_CODE AND M090.CTR_CD = I222.CTR_CD
+  WHERE I222.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+  )
+  SELECT M_CODE, M_NAME, WIDTH_CD,PHANLOAI, SUM(IN_CFM_QTY*WIDTH_CD*1.0/1000) AS IN_SQM  FROM INTB GROUP BY M_CODE,M_NAME, WIDTH_CD,PHANLOAI
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_M_OUTPUT_BY_POPULAR = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const previousMonth = moment().subtract(1, 'month');
+  // Lấy ngày đầu tiên của tháng trước
+const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+
+// Lấy ngày cuối cùng của tháng trước
+const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  let setpdQuery = `
+WITH OUTTB AS
+(
+SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+),
+OUTTB2 AS
+(
+SELECT OUTTB.*, CASE WHEN OUT_SQM > 10000 THEN 'A' WHEN OUT_SQM <=10000 AND OUT_SQM >5000 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+),
+OUTTB3 AS
+( 
+ SELECT O302.*, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI, M090.M_NAME, M090.WIDTH_CD FROM O302
+ LEFT JOIN OUTTB2 ON  O302.M_CODE =  OUTTB2.M_CODE
+ LEFT JOIN M090 ON M090.M_CODE = O302.M_CODE AND M090.CTR_CD = O302.CTR_CD 
+ WHERE O302.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+)
+
+SELECT OUTTB3.PHANLOAI, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * OUTTB3.WIDTH_CD*1.0/1000) AS OUT_SQM 
+FROM OUTTB3 
+GROUP BY OUTTB3.PHANLOAI
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_M_OUTPUT_BY_POPULAR_DETAIL = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const previousMonth = moment().subtract(1, 'month');
+  // Lấy ngày đầu tiên của tháng trước
+const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+
+// Lấy ngày cuối cùng của tháng trước
+const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  let setpdQuery = `
+  WITH OUTTB AS
+(
+SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+),
+OUTTB2 AS
+(
+SELECT OUTTB.*, CASE WHEN OUT_SQM > 10000 THEN 'A' WHEN OUT_SQM <=10000 AND OUT_SQM >5000 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+),
+OUTTB3 AS
+( 
+ SELECT O302.*, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI, M090.M_NAME, M090.WIDTH_CD FROM O302
+ LEFT JOIN OUTTB2 ON  O302.M_CODE =  OUTTB2.M_CODE
+ LEFT JOIN M090 ON M090.M_CODE = O302.M_CODE AND M090.CTR_CD = O302.CTR_CD 
+ WHERE O302.INS_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+)
+
+SELECT OUTTB3.M_CODE,OUTTB3.M_NAME, OUTTB3.WIDTH_CD, OUTTB3.PHANLOAI, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * OUTTB3.WIDTH_CD*1.0/1000) AS OUT_SQM 
+FROM OUTTB3 
+GROUP BY OUTTB3.M_CODE,OUTTB3.M_NAME, OUTTB3.WIDTH_CD,OUTTB3.PHANLOAI
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_M_STOCK_BY_MONTH = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  WITH TON_I222 AS
+(
+SELECT *, DATEDIFF(MONTH, I222.INS_DATE,GETDATE()) AS GAP FROM I222 WHERE USE_YN ='T'
+),
+TON_RETURN AS
+(
+SELECT *, DATEDIFF(MONTH,CONVERT(date,SUBSTRING(M_LOT_NO,1,6),3),GETDATE()) AS GAP FROM RETURN_NVL WHERE USE_YN='Y'
+),
+TON_HOLDING AS
+(
+SELECT *, DATEDIFF(MONTH,CONVERT(date,SUBSTRING(M_LOT_NO,1,6),3),GETDATE()) AS GAP FROM HOLDING_TB WHERE USE_YN='B'
+),
+I222GAP AS (
+SELECT *, DATEDIFF(MONTH, I222.INS_DATE, GETDATE()) AS GAP FROM I222
+),
+TON_TOTALTB AS
+(
+SELECT TON_I222.M_CODE, TON_I222.M_LOT_NO, (TON_I222.ROLL_QTY* TON_I222.IN_CFM_QTY) AS IN_CFM_QTY, TON_I222.GAP, CASE WHEN TON_I222.GAP < 3 THEN 'A' WHEN TON_I222.GAP >=3 AND TON_I222.GAP < 6 THEN 'B' ELSE 'C' END AS PHANLOAI 
+FROM TON_I222
+UNION ALL
+SELECT TON_RETURN.M_CODE, TON_RETURN.M_LOT_NO, (TON_RETURN.ROLL_QTY * TON_RETURN.RETURN_QTY) AS IN_CFM_QTY, TON_RETURN.GAP,CASE WHEN TON_RETURN.GAP < 3 THEN 'A' WHEN TON_RETURN.GAP >=3 AND TON_RETURN.GAP < 6 THEN 'B' ELSE 'C' END AS PHANLOAI   FROM TON_RETURN
+UNION ALL
+SELECT TON_HOLDING.M_CODE, TON_HOLDING.M_LOT_NO, (TON_HOLDING.HOLDING_ROLL_QTY * TON_HOLDING.HOLDING_QTY) AS IN_CFM_QTY, TON_HOLDING.GAP,CASE WHEN TON_HOLDING.GAP < 3 THEN 'A' WHEN TON_HOLDING.GAP >=3 AND TON_HOLDING.GAP < 6 THEN 'B' ELSE 'C' END AS PHANLOAI   FROM TON_HOLDING
+),
+TON_TOTALTB2 AS
+(
+SELECT TON_TOTALTB.*, M090.M_NAME, M090.WIDTH_CD, (IN_CFM_QTY*WIDTH_CD*1.0/1000) AS TOTAL_STOCK FROM TON_TOTALTB
+LEFT JOIN M090 ON M090.M_CODE = TON_TOTALTB.M_CODE
+)
+
+SELECT PHANLOAI, SUM(TOTAL_STOCK) AS TOTAL_STOCK FROM TON_TOTALTB2
+GROUP BY PHANLOAI
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_M_STOCK_BY_MONTH_DETAIL = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+WITH TON_I222 AS
+(
+SELECT *, DATEDIFF(MONTH, I222.INS_DATE,GETDATE()) AS GAP FROM I222 WHERE USE_YN ='T'
+),
+TON_RETURN AS
+(
+SELECT *, DATEDIFF(MONTH,CONVERT(date,SUBSTRING(M_LOT_NO,1,6),3),GETDATE()) AS GAP FROM RETURN_NVL WHERE USE_YN='Y'
+),
+TON_HOLDING AS
+(
+SELECT *, DATEDIFF(MONTH,CONVERT(date,SUBSTRING(M_LOT_NO,1,6),3),GETDATE()) AS GAP FROM HOLDING_TB WHERE USE_YN='B'
+),
+I222GAP AS (
+SELECT *, DATEDIFF(MONTH, I222.INS_DATE, GETDATE()) AS GAP FROM I222
+),
+TON_TOTALTB AS
+(
+SELECT TON_I222.M_CODE, TON_I222.M_LOT_NO, (TON_I222.ROLL_QTY* TON_I222.IN_CFM_QTY) AS IN_CFM_QTY, TON_I222.GAP, CASE WHEN TON_I222.GAP < 3 THEN 'A' WHEN TON_I222.GAP >=3 AND TON_I222.GAP < 6 THEN 'B' ELSE 'C' END AS PHANLOAI 
+FROM TON_I222
+UNION ALL
+SELECT TON_RETURN.M_CODE, TON_RETURN.M_LOT_NO, (TON_RETURN.ROLL_QTY * TON_RETURN.RETURN_QTY) AS IN_CFM_QTY, TON_RETURN.GAP,CASE WHEN TON_RETURN.GAP < 3 THEN 'A' WHEN TON_RETURN.GAP >=3 AND TON_RETURN.GAP < 6 THEN 'B' ELSE 'C' END AS PHANLOAI   FROM TON_RETURN
+UNION ALL
+SELECT TON_HOLDING.M_CODE, TON_HOLDING.M_LOT_NO, (TON_HOLDING.HOLDING_ROLL_QTY * TON_HOLDING.HOLDING_QTY) AS IN_CFM_QTY, TON_HOLDING.GAP,CASE WHEN TON_HOLDING.GAP < 3 THEN 'A' WHEN TON_HOLDING.GAP >=3 AND TON_HOLDING.GAP < 6 THEN 'B' ELSE 'C' END AS PHANLOAI   FROM TON_HOLDING
+),
+TON_TOTALTB2 AS
+(
+SELECT TON_TOTALTB.*, M090.M_NAME, M090.WIDTH_CD, (IN_CFM_QTY*WIDTH_CD*1.0/1000) AS STOCK_SQM FROM TON_TOTALTB
+LEFT JOIN M090 ON M090.M_CODE = TON_TOTALTB.M_CODE
+)
+SELECT M_CODE,M_NAME, WIDTH_CD,PHANLOAI, SUM(STOCK_SQM) AS STOCK_SQM FROM TON_TOTALTB2 WHERE PHANLOAI ='${DATA.PHANLOAI}' GROUP BY M_CODE,M_NAME, WIDTH_CD, PHANLOAI ORDER BY SUM(STOCK_SQM) DESC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.common = async (req, res, DATA) => {
 };
 exports.common = async (req, res, DATA) => {
