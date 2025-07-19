@@ -2248,6 +2248,11 @@ exports.traPlanDataFull = async (req, res, DATA) => {
 };
 exports.loadMonthlyRevenueByCustomer = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = `
   DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
   DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
@@ -2299,12 +2304,16 @@ exports.loadMonthlyRevenueByCustomer = async (req, res, DATA) => {
   declare @query varchar(max) 
   select 
   @query = '
-  WITH ZTBDLVR AS 
+  WITH INNHANHCODETB AS
+  (
+  SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN (''IN'',''I1'',''I2'',''I3'',''I4'',''I5'',''I6'',''I7'',''I8'',''I9'')
+  ),
+  ZTBDLVR AS 
   (
   SELECT M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT, ZTBDelivery.CTR_CD	
   FROM ZTBDelivery 
   LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD)	
-  LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD)
+  LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD) ${condition}
   ),
   DL2TB AS
   (
@@ -2373,6 +2382,11 @@ exports.loadMonthlyRevenueByCustomer = async (req, res, DATA) => {
 };
 exports.baocaodanhthutheokhachtheonguoimonthly = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = `
  DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
   DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
@@ -2424,12 +2438,17 @@ exports.baocaodanhthutheokhachtheonguoimonthly = async (req, res, DATA) => {
   declare @query varchar(max) 
   select 
   @query = '
-  WITH ZTBDLVR AS 
+  WITH INNHANHCODETB AS
+  (
+  SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN (''IN'',''I1'',''I2'',''I3'',''I4'',''I5'',''I6'',''I7'',''I8'',''I9'')
+  ),
+  ZTBDLVR AS 
   (
   SELECT M110.CUST_NAME_KD, ZTBDelivery.EMPL_NO, ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT, ZTBDelivery.CTR_CD	
   FROM ZTBDelivery 
   LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD)	
   LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD)
+  WHERE ZTBDelivery.CTR_CD=''${DATA.CTR_CD}'' ${condition}
   ),
   DL2TB AS
   (
@@ -2491,7 +2510,7 @@ exports.baocaodanhthutheokhachtheonguoimonthly = async (req, res, DATA) => {
   print(@query)
   execute(@query)
     `;
-  console.log(setpdQuery);
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -2547,18 +2566,34 @@ exports.kd_runningpobalance = async (req, res, DATA) => {
 };
 exports.kd_pooverweek = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `SELECT  AA.YEAR_WEEK, AA.PO_YEAR, AA.PO_WEEK, AA.WEEKLY_PO_QTY, AA.WEEKLY_PO_AMOUNT  FROM (SELECT DISTINCT  TOP 1000 YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,1,PO_DATE)) As PO_WEEK, CONCAT(YEAR(PO_DATE),'_', DATEPART( ISOWK, DATEADD(day,1,PO_DATE))) AS YEAR_WEEK ,
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBPOTable.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
+  let setpdQuery = `
+  WITH INNHANHCODETB AS
+  (
+  SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
+  )  
+  SELECT  AA.YEAR_WEEK, AA.PO_YEAR, AA.PO_WEEK, AA.WEEKLY_PO_QTY, AA.WEEKLY_PO_AMOUNT  FROM (SELECT DISTINCT  TOP 1000 YEAR(PO_DATE) AS PO_YEAR,DATEPART( ISOWK, DATEADD(day,1,PO_DATE)) As PO_WEEK, CONCAT(YEAR(PO_DATE),'_', DATEPART( ISOWK, DATEADD(day,1,PO_DATE))) AS YEAR_WEEK ,
   SUM(ZTBPOTable.PO_QTY) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,1,PO_DATE))) AS WEEKLY_PO_QTY,
   SUM(ZTBPOTable.PO_QTY*ZTBPOTable.PROD_PRICE) OVER(PARTITION BY YEAR(PO_DATE),DATEPART(ISOWK, DATEADD(day,1,PO_DATE))) AS WEEKLY_PO_AMOUNT
   FROM ZTBPOTable  
- WHERE ZTBPOTable.CTR_CD='${DATA.CTR_CD}' AND PO_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'
+ WHERE ZTBPOTable.CTR_CD='${DATA.CTR_CD}' AND PO_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}' ${condition}
   ORDER BY YEAR(PO_DATE) ASC ,DATEPART( ISOWK, DATEADD(day,1,PO_DATE)) DESC) AS AA ORDER BY AA.PO_YEAR DESC, AA.PO_WEEK DESC`;
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
 };
 exports.getWeeklyClosingKD = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = `
   DECLARE @StartDate DATE = '${DATA.FROM_DATE}'; -- Thay đổi start date tại đây
   DECLARE @EndDate DATE = '${DATA.TO_DATE}'; -- Thay đổi end date tại đây
@@ -2610,13 +2645,17 @@ exports.getWeeklyClosingKD = async (req, res, DATA) => {
   declare @query varchar(max) 
   select 
   @query = '
-  WITH ZTBDLVR AS 
+  WITH INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN (''IN'',''I1'',''I2'',''I3'',''I4'',''I5'',''I6'',''I7'',''I8'',''I9'')
+),
+  ZTBDLVR AS 
   (
   SELECT M110.CUST_NAME_KD,ZTBDelivery.DELIVERY_DATE, ZTBDelivery.DELIVERY_QTY, ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE AS DELIVERED_AMOUNT, ZTBDelivery.CTR_CD	
   FROM ZTBDelivery 
   LEFT JOIN ZTBPOTable ON (ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD)	
   LEFT JOIN M110 ON (M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD)
-  WHERE ZTBDelivery.CTR_CD=''${DATA.CTR_CD}''
+  WHERE ZTBDelivery.CTR_CD=''${DATA.CTR_CD}'' ${condition}
   ),
   DL2TB AS
   (
@@ -2685,6 +2724,11 @@ exports.getWeeklyClosingKD = async (req, res, DATA) => {
 };
 exports.getDailyClosingKD = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = `
   DECLARE @startdate date DECLARE @enddate date DECLARE @tempdate date 
   SET 
@@ -2827,9 +2871,13 @@ exports.getDailyClosingKD = async (req, res, DATA) => {
 declare @query varchar(max) 
   select 
     @query = '
-select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select ''TOTAL'' AS CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID, ZTBDelivery.CTR_CD  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO AND ZTBDelivery.CTR_CD = M010.CTR_CD JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE AND ZTBDelivery.CTR_CD = M100.CTR_CD JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD WHERE ZTBDelivery.CTR_CD = ''${DATA.CTR_CD}'' ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
+WITH INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN (''IN'',''I1'',''I2'',''I3'',''I4'',''I5'',''I6'',''I7'',''I8'',''I9'')
+)
+select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select ''TOTAL'' AS CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID, ZTBDelivery.CTR_CD  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO AND ZTBDelivery.CTR_CD = M010.CTR_CD JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE AND ZTBDelivery.CTR_CD = M100.CTR_CD JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD WHERE ZTBDelivery.CTR_CD = ''${DATA.CTR_CD}'' ${condition} ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
 UNION ALL
-select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select XX.CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID, ZTBDelivery.CTR_CD  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO AND ZTBDelivery.CTR_CD = M010.CTR_CD JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE AND ZTBDelivery.CTR_CD = M100.CTR_CD JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD WHERE ZTBDelivery.CTR_CD = ''${DATA.CTR_CD}'' ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
+select CUST_NAME_KD, (' + @cols3 + ') AS DELIVERED_AMOUNT,  ' + @string + ' from (  select XX.CUST_NAME_KD, XX.DELIVERED_AMOUNT ,XX.DELIVERY_DATE   from  (SELECT ZTBDelivery.G_CODE, M010.EMPL_NAME, M110.CUST_NAME_KD, ZTBDelivery.DELIVERY_DATE, M100.G_NAME, M100.PROD_MAIN_MATERIAL, ZTBDelivery.DELIVERY_QTY, ZTBPOTable.PROD_PRICE, ZTBDelivery.PO_NO, (ZTBPOTable.PROD_PRICE * ZTBDelivery.DELIVERY_QTY) As DELIVERED_AMOUNT, M100.PROD_TYPE, DATEPART( MONTH, ZTBDelivery.DELIVERY_DATE) AS DELMONTH, DATEPART( ISOWK,  ZTBDelivery.DELIVERY_DATE) AS DELWEEKNUM ,ZTBDelivery.NOCANCEL , ZTBDelivery.DELIVERY_ID, ZTBDelivery.CTR_CD  FROM ZTBDelivery JOIN ZTBPOTable ON (ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD) JOIN M010 ON ZTBDelivery.EMPL_NO = M010.EMPL_NO AND ZTBDelivery.CTR_CD = M010.CTR_CD JOIN M100 ON ZTBDelivery.G_CODE = M100.G_CODE AND ZTBDelivery.CTR_CD = M100.CTR_CD JOIN M110 ON M110.CUST_CD = ZTBDelivery.CUST_CD AND M110.CTR_CD = ZTBDelivery.CTR_CD WHERE ZTBDelivery.CTR_CD = ''${DATA.CTR_CD}'' ${condition} ) AS XX  ) src pivot (   SUM(DELIVERED_AMOUNT)   for DELIVERY_DATE in (' + @cols + ') ) piv 
 WHERE (' + @cols3 + ') <>0 ORDER BY DELIVERED_AMOUNT DESC;' 
     print(@query)
     execute(@query)
@@ -2937,14 +2985,23 @@ exports.dailyoverduedata = async (req, res, DATA) => {
 };
 exports.PICRevenue = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ` SELECT * FROM (
+  let condition = "";
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
+  let setpdQuery = ` 
+  WITH INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
+)
+  SELECT * FROM (
                     SELECT AA.EMPL_NAME, SUM(AA.DELIVERY_AMOUNT) AS DELIVERY_AMOUNT FROM 
                     (SELECT M010.EMPL_NAME, ZTBDelivery.G_CODE,ZTBDelivery.DELIVERY_QTY,ZTBDelivery.DELIVERY_DATE, M110.CUST_NAME_KD, (ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERY_AMOUNT
                     FROM ZTBDelivery
                     LEFT JOIN M110 ON (ZTBDelivery.CUST_CD = M110.CUST_CD AND ZTBDelivery.CTR_CD = M110.CTR_CD)
                     LEFT JOIN M010 ON (ZTBDelivery.EMPL_NO = M010.EMPL_NO AND ZTBDelivery.CTR_CD = M010.CTR_CD)
                     LEFT JOIN ZTBPOTable ON (ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD)
-                    WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}') AS AA
+                    WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}' ${condition}) AS AA
                     GROUP BY AA.EMPL_NAME) AS BB
                     ORDER BY BB.DELIVERY_AMOUNT DESC`;
   ////console.log(setpdQuery);
@@ -2953,14 +3010,24 @@ exports.PICRevenue = async (req, res, DATA) => {
 };
 exports.customerRevenue = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = ` SELECT * FROM (
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
+  let setpdQuery = `
+ WITH INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
+)
+   SELECT * FROM (
                     SELECT AA.CUST_NAME_KD, SUM(AA.DELIVERY_AMOUNT) AS DELIVERY_AMOUNT FROM 
                     (SELECT M010.EMPL_NAME, ZTBDelivery.G_CODE,ZTBDelivery.DELIVERY_QTY,ZTBDelivery.DELIVERY_DATE, M110.CUST_NAME_KD, (ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE) AS DELIVERY_AMOUNT
                     FROM ZTBDelivery
                     LEFT JOIN M110 ON (ZTBDelivery.CUST_CD = M110.CUST_CD AND ZTBDelivery.CTR_CD = M110.CTR_CD)
                     LEFT JOIN M010 ON (ZTBDelivery.EMPL_NO = M010.EMPL_NO AND ZTBDelivery.CTR_CD = M010.CTR_CD)
                     LEFT JOIN ZTBPOTable ON (ZTBDelivery.CUST_CD = ZTBPOTable.CUST_CD AND ZTBDelivery.G_CODE = ZTBPOTable.G_CODE AND ZTBDelivery.PO_NO = ZTBPOTable.PO_NO AND ZTBDelivery.CTR_CD = ZTBPOTable.CTR_CD)
-                    WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}') AS AA
+                    WHERE ZTBDelivery.CTR_CD='${DATA.CTR_CD}' AND DELIVERY_DATE BETWEEN '${DATA.START_DATE}' AND '${DATA.END_DATE}' ${condition}) AS AA
                     GROUP BY AA.CUST_NAME_KD) AS BB
                     ORDER BY BB.DELIVERY_AMOUNT DESC `;
   ////console.log(setpdQuery);
@@ -2976,6 +3043,11 @@ exports.traPOSummaryTotal = async (req, res, DATA) => {
 };
 exports.kd_annuallyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = ` DECLARE @FROM_DATE date;
 DECLARE @TO_DATE date;
 DECLARE @KPI_NAME varchar(100);
@@ -2992,6 +3064,10 @@ WITH DateRange AS (
         DATE_COLUMN AS KPI_DATE
     FROM DATETABLE
     WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
 ),
 WorkingDays AS (
     -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
@@ -3036,7 +3112,7 @@ DAILY_CLOSING_TB AS
 SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
 FROM ZTBDelivery 
 LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
-WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE ${condition}
 GROUP BY DELIVERY_DATE
 )
 SELECT  YEAR(DATETB.DATE_COLUMN) AS YEAR_NUM, SUM(isnull(DELIVERY_QTY,0)) AS DELIVERY_QTY, SUM(isnull(DELIVERED_AMOUNT,0)) AS DELIVERED_AMOUNT, SUM(isnull(KPI_VALUE,0)) AS KPI_VALUE 
@@ -3052,6 +3128,11 @@ ORDER BY YEAR(DATETB.DATE_COLUMN) ASC `;
 };
 exports.kd_monthlyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = ` DECLARE @FROM_DATE date;
 DECLARE @TO_DATE date;
 DECLARE @KPI_NAME varchar(100);
@@ -3068,6 +3149,10 @@ WITH DateRange AS (
         DATE_COLUMN AS KPI_DATE
     FROM DATETABLE
     WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
 ),
 WorkingDays AS (
     -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
@@ -3112,7 +3197,7 @@ DAILY_CLOSING_TB AS
 SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
 FROM ZTBDelivery 
 LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
-WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE ${condition}
 GROUP BY DELIVERY_DATE
 )
 SELECT  CONCAT(YEAR(DATETB.DATE_COLUMN),'_', MONTH(DATETB.DATE_COLUMN)) AS MONTH_YW, YEAR(DATETB.DATE_COLUMN) AS MONTH_YEAR, MONTH(DATETB.DATE_COLUMN) AS MONTH_NUM, SUM(isnull(DELIVERY_QTY,0)) AS DELIVERY_QTY, SUM(isnull(DELIVERED_AMOUNT,0)) AS DELIVERED_AMOUNT, SUM(isnull(KPI_VALUE,0)) AS KPI_VALUE 
@@ -3127,6 +3212,11 @@ ORDER BY YEAR(DATETB.DATE_COLUMN) DESC, MONTH(DATETB.DATE_COLUMN) DESC`;
 };
 exports.kd_weeklyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = ` DECLARE @FROM_DATE date;
 DECLARE @TO_DATE date;
 DECLARE @KPI_NAME varchar(100);
@@ -3143,6 +3233,10 @@ WITH DateRange AS (
         DATE_COLUMN AS KPI_DATE
     FROM DATETABLE
     WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
+),
+INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
 ),
 WorkingDays AS (
     -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
@@ -3187,7 +3281,7 @@ DAILY_CLOSING_TB AS
 SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
 FROM ZTBDelivery 
 LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
-WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE ${condition}
 GROUP BY DELIVERY_DATE
 )
 
@@ -3203,6 +3297,11 @@ ORDER BY DATEPART(YYYY, DATEADD(day,1,DATETB.DATE_COLUMN)) DESC, DATEPART( ISOWK
 };
 exports.kd_dailyclosing = async (req, res, DATA) => {
   let checkkq = "OK";
+  let condition = "";
+  console.log("INNHANH DATA",DATA.IN_NHANH)
+  if (DATA.IN_NHANH === true) {
+    condition += ` AND ZTBDelivery.G_CODE IN (SELECT G_CODE FROM INNHANHCODETB)`;
+  }
   let setpdQuery = ` -- daily closing
 DECLARE @FROM_DATE date;
 DECLARE @TO_DATE date;
@@ -3221,6 +3320,10 @@ WITH DateRange AS (
     FROM DATETABLE
     WHERE DATE_COLUMN BETWEEN CAST(@FROM_DATE AS DATE) AND CAST(@TO_DATE AS DATE)
 ),
+INNHANHCODETB AS
+(
+SELECT DISTINCT G_CODE FROM P400 WHERE PL_HANG IN ('IN','I1','I2','I3','I4','I5','I6','I7','I8','I9')
+),
 WorkingDays AS (
     -- Tính số ngày làm việc (trừ Chủ Nhật) cho toàn bộ tháng
     SELECT 
@@ -3264,7 +3367,7 @@ DAILY_CLOSING_TB AS
 SELECT  ZTBDelivery.DELIVERY_DATE, SUM(ZTBDelivery.DELIVERY_QTY) AS DELIVERY_QTY, SUM((ZTBDelivery.DELIVERY_QTY * ZTBPOTable.PROD_PRICE)) AS DELIVERED_AMOUNT 
 FROM ZTBDelivery 
 LEFT JOIN ZTBPOTable ON (ZTBPOTable.CTR_CD = ZTBDelivery.CTR_CD AND ZTBPOTable.CUST_CD = ZTBDelivery.CUST_CD AND ZTBPOTable.G_CODE = ZTBDelivery.G_CODE AND ZTBPOTable.PO_NO = ZTBDelivery.PO_NO)
-WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE
+WHERE ZTBDelivery.CTR_CD= @CTR_CD AND ZTBDelivery.DELIVERY_DATE BETWEEN @FROM_DATE AND  @TO_DATE ${condition}
 GROUP BY DELIVERY_DATE
 )
 SELECT DATETB.DATE_COLUMN AS DELIVERY_DATE, isnull(DAILY_CLOSING_TB.DELIVERY_QTY,0) AS DELIVERY_QTY,isnull(DAILY_CLOSING_TB.DELIVERED_AMOUNT,0) AS DELIVERED_AMOUNT, isnull(KPI_TB.KPI_VALUE,0) AS KPI_VALUE FROM 
