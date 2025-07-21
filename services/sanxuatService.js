@@ -303,7 +303,6 @@ exports.resetKhoSX_IQC2 = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-
 exports.updateLOT_SX_STATUS = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `UPDATE P501 SET P501.LOT_STATUS='${DATA.LOT_STATUS}' WHERE P501.PROCESS_LOT_NO='${DATA.PROCESS_LOT_NO}' AND P501.CTR_CD='${DATA.CTR_CD}'`;
