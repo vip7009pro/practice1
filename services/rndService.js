@@ -333,6 +333,15 @@ exports.insertAMZDesign = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 }
+exports.checkDesignExistAMZ = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let setpdQuery = `SELECT * FROM DESIGN_AMAZONE WHERE CTR_CD='${DATA.CTR_CD}' AND DESIGN_AMAZONE.G_CODE_MAU='${DATA.G_CODE}'`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
 exports.update_material_info = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = ` UPDATE ZTB_MATERIAL_TB SET CUST_CD ='${DATA.CUST_CD}', SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}',MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}' WHERE CTR_CD='${DATA.CTR_CD}' AND M_ID=${DATA.M_ID}`;
