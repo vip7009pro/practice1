@@ -4021,7 +4021,7 @@ ORDER BY YEAR(DATETB.DATE_COLUMN) DESC
     `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
-  console.log(checkkq);
+  //console.log(checkkq);
   res.send(checkkq);
 };
 exports.dailyEQEffTrending = async (req, res, DATA) => {
@@ -6605,7 +6605,7 @@ SX_GAPTB AS
  HAVING GAP >= 0
  ORDER BY GAP ASC;`;
   //${moment().format('YYYY-MM-DD')}
-  console.log(setpdQuery);
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
