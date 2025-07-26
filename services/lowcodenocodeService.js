@@ -3,8 +3,6 @@ const { queryDB_New, asyncQuery, queryDB, queryDB_New2 } = require("../config/da
 const fs = require("fs");
 const moment = require("moment");
 
-
-
 exports.loadFormList = async (req, res, DATA) => {
   let query = `SELECT * FROM Forms ORDER BY FormName ASC`; 
   console.log(query);
@@ -469,6 +467,236 @@ exports.updateSubMenu = async (req, res, DATA) => {
     MenuCode: DATA.MenuCode,
     Text: DATA.Text,
     Link: DATA.Link
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+
+
+///table dang EAV
+
+exports.insertPage = async (req, res, DATA) => {
+  let query = `
+    INSERT INTO Pages (PageName, Description, Layout, CreatedAt, LastModifiedAt)
+    VALUES (@PageName, @Description, @Layout, GETDATE(), GETDATE())
+  `;
+  let params = {
+    PageName: DATA.PageName,
+    Description: DATA.Description,
+    Layout: DATA.Layout
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.loadPageList = async (req, res) => {
+  let query = `SELECT * FROM Pages`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.updatePage = async (req, res, DATA) => {
+  let query = `UPDATE Pages SET PageName = @PageName, Description = @Description, Layout = @Layout, LastModifiedAt = GETDATE() WHERE PageID = @PageID`;
+  let params = {
+    PageID: DATA.PageID,
+    PageName: DATA.PageName,
+    Description: DATA.Description,
+    Layout: DATA.Layout
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.deletePage = async (req, res, DATA) => {
+  let query = `DELETE FROM Pages WHERE PageID = @PageID`;
+  let params = {
+    PageID: DATA.PageID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.insertPageComponent = async (req, res, DATA) => {
+  let query = `INSERT INTO PageComponents (PageID, ComponentType, ComponentName, ReferenceID, PositionX, PositionY, Width, Height, ComponentOrder) VALUES (@PageID, @ComponentType, @ComponentName, @ReferenceID, @PositionX, @PositionY, @Width, @Height, @ComponentOrder)`;
+  let params = {
+    PageID: DATA.PageID,
+    ComponentType: DATA.ComponentType,
+    ComponentName: DATA.ComponentName,
+    ReferenceID: DATA.ReferenceID,
+    PositionX: DATA.PositionX,
+    PositionY: DATA.PositionY,
+    Width: DATA.Width,
+    Height: DATA.Height,
+    ComponentOrder: DATA.ComponentOrder
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.deletePageComponent = async (req, res, DATA) => {
+  let query = `DELETE FROM PageComponents WHERE ComponentID = @ComponentID`;
+  let params = {
+    ComponentID: DATA.ComponentID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.loadPageComponentList = async (req, res,DATA) => {
+  let query = `SELECT * FROM PageComponents WHERE PageID = @PageID`;
+  let params = {
+    PageID: DATA.PageID
+  };
+  console.log(query);
+  console.log(params);
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.updatePageComponent = async (req, res, DATA) => {
+  let query = `UPDATE PageComponents SET PageID = @PageID, ComponentType = @ComponentType, ComponentName = @ComponentName, ReferenceID = @ReferenceID, PositionX = @PositionX, PositionY = @PositionY, Width = @Width, Height = @Height, ComponentOrder = @ComponentOrder, GridWidth = @GridWidth WHERE ComponentID = @ComponentID`;
+  let params = {
+    ComponentID: DATA.ComponentID,
+    PageID: DATA.PageID,
+    ComponentType: DATA.ComponentType,
+    ComponentName: DATA.ComponentName,
+    ReferenceID: DATA.ReferenceID,
+    PositionX: DATA.PositionX,
+    PositionY: DATA.PositionY,
+    Width: DATA.Width,
+    Height: DATA.Height,
+    ComponentOrder: DATA.ComponentOrder,
+    GridWidth: DATA.GridWidth
+  };
+  console.log(query);
+  console.log(params);
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+
+
+
+exports.insertComponentAttribute = async (req, res, DATA) => {
+  let query = `INSERT INTO ComponentAttributes (ComponentID, AttributeName, AttributeValue) VALUES (@ComponentID, @AttributeName, @AttributeValue)`;
+  let params = {
+    ComponentID: DATA.ComponentID,
+    AttributeName: DATA.AttributeName,
+    AttributeValue: DATA.AttributeValue
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.updateComponentAttribute = async (req, res, DATA) => {
+  let query = `UPDATE ComponentAttributes SET ComponentID = @ComponentID, AttributeName = @AttributeName, AttributeValue = @AttributeValue WHERE AttributeID = @AttributeID`;
+  let params = {
+    AttributeID: DATA.AttributeID,
+    ComponentID: DATA.ComponentID,
+    AttributeName: DATA.AttributeName,
+    AttributeValue: DATA.AttributeValue
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.deleteComponentAttribute = async (req, res, DATA) => {
+  let query = `DELETE FROM ComponentAttributes WHERE AttributeID = @AttributeID`;
+  let params = {
+    AttributeID: DATA.AttributeID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.loadComponentAttributeList = async (req, res,DATA) => {
+  let query = `SELECT * FROM ComponentAttributes WHERE ComponentID = @ComponentID`;
+  let params = {
+    ComponentID: DATA.ComponentID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+
+exports.insertRecord = async (req, res, DATA) => {
+  let query = `INSERT INTO Records (FormID, CreatedAt) OUTPUT INSERTED.RecordID VALUES (@FormID, GETDATE())`;
+  let params = {
+    FormID: DATA.FormID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.updateRecord = async (req, res, DATA) => {
+  let query = `UPDATE Records SET RecordID = @RecordID, FormID = @FormID, CreatedAt = GETDATE() WHERE RecordID = @RecordID`;
+  let params = {
+    RecordID: DATA.RecordID,
+    FormID: DATA.FormID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.deleteRecord = async (req, res, DATA) => {
+  let query = `DELETE FROM Records WHERE RecordID = @RecordID`;
+  let params = {
+    RecordID: DATA.RecordID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.loadRecordList = async (req, res,DATA) => {
+  let query = `SELECT * FROM Records WHERE FormID = @FormID`;
+  let params = {
+    FormID: DATA.FormID
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};  
+
+exports.insertFormData = async (req, res, DATA) => {
+  let query = `INSERT INTO FormData (FormID,RecordID,FieldID,Value,CreatedAt) VALUES (@FormID, @RecordID, @FieldID, @Value, GETDATE())`;
+  let params = {
+    FormID: DATA.FormID,
+    RecordID: DATA.RecordID,
+    FieldID: DATA.FieldID,
+    Value: DATA.Value
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.load_pivotedData = async (req, res, DATA) => {
+  let query = `
+DECLARE @sql NVARCHAR(MAX) = '';
+DECLARE @columns NVARCHAR(MAX) = '';
+
+SELECT @columns = STRING_AGG(QUOTENAME(FieldName), ',')
+FROM Fields
+WHERE FormID = @FormID;
+SET @sql = N'
+SELECT *
+FROM (
+    SELECT 
+        r.RecordID,
+        r.CreatedAt,
+        f.FieldName,
+        fd.Value
+    FROM Records r
+    JOIN FormData fd ON r.RecordID = fd.RecordID
+    JOIN Fields f ON fd.FieldID = f.FieldID
+    WHERE r.FormID = @FormID
+) AS SourceTable
+PIVOT (
+    MAX(Value)
+    FOR FieldName IN (' + @columns + ')
+) AS PivotTable;';
+
+-- Thực thi truy vấn
+EXEC sp_executesql @sql, N'@FormID INT', @FormID;`;
+  let params = {
+    FormID: DATA.FormID,
   };
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
