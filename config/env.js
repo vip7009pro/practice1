@@ -45,6 +45,8 @@ module.exports = {
       "http://cms1.ddns.net:3010",
       "http://cms1.ddns.net", */
       "http://localhost:3001",
+      "http://localhost:3010",
+      "http://cmsvina4285.com:3010",
       /* "http://192.168.1.192",
       "http://192.168.1.2", */
       "http://192.168.1.136:3010",
@@ -55,9 +57,10 @@ module.exports = {
       /* "http://14.160.33.94:3001", */
       "http://localhost:3000",
       "http://localhost",
-      /* "http://14.160.33.94",
-      "http://14.160.33.94:3010",
-      "http://14.160.33.94:3030", */
+      /* "http://14.160.33.94",*/
+      /* "http://14.160.33.94:3010",
+      "http://14.160.33.94:3001",
+      "http://14.160.33.94:3030",  */
       "https://script.google.com",
       "*",
     ],

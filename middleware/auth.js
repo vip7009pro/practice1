@@ -10,7 +10,8 @@ const checkLoginIndex = (req, res, next) => {
     req.coloiko = "kocoloi"; // Gán mặc định để tránh lỗi ở các bước sau
     return next();
   }
-  if(req.body.DATA !== undefined){
+  //console.log('req.body.secureContext',req.body.secureContext)
+  if(req.body.DATA !== undefined && req.body.secureContext !== false){
     let decrypted = decryptData(privateKey, req.body.DATA);    
     req.body.DATA = decrypted;
   }
