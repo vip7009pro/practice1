@@ -42,20 +42,22 @@ exports.loadFormDetail = async (req, res, DATA) => {
 exports.loadFieldList = async (req, res, DATA) => {
   let query = `SELECT * FROM Fields WHERE FormID = @FormID ORDER BY FieldName ASC`;
   let params = { FormID: DATA.FormID };
+  console.log(query);
+  console.log(params);
   let checkkq = await queryDB_New(query, params);
   //console.log(checkkq);
   res.send(checkkq);
 };
 exports.insertField = async (req, res, DATA) => {
-  let query = `INSERT INTO Fields (FormID, FieldName, DataType, ReferenceFormID, Length, IsRequired, CreatedAt) VALUES (@FormID, @FieldName, @DataType, @ReferenceFormID, @Length, @IsRequired, GETDATE())`;
-  let params = { FormID: DATA.FormID, FieldName: DATA.FieldName, DataType: DATA.DataType, ReferenceFormID: DATA.ReferenceFormID, Length: DATA.Length, IsRequired: DATA.IsRequired };
+  let query = `INSERT INTO Fields (FormID, FieldName, DataType, ReferenceFormID,ReferenceFieldIDs,Length, IsRequired, CreatedAt) VALUES (@FormID, @FieldName, @DataType, @ReferenceFormID, @ReferenceFieldIDs, @Length, @IsRequired, GETDATE())`;
+  let params = { FormID: DATA.FormID, FieldName: DATA.FieldName, DataType: DATA.DataType, ReferenceFormID: DATA.ReferenceFormID, ReferenceFieldIDs: DATA.ReferenceFieldIDs, Length: DATA.Length, IsRequired: DATA.IsRequired };
   let checkkq = await queryDB_New(query, params);
   //console.log(checkkq);
   res.send(checkkq);
 };
 exports.updateField = async (req, res, DATA) => {
-  let query = `UPDATE Fields SET FormID = @FormID, FieldName = @FieldName, DataType = @DataType, ReferenceFormID = @ReferenceFormID, Length = @Length, IsRequired = @IsRequired WHERE FieldID = @FieldID`;
-  let params = { FieldID: DATA.FieldID, FormID: DATA.FormID, FieldName: DATA.FieldName, DataType: DATA.DataType, ReferenceFormID: DATA.ReferenceFormID, Length: DATA.Length, IsRequired: DATA.IsRequired };
+  let query = `UPDATE Fields SET FormID = @FormID, FieldName = @FieldName, DataType = @DataType, ReferenceFormID = @ReferenceFormID,ReferenceFieldIDs = @ReferenceFieldIDs, Length = @Length, IsRequired = @IsRequired WHERE FieldID = @FieldID`;
+  let params = { FieldID: DATA.FieldID, FormID: DATA.FormID, FieldName: DATA.FieldName, DataType: DATA.DataType, ReferenceFormID: DATA.ReferenceFormID, ReferenceFieldIDs: DATA.ReferenceFieldIDs, Length: DATA.Length, IsRequired: DATA.IsRequired };
   let checkkq = await queryDB_New(query, params);
   //console.log(checkkq);
   res.send(checkkq);
@@ -698,6 +700,136 @@ EXEC sp_executesql @sql, N'@FormID INT', @FormID;`;
   let params = {
     FormID: DATA.FormID,
   };
+  console.log(query);
+  console.log(params);
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.load_pivotedDataSpecificFields = async (req, res, DATA) => {
+  let query = `
+DECLARE @sql NVARCHAR(MAX) = '';
+DECLARE @columns NVARCHAR(MAX) = '';
+
+SELECT @columns = STRING_AGG(QUOTENAME(FieldName), ',')
+FROM Fields
+WHERE FormID = @FormID;
+SET @sql = N'
+SELECT *
+FROM (
+    SELECT 
+        r.RecordID,
+        r.CreatedAt,
+        f.FieldName,
+        fd.Value
+    FROM Records r
+    JOIN FormData fd ON r.RecordID = fd.RecordID
+    JOIN Fields f ON fd.FieldID = f.FieldID
+    WHERE r.FormID = @FormID AND f.FieldID IN (' + @Fields + ')
+) AS SourceTable
+PIVOT (
+    MAX(Value)
+    FOR FieldName IN (' + @columns + ')
+) AS PivotTable;';
+
+-- Thực thi truy vấn
+EXEC sp_executesql @sql, N'@FormID INT, @Fields NVARCHAR(MAX)', @FormID, @Fields;`;
+  let params = {
+    FormID: DATA.FormID,
+    Fields: DATA.FieldIDs
+  };
+  console.log(query);
+  console.log(params);
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+
+exports.loadRelationshipList = async (req, res) => {
+  let query = `SELECT Relationships.*, f1.FieldName AS ParentFieldName, f2.FieldName AS ChildFieldName, b1.FormName AS ParentTableName, b2.FormName AS ChildTableName  FROM Relationships 
+LEFT JOIN Fields f1 ON  f1.FieldID = Relationships.ParentFieldID
+LEFT JOIN Fields f2 ON  f2.FieldID = Relationships.ChildFieldID
+LEFT JOIN Forms b1 ON b1.FormID = Relationships.ParentTableID
+LEFT JOIN Forms b2 ON b2.FormID = Relationships.ChildTableID`;
+  let checkkq = await queryDB_New2(query, {}, []);
+  res.send(checkkq);
+};
+exports.loadRelationshipDetail = async (req, res, DATA) => {
+  let query = `SELECT Relationships.*, f1.FieldName AS ParentFieldName, f2.FieldName AS ChildFieldName FROM Relationships 
+LEFT JOIN Fields f1 ON  f1.FieldID = Relationships.ParentFieldID
+LEFT JOIN Fields f2 ON  f2.FieldID = Relationships.ChildFieldID WHERE RelationshipID = @RelationshipID`;
+  let params = {
+    RelationshipID: DATA.RelationshipID,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.insertRelationship = async (req, res, DATA) => {
+  let query = `
+    IF NOT EXISTS (
+      SELECT 1 FROM Relationships 
+      WHERE ParentTableID = @ParentTableID 
+        AND ChildTableID = @ChildTableID 
+        AND ParentFieldID = @ParentFieldID 
+        AND ChildFieldID = @ChildFieldID
+    ) 
+    BEGIN
+      INSERT INTO Relationships (ParentTableID, ChildTableID, ParentFieldID, ChildFieldID, RelationshipType, CreatedAt, UpdatedAt)
+      VALUES (@ParentTableID, @ChildTableID, @ParentFieldID, @ChildFieldID, @RelationshipType, GETDATE(), GETDATE());
+    END
+    ELSE
+    BEGIN
+      UPDATE Relationships
+      SET RelationshipType = @RelationshipType, UpdatedAt = GETDATE()
+      WHERE ParentTableID = @ParentTableID 
+        AND ChildTableID = @ChildTableID 
+        AND ParentFieldID = @ParentFieldID 
+        AND ChildFieldID = @ChildFieldID;
+    END
+  `;
+  let params = {
+    ParentTableID: DATA.ParentTableID,
+    ChildTableID: DATA.ChildTableID,
+    ParentFieldID: DATA.ParentFieldID,
+    ChildFieldID: DATA.ChildFieldID,
+    RelationshipType: DATA.RelationshipType,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.updateRelationship = async (req, res, DATA) => {
+  let query = `
+    UPDATE Relationships
+    SET ParentTableID = @ParentTableID, ChildTableID = @ChildTableID, ParentFieldID = @ParentFieldID, ChildFieldID = @ChildFieldID, RelationshipType = @RelationshipType
+    WHERE RelationshipID = @RelationshipID
+  `;
+  let params = {
+    RelationshipID: DATA.RelationshipID,
+    ParentTableID: DATA.ParentTableID,
+    ChildTableID: DATA.ChildTableID,
+    ParentFieldID: DATA.ParentFieldID,
+    ChildFieldID: DATA.ChildFieldID,
+    RelationshipType: DATA.RelationshipType,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.deleteRelationship = async (req, res, DATA) => {
+  let query = `DELETE FROM Relationships WHERE RelationshipID = @RelationshipID`;
+  let params = {
+    RelationshipID: DATA.RelationshipID,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.loadTwoTableRelationship = async (req, res, DATA) => {
+  let query = `SELECT Relationships.*, f1.FieldName AS ParentFieldName, f2.FieldName AS ChildFieldName FROM Relationships 
+LEFT JOIN Fields f1 ON  f1.FieldID = Relationships.ParentFieldID
+LEFT JOIN Fields f2 ON  f2.FieldID = Relationships.ChildFieldID WHERE Relationships.ParentTableID = @ParentTableID AND Relationships.ChildTableID=@ChildTableID`;
+  let params = {
+    ParentTableID: DATA.ParentTableID,
+    ChildTableID: DATA.ChildTableID,
+  };  
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
