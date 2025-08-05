@@ -10,7 +10,7 @@ const { get_material_table, checkMaterialExist, addMaterial, updateMaterial, upd
 
 const { updateAmazonBOMCodeInfo, listAmazon, getBOMAMAZON, getBOMAMAZON_EMPTY, codeinfo, loadcodephoi, checkExistBOMAMAZON, insertAmazonBOM, updateAmazonBOM, checkGNAMEKDExist, update_appsheet_value, getMasterMaterialList, resetbanve, pdbanve, getbomsx, codeinforRnD, getcodefullinfo, getNextSEQ_G_CODE, insertM100BangTinhGia, updateM100BangTinhGia, insertM100, insertM100_AddVer, updateM100, deleteM140_2, checkGSEQ_M140, update_M140, insertM140, deleteM140, checkMaterialInfo, checkMassG_CODE, deleteBOM2, insertBOM2, checkTBGExist, getlastestCODKH, getAMAZON_DESIGN, deleteAMZDesign, insertAMZDesign, update_material_info, loadbarcodemanager, checkbarcodeExist, addBarcode, updateBarcode, deleteBarcode, loadquanlygiaonhan, addbangiaodaofilmtailieu, rnddailynewcode, rndweeklynewcode, rndmonthlynewcode, rndyearlynewcode, rndNewCodeByCustomer, rndNewCodeByProdType, loadSampleMonitorTable, lockSample, updateRND_SAMPLE_STATUS, updateSX_SAMPLE_STATUS, updateQC_SAMPLE_STATUS, updateMATERIAL_STATUS, updateAPPROVE_SAMPLE_STATUS, addMonitoringSample, updateProdProcessData, addProdProcessData, deleteProcessNotInCurrentListFromDataBase, deleteProdProcessData, getmachinelist, loadProdProcessData, saveLOSS_SETTING_SX, saveQLSX, setngoaiquan, updateBEP, updateLossKT, check_m_code_m140, addYCTK, updateYCTK, deleteYCTK, loadyctkdata, loadyctkdatatrenddaily, loadyctkdatatrendweekly, loadyctkdatatrendmonthly, loadyctkdatatrendyearly, checkDesignExistAMZ } = require("./rndService");
 const { insert_O302, updateStockM090, tranhaplieu, traxuatlieu, tratonlieu, updatelieuncc, checkMNAMEfromLotI222XuatKho, checksolanout_O302, xuatpackkhotp, trakhotpInOut, traSTOCKCMS_NEW, traSTOCKCMS, traSTOCKKD_NEW, traSTOCKKD, traSTOCKTACH, loadKTP_IN, loadKTP_OUT, loadStockFull, loadSTOCKG_CODE, loadSTOCKG_NAME_KD, loadSTOCK_YCSX, updatePheDuyetHuyO660, cancelPheDuyetHuyO660, loadMSTOCK_BY_POPULAR, loadMSTOCK_BY_POPULAR_DETAIL, load_M_INPUT_BY_POPULAR, load_M_INPUT_BY_POPULAR_DETAIL, load_M_OUTPUT_BY_POPULAR, load_M_OUTPUT_BY_POPULAR_DETAIL, load_M_STOCK_BY_MONTH, load_M_STOCK_BY_MONTH_DETAIL } = require("./warehouseService");
-const { loadFormList, insertForm, updateForm, deleteForm, loadFormDetail, loadFieldList, insertField, updateField, deleteField, testSQL, loadTableList, createTable, renameTable, deleteTable, deleteColumn, loadColumnList, addColumn, renameColumn, updateColumn, addQuery, getQueryList, getQueryFilter, addQueryFilter, deleteQueryFilter, updateQueryFilter, runQuery, insertData, loadData, insertData2, loadMenuData, loadMainMenus, loadSubMenus, updateMainMenu, updateSubMenu, createSubMenu, createMainMenu, deleteMainMenu, deleteSubMenu, insertPage, loadPageList, updatePage, deletePage, insertPageComponent, loadPageComponentList, updatePageComponent, deletePageComponent, insertComponentAttribute, updateComponentAttribute, deleteComponentAttribute, loadComponentAttributeList, insertFormData, insertRecord, updateRecord, deleteRecord, loadRecordList, load_pivotedData, loadRelationshipList, loadRelationshipDetail, insertRelationship, updateRelationship, deleteRelationship, loadTwoTableRelationship, load_pivotedDataSpecificFields } = require("./lowcodenocodeService");
+const { loadFormList, insertForm, updateForm, deleteForm, loadFormDetail, loadFieldList, insertField, updateField, deleteField, testSQL, loadTableList, createTable, renameTable, deleteTable, deleteColumn, loadColumnList, addColumn, renameColumn, updateColumn, addQuery, getQueryList, getQueryFilter, addQueryFilter, deleteQueryFilter, updateQueryFilter, runQuery, insertData, loadData, insertData2, loadMenuData, loadMainMenus, loadSubMenus, updateMainMenu, updateSubMenu, createSubMenu, createMainMenu, deleteMainMenu, deleteSubMenu, insertPage, loadPageList, updatePage, deletePage, insertPageComponent, loadPageComponentList, updatePageComponent, deletePageComponent, insertComponentAttribute, updateComponentAttribute, deleteComponentAttribute, loadComponentAttributeList, insertFormData, insertRecord, updateRecord, deleteRecord, loadRecordList, load_pivotedData, loadRelationshipList, loadRelationshipDetail, insertRelationship, updateRelationship, deleteRelationship, loadTwoTableRelationship, load_pivotedDataSpecificFields, createViewTrackingTable, createViewForOneForm, updateViewForAllForm, loadViewData, loadViewList, deleteView, getFormIDFromViewName, getViewNameFromFormID, loadViewDataSpecificFields, updateBaseQuery, getQueryFilterByQueryName, getQueryIDFromQueryName, loadPageListFromGroupName, loadPageListFromGroupID } = require("./lowcodenocodeService");
 const { loadKPI, insertKPI, deleteKPI, updateKPI, loadKPIList } = require("./kpiService");
 const { addSubscription, sendNotificationAPI } = require("./pushService");
 const { updatenndscs, updateCSImageStatus, updateCSDoiSachVNStatus, updateCSDoiSachKRStatus, tracsconfirm, tracsrma, tracsCNDB, tracsTAXI, csdailyconfirmdata, csweeklyconfirmdata, csmonthlyconfirmdata, csyearlyconfirmdata, csConfirmDataByCustomer, csConfirmDataByPIC, csdailyreduceamount, csweeklyreduceamount, csmonthlyreduceamount, csyearlyreduceamount, csdailyRMAAmount, csweeklyRMAAmount, csmonthlyRMAAmount, csyearlyRMAAmount, csdailyTaxiAmount, csmonthlyTaxiAmount, csweeklyTaxiAmount, csyearlyTaxiAmount, getMaterialList, checkSpecDTC, checkSpecDTC2, insertSpecDTC, updateSpecDTC, checkAddedSpec, loadrecentRegisteredDTCData, getLastDTCID, checkLabelID2, registerDTCTest, getinputdtcspec, checkRegisterdDTCTEST, insert_dtc_result, updateDTC_TEST_EMPL, loadXbarData, loadCPKTrend, loadHistogram, dtcdata, dtcspec, getpatrolheader, getInspectionWorstTable, inspect_daily_ppm, inspect_weekly_ppm, inspect_monthly_ppm, inspect_yearly_ppm, getInspectionSummary, dailyFcost, weeklyFcost, monthlyFcost, annuallyFcost, dailyDefectTrending, get_inspection, loadChoKiemGop_NEW, loadInspectionPatrol, trendNguoi_Hang_Ktra_daily, trendNguoi_Hang_Ktra_weekly, trendNguoi_Hang_Ktra_monthly, trendNguoi_Hang_Ktra_yearly, loadAUDIT_HISTORY_DATA, add_AUDIT_HISTORY_DATA, delete_AUDIT_HISTORY_DATA, update_AUDIT_HISTORY_DATA, updateFileInfo_AUDIT_HISTORY }= require("./qcService");
@@ -21,6 +21,20 @@ const { loadDataSX, nhapkhoao, resetKhoSX_IQC1, resetKhoSX_IQC2, loadtiledat, ge
 const {check_PLAN_ID_KHO_AO, checkPLANID_O300, checkPLANID_O301, getO300_LAST_OUT_NO, getP400, insertO300, getO300_ROW, deleteM_CODE_O301, checkM_CODE_PLAN_ID_Exist_in_O301, insertO301, updatePlanQLSX, updatePlanOrder, getqlsxplan2, getqlsxplan2_New, deleteMCODEExistIN_O302, updateLIEUQL_SX_M140, deleteM_CODE_ZTB_QLSXCHITHI, updateChiThi, insertChiThi, traYCSXDataFull_QLSX_New, updateDKXLPLAN, updateXUATLIEUCHINH_PLAN, update_XUAT_DAO_FILM_PLAN, updateO301, checkPLANID_O302, neededSXQtyByYCSX, getSystemDateTime, deleteDMYCSX, deleteDMYCSX2, checkTonTaiXuatKhoSub, nhapkhosubao, tralichsutemlotsx, loadDMSX, updateO301_OUT_CFM_QTY_FROM_O302, updateUSE_YN_I222_RETURN_NVL, addProdProcessDataQLSX, updateProdProcessDataQLSX, checkProcessExist, isM_LOT_NO_in_O302, getI221Lastest_IN_NO, getI222Lastest_M_LOT_NO, insert_I221, insert_I222, loadBTPAuto2, loadBTPSummaryAuto2, updateKHSXDAIHAN, deleteNotExistKHSXDAIHAN, cancelProductionLot, traDataPlanLossSX, datasxdailylosstrend, datasxweeklylosstrend, datasxmonthlylosstrend, datasxyearlylosstrend, dailyEQEffTrending, weeklyEQEffTrending, monthlyEQEffTrending, yearlyEQEffTrending, sxdailyachivementtrending, sxweeklyachivementtrending, sxmonthlyachivementtrending, sxyearlyachivementtrending, sxLossTimeByReason, sxLossTimeByEmpl, loadBaoCaoTheoRoll, trasxlosstrendingdata, dailysxlosstrend, weeklysxlosstrend, monthlysxlosstrend, yearlysxlosstrend, loadquanlydaofilm, lichsuxuatdaofilm, machinecounting2, dailysxdata, sxweeklytrenddata, sxmonthlytrenddata, machineTimeEfficiency, sxachivementdata, tinhhinhchotbaocaosx, materialLotStatus, checkRollLieuBienMat, checkM_CODE_PLAN_ID_Exist, checkRollLieuBienMatDaily, loadFullRollData, tinhluongP3, update_M_PRICE_P500, checkProcessLotNoInfo, updateLOT_SX_STATUS, checkM_LOT_NO_QTY_P500, loadSX_KPI_NV_DATA_Daily } = require("./sanxuatService");
 
 const commandHandlers = {
+  loadPageListFromGroupID,
+  loadPageListFromGroupName,
+  getQueryIDFromQueryName,
+  getQueryFilterByQueryName,
+  updateBaseQuery,
+  loadViewDataSpecificFields,
+  getFormIDFromViewName,
+  getViewNameFromFormID,
+  loadViewList,
+  deleteView,
+  loadViewData,
+  createViewTrackingTable,
+  createViewForOneForm,
+  updateViewForAllForm,
   checkDesignExistAMZ,
   loadALL_HOAN_THANH_TRUOC_HAN_RATE_DATA,
   load_M_STOCK_BY_MONTH,
@@ -788,6 +802,7 @@ const commandHandlers = {
   loadSX_GAP_RATE_BACKDATA,
   loadYCSX_GAP_RATE_BACKDATA,
 };
+//console.log(Object.keys(commandHandlers).length);
 exports.processApi = async (req, res) => {
   const qr = req.body;
   const { command, DATA } = qr;
@@ -802,7 +817,7 @@ exports.processApi = async (req, res) => {
   }
   try { 
     //await handler(req, res, DATA);
-    if(DATA.COMPANY === "PVN"){
+    if(DATA.COMPANY === "CMS"){
       await handler(req, res, DATA);
     }
     else {

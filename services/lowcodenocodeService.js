@@ -5,7 +5,7 @@ const moment = require("moment");
 
 exports.loadFormList = async (req, res, DATA) => {
   let query = `SELECT * FROM Forms ORDER BY FormName ASC`; 
-  console.log(query);
+  //console.log(query);
   let params = {};
   let checkkq = await queryDB_New(query, params);
   //console.log(checkkq);
@@ -42,8 +42,8 @@ exports.loadFormDetail = async (req, res, DATA) => {
 exports.loadFieldList = async (req, res, DATA) => {
   let query = `SELECT * FROM Fields WHERE FormID = @FormID ORDER BY FieldName ASC`;
   let params = { FormID: DATA.FormID };
-  console.log(query);
-  console.log(params);
+ /*  console.log(query);
+  console.log(params); */
   let checkkq = await queryDB_New(query, params);
   //console.log(checkkq);
   res.send(checkkq);
@@ -219,7 +219,7 @@ exports.getQueryList = async (req, res, DATA) => {
   res.send(checkkq);  
 };
 exports.getQueryFilter = async (req, res, DATA) => {
-  let query = `SELECT * FROM ZTB_QUERY_FILTER WHERE 1=1 AND {{QueryID}}`;
+  let query = `SELECT * FROM ZTB_QUERY_FILTER WHERE 1=1 AND {{QueryID}} ORDER BY STT ASC`;
   let filters = [
     {
       placeholder: "{{QueryID}}",
@@ -234,8 +234,45 @@ exports.getQueryFilter = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);  
 };
+exports.getQueryFilterByQueryName = async (req, res, DATA) => {
+  let query = `SELECT * FROM ZTB_QUERY_FILTER WHERE 1=1 AND {{QueryName}}`;
+  let filters = [
+    {
+      placeholder: "{{QueryName}}",
+      clause: "QueryName = @QueryName",
+      paramName: "QueryName",    
+    }
+  ]
+  let params = {
+    QueryName: DATA.QueryName
+  };
+  let checkkq = await queryDB_New2(query, params, filters);
+  //console.log(checkkq);
+  res.send(checkkq);  
+};
+exports.getQueryIDFromQueryName = async (req, res, DATA) => {
+  let query = `SELECT QueryID FROM ZTB_QUERYTB WHERE QueryName = @QueryName`;
+  let params = {
+    QueryName: DATA.QueryName
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  //console.log(checkkq);
+  res.send(checkkq);  
+}; 
+
+exports.updateBaseQuery = async (req, res, DATA) => {
+  let query = `UPDATE ZTB_QUERYTB SET BaseQuery = @BaseQuery WHERE QueryID = @QueryID`;
+  let params = {
+    QueryID: DATA.QueryID,
+    BaseQuery: DATA.BaseQuery,
+  };
+  //console.log(params)
+  let checkkq = await queryDB_New2(query, params, []);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
 exports.addQueryFilter = async (req, res, DATA) => {
-  let query = `INSERT INTO ZTB_QUERY_FILTER (QueryID,Placeholder,Clause,ParamName,LikeType,SkipValues,CreatedAt,UpdatedAt) VALUES (@QueryID,@Placeholder,@Clause,@ParamName,@LikeType,@SkipValues,GETDATE(),GETDATE())`;
+  let query = `INSERT INTO ZTB_QUERY_FILTER (QueryID,Placeholder,Clause,ParamName,LikeType,SkipValues,SELECTION_TEXT,SELECTION_VALUE,QueryName,CreatedAt,UpdatedAt,STT,INPUT_TYPE) VALUES (@QueryID,@Placeholder,@Clause,@ParamName,@LikeType,@SkipValues,@SELECTION_TEXT,@SELECTION_VALUE,@QueryName,GETDATE(),GETDATE(),@STT,@INPUT_TYPE)`;
   let params = {
     QueryID: DATA.QueryID,
     Placeholder: DATA.Placeholder,
@@ -243,6 +280,11 @@ exports.addQueryFilter = async (req, res, DATA) => {
     ParamName: DATA.ParamName,
     LikeType: DATA.LikeType,
     SkipValues:  DATA.SkipValues,
+    SELECTION_TEXT: DATA.SELECTION_TEXT,
+    SELECTION_VALUE: DATA.SELECTION_VALUE,
+    QueryName: DATA.QueryName,
+    STT: DATA.STT,
+    INPUT_TYPE: DATA.INPUT_TYPE,    
   };
   //console.log(params)
   let checkkq = await queryDB_New2(query, params, []);
@@ -250,7 +292,7 @@ exports.addQueryFilter = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.updateQueryFilter = async (req, res, DATA) => {
-  let query = `UPDATE ZTB_QUERY_FILTER SET Placeholder = @Placeholder, Clause = @Clause, ParamName = @ParamName, LikeType = @LikeType, SkipValues = @SkipValues, UpdatedAt = GETDATE() WHERE FilterID = @FilterID`;
+  let query = `UPDATE ZTB_QUERY_FILTER SET Placeholder = @Placeholder, Clause = @Clause, ParamName = @ParamName, LikeType = @LikeType, SkipValues = @SkipValues,SELECTION_TEXT = @SELECTION_TEXT,SELECTION_VALUE = @SELECTION_VALUE,QueryName = @QueryName,STT = @STT,INPUT_TYPE = @INPUT_TYPE, UpdatedAt = GETDATE() WHERE FilterID = @FilterID`;
   let params = {
     FilterID: DATA.FilterID,
     Placeholder: DATA.Placeholder,
@@ -258,6 +300,11 @@ exports.updateQueryFilter = async (req, res, DATA) => {
     ParamName: DATA.ParamName,
     LikeType: DATA.LikeType,
     SkipValues: DATA.SkipValues,    
+    SELECTION_TEXT: DATA.SELECTION_TEXT,
+    SELECTION_VALUE: DATA.SELECTION_VALUE,
+    QueryName: DATA.QueryName,
+    STT: DATA.STT,
+    INPUT_TYPE: DATA.INPUT_TYPE,    
   };
   //console.log(params)
   let checkkq = await queryDB_New2(query, params, []);
@@ -290,6 +337,7 @@ exports.runQuery = async (req, res, DATA) => {
 
 
   let checkQuery = await queryDB_New2(query, params, filters);
+  //console.log(checkQuery);
 
 
   let filterQuery = `SELECT * FROM ZTB_QUERY_FILTER WHERE 1=1 AND {{QueryID}}`;
@@ -297,15 +345,16 @@ exports.runQuery = async (req, res, DATA) => {
     {
       placeholder: "{{QueryID}}",
       clause: "QueryID = @QueryID",
-      paramName: "QueryID",    
+      paramName: "QueryID",     
     }
   ]
   let paramsQuery = { 
     QueryID: checkQuery.data[0].QueryID
   };
   let checkQueryFilter = await queryDB_New2(filterQuery, paramsQuery, filtersQuery);
+  //console.log('checkQueryFilter',checkQueryFilter)
   let finalQuery = checkQuery.data[0].BaseQuery;
-  let finalFilter = (checkQueryFilter.data.length > 0 ? checkQueryFilter.data : []).map(item => {
+  let finalFilter = (checkQueryFilter.tk_status !== 'NG' && checkQueryFilter.data.length > 0 ? checkQueryFilter.data : []).map(item => {
     return {
       placeholder: item.Placeholder,
       clause: item.Clause,
@@ -357,7 +406,7 @@ exports.loadData = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.loadMenuData = async (req, res, DATA) => {
-  let query = `SELECT ZTB_MENU_TB.*,ZTB_SUBMENU_TB.SubMenuID, ZTB_SUBMENU_TB.SubMenuName, ZTB_SUBMENU_TB.Text as SubText, ZTB_SUBMENU_TB.Link as SubLink, ZTB_SUBMENU_TB.CreateAt as SubCreateAt, ZTB_SUBMENU_TB.UpdatedAt as SubUpdatedAt, ZTB_SUBMENU_TB.MenuCode, ZTB_SUBMENU_TB.SubMenuIcon, ZTB_SUBMENU_TB.SubIconColor FROM ZTB_MENU_TB
+  let query = `SELECT ZTB_MENU_TB.*,ZTB_SUBMENU_TB.SubMenuID, ZTB_SUBMENU_TB.SubMenuName, ZTB_SUBMENU_TB.Text as SubText, ZTB_SUBMENU_TB.Link as SubLink, ZTB_SUBMENU_TB.CreateAt as SubCreateAt, ZTB_SUBMENU_TB.UpdatedAt as SubUpdatedAt, ZTB_SUBMENU_TB.MenuCode, ZTB_SUBMENU_TB.SubMenuIcon, ZTB_SUBMENU_TB.SubIconColor, ZTB_SUBMENU_TB.PAGE_ID FROM ZTB_MENU_TB
 LEFT JOIN ZTB_SUBMENU_TB ON (ZTB_MENU_TB.MenuID = ZTB_SUBMENU_TB.MenuID) ORDER BY ZTB_MENU_TB.MenuID ASC, ZTB_SUBMENU_TB.SubMenuID ASC`;
   let params = {};
   let checkkq = await queryDB_New2(query, params, []);
@@ -391,21 +440,8 @@ exports.updateMainMenu = async (req, res, DATA) => {
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
-exports.updateSubMenu = async (req, res, DATA) => {
-  let query =` UPDATE ZTB_SUBMENU_TB SET SubMenuName = @SubMenuName, SubMenuIcon = @SubMenuIcon, SubIconColor = @SubIconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE() WHERE SubMenuID = @SubMenuID`;
-  let params = {
-    SubMenuID: DATA.SubMenuID,
-    SubMenuName: DATA.SubMenuName,
-    SubMenuIcon: DATA.SubMenuIcon,
-    SubIconColor: DATA.SubIconColor,   
-    Text: DATA.Text,
-    Link: DATA.Link
-  };
-  let checkkq = await queryDB_New2(query, params, []);
-  res.send(checkkq);
-};
 exports.createSubMenu = async (req, res, DATA) => {
-  let query = `INSERT INTO ZTB_SUBMENU_TB (MenuID,SubMenuName,SubMenuIcon,SubIconColor,MenuCode,Text,Link,CreateAt,UpdatedAt) VALUES (@MenuID,@SubMenuName,@SubMenuIcon,@SubIconColor,@MenuCode,@Text,@Link,GETDATE(),GETDATE())`;
+  let query = `INSERT INTO ZTB_SUBMENU_TB (MenuID,SubMenuName,SubMenuIcon,SubIconColor,MenuCode,Text,Link,CreateAt,UpdatedAt,PAGE_ID) VALUES (@MenuID,@SubMenuName,@SubMenuIcon,@SubIconColor,@MenuCode,@Text,@Link,GETDATE(),GETDATE(),@PAGE_ID)`;
   let params = {
     MenuID: DATA.MenuID,
     SubMenuName: DATA.SubMenuName,
@@ -413,7 +449,8 @@ exports.createSubMenu = async (req, res, DATA) => {
     SubIconColor: DATA.SubIconColor,   
     MenuCode: DATA.MenuCode,
     Text: DATA.Text,
-    Link: DATA.Link
+    Link: DATA.Link,
+    PAGE_ID: DATA.PAGE_ID
   };
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
@@ -460,13 +497,14 @@ exports.updateMainMenu = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.updateSubMenu = async (req, res, DATA) => {
-  let query =` UPDATE ZTB_SUBMENU_TB SET SubMenuName = @SubMenuName, SubMenuIcon = @SubMenuIcon, SubIconColor = @SubIconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE(), MenuCode = @MenuCode WHERE SubMenuID = @SubMenuID`;
+  let query =` UPDATE ZTB_SUBMENU_TB SET SubMenuName = @SubMenuName, SubMenuIcon = @SubMenuIcon, SubIconColor = @SubIconColor, Text = @Text, Link = @Link, UpdatedAt = GETDATE(), MenuCode = @MenuCode, PAGE_ID = @PAGE_ID WHERE SubMenuID = @SubMenuID`;
   let params = {
     SubMenuID: DATA.SubMenuID,
     SubMenuName: DATA.SubMenuName,
     SubMenuIcon: DATA.SubMenuIcon,
     SubIconColor: DATA.SubIconColor,   
     MenuCode: DATA.MenuCode,
+    PAGE_ID: DATA.PAGE_ID,
     Text: DATA.Text,
     Link: DATA.Link
   };
@@ -480,13 +518,15 @@ exports.updateSubMenu = async (req, res, DATA) => {
 
 exports.insertPage = async (req, res, DATA) => {
   let query = `
-    INSERT INTO Pages (PageName, Description, Layout, CreatedAt, LastModifiedAt)
-    VALUES (@PageName, @Description, @Layout, GETDATE(), GETDATE())
+    INSERT INTO Pages (PageName, Description, Layout, PageGroupID, PageGroupName, CreatedAt, LastModifiedAt)
+    VALUES (@PageName, @Description, @Layout, @PageGroupID, @PageGroupName, GETDATE(), GETDATE())
   `;
   let params = {
     PageName: DATA.PageName,
     Description: DATA.Description,
-    Layout: DATA.Layout
+    Layout: DATA.Layout,
+    PageGroupID: DATA.PageGroupID,
+    PageGroupName: DATA.PageGroupName
   };
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
@@ -499,12 +539,14 @@ exports.loadPageList = async (req, res) => {
 };
 
 exports.updatePage = async (req, res, DATA) => {
-  let query = `UPDATE Pages SET PageName = @PageName, Description = @Description, Layout = @Layout, LastModifiedAt = GETDATE() WHERE PageID = @PageID`;
+  let query = `UPDATE Pages SET PageName = @PageName, Description = @Description, Layout = @Layout, LastModifiedAt = GETDATE(), PageGroupID = @PageGroupID, PageGroupName = @PageGroupName WHERE PageID = @PageID`;
   let params = {
     PageID: DATA.PageID,
     PageName: DATA.PageName,
     Description: DATA.Description,
-    Layout: DATA.Layout
+    Layout: DATA.Layout,
+    PageGroupID: DATA.PageGroupID,
+    PageGroupName: DATA.PageGroupName
   };
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
@@ -549,8 +591,8 @@ exports.loadPageComponentList = async (req, res,DATA) => {
   let params = {
     PageID: DATA.PageID
   };
-  console.log(query);
-  console.log(params);
+  /* console.log(query);
+  console.log(params); */
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
@@ -570,8 +612,8 @@ exports.updatePageComponent = async (req, res, DATA) => {
     ComponentOrder: DATA.ComponentOrder,
     GridWidth: DATA.GridWidth
   };
-  console.log(query);
-  console.log(params);
+  /* console.log(query);
+  console.log(params); */
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
@@ -700,8 +742,8 @@ EXEC sp_executesql @sql, N'@FormID INT', @FormID;`;
   let params = {
     FormID: DATA.FormID,
   };
-  console.log(query);
-  console.log(params);
+  /* console.log(query);
+  console.log(params); */
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
@@ -737,8 +779,8 @@ EXEC sp_executesql @sql, N'@FormID INT, @Fields NVARCHAR(MAX)', @FormID, @Fields
     FormID: DATA.FormID,
     Fields: DATA.FieldIDs
   };
-  console.log(query);
-  console.log(params);
+  /* console.log(query);
+  console.log(params); */
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
@@ -833,3 +875,241 @@ LEFT JOIN Fields f2 ON  f2.FieldID = Relationships.ChildFieldID WHERE Relationsh
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
+
+exports.createViewTrackingTable = async (req, res, DATA) => {
+  let query = `
+  -- Tạo hoặc cập nhật bảng FormViewTracking
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FormViewTracking')
+BEGIN
+    CREATE TABLE FormViewTracking (
+        FormID INT PRIMARY KEY,
+        ViewName NVARCHAR(128),
+        LastUpdated DATETIME,
+        FieldHash NVARCHAR(256)
+    );
+END
+ELSE
+BEGIN
+    -- Thêm cột FieldHash nếu chưa tồn tại
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FormViewTracking') AND name = 'FieldHash')
+    BEGIN
+        ALTER TABLE FormViewTracking
+        ADD FieldHash NVARCHAR(256);
+    END
+END;`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.createViewForOneForm = async (req, res, DATA) => {
+  let query = `
+ CREATE OR ALTER PROCEDURE sp_UpdateFormView
+    @FormID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @FormName NVARCHAR(128);
+    DECLARE @ViewName NVARCHAR(128);
+    DECLARE @SQL NVARCHAR(MAX) = '';
+    DECLARE @CurrentFields NVARCHAR(MAX) = '';
+    DECLARE @FieldHash NVARCHAR(256) = '';
+    DECLARE @StoredFieldHash NVARCHAR(256) = '';
+    DECLARE @ViewExists BIT = 0;
+
+    -- Lấy FormName và kiểm tra FormID có tồn tại không
+    SELECT @FormName = FormName
+    FROM Forms
+    WHERE FormID = @FormID;
+
+    IF @FormName IS NULL
+    BEGIN
+        PRINT 'FormID ' + CAST(@FormID AS NVARCHAR(10)) + ' does not exist.';
+        RETURN;
+    END;
+
+    -- Tạo tên View từ FormName, thay khoảng trắng và ký tự không hợp lệ thành '_'
+    SET @ViewName = 'View_' + REPLACE(REPLACE(@FormName, ' ', '_'), '[^a-zA-Z0-9_]', '_');
+
+    -- Kiểm tra xem View đã tồn tại chưa
+    IF EXISTS (SELECT 1 FROM sys.views WHERE name = @ViewName)
+        SET @ViewExists = 1;
+
+    -- Lấy danh sách field hiện tại và tạo hash để kiểm tra thay đổi
+    SELECT @CurrentFields = STRING_AGG(CAST(FieldID AS NVARCHAR(10)) + ':' + FieldName, ','),
+           @FieldHash = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', STRING_AGG(CAST(FieldID AS NVARCHAR(10)) + ':' + FieldName, ',')))
+    FROM Fields
+    WHERE FormID = @FormID;
+
+    -- Lấy hash của field từ FormViewTracking
+    SELECT @StoredFieldHash = FieldHash
+    FROM FormViewTracking
+    WHERE FormID = @FormID;
+
+    -- Nếu View tồn tại và hash không thay đổi, không cần cập nhật
+    IF @ViewExists = 1 AND ISNULL(@FieldHash, '') = ISNULL(@StoredFieldHash, '')
+    BEGIN
+        PRINT 'No changes detected for View ' + @ViewName;
+        RETURN;
+    END;
+
+    -- Xóa View cũ nếu tồn tại
+    IF @ViewExists = 1
+    BEGIN
+        SET @SQL = 'DROP VIEW ' + QUOTENAME(@ViewName) + ';';
+        EXEC sp_executesql @SQL;
+    END;
+
+    -- Tạo câu truy vấn động để sinh View mới, bao gồm cột CreatedAt
+    SET @SQL = 'CREATE VIEW ' + QUOTENAME(@ViewName) + ' AS ' +
+               'SELECT r.RecordID, r.CreatedAt, ' +
+               ISNULL(
+                   (
+                       SELECT STRING_AGG(
+                           'MAX(CASE WHEN f.FieldID = ' + CAST(f.FieldID AS NVARCHAR(10)) + 
+                           ' THEN fd.Value END) AS ' + QUOTENAME(f.FieldName), ', ')
+                       FROM Fields f 
+                       WHERE f.FormID = @FormID
+                   ), ''
+               ) +
+               ' FROM Records r ' +
+               ' LEFT JOIN FormData fd ON r.RecordID = fd.RecordID ' +
+               ' LEFT JOIN Fields f ON fd.FieldID = f.FieldID ' +
+               ' WHERE r.FormID = ' + CAST(@FormID AS NVARCHAR(10)) +
+               ' GROUP BY r.RecordID, r.CreatedAt;';
+
+    -- Nếu không có field, tạo View chỉ với RecordID và CreatedAt
+    IF @CurrentFields IS NULL
+    BEGIN
+        SET @SQL = 'CREATE VIEW ' + QUOTENAME(@ViewName) + ' AS ' +
+                   'SELECT r.RecordID, r.CreatedAt ' +
+                   'FROM Records r ' +
+                   'WHERE r.FormID = ' + CAST(@FormID AS NVARCHAR(10)) + ';';
+    END;
+
+    -- Thực thi câu lệnh tạo View
+    EXEC sp_executesql @SQL;
+
+    -- Cập nhật bảng FormViewTracking
+    IF EXISTS (SELECT 1 FROM FormViewTracking WHERE FormID = @FormID)
+    BEGIN
+        UPDATE FormViewTracking
+        SET ViewName = @ViewName, 
+            LastUpdated = GETDATE(),
+            FieldHash = @FieldHash
+        WHERE FormID = @FormID;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO FormViewTracking (FormID, ViewName, LastUpdated, FieldHash)
+        VALUES (@FormID, @ViewName, GETDATE(), @FieldHash);
+    END;
+
+    PRINT 'View ' + @ViewName + ' created or updated successfully.';
+END;
+GO
+`;
+  let params = {
+    FormID: DATA.FormID,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+  
+exports.updateViewForAllForm = async (req, res, DATA) => {
+  let query = `
+  -- Stored Procedure để kiểm tra và cập nhật View cho tất cả Form
+CREATE OR ALTER PROCEDURE sp_UpdateAllFormViews
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @FormID INT;
+
+    -- Lấy danh sách tất cả FormID
+    DECLARE form_cursor CURSOR FOR
+    SELECT FormID FROM Forms;
+
+    OPEN form_cursor;
+    FETCH NEXT FROM form_cursor INTO @FormID;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC sp_UpdateFormView @FormID;
+        FETCH NEXT FROM form_cursor INTO @FormID;
+    END;
+
+    CLOSE form_cursor;
+    DEALLOCATE form_cursor;
+
+    PRINT 'All form views updated successfully.';
+END;
+GO
+`;
+let checkkq = await queryDB_New2(query, {}, []);
+res.send(checkkq);
+};
+  
+exports.loadViewList = async (req, res) => {
+  let query = `SELECT * FROM FormViewTracking`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.deleteView = async (req, res, DATA) => {
+  let query = `DELETE FROM FormViewTracking WHERE FormID = @FormID`;
+  let params = {
+    FormID: DATA.FormID,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.loadViewData = async (req, res, DATA) => {
+  let query = `SELECT * FROM ${DATA.ViewName}`;
+  //console.log(query);
+  let checkkq = await queryDB_New2(query, {}, []);
+  res.send(checkkq);
+};
+
+exports.loadViewDataSpecificFields = async (req, res, DATA) => {
+  let query = `SELECT RecordID, CreatedAt, ${DATA.Fields} FROM ${DATA.ViewName}`;
+  //console.log(query);
+  let checkkq = await queryDB_New2(query, {}, []);
+  res.send(checkkq);
+};
+
+exports.getFormIDFromViewName = async (req, res, DATA) => {
+  let query = `SELECT FormID FROM FormViewTracking WHERE ViewName = @ViewName`;
+  let params = {
+    ViewName: DATA.ViewName,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+exports.getViewNameFromFormID = async (req, res, DATA) => {
+  let query = `SELECT ViewName FROM FormViewTracking WHERE FormID = @FormID`;
+  let params = {
+    FormID: DATA.FormID,
+  };  
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.loadPageListFromGroupName = async (req, res, DATA) => {
+  let query = `SELECT * FROM Pages WHERE PageGroupName = @PageGroupName`;
+  let params = {
+    PageGroupName: DATA.PageGroupName,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};  
+
+exports.loadPageListFromGroupID = async (req, res, DATA) => {
+  let query = `SELECT * FROM Pages WHERE PageGroupID = @PageGroupID`;
+  let params = {
+    PageGroupID: DATA.PageGroupID,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};  
