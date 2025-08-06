@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const { queryDB_New, asyncQuery, queryDB, queryDB_New2 } = require("../config/database");
 const fs = require("fs");
 const moment = require("moment");
+const e = require("express");
 
 exports.loadFormList = async (req, res, DATA) => {
   let query = `SELECT * FROM Forms ORDER BY FormName ASC`; 
@@ -1113,3 +1114,19 @@ exports.loadPageListFromGroupID = async (req, res, DATA) => {
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };  
+
+exports.excuteUpdateViewForOneForm = async (req, res, DATA) => {
+  let query = `EXEC sp_UpdateFormView @FormID = @FormID`;
+  let params = {
+    FormID: DATA.FormID,
+  };
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
+
+exports.excuteUpdateViewForAllForm = async (req, res) => {
+  let query = `EXEC sp_UpdateAllFormViews`;
+  let params = {};
+  let checkkq = await queryDB_New2(query, params, []);
+  res.send(checkkq);
+};
