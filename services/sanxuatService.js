@@ -1505,7 +1505,7 @@ exports.loadDataSX_YCSX = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = " WHERE PROD_REQUEST_NO1 is not null  ";
   if (DATA.ALLTIME === false) {
-    condition += ` AND P400.PROD_REQUEST_DATE BETWEEN '${DATA.FROM_DATE}' AND  '${DATA.TO_DATE}'`;
+    condition += ` AND P400.PROD_REQUEST_DATE BETWEEN '${moment(DATA.FROM_DATE).format('YYYYMMDD')}' AND  '${moment(DATA.TO_DATE).format('YYYYMMDD')}'`;
   }
   if (DATA.G_NAME !== "") {
     condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
