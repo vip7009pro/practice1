@@ -62,6 +62,10 @@ module.exports = {
       "http://14.160.33.94:3001",
       "http://14.160.33.94:3030",  */
       "https://script.google.com",
+      "https://erp.printvietnam.com.vn",
+      "https://wwww.erp.printvietnam.com.vn",
+      "http://erp.printvietnam.com.vn",
+      "http://wwww.erp.printvietnam.com.vn",
       "*",
     ],
     optionsSuccessStatus: 200,
