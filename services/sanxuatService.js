@@ -6997,25 +6997,29 @@ WHERE ZTB_QL_KNIFE_FILM.G_CODE='${DATA.G_CODE}' AND ZTB_QL_KNIFE_FILM.KNIFE_TYPE
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.insert_sampledatasx = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTB_QLSXCHITHI WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`;
+  let setpdQuery = `INSERT INTO ZTB_SX_QL_SAMPLE (CTR_CD, PLAN_ID, G_CODE, BANVE, DKSX, INS_EMPL, INS_DATE, UPD_EMPL, UPD_DATE) OUTPUT INSERTED.SX_SP_ID
+  VALUES ('${DATA.CTR_CD}', '${DATA.PLAN_ID}', '${DATA.G_CODE}', '${DATA.BANVE}', '${DATA.DKSX}', '${EMPL_NO}', GETDATE(), '${EMPL_NO}', GETDATE())`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.updatebanvesampledata = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTB_QLSXCHITHI WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`;
+  let setpdQuery = `UPDATE ZTB_SX_QL_SAMPLE SET BANVE='${DATA.BANVE}',BANVE_EXT='${DATA.BANVE_EXT}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE SX_SP_ID='${DATA.SX_SP_ID}'`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
-exports.common = async (req, res, DATA) => {
+exports.updateAnhDKSXSampleData = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTB_QLSXCHITHI WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`;
+  let setpdQuery = `UPDATE ZTB_SX_QL_SAMPLE SET DKSX='${DATA.DKSX}', DKSX_EXT='${DATA.DKSX_EXT}', UPD_EMPL='${EMPL_NO}', UPD_DATE=GETDATE() WHERE SX_SP_ID='${DATA.SX_SP_ID}'`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
