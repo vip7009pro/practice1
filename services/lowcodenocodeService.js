@@ -390,18 +390,18 @@ exports.insertData2 = async (req, res, DATA) => {
     return acc;
   }, {});
   let query = `INSERT INTO ${DATA.TABLE_NAME} (${Object.keys(filteredDATA).join(",")}) VALUES (${Object.keys(filteredDATA).map(item => `@${item}`).join(",")})`;
-  console.log(query);
+  //console.log(query);
   let params = Object.keys(filteredDATA).reduce((acc, item) => {
     acc[item] = filteredDATA[item] ?? "";
     return acc;
   }, {});
-  console.log(params);
+  //console.log(params);
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);
 };
 exports.loadData = async (req, res, DATA) => {
   let query = `SELECT TOP 1000 * FROM ${DATA.TABLE_NAME}`;
-  console.log(query);
+  //console.log(query);
   let params = {};
   let checkkq = await queryDB_New2(query, params, []);
   res.send(checkkq);

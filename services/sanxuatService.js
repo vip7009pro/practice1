@@ -7001,7 +7001,7 @@ exports.insert_sampledatasx = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
   let setpdQuery = `INSERT INTO ZTB_SX_QL_SAMPLE (CTR_CD, PLAN_ID, G_CODE, BANVE, DKSX, INS_EMPL, INS_DATE, UPD_EMPL, UPD_DATE) OUTPUT INSERTED.SX_SP_ID
-  VALUES ('${DATA.CTR_CD}', '${DATA.PLAN_ID}', '${DATA.G_CODE}', '${DATA.BANVE}', '${DATA.DKSX}', '${EMPL_NO}', GETDATE(), '${EMPL_NO}', GETDATE())`;
+  VALUES ('${DATA.CTR_CD}', '${DATA.PLAN_ID.toUpperCase()}', '${DATA.G_CODE}', '${DATA.BANVE}', '${DATA.DKSX}', '${EMPL_NO}', GETDATE(), '${EMPL_NO}', GETDATE())`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
