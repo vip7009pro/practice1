@@ -25,6 +25,7 @@ module.exports = {
       "https://cmsvina4285.com:3006",
       "http://cmsvina4285.com:3006",
       "http://cmsvina4285.com:3001",
+      "http://cmsvina4285.com:3000",
       /* "http://192.168.1.136:3001", */
       /* "https://cms.ddns.net:3004",
       "http://cms.ddns.net:3010",
