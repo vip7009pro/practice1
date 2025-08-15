@@ -1353,8 +1353,6 @@ ORDER BY PHANLOAI ASC
 };
 exports.load_M_STOCK_BY_MONTH_DETAIL = async (req, res, DATA) => {
   let checkkq = "OK";
-  console.log('moc1',DATA.MOC1);
-  console.log('moc2',DATA.MOC2);
   let setpdQuery = `
 WITH TON_I222 AS
 (
@@ -1391,6 +1389,47 @@ SELECT M_CODE,M_NAME, WIDTH_CD,PHANLOAI, SUM(STOCK_SQM) AS STOCK_SQM FROM TON_TO
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
+};
+exports.load_P_STOCK_BY_MONTH = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  WITH TONKHOGAP AS
+(
+SELECT I660.*, DATEDIFF(MONTH,INS_DATE,GETDATE()) AS GAP FROM I660 WHERE  USE_YN <> 'X' AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton')
+),
+TONPHANLOAI AS
+(
+SELECT TONKHOGAP.*,  CASE WHEN TONKHOGAP.GAP < ${DATA.MOC1} THEN 'A' WHEN TONKHOGAP.GAP >=${DATA.MOC1} AND TONKHOGAP.GAP < ${DATA.MOC2} THEN 'B' ELSE 'C' END AS PHANLOAI FROM TONKHOGAP
+)
+SELECT PHANLOAI, SUM(IN_QTY) AS TOTAL_STOCK FROM TONPHANLOAI GROUP BY PHANLOAI ORDER BY PHANLOAI ASC
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.load_P_STOCK_BY_MONTH_DETAIL = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  WITH TONKHOGAP AS
+(
+SELECT I660.*, DATEDIFF(MONTH,INS_DATE,GETDATE()) AS GAP FROM I660 WHERE  USE_YN <> 'X' AND (I660.REMARK is null OR  I660.REMARK<> 'Pending Huy ton')
+),
+TONPHANLOAI AS
+(
+SELECT TONKHOGAP.*,  CASE WHEN TONKHOGAP.GAP < ${DATA.MOC1} THEN 'A' WHEN TONKHOGAP.GAP >=${DATA.MOC1} AND TONKHOGAP.GAP < ${DATA.MOC2} THEN 'B' ELSE 'C' END AS PHANLOAI FROM TONKHOGAP
+)
+SELECT TONPHANLOAI.G_CODE,M100.G_NAME, M100.G_NAME_KD, SUM(IN_QTY) AS TOTAL_STOCK, TONPHANLOAI.PHANLOAI FROM TONPHANLOAI LEFT JOIN M100 ON M100.G_CODE = TONPHANLOAI.G_CODE
+WHERE TONPHANLOAI.PHANLOAI= '${DATA.PHANLOAI}'
+GROUP BY TONPHANLOAI.G_CODE,M100.G_NAME, M100.G_NAME_KD,TONPHANLOAI.PHANLOAI
+  
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.common = async (req, res, DATA) => {
 };
 exports.common = async (req, res, DATA) => {
 };
