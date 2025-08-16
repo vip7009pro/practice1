@@ -1114,7 +1114,7 @@ exports.loadCPKTrend = async (req, res, DATA) => {
   ),
   GroupedData AS (
       SELECT 
-          (RowNum - 1) / 25 + 1 AS GRP_ID,
+          (RowNum - 1) / 32 + 1 AS GRP_ID,
           CENTER_VALUE,
           LOWER_VALUE,
           UPPER_VALUE,
@@ -1124,7 +1124,7 @@ exports.loadCPKTrend = async (req, res, DATA) => {
       FROM 
           CTE
       GROUP BY 
-          (RowNum - 1) / 25 + 1, 
+          (RowNum - 1) / 32 + 1, 
           CENTER_VALUE,
           LOWER_VALUE,
           UPPER_VALUE,
