@@ -239,6 +239,9 @@ ZTB_SX_EFFICIENCY.CHO_QC,
 ZTB_SX_EFFICIENCY.CHOT_BAOCAO, 
 ZTB_SX_EFFICIENCY.CHUYEN_CODE, 
 ZTB_SX_EFFICIENCY.KHAC, 
+ZTB_SX_EFFICIENCY.CHO_FILM, 
+ZTB_SX_EFFICIENCY.K_CHO_DUYET, 
+ZTB_SX_EFFICIENCY.CHA_BAN, 
 ZTB_SX_EFFICIENCY.REMARK,
 ZTB_QLSXPLAN.NEEDED_QTY,
 ZTB_QLSXPLAN.CURRENT_LOSS_SX,
@@ -4032,7 +4035,7 @@ exports.dailyEQEffTrending = async (req, res, DATA) => {
 SELECT
 ZTB_SX_RESULT.SX_DATE,   
 DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
-DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
+DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(CHO_FILM, 0) + isnull(K_CHO_DUYET, 0) + isnull(CHA_BAN, 0)+ isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
 ZTB_SX_RESULT.CTR_CD     
 FROM 
 ZTB_SX_RESULT 
@@ -4088,7 +4091,7 @@ exports.weeklyEQEffTrending = async (req, res, DATA) => {
 SELECT
 ZTB_SX_RESULT.SX_DATE,   
 DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
-DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
+DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(CHO_FILM, 0) + isnull(K_CHO_DUYET, 0) + isnull(CHA_BAN, 0)+ isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
 ZTB_SX_RESULT.CTR_CD     
 FROM 
 ZTB_SX_RESULT 
@@ -4145,7 +4148,7 @@ exports.monthlyEQEffTrending = async (req, res, DATA) => {
 SELECT
 ZTB_SX_RESULT.SX_DATE,   
 DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
-DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
+DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(CHO_FILM, 0) + isnull(K_CHO_DUYET, 0) + isnull(CHA_BAN, 0)+ isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
 ZTB_SX_RESULT.CTR_CD     
 FROM 
 ZTB_SX_RESULT 
@@ -4202,7 +4205,7 @@ exports.yearlyEQEffTrending = async (req, res, DATA) => {
 SELECT
 ZTB_SX_RESULT.SX_DATE,   
 DATEDIFF(minute, SETTING_START_TIME, MASS_END_TIME) as TOTAL_TIME,(DATEDIFF(minute, MASS_START_TIME, MASS_END_TIME)) AS RUN_TIME_SX, 
-DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
+DATEDIFF(minute, SETTING_START_TIME, MASS_START_TIME) as SETTING_TIME,(isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(CHO_FILM, 0) + isnull(K_CHO_DUYET, 0) + isnull(CHA_BAN, 0)+ isnull(KHAC, 0)) AS TOTAL_LOSS_TIME,
 ZTB_SX_RESULT.CTR_CD     
 FROM 
 ZTB_SX_RESULT 
