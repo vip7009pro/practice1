@@ -4317,7 +4317,7 @@ exports.sxLossTimeByReason = async (req, res, DATA) => {
   let setpdQuery = `
  WITH LOSS_TIME_TB AS
     (
-    SELECT SUM(isnull(LAY_DO, 0)) AS LAY_DO , SUM(isnull(MAY_HONG, 0)) AS MAY_HONG , SUM(isnull(DAO_NG, 0)) AS DAO_NG , SUM(isnull(CHO_BTP, 0)) AS CHO_BTP , SUM(isnull(CHO_LIEU, 0)) AS CHO_LIEU , SUM(isnull(HET_LIEU, 0)) AS HET_LIEU , SUM(isnull(LIEU_NG, 0)) AS LIEU_NG , SUM(isnull(CAN_HANG, 0)) AS CAN_HANG , SUM(isnull(HOP_FL, 0)) AS HOP_FL , SUM(isnull(CHO_QC, 0)) AS CHO_QC , SUM(isnull(CHOT_BAOCAO, 0)) AS CHOT_BAOCAO , SUM(isnull(CHUYEN_CODE, 0)) AS CHUYEN_CODE ,SUM(isnull(CHO_FILM, 0)) AS CHO_FILM, SUM(isnull(K_CHO_DUYET, 0)) AS K_CHO_DUYET, SUM(isnull(KHAC, 0)) AS KHAC, SUM((isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(CHO_FILM, 0)+  isnull(K_CHO_DUYET, 0) + isnull(KHAC, 0))) AS TOTAL_LOSS_TIME, ZTB_SX_EFFICIENCY.CTR_CD FROM ZTB_SX_EFFICIENCY
+    SELECT SUM(isnull(LAY_DO, 0)) AS LAY_DO , SUM(isnull(MAY_HONG, 0)) AS MAY_HONG , SUM(isnull(DAO_NG, 0)) AS DAO_NG , SUM(isnull(CHO_BTP, 0)) AS CHO_BTP , SUM(isnull(CHO_LIEU, 0)) AS CHO_LIEU , SUM(isnull(HET_LIEU, 0)) AS HET_LIEU , SUM(isnull(LIEU_NG, 0)) AS LIEU_NG , SUM(isnull(CAN_HANG, 0)) AS CAN_HANG , SUM(isnull(HOP_FL, 0)) AS HOP_FL , SUM(isnull(CHO_QC, 0)) AS CHO_QC , SUM(isnull(CHOT_BAOCAO, 0)) AS CHOT_BAOCAO , SUM(isnull(CHUYEN_CODE, 0)) AS CHUYEN_CODE ,SUM(isnull(CHO_FILM, 0)) AS CHO_FILM, SUM(isnull(K_CHO_DUYET, 0)) AS K_CHO_DUYET, SUM(isnull(CHA_BAN, 0)) AS CHA_BAN, SUM(isnull(KHAC, 0)) AS KHAC, SUM((isnull(LAY_DO, 0) + isnull(MAY_HONG, 0) + isnull(DAO_NG, 0) + isnull(CHO_BTP, 0) + isnull(CHO_LIEU, 0) + isnull(HET_LIEU, 0) + isnull(LIEU_NG, 0) + isnull(CAN_HANG, 0) + isnull(HOP_FL, 0) + isnull(CHO_QC, 0) + isnull(CHOT_BAOCAO, 0) + isnull(CHUYEN_CODE, 0) + isnull(CHO_FILM, 0)+  isnull(K_CHO_DUYET, 0) + isnull(CHA_BAN, 0) + isnull(KHAC, 0))) AS TOTAL_LOSS_TIME, ZTB_SX_EFFICIENCY.CTR_CD FROM ZTB_SX_EFFICIENCY
     LEFT JOIN ZTB_SX_RESULT ON (ZTB_SX_RESULT.PLAN_ID = ZTB_SX_EFFICIENCY.PLAN_ID AND ZTB_SX_RESULT.WORK_SHIFT = ZTB_SX_EFFICIENCY.WORK_SHIFT AND ZTB_SX_RESULT.CTR_CD = ZTB_SX_EFFICIENCY.CTR_CD)
     WHERE ZTB_SX_RESULT.SX_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
     AND ZTB_SX_EFFICIENCY.CTR_CD='${DATA.CTR_CD}'
@@ -4329,7 +4329,7 @@ exports.sxLossTimeByReason = async (req, res, DATA) => {
     ) AS s
     UNPIVOT
     (
-    LOSS_TIME FOR [REASON] IN ([LAY_DO],[MAY_HONG],[DAO_NG],[CHO_LIEU],[HET_LIEU],[LIEU_NG],[HOP_FL],[CHO_QC],[CHOT_BAOCAO],[CHUYEN_CODE],[CAN_HANG],[CHO_BTP],[CHO_FILM],[K_CHO_DUYET],[KHAC])
+    LOSS_TIME FOR [REASON] IN ([LAY_DO],[MAY_HONG],[DAO_NG],[CHO_LIEU],[HET_LIEU],[LIEU_NG],[HOP_FL],[CHO_QC],[CHOT_BAOCAO],[CHUYEN_CODE],[CAN_HANG],[CHO_BTP],[CHA_BAN],[CHO_FILM],[K_CHO_DUYET],[KHAC])
     ) as unpvt
     WHERE unpvt.CTR_CD='${DATA.CTR_CD}' AND LOSS_TIME <> 0
     ORDER BY unpvt.LOSS_TIME DESC
