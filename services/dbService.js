@@ -1,6 +1,6 @@
 const { login, logout, login2, loginVendors, logoutVendors } = require("./authService");
 const { uploadFile } = require("./fileService");
-const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer, check_chua_pd, setMobileVer, checkloginVendors, checkMYCHAMCONGVendors } = require("./commonService");
+const { getCommonData, checklogin, checkMYCHAMCONG, insert_Notification_Data, load_Notification_Data, checkEMPL_NO_mobile, checkMNAMEfromLotI222, checkPLAN_ID, checkMNAMEfromLot, checkMNAMEfromLotI222Total, checkPlanIdP501, checkProcessLotNo_Prod_Req_No, checkPROCESS_LOT_NO, check_m_code_m140_main, isM_LOT_NO_in_IN_KHO_SX, check_m_lot_exist_p500, loadPostAll, loadPost, updatePost, deletePost, updatechamcongdiemdanhauto, getlastestPostId, insert_information, loadWebSetting, update_file_name, get_file_list, delete_file, changepassword, setWebVer, check_chua_pd, setMobileVer, checkloginVendors, checkMYCHAMCONGVendors, checkPLAN_ID_Exist } = require("./commonService");
 const { workdaycheck, tangcadaycheck, countxacnhanchamcong, countthuongphat, checkWebVer, nghidaycheck, checkLicense } = require("./userService");
 const moment = require("moment");
 const { diemdanhnhom, diemdanhnhomBP, diemdanhnhomNS, setdiemdanhnhom, setdiemdanhnhom2, setteamnhom, dangkytangcanhom, dangkynghi2, dangkynghi2_AUTO, dangkytangcacanhan, pheduyetnhom, pheduyetnhomBP, pheduyetnhomNS, setpheduyetnhom, mydiemdanhnhom, diemdanhsummarynhom, getmaindeptlist, workpositionlist, workpositionlist_BP, workpositionlist_NS, diemdanhhistorynhom, diemdanhfull, getemployee_full, insertemployee, updateemployee, getmaindept, insertmaindept, updatemaindept, deletemaindept, getsubdept, insertsubdept, updatesubdept, deletesubdept, getworkposition, insertworkposition, updateworkposition, deleteworkposition, getsubdeptall, getddmaindepttb, loadDiemDanhFullSummaryTable, xoadangkynghi_AUTO, setca, setnhamay, setEMPL_WORK_POSITION, updateM010, loadC001, loadC0012, loadCaInfo, fixTime, update_empl_image, getDepartmentList, checkdiemdanh, fixTimehangloat } = require("./nhansuService");
@@ -21,6 +21,7 @@ const { loadDataSX, nhapkhoao, resetKhoSX_IQC1, resetKhoSX_IQC2, loadtiledat, ge
 const {check_PLAN_ID_KHO_AO, checkPLANID_O300, checkPLANID_O301, getO300_LAST_OUT_NO, getP400, insertO300, getO300_ROW, deleteM_CODE_O301, checkM_CODE_PLAN_ID_Exist_in_O301, insertO301, updatePlanQLSX, updatePlanOrder, getqlsxplan2, getqlsxplan2_New, deleteMCODEExistIN_O302, updateLIEUQL_SX_M140, deleteM_CODE_ZTB_QLSXCHITHI, updateChiThi, insertChiThi, traYCSXDataFull_QLSX_New, updateDKXLPLAN, updateXUATLIEUCHINH_PLAN, update_XUAT_DAO_FILM_PLAN, updateO301, checkPLANID_O302, neededSXQtyByYCSX, getSystemDateTime, deleteDMYCSX, deleteDMYCSX2, checkTonTaiXuatKhoSub, nhapkhosubao, tralichsutemlotsx, loadDMSX, updateO301_OUT_CFM_QTY_FROM_O302, updateUSE_YN_I222_RETURN_NVL, addProdProcessDataQLSX, updateProdProcessDataQLSX, checkProcessExist, isM_LOT_NO_in_O302, getI221Lastest_IN_NO, getI222Lastest_M_LOT_NO, insert_I221, insert_I222, loadBTPAuto2, loadBTPSummaryAuto2, updateKHSXDAIHAN, deleteNotExistKHSXDAIHAN, cancelProductionLot, traDataPlanLossSX, datasxdailylosstrend, datasxweeklylosstrend, datasxmonthlylosstrend, datasxyearlylosstrend, dailyEQEffTrending, weeklyEQEffTrending, monthlyEQEffTrending, yearlyEQEffTrending, sxdailyachivementtrending, sxweeklyachivementtrending, sxmonthlyachivementtrending, sxyearlyachivementtrending, sxLossTimeByReason, sxLossTimeByEmpl, loadBaoCaoTheoRoll, trasxlosstrendingdata, dailysxlosstrend, weeklysxlosstrend, monthlysxlosstrend, yearlysxlosstrend, loadquanlydaofilm, lichsuxuatdaofilm, machinecounting2, dailysxdata, sxweeklytrenddata, sxmonthlytrenddata, machineTimeEfficiency, sxachivementdata, tinhhinhchotbaocaosx, materialLotStatus, checkRollLieuBienMat, checkM_CODE_PLAN_ID_Exist, checkRollLieuBienMatDaily, loadFullRollData, tinhluongP3, update_M_PRICE_P500, checkProcessLotNoInfo, updateLOT_SX_STATUS, checkM_LOT_NO_QTY_P500, loadSX_KPI_NV_DATA_Daily } = require("./sanxuatService");
 
 const commandHandlers = {
+  checkPLAN_ID_Exist,
   loadALL_HOAN_THANH_TRUOC_HAN_RATE2,
   loadALL_HOAN_THANH_TRUOC_HAN_RATE_BACKDATA2,
   insertupdateworkhours,
@@ -834,7 +835,7 @@ exports.processApi = async (req, res) => {
   }
   try { 
     //await handler(req, res, DATA);
-    if(DATA.COMPANY === "PVN"){
+    if(DATA.COMPANY === "CMS"){
       await handler(req, res, DATA);
     }
     else {

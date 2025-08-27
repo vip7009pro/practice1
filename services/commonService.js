@@ -253,6 +253,14 @@ exports.checkPLAN_ID = async (req, res, DATA) => {
   res.send(checkkq);
 };
 
+exports.checkPLAN_ID_Exist = async (req, res, DATA) => {
+  let checkkq = await queryDB_New(
+    `SELECT TOP 1 * FROM ZTB_QLSXPLAN WHERE ZTB_QLSXPLAN.PROD_REQUEST_NO=@prod_request_no AND ZTB_QLSXPLAN.CTR_CD=@ctr_cd`,
+    { prod_request_no: DATA.PROD_REQUEST_NO, ctr_cd: DATA.CTR_CD }
+  );
+  res.send(checkkq);
+};
+
 exports.checkPlanIdP501 = async (req, res, DATA) => {
   let checkkq = await queryDB_New(
     `SELECT TOP 1 * FROM P501 WHERE CTR_CD=@ctr_cd AND PLAN_ID=@plan_id`,
