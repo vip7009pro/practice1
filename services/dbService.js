@@ -845,7 +845,7 @@ exports.processApi = async (req, res) => {
   }
   try { 
     //await handler(req, res, DATA);
-    if(DATA.COMPANY === "CMS"){
+    if(DATA.COMPANY === "PVN"){
       await handler(req, res, DATA);
     }
     else {
