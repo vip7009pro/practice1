@@ -850,9 +850,10 @@ exports.selectcodeList = async (req, res, DATA) => {
   if (DATA.G_NAME !== undefined && DATA.G_NAME !== null && DATA.G_NAME !== '') {
     condition = ` AND  M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
   }
-  let query = `SELECT G_CODE , G_NAME, G_NAME_KD, PROD_LAST_PRICE, USE_YN FROM M100 WHERE CTR_CD='${DATA.CTR_CD}'  ${condition}`;
+  let query = `SELECT G_CODE , G_NAME, G_NAME_KD, PROD_LAST_PRICE, USE_YN FROM M100 WHERE USE_YN='Y' AND CTR_CD='${DATA.CTR_CD}'  ${condition}`;
+  //console.log('query',query)
   kqua = await queryDB(query);
-  ////console.log(kqua);
+  //console.log(kqua);
   res.send(kqua);
 };
 exports.delete_invoice = async (req, res, DATA) => {
