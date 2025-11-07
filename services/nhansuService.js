@@ -2282,7 +2282,159 @@ exports.updateworkhour = async (req, res, DATA) => {
   res.send(checkkq);
 };
 
+exports.insertBangCong = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let checkkq = "OK";
+  let WORK_HOUR = ((DATA.L100 ?? 0) +  (DATA.L150T ?? 0) + (DATA.L150S ?? 0) + (DATA.L130 ?? 0) + (DATA.L180 ?? 0) + (DATA.L200 ?? 0) + (DATA.L210 ?? 0) + (DATA.L270 ?? 0) + (DATA.L300 ?? 0) + (DATA.L390 ?? 0) - (DATA.DI_TRE ?? 0) - (DATA.VE_SOM ?? 0));
+  let checkEMPL_NO_Query = `SELECT * FROM ZTBEMPLINFO WHERE CTR_CD = '${DATA.CTR_CD}' AND NV_CCID = '${parseInt(DATA.NV_CCID)}'`;
+  let checkEMPL_NO = await queryDB(checkEMPL_NO_Query);
+  console.log(checkEMPL_NO_Query);
+  let DD_EMPL_NO = '';
+  if(checkEMPL_NO.tk_status !== 'NG'){
+    DD_EMPL_NO = checkEMPL_NO.data[0].EMPL_NO;
+     console.log(WORK_HOUR);
+  let setpdQuery = `INSERT INTO ZTB_BANG_CONG (CTR_CD, EMPL_NO, APPLY_DATE, WORK_HOUR, IN_TIME, OUT_TIME, L100, L150T, L150S, L130, L180, L200, L210, L270, L300, L390, DI_TRE, VE_SOM, AN_SANG, AN_TRUA, AN_TOI, PHU, DI_LAI, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, NV_CCID) VALUES ('${DATA.CTR_CD}', '${DD_EMPL_NO}', '${DATA.APPLY_DATE}', ${WORK_HOUR}, '${DATA.IN_TIME ?? 'X'}', '${DATA.OUT_TIME ?? 'X'}', ${DATA.L100 ?? 0}, ${DATA.L150T ?? 0}, ${DATA.L150S ?? 0}, ${DATA.L130 ?? 0}, ${DATA.L180 ?? 0}, ${DATA.L200 ?? 0}, ${DATA.L210 ?? 0}, ${DATA.L270 ?? 0}, ${DATA.L300 ?? 0}, ${DATA.L390 ?? 0}, ${DATA.DI_TRE ?? 0}, ${DATA.VE_SOM ?? 0}, ${DATA.AN_SANG ?? 0}, ${DATA.AN_TRUA ?? 0}, ${DATA.AN_TOI ?? 0}, ${DATA.PHU ?? 0}, ${DATA.DI_LAI ?? 0}, GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}', '${DATA.NV_CCID}')`;
+  //${moment().format('YYYY-MM-DD')}
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+  }
+  else {
+    console.log(checkEMPL_NO_Query)
+    console.log('khong thay nhan vien',checkEMPL_NO);
+    res.send({
+      tk_status: "NG",
+      message: "Không tìm thấy nhân viên: " + DATA.NV_CCID + "\n"
+    });
+  }
+ 
+};
+exports.updateBangCong = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE ZTB_BANG_CONG SET CTR_CD = '${DATA.CTR_CD}', EMPL_NO = '${DATA.EMPL_NO}', APPLY_DATE = '${DATA.APPLY_DATE}', WORK_HOUR = ${DATA.WORK_HOUR}, IN_TIME = '${DATA.IN_TIME}', OUT_TIME = '${DATA.OUT_TIME}', L100 = ${DATA.L100}, L150T = ${DATA.L150T}, L150S = ${DATA.L150S}, L130 = ${DATA.L130}, L180 = ${DATA.L180}, L200 = ${DATA.L200}, L210 = ${DATA.L210}, L270 = ${DATA.L270}, L300 = ${DATA.L300}, L390 = ${DATA.L390}, DI_TRE = ${DATA.DI_TRE}, VE_SOM = ${DATA.VE_SOM}, AN_SANG = ${DATA.AN_SANG}, AN_TRUA = ${DATA.AN_TRUA}, AN_TOI = ${DATA.AN_TOI}, PHU = ${DATA.PHU}, DI_LAI = ${DATA.DI_LAI}, INS_DATE = GETDATE(), INS_EMPL = '${DATA.INS_EMPL}', UPD_DATE = GETDATE(), UPD_EMPL = '${DATA.UPD_EMPL}' WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${DATA.EMPL_NO}' AND APPLY_DATE = '${DATA.APPLY_DATE}'`;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.deleteBangCong = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `DELETE FROM ZTB_BANG_CONG WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${DATA.EMPL_NO}' AND APPLY_DATE = '${DATA.APPLY_DATE}'`;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.loadBangCong = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `SELECT ZTB_BANG_CONG.*, CONCAT(ZTBEMPLINFO.MIDLAST_NAME, ' ', ZTBEMPLINFO.FIRST_NAME) AS FULL_NAME, ZTBMAINDEPARMENT.MAINDEPTNAME, ZTBWORKPOSITION.WORK_POSITION_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME 
+  FROM ZTB_BANG_CONG 
+  LEFT JOIN ZTBEMPLINFO ON ZTB_BANG_CONG.CTR_CD = ZTBEMPLINFO.CTR_CD AND ZTB_BANG_CONG.EMPL_NO = ZTBEMPLINFO.EMPL_NO
+  LEFT JOIN ZTBWORKPOSITION ON ZTBEMPLINFO.CTR_CD = ZTBWORKPOSITION.CTR_CD AND ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE
+  LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD AND ZTBWORKPOSITION.SUBDEPTCODE
+   = ZTBSUBDEPARTMENT.SUBDEPTCODE
+  LEFT JOIN ZTBMAINDEPARMENT ON ZTBSUBDEPARTMENT.CTR_CD = ZTBMAINDEPARMENT.CTR_CD AND ZTBSUBDEPARTMENT.MAINDEPTCODE
+   = ZTBMAINDEPARMENT.MAINDEPTCODE 
+  WHERE ZTB_BANG_CONG.CTR_CD='${DATA.CTR_CD}' AND ZTB_BANG_CONG.APPLY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
 
+
+exports.loadBangCongTheoThang = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  WITH BANGCONGTHANG AS
+(
+SELECT 
+    EMPL_NO,
+    CONCAT(YEAR(APPLY_DATE), '_', RIGHT('0' + CAST(MONTH(APPLY_DATE) AS VARCHAR(2)), 2)) AS Year_Month,
+    SUM(WORK_HOUR) AS Total_WORK_HOUR,
+    SUM(L100) AS Total_L100,
+    SUM(L150T) AS Total_L150T,
+    SUM(L150S) AS Total_L150S,
+    SUM(L130) AS Total_L130,
+    SUM(L180) AS Total_L180,
+    SUM(L200) AS Total_L200,
+    SUM(L210) AS Total_L210,
+    SUM(L270) AS Total_L270,
+    SUM(L300) AS Total_L300,
+    SUM(L390) AS Total_L390,
+    SUM(DI_TRE) AS Total_DI_TRE,
+    SUM(VE_SOM) AS Total_VE_SOM,
+    SUM(AN_SANG) AS Total_AN_SANG,
+    SUM(AN_TRUA) AS Total_AN_TRUA,
+    SUM(AN_TOI) AS Total_AN_TOI,
+    SUM(PHU) AS Total_PHU,
+	SUM(DI_LAI) AS Total_DI_LAI
+FROM ZTB_BANG_CONG WHERE ZTB_BANG_CONG.CTR_CD='${DATA.CTR_CD}' AND ZTB_BANG_CONG.APPLY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+GROUP BY 
+    EMPL_NO,
+    CONCAT(YEAR(APPLY_DATE), '_', RIGHT('0' + CAST(MONTH(APPLY_DATE) AS VARCHAR(2)), 2))
+
+)
+SELECT BANGCONGTHANG.*,CONCAT(ZTBEMPLINFO.MIDLAST_NAME, ' ', ZTBEMPLINFO.FIRST_NAME) AS FULL_NAME, ZTBMAINDEPARMENT.MAINDEPTNAME, ZTBWORKPOSITION.WORK_POSITION_NAME, ZTBSUBDEPARTMENT.SUBDEPTNAME FROM BANGCONGTHANG
+LEFT JOIN ZTBEMPLINFO ON BANGCONGTHANG.EMPL_NO = ZTBEMPLINFO.EMPL_NO
+  LEFT JOIN ZTBWORKPOSITION ON ZTBEMPLINFO.CTR_CD = ZTBWORKPOSITION.CTR_CD AND ZTBEMPLINFO.WORK_POSITION_CODE = ZTBWORKPOSITION.WORK_POSITION_CODE
+  LEFT JOIN ZTBSUBDEPARTMENT ON ZTBWORKPOSITION.CTR_CD = ZTBSUBDEPARTMENT.CTR_CD AND ZTBWORKPOSITION.SUBDEPTCODE
+   = ZTBSUBDEPARTMENT.SUBDEPTCODE
+  LEFT JOIN ZTBMAINDEPARMENT ON ZTBSUBDEPARTMENT.CTR_CD = ZTBMAINDEPARMENT.CTR_CD AND ZTBSUBDEPARTMENT.MAINDEPTCODE
+   = ZTBMAINDEPARMENT.MAINDEPTCODE 
+   ORDER BY 
+    BANGCONGTHANG.EMPL_NO, 
+    BANGCONGTHANG.Year_Month
+  `;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.checkNVCCID = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  DECLARE @EmployeeCodes VARCHAR(MAX) = '${DATA.LIST_NV_CCID}'; -- Chuỗi mã nhân viên gửi lên
+DECLARE @TempTable TABLE (EmployeeCode VARCHAR(50));
+
+-- Tách chuỗi mã nhân viên thành từng dòng
+INSERT INTO @TempTable (EmployeeCode)
+SELECT TRIM(value) 
+FROM STRING_SPLIT(@EmployeeCodes, ',');
+
+-- Truy vấn kiểm tra mã nhân viên không tồn tại
+SELECT t.EmployeeCode
+FROM @TempTable t
+LEFT JOIN ZTBEMPLINFO e ON t.EmployeeCode = e.NV_CCID -- Thay 'Employee' bằng tên bảng thực tế và 'EmployeeCode' bằng tên cột thực tế
+WHERE e.NV_CCID IS NULL;
+`;
+  //${moment().format('YYYY-MM-DD')}
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.syncBangCongSangDiemDanh = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  MERGE INTO ZTBATTENDANCETB AS target
+USING (SELECT ZTB_BANG_CONG.*,ZTBEMPLINFO.WORK_SHIFT_CODE FROM ZTB_BANG_CONG LEFT JOIN ZTBEMPLINFO ON ZTB_BANG_CONG.CTR_CD = ZTBEMPLINFO.CTR_CD AND ZTB_BANG_CONG.EMPL_NO = ZTBEMPLINFO.EMPL_NO WHERE ZTB_BANG_CONG.CTR_CD = '${DATA.CTR_CD}' AND ZTB_BANG_CONG.APPLY_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}') AS source
+ON target.CTR_CD = source.CTR_CD 
+   AND target.EMPL_NO = source.EMPL_NO 
+   AND target.APPLY_DATE = source.APPLY_DATE
+WHEN MATCHED THEN 
+    UPDATE SET 
+        target.WORK_HOUR = source.WORK_HOUR,
+        target.IN_TIME = source.IN_TIME,
+        target.OUT_TIME = source.OUT_TIME
+WHEN NOT MATCHED THEN 
+    INSERT (CTR_CD, EMPL_NO, APPLY_DATE,ON_OFF, OVERTIME,CURRENT_TEAM, CURRENT_CA,  WORK_HOUR, IN_TIME, OUT_TIME)
+    VALUES (source.CTR_CD, source.EMPL_NO, source.APPLY_DATE,1, CASE WHEN source.WORK_HOUR > 8 THEN 1 ELSE 0 END, source.WORK_SHIFT_CODE,0, source.WORK_HOUR, source.IN_TIME, source.OUT_TIME);
+`;
+  //${moment().format('YYYY-MM-DD')}
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
 exports.common = async (req, res, DATA) => {
 };
 exports.common = async (req, res, DATA) => {
