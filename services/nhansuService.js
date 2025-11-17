@@ -2311,7 +2311,7 @@ exports.insertBangCong = async (req, res, DATA) => {
 };
 exports.updateBangCong = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `UPDATE ZTB_BANG_CONG SET CTR_CD = '${DATA.CTR_CD}', EMPL_NO = '${DATA.EMPL_NO}', APPLY_DATE = '${DATA.APPLY_DATE}', WORK_HOUR = ${DATA.WORK_HOUR}, IN_TIME = '${DATA.IN_TIME}', OUT_TIME = '${DATA.OUT_TIME}', L100 = ${DATA.L100}, L150T = ${DATA.L150T}, L150S = ${DATA.L150S}, L130 = ${DATA.L130}, L180 = ${DATA.L180}, L200 = ${DATA.L200}, L210 = ${DATA.L210}, L270 = ${DATA.L270}, L300 = ${DATA.L300}, L390 = ${DATA.L390}, DI_TRE = ${DATA.DI_TRE}, VE_SOM = ${DATA.VE_SOM}, AN_SANG = ${DATA.AN_SANG}, AN_TRUA = ${DATA.AN_TRUA}, AN_TOI = ${DATA.AN_TOI}, PHU = ${DATA.PHU}, DI_LAI = ${DATA.DI_LAI}, INS_DATE = GETDATE(), INS_EMPL = '${DATA.INS_EMPL}', UPD_DATE = GETDATE(), UPD_EMPL = '${DATA.UPD_EMPL}' WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${DATA.EMPL_NO}' AND APPLY_DATE = '${DATA.APPLY_DATE}'`;
+  let setpdQuery = `UPDATE ZTB_BANG_CONG SET CTR_CD = '${DATA.CTR_CD}', EMPL_NO = '${DATA.EMPL_NO}', APPLY_DATE = '${DATA.APPLY_DATE}', WORK_HOUR = ${DATA.WORK_HOUR}, IN_TIME = '${DATA.IN_TIME}', OUT_TIME = '${DATA.OUT_TIME}', L100 = ${DATA.L100 ?? 0}, L150T = ${DATA.L150T ?? 0}, L150S = ${DATA.L150S ?? 0}, L130 = ${DATA.L130 ?? 0}, L180 = ${DATA.L180 ?? 0}, L200 = ${DATA.L200 ?? 0}, L210 = ${DATA.L210 ?? 0}, L270 = ${DATA.L270 ?? 0}, L300 = ${DATA.L300 ?? 0}, L390 = ${DATA.L390 ?? 0}, DI_TRE = ${DATA.DI_TRE ?? 0}, VE_SOM = ${DATA.VE_SOM ?? 0}, AN_SANG = ${DATA.AN_SANG ?? 0}, AN_TRUA = ${DATA.AN_TRUA ?? 0}, AN_TOI = ${DATA.AN_TOI ?? 0}, PHU = ${DATA.PHU ?? 0}, DI_LAI = ${DATA.DI_LAI ?? 0}, INS_DATE = GETDATE(), INS_EMPL = '${DATA.INS_EMPL}', UPD_DATE = GETDATE(), UPD_EMPL = '${DATA.UPD_EMPL}' WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${DATA.EMPL_NO}' AND APPLY_DATE = '${DATA.APPLY_DATE}'`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
@@ -2429,6 +2429,20 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN 
     INSERT (CTR_CD, EMPL_NO, APPLY_DATE,ON_OFF, OVERTIME,CURRENT_TEAM, CURRENT_CA,  WORK_HOUR, IN_TIME, OUT_TIME)
     VALUES (source.CTR_CD, source.EMPL_NO, source.APPLY_DATE,1, CASE WHEN source.WORK_HOUR > 8 THEN 1 ELSE 0 END, source.WORK_SHIFT_CODE,isnull(source.CALV,0), source.WORK_HOUR, source.IN_TIME, source.OUT_TIME);
+`;
+  //${moment().format('YYYY-MM-DD')}
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.checktrungNV_CCID = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  SELECT NV_CCID, STRING_AGG(EMPL_NO, ', ') AS Employees
+  FROM ZTBEMPLINFO
+  GROUP BY NV_CCID
+  HAVING COUNT(EMPL_NO) > 1
+  ORDER BY NV_CCID;
 `;
   //${moment().format('YYYY-MM-DD')}
   console.log(setpdQuery);
