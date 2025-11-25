@@ -2165,6 +2165,88 @@ exports.updatefaceid = async (req, res, DATA) => {
     });
   }
 };
+exports.updatefaceid_web = async (req, res, DATA) => {
+  const CTR_CD = DATA.CTR_CD;
+  const EMPL_NO = DATA.EMPL_NO;
+  const faceIdBase64 = DATA.FACE_ID; // ← BÂY GIỜ LÀ CHUỖI BASE64
+
+  // === VALIDATE INPUT ===
+  if (!CTR_CD || !EMPL_NO || !faceIdBase64) {
+    return res.status(400).json({
+      tk_status: 'NG',
+      error: 'Thiếu CTR_CD, EMPL_NO hoặc FACE_ID'
+    });
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(CTR_CD) || !/^[a-zA-Z0-9]+$/.test(EMPL_NO)) {
+    return res.status(400).json({
+      tk_status: 'NG',
+      error: 'CTR_CD hoặc EMPL_NO không hợp lệ'
+    });
+  }
+
+  // === DECODE BASE64 → BUFFER (768 bytes) ===
+  let buffer;
+  try {
+    buffer = Buffer.from(faceIdBase64, 'base64');
+    if (buffer.length !== 768) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: `FACE_ID base64 sai độ dài: ${buffer.length} (cần 768 bytes)`
+      });
+    }
+  } catch (e) {
+    return res.status(400).json({
+      tk_status: 'NG',
+      error: 'FACE_ID base64 không hợp lệ'
+    });
+  }
+
+  console.log('updatefaceid:');
+  console.log('  EMPL_NO:', EMPL_NO);
+  console.log('  Buffer length:', buffer.length);
+
+  // === CHUYỂN BUFFER → HEX ĐỂ LƯU VÀO SQL SERVER ===
+  const hexString = buffer.toString('hex');
+  console.log('  Hex string length:', hexString.length); // 1536
+
+  // === SQL UPDATE ===
+  const setpdQuery = `
+    UPDATE ZTBEMPLINFO
+    SET FACE_ID = CONVERT(VARBINARY(MAX), '${hexString}', 2)
+    WHERE CTR_CD = '${CTR_CD.replace(/'/g, "''")}'
+      AND EMPL_NO = '${EMPL_NO.replace(/'/g, "''")}'
+  `;
+
+  try {
+    await queryDB(setpdQuery);
+    console.log('✓ Đăng ký khuôn mặt thành công:', CTR_CD, EMPL_NO);
+
+    // Kiểm tra self-similarity (phải ≈ 1.0)
+    const inputFloat32 = new Float32Array(192);
+    for (let i = 0; i < 192; i++) {
+      inputFloat32[i] = buffer.readFloatLE(i * 4);
+    }
+    const selfScore = cosineSimilarity(inputFloat32, inputFloat32);
+    console.log('Self-similarity:', selfScore.toFixed(6)); // Phải = 1.000000
+
+    res.send({
+      tk_status: 'OK',
+      message: 'Đăng ký khuôn mặt thành công',
+      data: {
+        EMPL_NO,
+        embedding_length: 192,
+        self_score: selfScore.toFixed(6)
+      }
+    });
+  } catch (err) {
+    console.error('Lỗi DB:', err);
+    res.status(500).json({
+      tk_status: 'NG',
+      error: 'Lỗi lưu vào database'
+    });
+  }
+};
 
 /* ==============================================================
    API: recognizeface – NHẬN BASE64 → SO SÁNH CHÍNH XÁC

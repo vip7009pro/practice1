@@ -5102,7 +5102,7 @@ ORDER BY FAIL_QTY ASC
 }
 exports.loadQTRData = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `
+  /* let setpdQuery = `
 SELECT 
   MANAGEMENT_NUMBER, 
   REGISTERED_DATE, 
@@ -5229,7 +5229,143 @@ ORDER BY
   CASE WHEN OCCUR_PLACE = 'Main' THEN 0 ELSE 1 END, 
   DEFECT_MANAGEMENT.REGISTERED_DATE DESC
 
-  `;
+  `; */
+  let setpdQuery = ` 
+  SELECT 
+  MANAGEMENT_NUMBER, 
+  REGISTERED_DATE, 
+  DEFECT_MANAGEMENT.PLANT, 
+  DEFECT_MANAGEMENT.PART_CODE, 
+  FORMAT(
+    CASE WHEN DEFECT_MANAGEMENT.APPROVAL_DATE = '1900-01-01' THEN FORMAT(
+      GETDATE(), 
+      'yyyy-MM-dd'
+    ) ELSE APPROVAL_DATE END, 
+    'yyyyMM'
+  ) AS MONTH_QTR, 
+  (
+    CASE WHEN (
+      isnull(WH_OUT_QTY, 0) > 100000 
+      AND OCCUR_PLACE = 'Main' 
+      AND ISNULL(DEFECT_PPM, 1000000) > 500
+    ) THEN 'FAIL' WHEN (
+      isnull(WH_OUT_QTY, 0) > 100000 
+      AND OCCUR_PLACE = 'Main' 
+      AND ISNULL(DEFECT_PPM, 1000000) < 500
+    ) THEN 'OK' ELSE 'NO' END
+  ) AS QTR_QL_YN, 
+  ISNULL(DEFECT_PPM, 1000000) AS QTR_PPM, 
+  OCCUR_PLACE, 
+  DEFECT_MANAGEMENT.DEFECT_QTY, 
+  WH_OUT_QTY, 
+  APPROVAL, 
+  TITLE, 
+  PART_NAME, 
+  PART_GROUP, 
+  MAIN_CATEGORY, 
+  PROJECT, 
+  BASIC_MODEL, 
+  DEFECT_DETAILS, 
+  SAMPLE_QTY, 
+  DEFECT_RATE, 
+  APPROVER, 
+  DEFECT_MANAGEMENT.APPROVAL_DATE, 
+  REASON1, 
+  DEFECT_MANAGEMENT.G_CODE, 
+  DEFECT_MANAGEMENT.CUST_CD, 
+  M100.G_NAME, 
+  (
+    CASE WHEN M100.CODE_33 = '01' THEN 'EA' WHEN M100.CODE_33 = '02' THEN 'ROLL' WHEN M100.CODE_33 = '03' THEN 'SHEET' WHEN M100.CODE_33 = '04' THEN 'MET' WHEN M100.CODE_33 = '06' THEN 'PACK (BAG)' WHEN M100.CODE_33 = '99' THEN 'X' END
+  ) AS UNIT, 
+  M100.PROD_TYPE, 
+  DEFECT_MANAGEMENT.INS_EMPL, 
+  DEFECT_MANAGEMENT.INS_DATE, 
+  DEFECT_MANAGEMENT.UPD_DATE, 
+  DEFECT_MANAGEMENT.UPD_EMPL, 
+  QTR_YN 
+FROM 
+  DEFECT_MANAGEMENT 
+  LEFT JOIN (
+    SELECT 
+      MONTH_, 
+      PLANT, 
+      PART_CODE, 
+      CAST(
+        (
+          DEFECT_QTY * 1000000.0 / NULLIF(WH_OUT_QTY, 0)
+        ) AS decimal(10, 0)
+      ) AS DEFECT_PPM, 
+      DEFECT_QTY, 
+      WH_OUT_QTY 
+    FROM 
+      (
+        SELECT 
+          FORMAT(
+            CASE WHEN APPROVAL_DATE = '1900-01-01' THEN FORMAT(
+              GETDATE(), 
+              'yyyy-MM-dd'
+            ) ELSE APPROVAL_DATE END, 
+            'yyyyMM'
+          ) AS MONTH_, 
+          PLANT, 
+          OCCUR_PLACE, 
+          PART_CODE, 
+          SUM(DEFECT_QTY) AS DEFECT_QTY 
+        FROM 
+          DEFECT_MANAGEMENT 
+        GROUP BY 
+          FORMAT(
+            CASE WHEN APPROVAL_DATE = '1900-01-01' THEN FORMAT(
+              GETDATE(), 
+              'yyyy-MM-dd'
+            ) ELSE APPROVAL_DATE END, 
+            'yyyyMM'
+          ), 
+          PLANT, 
+          OCCUR_PLACE, 
+          PART_CODE
+      ) AS OQC_VOC 
+      LEFT JOIN (
+        SELECT 
+          FORMAT(IO_Datebc, 'yyyyMM') AS MonthOnly, 
+          Customer_ShortName AS CUSTOMER, 
+          M100.G_NAME_KD, 
+          SUM(IO_Qty) AS WH_OUT_QTY 
+        FROM 
+          tbl_InputOutput 
+          LEFT JOIN M100 ON(
+            M100.G_CODE = tbl_InputOutput.Product_MaVach
+          ) 
+        WHERE 
+          IO_Type = 'OUT' 
+        GROUP BY 
+          FORMAT(IO_Datebc, 'yyyyMM'), 
+          Customer_ShortName, 
+          M100.G_NAME_KD
+      ) AS WH_OUT ON(
+        OQC_VOC.MONTH_ = WH_OUT.MonthOnly 
+        AND OQC_VOC.PLANT = WH_OUT.CUSTOMER 
+        AND OQC_VOC.PART_CODE = WH_OUT.G_NAME_KD
+      )
+  ) AS PPM_OK ON (
+    FORMAT(
+      CASE WHEN DEFECT_MANAGEMENT.APPROVAL_DATE = '1900-01-01' THEN FORMAT(
+        GETDATE(), 
+        'yyyy-MM-dd'
+      ) ELSE DEFECT_MANAGEMENT.APPROVAL_DATE END, 
+      'yyyyMM'
+    ) = PPM_OK.MONTH_ 
+    AND DEFECT_MANAGEMENT.PLANT = PPM_OK.PLANT 
+    AND DEFECT_MANAGEMENT.PART_CODE = PPM_OK.PART_CODE
+  ) 
+  LEFT JOIN M100 ON(
+    M100.G_CODE = DEFECT_MANAGEMENT.G_CODE
+  ) 
+WHERE 
+  DEFECT_MANAGEMENT.REGISTERED_DATE BETWEEN '${DATA.FROM_DATE}' 
+  AND '${DATA.TO_DATE}'
+ORDER BY  DEFECT_MANAGEMENT.REGISTERED_DATE DESC
+  `
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
