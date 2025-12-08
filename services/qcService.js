@@ -5382,6 +5382,132 @@ exports.updateTruDiemKiemTra = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 }
+exports.loadKpiNV_KiemTra_New2 = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  WITH INSP_TABLE AS
+(
+SELECT ZTBINSPECTNGTB.INSPECT_ID,INSPECT_DATETIME,
+CASE 
+    WHEN DATEPART(HOUR, INSPECT_DATETIME) BETWEEN 0 AND 6 
+    THEN CAST(DATEADD(DAY, -1, CAST(INSPECT_DATETIME AS DATE)) AS DATE)
+    ELSE CAST(INSPECT_DATETIME AS DATE)
+END AS INSPECT_DATE,
+CONCAT(datepart(YEAR,INSPECT_DATETIME),'_',datepart(ISO_WEEK,DATEADD(day,2,INSPECT_START_TIME))) AS YEAR_WEEK, ZTBINSPECTNGTB.EMPL_NO,  DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME) AS INSPECT_MINUTE, INSPECT_TOTAL_QTY, G_WIDTH * G_LENGTH*INSPECT_TOTAL_QTY*1.0/1000000 AS PROD_SQM, ZTBINSPECTNGTB.EQ_NAME, ZTB_INS_STATUS.PHANLOAI, ZTB_INS_KPI.KPI_VALUE, CASE WHEN P400.CODE_03 = '09' THEN 'PS' ELSE 'TT' END AS LOAI_HANG,
+ZTB_INS_KPI.KPI_VALUE * DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME)*1.0/60 AS DM_VITRI, 
+M100.DM_KT*1.0/60* DATEDIFF(MINUTE, INSPECT_START_TIME, INSPECT_FINISH_TIME) AS DM_CODE, 
+ZTBINSPECTNGTB.TRU_DIEM
+FROM ZTBINSPECTNGTB  
+LEFT JOIN M100 ON M100.G_CODE  = ZTBINSPECTNGTB.G_CODE  AND M100.CTR_CD  = ZTBINSPECTNGTB.CTR_CD 
+LEFT JOIN ZTB_INS_STATUS ON ZTB_INS_STATUS.EQ_NAME  = ZTBINSPECTNGTB.EQ_NAME  AND ZTB_INS_STATUS.CTR_CD  = ZTBINSPECTNGTB.CTR_CD 
+LEFT JOIN ZTB_INS_KPI ON ZTB_INS_STATUS.PHANLOAI = ZTB_INS_KPI.PHANLOAI AND ZTB_INS_STATUS.CTR_CD = ZTB_INS_KPI.CTR_CD
+LEFT JOIN P400 ON P400.CTR_CD = ZTBINSPECTNGTB.CTR_CD AND P400.PROD_REQUEST_NO = ZTBINSPECTNGTB.PROD_REQUEST_NO
+WHERE INSPECT_DATETIME BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE} 23:59:59'
+),
+INSP_TABLE2 AS
+(
+SELECT EMPL_NO, 
+COUNT(INSPECT_ID) AS CODE_COUNT,
+SUM(INSPECT_MINUTE) AS INSPECT_MINUTE, 
+SUM(CASE WHEN LOAI_HANG='TT' THEN 1 ELSE 0 END) AS COUNT_TT,
+SUM(CASE WHEN LOAI_HANG='PS' THEN 1 ELSE 0 END) AS COUNT_PS,
+SUM(CASE WHEN LOAI_HANG='TT' THEN INSPECT_TOTAL_QTY ELSE 0 END) AS INSPECT_QTY_TT,
+SUM(CASE WHEN LOAI_HANG='PS' THEN INSPECT_TOTAL_QTY ELSE 0 END) AS INSPECT_QTY_PS,
+SUM(CASE WHEN LOAI_HANG='TT' THEN DM_VITRI ELSE 0 END) AS DM_VITRI,
+SUM(CASE WHEN LOAI_HANG='PS' THEN DM_CODE ELSE 0 END) AS DM_CODE,
+SUM(TRU_DIEM) AS TRU_DIEM,
+SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY, 
+SUM(PROD_SQM) AS PROD_SQM FROM INSP_TABLE GROUP BY EMPL_NO
+),
+INSP_TABLE3 AS
+(
+SELECT INSP_TABLE2.*, 
+CASE WHEN DM_CODE <> 0 THEN INSPECT_QTY_PS*1.0/DM_CODE ELSE 0 END RATE_PS,
+CASE WHEN DM_VITRI <> 0 THEN INSPECT_QTY_TT*1.0/DM_VITRI ELSE 0 END RATE_TT
+FROM INSP_TABLE2
+)
+SELECT INSP_TABLE3.*, 
+CASE 
+WHEN COUNT_PS = 0 AND COUNT_TT <>  0 THEN RATE_TT
+WHEN COUNT_PS <> 0 AND COUNT_TT =  0 THEN RATE_PS
+WHEN COUNT_PS <> 0 AND COUNT_TT <>  0 THEN (RATE_PS + RATE_TT)/2
+ELSE 0
+END AS TOTAL_KIEMTRA_KPI,
+CASE 
+WHEN COUNT_PS = 0 AND COUNT_TT <>  0 THEN (RATE_TT + (1-TRU_DIEM * 0.05))/2
+WHEN COUNT_PS <> 0 AND COUNT_TT =  0 THEN (RATE_PS + (1-TRU_DIEM * 0.05))/2
+WHEN COUNT_PS <> 0 AND COUNT_TT <>  0 THEN ((RATE_PS + RATE_TT)/2 +(1-TRU_DIEM * 0.05))/2
+ELSE 0
+END AS FINAL_KPI,
+(1-TRU_DIEM * 0.05) AS DIEM_CON
+FROM INSP_TABLE3
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
+exports.common = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+
+  `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+}
 exports.common = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
