@@ -3676,7 +3676,7 @@ exports.common = async (req, res, DATA) => {
 
 exports.checkgcodeexists_approved_samplemonitor = async (req, res, DATA) => {
   let checkkq = "OK";
-  let setpdQuery = `SELECT * FROM ZTB_SAMPLE_MONITOR WHERE G_CODE = '${DATA.G_CODE}' AND CTR_CD = '${DATA.CTR_CD}'`;
+  let setpdQuery = `SELECT * FROM ZTB_SAMPLE_MONITOR WHERE G_CODE = '${DATA.G_CODE}' AND CTR_CD = '${DATA.CTR_CD}' ORDER BY INS_DATE DESC`;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
