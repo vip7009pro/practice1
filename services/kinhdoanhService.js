@@ -1095,8 +1095,9 @@ exports.insertData_Amazon_SuperFast = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.update_banve_value = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `UPDATE M100 SET BANVE='${DATA.banvevalue}' WHERE CTR_CD='${DATA.CTR_CD}'AND G_CODE= '${DATA.G_CODE}'`;
+  let setpdQuery = `UPDATE M100 SET BANVE='${DATA.banvevalue}', UPD_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}'AND G_CODE= '${DATA.G_CODE}'`;
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -3394,7 +3395,7 @@ exports.checklastfcstweekno = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = ` SELECT TOP 1 * FROM ZTBFCSTTB WHERE CTR_CD='${DATA.CTR_CD}' AND FCSTYEAR = '${DATA.FCSTWEEKNO}' ORDER BY FCSTWEEKNO DESC `;
   //${moment().format('YYYY-MM-DD')}
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);

@@ -103,7 +103,7 @@ exports.getMasterMaterialList = async (req, res, DATA) => {
 exports.resetbanve = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = ` UPDATE M100 SET BANVE= 'N', PDBV='${DATA.VALUE}', INS_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', INS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}'  AND G_CODE='${DATA.G_CODE}'`;
+  let setpdQuery = ` UPDATE M100 SET BANVE= 'N', PDBV='${DATA.VALUE}', UPD_DATE='${moment().format('YYYY-MM-DD HH:mm:ss')}', UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}'  AND G_CODE='${DATA.G_CODE}'`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
