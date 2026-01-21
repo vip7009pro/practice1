@@ -3666,12 +3666,7 @@ ORDER BY PO_BALANCE DESC
   res.send(checkkq);
 
 };
-exports.common = async (req, res, DATA) => {
 
-};
-exports.common = async (req, res, DATA) => {
-
-};
 
 exports.checkgcodeexists_approved_samplemonitor = async (req, res, DATA) => {
   let checkkq = "OK";
@@ -3680,4 +3675,109 @@ exports.checkgcodeexists_approved_samplemonitor = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
+};
+exports.loadCustomerWeeklyPOQty = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `
+  DECLARE @cols NVARCHAR(MAX);
+DECLARE @cols_isnull NVARCHAR(MAX);
+DECLARE @cols_total NVARCHAR(MAX);
+DECLARE @cols_sum NVARCHAR(MAX);
+DECLARE @sql  NVARCHAR(MAX);
+
+SELECT 
+    @cols = STRING_AGG(QUOTENAME(PO_YW), ',')
+            WITHIN GROUP (ORDER BY PO_YEAR, PO_WEEK),
+
+    @cols_isnull = STRING_AGG(
+        'ISNULL(' + QUOTENAME(PO_YW) + ',0) AS ' + QUOTENAME(PO_YW),
+        ','
+    ) WITHIN GROUP (ORDER BY PO_YEAR, PO_WEEK),
+
+    @cols_total = STRING_AGG(
+        'ISNULL(' + QUOTENAME(PO_YW) + ',0)',
+        ' + '
+    ) WITHIN GROUP (ORDER BY PO_YEAR, PO_WEEK),
+
+    @cols_sum = STRING_AGG(
+        'SUM(ISNULL(' + QUOTENAME(PO_YW) + ',0)) AS ' + QUOTENAME(PO_YW),
+        ','
+    ) WITHIN GROUP (ORDER BY PO_YEAR, PO_WEEK)
+FROM (
+    SELECT DISTINCT
+           YEAR(PO_DATE) AS PO_YEAR,
+           DATEPART(ISO_WEEK, PO_DATE) AS PO_WEEK,
+           CONCAT(YEAR(PO_DATE),'_', DATEPART(ISO_WEEK, PO_DATE)) AS PO_YW
+    FROM ZTBPOTable
+    WHERE PO_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'
+) A;
+
+SET @sql = N'
+WITH PO_TB AS
+(
+    SELECT 
+        M110.CUST_NAME_KD,
+        CONCAT(YEAR(Z.PO_DATE),''_'', DATEPART(ISO_WEEK,Z.PO_DATE)) AS PO_YW,
+        Z.PO_QTY
+    FROM ZTBPOTable Z
+    LEFT JOIN M110 ON M110.CUST_CD = Z.CUST_CD
+    WHERE Z.PO_DATE BETWEEN ''${DATA.FROM_DATE}'' AND ''${DATA.TO_DATE}''
+),
+PVT AS
+(
+    SELECT 
+        0 AS SORT_ORDER,
+        CUST_NAME_KD,
+        (' + @cols_total + ') AS TOTAL,
+        ' + @cols_isnull + '
+    FROM
+    (
+        SELECT CUST_NAME_KD, PO_YW, PO_QTY
+        FROM PO_TB
+    ) SRC
+    PIVOT
+    (
+        SUM(PO_QTY)
+        FOR PO_YW IN (' + @cols + ')
+    ) P
+)
+SELECT 
+    CUST_NAME_KD,
+    TOTAL,
+    ' + @cols + '
+FROM
+(
+    SELECT 
+        SORT_ORDER,
+        CUST_NAME_KD,
+        TOTAL,
+        ' + @cols + '
+    FROM PVT
+
+    UNION ALL
+
+    SELECT
+        1 AS SORT_ORDER,
+        ''TOTAL'' AS CUST_NAME_KD,
+        SUM(TOTAL) AS TOTAL,
+        ' + @cols_sum + '
+    FROM PVT
+) X
+ORDER BY SORT_ORDER, CUST_NAME_KD;
+';
+
+EXEC sp_executesql @sql;
+
+  `;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  ////console.log(checkkq);
+  res.send(checkkq);
+};
+
+exports.common = async (req, res, DATA) => {
+
+};
+exports.common = async (req, res, DATA) => {
+
 };
