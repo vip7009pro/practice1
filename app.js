@@ -8,6 +8,7 @@ var compression = require("compression");
 const fileupload = require("express-fileupload");
 var multer = require("multer");
 const fs = require("fs");
+const path = require("path");
 let client_array = [];
 let API_PORT = parseInt(process.env.API_PORT);
 let SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
@@ -38,7 +39,12 @@ const storage2 = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
-const upload2 = multer({ storage: storage2 });
+const upload2 = multer({
+  storage: storage2,
+  limits: {
+    fileSize: parseInt(process.env.UPLOAD_MAX_BYTES || "0", 10) || 2 * 1024 * 1024 * 1024,
+  },
+});
 app.use(
   compression({
     level: 9,
@@ -63,6 +69,9 @@ try {
 var credentials = { key: privateKey, cert: certificate, ca: ca_bundle };
 const server = require("http").createServer(app);
 const server_s = require("https").createServer(credentials, app);
+server.setTimeout(parseInt(process.env.SERVER_TIMEOUT_MS || "0", 10) || 10 * 60 * 1000);
+server.keepAliveTimeout = parseInt(process.env.KEEPALIVE_TIMEOUT_MS || "0", 10) || 10 * 60 * 1000;
+server.headersTimeout = parseInt(process.env.HEADERS_TIMEOUT_MS || "0", 10) || 11 * 60 * 1000;
 const io = require("socket.io")(server, {
   cors: {
     origin: "*",
@@ -297,19 +306,32 @@ app.post("/csharp", function (req, res) {
   console.log(req);
   res.send({ tk_status: "OK", message: "C sharp da qua day" });
 });
-app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
+app.post("/uploadfile", function (req, res) {
+  req.on("aborted", () => {
+    console.log("uploadfile aborted by client");
+  });
+  upload2.single("uploadedfile")(req, res, function (err) {
+    if (err) {
+      const msg = err && err.code ? `${err.code}: ${err.message}` : String(err);
+      res.status(400).send({ tk_status: "NG", message: "Upload file thất bại: " + msg });
+      return;
+    }
   console.log("vao uploaded file thanh cong");
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);
   //console.log('token upload',req.body.token_string);
-  console.log(" ten file goc: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
+  if (!req.file) {
+    res.send({ tk_status: "NG", message: "File chưa lên" });
+    return;
+  }
+  console.log(" ten file goc: " + path.join(TEMP_UPLOAD_FOLDER, req.file.originalname));
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, () => {
+      fs.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname), () => {
         console.log("DELETED " + req.file.originalname);
       });
       console.log(
-        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
+        "successfully deleted " + path.join(TEMP_UPLOAD_FOLDER, req.file.originalname)
       );
       res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
     } else {
@@ -324,82 +346,65 @@ app.post("/uploadfile", upload2.single("uploadedfile"), function (req, res) {
       let filenamearray = [];
       if (newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
       console.log("filenamearray:", filenamearray);
-      if (!existsSync(DESTINATION_FOlDER + uploadfoldername + filename)) {
+      const destDir = path.join(DESTINATION_FOlDER, uploadfoldername);
+      if (!existsSync(path.join(destDir, filename))) {
         //fs.mkdir(DESTINATION_FOlDER + uploadfoldername);
-        if (!existsSync(DESTINATION_FOlDER + uploadfoldername)) {
-          fs.mkdir(DESTINATION_FOlDER + uploadfoldername, (e) => {
-            if (!e) {
-            } else {
-              console.log(e);
-            }
+        if (!existsSync(destDir)) {
+          fs.mkdir(destDir, { recursive: true }, (e) => {
+            if (e) console.log(e);
           });
         }
         if (filenamearray.length === 0) {
-          console.log("tempfile: ", TEMP_UPLOAD_FOLDER + filename);
+          const tempFile = path.join(TEMP_UPLOAD_FOLDER, filename);
+          const destFile = path.join(destDir, newfilename);
+          console.log("tempfile: ", tempFile);
           console.log(
             "destination file: ",
-            DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename
+            destFile
           );
-          fs.copyFile(
-            TEMP_UPLOAD_FOLDER + filename,
-            DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename,
-            (err) => {
-              if (err) {
-                res.send({
-                  tk_status: "NG",
-                  message: "Upload file thất bại: " + err,
-                });
-              } else {
-                fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-                  //you can handle the error here
-                  console.log("Loi remove dong 364:" + error);
-                });
-                res.send({
-                  tk_status: "OK",
-                  message: "Upload file thành công",
-                });
-              }
-            }
-          );
+          fs.promises
+            .copyFile(tempFile, destFile)
+            .then(() => fs.promises.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname)))
+            .then(() => {
+              res.send({ tk_status: "OK", message: "Upload file thành công" });
+            })
+            .catch((copyErr) => {
+              res.status(500).send({
+                tk_status: "NG",
+                message: "Upload file thất bại: " + copyErr,
+              });
+            });
         } else {
-          let err_code = "";
-          for (let i = 0; i < filenamearray.length; i++) {
-            fs.copyFile(
-              TEMP_UPLOAD_FOLDER + filename,
-              DESTINATION_FOlDER + uploadfoldername + "\\" + filenamearray[i],
-              (err) => {
-                if (err) {
-                  err_code += err + "| ";
-                } else {
-                }
-              }
-            );
-          }
-          if (err_code === "") {
-            fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-              console.log("Loi dong 390:" + error);
-              //res.send({ tk_status: "NG", message: "Upload file thất bại: " + error });
+          const tempFile = path.join(TEMP_UPLOAD_FOLDER, filename);
+          Promise.all(
+            filenamearray.map((name) =>
+              fs.promises.copyFile(tempFile, path.join(destDir, name))
+            )
+          )
+            .then(() => fs.promises.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname)))
+            .then(() => {
+              res.send({ tk_status: "OK", message: "Upload file thành công" });
+            })
+            .catch((copyErr) => {
+              res.status(500).send({
+                tk_status: "NG",
+                message: "Upload file thất bại: " + copyErr,
+              });
             });
-            res.send({ tk_status: "OK", message: "Upload file thành công" });
-          } else {
-            res.send({
-              tk_status: "NG",
-              message: "Upload file thất bại: " + err,
-            });
-          }
         }
       } else {
-        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+        fs.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname), (error) => {
           console.log("Loi dong 404:" + error);
           //you can handle the error here
         });
-        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
+        console.log("DELETED: " + path.join(TEMP_UPLOAD_FOLDER, req.file.originalname));
         res.send({ tk_status: "NG", message: "File đã tồn tại" });
       }
     } else {
       res.send({ tk_status: "NG", message: "File chưa lên" });
     }
   }
+  });
 });
 app.post("/uploadfile55", upload2.single("uploadedfile"), function (req, res) {
   console.log("vao uploaded file thanh cong");
@@ -509,5 +514,8 @@ server.listen(API_PORT);
 server_s.listen(SOCKET_PORT);
 process.on('uncaughtException', function (error) {
   console.log("loi cmnr: " + error);
+});
+process.on('unhandledRejection', function (error) {
+  console.log("unhandledRejection: " + error);
 });
 console.log("Server listening on  " + API_PORT + "/" + SOCKET_PORT);

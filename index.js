@@ -20,6 +20,9 @@ const pushUtil = require("./utils/pushUtils");
 const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
+httpServer.setTimeout(parseInt(process.env.SERVER_TIMEOUT_MS || "0", 100) || 100 * 60 * 1000);
+httpServer.keepAliveTimeout = parseInt(process.env.KEEPALIVE_TIMEOUT_MS || "0", 100) || 100 * 60 * 1000;
+httpServer.headersTimeout = parseInt(process.env.HEADERS_TIMEOUT_MS || "0", 100) || 110 * 60 * 1000;
 // Middleware
 app.use(compression({ level: 9, threshold: 10 * 1024 }));
 app.use(cors(corsOptions));
@@ -41,6 +44,9 @@ httpsServer.listen(SOCKET_PORT, () => console.log(`Socket listening on ${SOCKET_
 // Xử lý lỗi toàn cục
 process.on("uncaughtException", (error) => {
   console.log("Uncaught Exception:", error);
+});
+process.on("unhandledRejection", (error) => {
+  console.log("Unhandled Rejection:", error);
 });
 // Đóng pool khi server dừng
 process.on("SIGINT", async () => {

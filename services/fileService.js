@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { existsSync } = require("fs");
+const path = require("path");
 require("dotenv").config();
 exports.uploadFile = async (req, res) => {
   let TEMP_UPLOAD_FOLDER = process.env.TEMP_UPLOAD_FOLDER;
@@ -8,18 +9,24 @@ exports.uploadFile = async (req, res) => {
   console.log(req.body.filename);
   console.log(req.body.uploadfoldername);
   //console.log('token upload',req.body.token_string);
-  console.log(" ten file goc: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
+  if (!req.file) {
+    res.send({ tk_status: "NG", message: "File chưa lên" });
+    return;
+  }
+  console.log(" ten file goc: " + path.join(TEMP_UPLOAD_FOLDER, req.file.originalname));
   if (req.coloiko === "coloi") {
     if (req.file) {
-      fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, () => {
+      fs.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname), () => {
         console.log("DELETED " + req.file.originalname);
       });
       console.log(
-        "successfully deleted " + TEMP_UPLOAD_FOLDER + req.file.originalname
+        "successfully deleted " + path.join(TEMP_UPLOAD_FOLDER, req.file.originalname)
       );
       res.send({ tk_status: "NG", message: "Chưa đăng nhập" });
+      return;
     } else {
       res.send({ tk_status: "NG", message: "File chưa lên" });
+      return;
     }
   } else if (req.coloiko === "kocoloi") {
     if (req.file) {
@@ -30,80 +37,60 @@ exports.uploadFile = async (req, res) => {
       let filenamearray = [];
       if (newfilenamelist) filenamearray = JSON.parse(newfilenamelist);
       console.log("filenamearray:", filenamearray);
-      if (!existsSync(DESTINATION_FOlDER + uploadfoldername + filename)) {
-        //fs.mkdir(DESTINATION_FOlDER + uploadfoldername);
-        if (!existsSync(DESTINATION_FOlDER + uploadfoldername)) {
-          fs.mkdir(DESTINATION_FOlDER + uploadfoldername, (e) => {
-            if (!e) {
-            } else {
-              console.log(e);
-            }
-          });
+      const destDir = path.join(DESTINATION_FOlDER, uploadfoldername);
+      const tempFile = path.join(TEMP_UPLOAD_FOLDER, filename);
+      if (!existsSync(path.join(destDir, filename))) {
+        if (!existsSync(destDir)) {
+          try {
+            await fs.promises.mkdir(destDir, { recursive: true });
+          } catch (e) {
+            res.status(500).send({ tk_status: "NG", message: "Upload file thất bại: " + e });
+            return;
+          }
         }
         if (filenamearray.length === 0) {
-          console.log("tempfile: ", TEMP_UPLOAD_FOLDER + filename);
+          const destFile = path.join(destDir, newfilename);
+          console.log("tempfile: ", tempFile);
           console.log(
             "destination file: ",
-            DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename
+            destFile
           );
-          fs.copyFile(
-            TEMP_UPLOAD_FOLDER + filename,
-            DESTINATION_FOlDER + uploadfoldername + "\\" + newfilename,
-            (err) => {
-              if (err) {
-                res.send({
-                  tk_status: "NG",
-                  message: "Upload file thất bại: " + err,
-                });
-              } else {
-                fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-                  //you can handle the error here
-                  console.log("Loi remove dong 364:" + error);
-                });
-                res.send({
-                  tk_status: "OK",
-                  message: "Upload file thành công",
-                });
-              }
-            }
-          );
-        } else {
-          let err_code = "";
-          for (let i = 0; i < filenamearray.length; i++) {
-            fs.copyFile(
-              TEMP_UPLOAD_FOLDER + filename,
-              DESTINATION_FOlDER + uploadfoldername + "\\" + filenamearray[i],
-              (err) => {
-                if (err) {
-                  err_code += err + "| ";
-                } else {
-                }
-              }
-            );
-          }
-          if (err_code === "") {
-            fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
-              console.log("Loi dong 390:" + error);
-              //res.send({ tk_status: "NG", message: "Upload file thất bại: " + error });
-            });
+          try {
+            await fs.promises.copyFile(tempFile, destFile);
+            await fs.promises.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname));
             res.send({ tk_status: "OK", message: "Upload file thành công" });
-          } else {
-            res.send({
-              tk_status: "NG",
-              message: "Upload file thất bại: " + err,
-            });
+            return;
+          } catch (err) {
+            res.status(500).send({ tk_status: "NG", message: "Upload file thất bại: " + err });
+            return;
+          }
+        } else {
+          try {
+            await Promise.all(
+              filenamearray.map((name) =>
+                fs.promises.copyFile(tempFile, path.join(destDir, name))
+              )
+            );
+            await fs.promises.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname));
+            res.send({ tk_status: "OK", message: "Upload file thành công" });
+            return;
+          } catch (err) {
+            res.status(500).send({ tk_status: "NG", message: "Upload file thất bại: " + err });
+            return;
           }
         }
       } else {
-        fs.rm(TEMP_UPLOAD_FOLDER + req.file.originalname, (error) => {
+        fs.rm(path.join(TEMP_UPLOAD_FOLDER, req.file.originalname), (error) => {
           console.log("Loi dong 404:" + error);
           //you can handle the error here
         });
-        console.log("DELETED: " + TEMP_UPLOAD_FOLDER + req.file.originalname);
+        console.log("DELETED: " + path.join(TEMP_UPLOAD_FOLDER, req.file.originalname));
         res.send({ tk_status: "NG", message: "File đã tồn tại" });
+        return;
       }
     } else {
       res.send({ tk_status: "NG", message: "File chưa lên" });
+      return;
     }
   }
 };
