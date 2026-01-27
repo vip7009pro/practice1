@@ -887,6 +887,9 @@ exports.processApi = async (req, res) => {
   try { 
     //await handler(req, res, DATA);
     if(DATA.COMPANY === "CMS"){
+      if(process.env.TO && parseInt(process.env.TO) > 0) {
+        await new Promise(resolve => setTimeout(resolve, parseInt(process.env.TO)));
+      }
       await handler(req, res, DATA);
     }
     else {

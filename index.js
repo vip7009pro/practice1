@@ -20,9 +20,30 @@ const pushUtil = require("./utils/pushUtils");
 const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
+const geoip = require('geoip-lite');
+
 httpServer.setTimeout(parseInt(process.env.SERVER_TIMEOUT_MS || "0", 100) || 100 * 60 * 1000);
 httpServer.keepAliveTimeout = parseInt(process.env.KEEPALIVE_TIMEOUT_MS || "0", 100) || 100 * 60 * 1000;
 httpServer.headersTimeout = parseInt(process.env.HEADERS_TIMEOUT_MS || "0", 100) || 110 * 60 * 1000;
+//loc IP
+const allowCountries = ['VN']; // Việt Nam
+
+app.use((req, res, next) => {
+  const ip =
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.socket.remoteAddress;
+
+  const geo = geoip.lookup(ip);
+
+  if (!geo || !allowCountries.includes(geo.country)) {
+    return res.status(403).json({
+      tk_status: 'NG',
+      message: 'Access denied: country not allowed'
+    });
+  }
+
+  next();
+});
 // Middleware
 app.use(compression({ level: 9, threshold: 10 * 1024 }));
 app.use(cors(corsOptions));
