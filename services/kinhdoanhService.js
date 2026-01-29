@@ -1094,6 +1094,83 @@ exports.insertData_Amazon_SuperFast = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.insertData_Amazon_SuperFast2 = async (req, res, DATA) => {
+  if (!await checkPermission(
+    req.payload_data,
+    ['KD','RND'],
+    ['Leader','ADMIN', 'Dept Staff'],
+    ['ALL']
+  )) {
+    return res.send({ tk_status: "NG", message: "Permission insufficent" });
+  }
+
+  const EMPL_NO = req.payload_data["EMPL_NO"];
+  const uploadAmazonData = DATA.AMZDATA;
+
+  const pool = await getDBPool(); // pool mssql của bạn
+  const request = pool.request();
+
+  let values = [];
+
+  uploadAmazonData.forEach((item, index) => {
+    values.push(`(
+      @CTR_CD,
+      @G_CODE_${index},
+      @PROD_REQUEST_NO_${index},
+      @NO_IN_${index},
+      @ROW_NO_${index},
+      @DATA_1_${index},
+      @DATA_2_${index},
+      '',
+      '',
+      'OK',
+      @INLAI_COUNT_${index},
+      @REMARK_${index},
+      GETDATE(),
+      @EMPL_NO,
+      GETDATE(),
+      @EMPL_NO
+    )`);
+
+    request.input(`G_CODE_${index}`, item.G_CODE);
+    request.input(`PROD_REQUEST_NO_${index}`, item.PROD_REQUEST_NO);
+    request.input(`NO_IN_${index}`, item.NO_IN);
+    request.input(`ROW_NO_${index}`, item.ROW_NO);
+    request.input(`DATA_1_${index}`, item.DATA1); // có ' vẫn OK
+    request.input(`DATA_2_${index}`, item.DATA2); // có ' vẫn OK
+    request.input(`INLAI_COUNT_${index}`, item.INLAI_COUNT);
+    request.input(`REMARK_${index}`, item.REMARK);
+  });
+
+  request.input("CTR_CD", DATA.CTR_CD);
+  request.input("EMPL_NO", EMPL_NO);
+
+  const sql = `
+    BEGIN TRANSACTION;
+    BEGIN TRY
+      INSERT INTO AMAZONE_DATA (
+        CTR_CD,G_CODE,PROD_REQUEST_NO,NO_IN,ROW_NO,
+        DATA_1,DATA_2,DATA_3,DATA_4,
+        PRINT_STATUS,INLAI_COUNT,REMARK,
+        INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL
+      )
+      VALUES ${values.join(",")}
+      COMMIT;
+    END TRY
+    BEGIN CATCH
+      ROLLBACK;
+      THROW;
+    END CATCH
+  `;
+
+  try {
+    const result = await request.query(sql);
+    res.send({ tk_status: "OK", result });
+  } catch (err) {
+    res.send({ tk_status: "NG", message: err.message });
+  }
+};
+
 exports.update_banve_value = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
