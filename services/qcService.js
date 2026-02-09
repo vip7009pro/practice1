@@ -1670,7 +1670,7 @@ GROUP BY YEAR(DATETB.DATE_COLUMN),DATEPART(iso_week, DATEADD(DAY, 2, DATETB.DATE
 HAVING SUM(CAST(isnull(INSPECTTB.INSPECT_TOTAL_QTY,0) AS float)) <> 0
 ORDER BY YEAR(DATETB.DATE_COLUMN) DESC,DATEPART(iso_week, DATEADD(DAY, 2, DATETB.DATE_COLUMN)) DESC`;
   //${moment().format('YYYY-MM-DD')}
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
@@ -3000,7 +3000,7 @@ exports.loadRNRchitiet = async (req, res, DATA) => {
     AND ZTB_RNR_TEST.CTR_CD='${DATA.CTR_CD}'
     ORDER BY ZTB_RNR_TEST.TEST_ID DESC, ZTB_RNR_TEST.TEST_EMPL_NO DESC,  ZTB_RNR_TEST.TEST_NUMBER ASC
   `;
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
@@ -3626,6 +3626,94 @@ SET @CTR_CD ='${DATA.CTR_CD}';
 
 
 
+WITH PQC_AGG AS (
+    SELECT
+        YEAR(p.SETTING_OK_TIME) AS SETTING_YEAR,
+        DATEPART(ISO_WEEK, p.SETTING_OK_TIME) AS SETTING_WEEK,
+        COUNT(p.PQC1_ID) AS TOTAL_LOT,
+        COUNT(p3.PQC3_ID) AS NG_LOT,
+        SUM(ISNULL(m.PROD_LAST_PRICE,0) * ISNULL(p.INSPECT_SAMPLE_QTY,0)) AS INSPECT_AMOUNT
+    FROM ZTBPQC1TABLE p
+    LEFT JOIN ZTBPQC3TABLE p3
+        ON p.PQC1_ID = p3.PQC1_ID
+       AND p.CTR_CD = p3.CTR_CD
+    LEFT JOIN M100 m
+        ON m.G_CODE = p.G_CODE
+       AND m.CTR_CD = p.CTR_CD
+    WHERE p.SETTING_OK_TIME >= @FROM_DATE
+      AND p.SETTING_OK_TIME < DATEADD(DAY,1,@TO_DATE)
+      AND p.CTR_CD = @CTR_CD
+    GROUP BY
+        YEAR(p.SETTING_OK_TIME),
+        DATEPART(ISO_WEEK, p.SETTING_OK_TIME)
+), KPI_AGG AS (
+    SELECT
+        YEAR(d.DATE_COLUMN) AS KPI_YEAR,
+        DATEPART(ISO_WEEK, d.DATE_COLUMN) AS KPI_WEEK,
+        AVG(
+            CASE
+                WHEN k.VALUE_TYPE = 'Number'
+                    THEN ISNULL(k.KPI_VALUE / NULLIF(w.WORKING_DAYS,0),0)
+                WHEN k.VALUE_TYPE = 'Percentage'
+                    THEN ISNULL(k.KPI_VALUE,0)
+                ELSE 0
+            END
+        ) AS KPI_VALUE
+    FROM DATETABLE d
+    JOIN ZTB_KPI_TB k
+        ON k.KPI_YEAR = YEAR(d.DATE_COLUMN)
+       AND k.KPI_MONTH = MONTH(d.DATE_COLUMN)
+       AND k.KPI_NAME = @KPI_NAME
+    JOIN (
+        SELECT
+            YEAR(DATE_COLUMN) AS Y,
+            MONTH(DATE_COLUMN) AS M,
+            COUNT(*) AS WORKING_DAYS
+        FROM DATETABLE
+        WHERE DATE_COLUMN BETWEEN
+              DATEADD(month, DATEDIFF(month, 0, @FROM_DATE), 0)
+          AND EOMONTH(@TO_DATE)
+        GROUP BY YEAR(DATE_COLUMN), MONTH(DATE_COLUMN)
+    ) w
+        ON w.Y = YEAR(d.DATE_COLUMN)
+       AND w.M = MONTH(d.DATE_COLUMN)
+    WHERE d.DATE_COLUMN BETWEEN @FROM_DATE AND @TO_DATE
+    GROUP BY
+        YEAR(d.DATE_COLUMN),
+        DATEPART(ISO_WEEK, d.DATE_COLUMN)
+)
+SELECT
+    CONCAT(p.SETTING_YEAR,'_',p.SETTING_WEEK) AS SETTING_YW,
+    p.SETTING_YEAR,
+    p.SETTING_WEEK,
+    p.TOTAL_LOT,
+    p.NG_LOT,
+    CASE WHEN p.TOTAL_LOT = 0 THEN 0
+         ELSE p.NG_LOT * 1.0 / p.TOTAL_LOT END AS NG_RATE,
+    p.INSPECT_AMOUNT,
+    k.KPI_VALUE
+FROM PQC_AGG p
+LEFT JOIN KPI_AGG k
+    ON k.KPI_YEAR = p.SETTING_YEAR
+   AND k.KPI_WEEK = p.SETTING_WEEK
+ORDER BY
+    p.SETTING_YEAR DESC,
+    p.SETTING_WEEK DESC;
+
+  `;
+  /* let setpdQuery = `
+DECLARE @FROM_DATE date;
+DECLARE @TO_DATE date;
+DECLARE @KPI_NAME varchar(100);
+DECLARE @CTR_CD  varchar(3);
+
+SET @FROM_DATE = '${DATA.FROM_DATE}';
+SET @TO_DATE = '${DATA.TO_DATE}';
+SET @KPI_NAME = 'pqc_kpi';
+SET @CTR_CD ='${DATA.CTR_CD}';
+
+
+
 WITH DateRange AS (
     -- Lấy các ngày từ DATETABLE trong khoảng FROM_DATE đến TO_DATE
     SELECT 
@@ -3685,8 +3773,8 @@ LEFT JOIN KPI_TB ON DATETB.DATE_COLUMN = KPI_TB.KPI_DATE
 WHERE SETTING_YEAR is not null
   GROUP BY SETTING_YEAR, SETTING_WEEK 
   ORDER BY SETTING_YEAR DESC, SETTING_WEEK DESC
-  `;
-  //console.log(setpdQuery);
+  `; */
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);

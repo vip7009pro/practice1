@@ -46,6 +46,7 @@ module.exports = {
       "http://cms1.ddns.net:3010",
       "http://cms1.ddns.net", */
       "http://localhost:3001",
+      "http://localhost:61221",
       "http://localhost:3010",
       "http://cmsvina4285.com:3010",
       /* "http://192.168.1.192",

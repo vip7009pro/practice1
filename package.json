@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "pm2 start index.js --watch && pm2 logs",
+    "stop": "pm2 stop index.js",
+    "build": " pkg index.js --target  node18-win-x64 -o outbinary/updatebe.exe"
   },
   "author": "Hung Nguyen Page",
   "license": "ISC",

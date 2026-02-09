@@ -210,10 +210,10 @@ exports.loadMaterialMRPALL = async (req, res, DATA) => {
   ) AS CC
   LEFT JOIN M090 ON (M090.M_CODE = CC.M_CODE)
   ${condition2}
-  WHERE M090.CTR_CD='${DATA.CTR_CD}'
+  AND  M090.CTR_CD='${DATA.CTR_CD}'
   ORDER BY ((M090.STOCK_CFM_NM1 + STOCK_CFM_NM2) - CC.NEED_M_QTY) ASC
   `;
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
