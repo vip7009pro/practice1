@@ -473,6 +473,19 @@ exports.setMobileVer = async (req, res, DATA) => {
   );
   res.send(checkkq);
 };
+exports.checkpassAMZ = async (req, res, DATA) => {
+  if(DATA.PASSAMZ === "123456") {
+    res.send({
+      tk_status: "ok",
+      message: "Pass correct"
+    });
+  } else {
+    res.send({
+      tk_status: "ng",
+      message: "Pass incorrect"
+    });
+  }
+};
 
 exports.common = async (req, res, DATA) => {
 };

@@ -374,7 +374,7 @@ exports.loadbarcodemanager = async (req, res, DATA) => {
   LEFT JOIN (SELECT DISTINCT CTR_CD,G_CODE FROM P500) AS P500_A ON P500_A.G_CODE = ZTB_BARCODE_MANAGER.G_CODE AND P500_A.CTR_CD = ZTB_BARCODE_MANAGER.CTR_CD
   WHERE ZTB_BARCODE_MANAGER.CTR_CD='${DATA.CTR_CD}'
   `;
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
