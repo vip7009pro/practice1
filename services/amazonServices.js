@@ -84,23 +84,23 @@ exports.insertData_Amazon_SuperFast = async (req, res, DATA) => {
         throw new Error(`Invalid ROW_NO at index ${i}`);
       }
 
-      const data1 = truncateString(item.DATA1 ?? '', 100);
-      const data2 = truncateString(item.DATA2 ?? '', 100);
-      const data3 = truncateString(item.DATA3 ?? '', 100);
-      const data4 = truncateString(item.DATA4 ?? '', 100);
+      const data1 = truncateString(item.DATA_1 ?? '', 100);
+      const data2 = truncateString(item.DATA_2 ?? '', 100);
+      const data3 = truncateString(item.DATA_3 ?? '', 100);
+      const data4 = truncateString(item.DATA_4 ?? '', 100);
       const remark = truncateString(item.REMARK ?? '', 200);
 
-      if (typeof item.DATA1 === 'string' && item.DATA1.length > 100) {
-        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA1', { index: i, len: item.DATA1.length });
+      if (typeof item.DATA_1 === 'string' && item.DATA_1.length > 100) {
+        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA_1', { index: i, len: item.DATA_1.length });
       }
-      if (typeof item.DATA2 === 'string' && item.DATA2.length > 100) {
-        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA2', { index: i, len: item.DATA2.length });
+      if (typeof item.DATA_2 === 'string' && item.DATA_2.length > 100) {
+        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA_2', { index: i, len: item.DATA_2.length });
       }
-      if (typeof item.DATA3 === 'string' && item.DATA3.length > 100) {
-        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA3', { index: i, len: item.DATA3.length });
+      if (typeof item.DATA_3 === 'string' && item.DATA_3.length > 100) {
+        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA_3', { index: i, len: item.DATA_3.length });
       }
-      if (typeof item.DATA4 === 'string' && item.DATA4.length > 100) {
-        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA4', { index: i, len: item.DATA4.length });
+      if (typeof item.DATA_4 === 'string' && item.DATA_4.length > 100) {
+        console.log('[AMZ][insertData_Amazon_SuperFast] truncate DATA_4', { index: i, len: item.DATA_4.length });
       }
       if (typeof item.REMARK === 'string' && item.REMARK.length > 200) {
         console.log('[AMZ][insertData_Amazon_SuperFast] truncate REMARK', { index: i, len: item.REMARK.length });
