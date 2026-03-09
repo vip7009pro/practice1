@@ -22,13 +22,23 @@ const {check_PLAN_ID_KHO_AO, checkPLANID_O300, checkPLANID_O301, getO300_LAST_OU
 const { insertData_Amazon_SuperFast } = require("./amazonServices");
 const { gemini_prompt } = require("./aiServices");
 
-const { get_column_comments, update_column_comment } = require('./columnCommentService');
+const {
+  get_column_comments,
+  update_column_comment,
+  get_table_comments,
+  update_table_comment,
+  bulk_upsert_comments,
+} = require('./columnCommentService');
 const { rebuild_schema_index } = require('./schemaAdminService');
+
 
 const commandHandlers = {
   gemini_prompt,
   get_column_comments,
   update_column_comment,
+  get_table_comments,
+  update_table_comment,
+  bulk_upsert_comments,
   rebuild_schema_index,
   checkpassAMZ,
   loadCustomerWeeklyPOQty,

@@ -33,6 +33,27 @@ const loadTableColumns = async () => {
   return result.recordset || [];
 };
 
+const loadTableDescriptions = async () => {
+  const sql = `
+    SELECT
+      s.name AS schema_name,
+      t.name AS table_name,
+      CAST(ep.value AS NVARCHAR(4000)) AS table_description
+    FROM sys.tables t
+    INNER JOIN sys.schemas s ON s.schema_id = t.schema_id
+    LEFT JOIN sys.extended_properties ep
+      ON ep.major_id = t.object_id
+      AND ep.minor_id = 0
+      AND ep.name = 'MS_Description'
+    WHERE t.is_ms_shipped = 0
+    ORDER BY s.name, t.name;
+  `;
+
+  const pool = await openConnection();
+  const result = await pool.request().query(sql);
+  return result.recordset || [];
+};
+
 const loadForeignKeys = async () => {
   const sql = `
     SELECT
@@ -84,7 +105,7 @@ const formatType = (row) => {
 };
 
 exports.extractSchema = async () => {
-  const [cols, fks] = await Promise.all([loadTableColumns(), loadForeignKeys()]);
+  const [cols, fks, tds] = await Promise.all([loadTableColumns(), loadForeignKeys(), loadTableDescriptions()]);
 
   if (isDebug()) {
     console.log('[SchemaExtractor] loaded', {
@@ -117,6 +138,16 @@ exports.extractSchema = async () => {
       identity: Boolean(r.is_identity),
       description: r.column_description ? String(r.column_description) : '',
     });
+  }
+
+  for (const td of tds) {
+    const schema = String(td.schema_name || 'dbo');
+    const table = String(td.table_name || '');
+    if (!table) continue;
+    const key = `${schema}.${table}`;
+    const doc = byTable.get(key);
+    if (!doc) continue;
+    doc.description = td.table_description ? String(td.table_description) : '';
   }
 
   for (const fk of fks) {
