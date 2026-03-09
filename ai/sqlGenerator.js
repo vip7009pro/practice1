@@ -22,6 +22,7 @@ const buildPrompt = ({ retrievedSchema, question }) => {
     '- Only SELECT queries are allowed.',
     '- Prefer explicit schema-qualified table names (e.g. dbo.Table).',
     '- Keep result size reasonable (use TOP when appropriate).',
+    '- Never let column name null (especially from aggregate functions), use AS to rename it.',
   ].join('\n');
 };
 
