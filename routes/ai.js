@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { checkLoginIndex } = require('../middleware/auth');
 const { SchemaIndex } = require('../ai/schemaIndex');
-const { generateSelectSql } = require('../ai/sqlGenerator');
+const { generateSelectSql, generateSelectSqlFix } = require('../ai/sqlGenerator');
 const { validateSqlSafety, normalizeSql } = require('../ai/sqlValidator');
 const { gemini_generateText } = require('../services/aiServices');
 const { openConnection } = require('../config/database');
@@ -109,6 +109,12 @@ const buildExplanation = async ({ question, sql, recordset }) => {
 
 const schemaIndex = new SchemaIndex();
 
+const getExecRetryLimit = () => {
+  const v = Number(process.env.AI_SQL_EXEC_RETRY || 2);
+  if (!Number.isFinite(v)) return 2;
+  return Math.max(0, Math.min(5, Math.floor(v)));
+};
+
 router.post('/query', checkLoginIndex, async (req, res) => {
   const started = Date.now();
   try {
@@ -188,7 +194,10 @@ router.post('/query', checkLoginIndex, async (req, res) => {
     }
 
     const t1 = Date.now();
-    const sqlRes = await generateSelectSql({
+    const execRetryLimit = getExecRetryLimit();
+    const pool = await openConnection();
+
+    let sqlRes = await generateSelectSql({
       generateText: gemini_generateText,
       retrievedSchema,
       question: String(question),
@@ -199,35 +208,83 @@ router.post('/query', checkLoginIndex, async (req, res) => {
       console.log('[AI_SQL][query] sql_generated', { ms: genMs, sql: sqlRes.sql });
     }
 
-    if (sqlRes.error) {
-      return res.json({
-        tk_status: 'NG',
-        message: sqlRes.error,
-        sql: sqlRes.sql || '',
-        sql_generation_prompt: sqlRes.prompt || '',
-      });
+    let finalSql = '';
+    let finalPrompt = sqlRes.prompt || '';
+    let qMs = 0;
+    let result = null;
+    const attempts = [];
+
+    for (let execAttempt = 0; execAttempt <= execRetryLimit; execAttempt++) {
+      if (sqlRes.error) {
+        return res.json({
+          tk_status: 'NG',
+          message: sqlRes.error,
+          sql: sqlRes.sql || '',
+          sql_generation_prompt: sqlRes.prompt || '',
+        });
+      }
+
+      const validation = validateSqlSafety(sqlRes.sql);
+      if (!validation.ok) {
+        return res.json({
+          tk_status: 'NG',
+          message: validation.reason,
+          sql: sqlRes.sql || '',
+          sql_generation_prompt: sqlRes.prompt || '',
+        });
+      }
+
+      finalSql = sqlRes.sql;
+      finalPrompt = sqlRes.prompt || finalPrompt;
+      const qStarted = Date.now();
+
+      try {
+        console.log('sql', finalSql);
+        result = await pool.request().query(finalSql);
+        qMs = Date.now() - qStarted;
+        attempts.push({ attempt: execAttempt, ok: true, sql: finalSql });
+        break;
+      } catch (e) {
+        qMs = Date.now() - qStarted;
+        const errMsg = e?.message || String(e);
+        attempts.push({ attempt: execAttempt, ok: false, sql: finalSql, error: errMsg });
+        if (isDebug()) console.log('[AI_SQL][query] sql_exec_error', { attempt: execAttempt, message: errMsg });
+
+        if (execAttempt >= execRetryLimit) {
+          return res.json({
+            tk_status: 'NG',
+            message: errMsg,
+            sql: finalSql,
+            sql_generation_prompt: finalPrompt,
+            attempts,
+          });
+        }
+
+        const fixStarted = Date.now();
+        const fixRes = await generateSelectSqlFix({
+          generateText: gemini_generateText,
+          retrievedSchema,
+          question: String(question),
+          previousSql: finalSql,
+          sqlError: errMsg,
+          maxRetries: 1,
+        });
+        const fixMs = Date.now() - fixStarted;
+        if (isDebug()) {
+          console.log('[AI_SQL][query] sql_fixed', { attempt: execAttempt + 1, ms: fixMs, sql: fixRes.sql });
+        }
+        sqlRes = fixRes;
+      }
     }
 
-    const validation = validateSqlSafety(sqlRes.sql);
-    if (!validation.ok) {
-      return res.json({
-        tk_status: 'NG',
-        message: validation.reason,
-        sql: sqlRes.sql || '',
-        sql_generation_prompt: sqlRes.prompt || '',
-      });
+    if (!result) {
+      return res.json({ tk_status: 'NG', message: 'Failed to execute query', sql: finalSql, sql_generation_prompt: finalPrompt, attempts });
     }
-
-    const pool = await openConnection();
-    const qStarted = Date.now();
-    console.log('sql', sqlRes.sql);
-    const result = await pool.request().query(sqlRes.sql);
-    const qMs = Date.now() - qStarted;
 
     let explanation = '';
     if (explain) {
       try {
-        explanation = await buildExplanation({ question: String(question || ''), sql: sqlRes.sql, recordset: result.recordset || [] });
+        explanation = await buildExplanation({ question: String(question || ''), sql: finalSql, recordset: result.recordset || [] });
       } catch (e) {
         if (isDebug()) console.log('[AI_SQL][query] explain_error', e?.message || e);
       }
@@ -239,11 +296,12 @@ router.post('/query', checkLoginIndex, async (req, res) => {
     return res.json({
       tk_status: 'OK',
       data: {
-        sql: sqlRes.sql,
-        sql_generation_prompt: sqlRes.prompt || '',
+        sql: finalSql,
+        sql_generation_prompt: finalPrompt || '',
         data: result.recordset || [],
         explanation,
         execution_time_ms: ms,
+        attempts,
       },
     });
   } catch (e) {
