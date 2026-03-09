@@ -23,11 +23,13 @@ const { insertData_Amazon_SuperFast } = require("./amazonServices");
 const { gemini_prompt } = require("./aiServices");
 
 const { get_column_comments, update_column_comment } = require('./columnCommentService');
+const { rebuild_schema_index } = require('./schemaAdminService');
 
 const commandHandlers = {
   gemini_prompt,
   get_column_comments,
   update_column_comment,
+  rebuild_schema_index,
   checkpassAMZ,
   loadCustomerWeeklyPOQty,
   updateINNhanhData,

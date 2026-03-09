@@ -1,7 +1,27 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
-const DEFAULT_PATH = path.resolve(__dirname, '..', 'outbinary', 'schema_index.json');
+const resolveSchemaIndexPath = () => {
+  const explicit = String(process.env.SCHEMA_INDEX_PATH || '').trim();
+  if (explicit) return explicit;
+
+  const dataDir = String(process.env.AI_SQL_DATA_DIR || '').trim();
+  if (dataDir) return path.resolve(dataDir, 'schema_index.json');
+
+  // When bundled by `pkg`, __dirname points into a snapshot (read-only).
+  // Persisting files must go to a writable mountpoint.
+  const runningInPkg = Boolean(process.pkg);
+  if (runningInPkg) {
+    const localAppData = String(process.env.LOCALAPPDATA || '').trim();
+    const baseDir = localAppData || path.join(os.homedir(), 'AppData', 'Local');
+    return path.join(baseDir, 'practice1', 'outbinary', 'schema_index.json');
+  }
+
+  return path.resolve(__dirname, '..', 'outbinary', 'schema_index.json');
+};
+
+const DEFAULT_PATH = resolveSchemaIndexPath();
 
 const tokenize = (text) => {
   const raw = String(text || '');
