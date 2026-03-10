@@ -115,6 +115,59 @@ const getExecRetryLimit = () => {
   return Math.max(0, Math.min(5, Math.floor(v)));
 };
 
+const buildEffectiveQuestion = ({ question, chat_history, chat_summary }) => {
+  const q = String(question || '').trim();
+  const summary = String(chat_summary || '').trim();
+
+  const turns = Array.isArray(chat_history) ? chat_history : [];
+  const safeTurns = turns
+    .filter((t) => t && (t.user || t.assistant))
+    .slice(Math.max(0, turns.length - 6))
+    .map((t, i) => {
+      const u = String(t?.user || '').trim();
+      const a = String(t?.assistant || '').trim();
+      return [`Turn ${i + 1} - User: ${u}`, `Turn ${i + 1} - Assistant: ${a}`].join('\n');
+    })
+    .join('\n');
+
+  return [
+    'You are continuing an ERP data conversation.',
+    'Use the conversation context to resolve follow-up/elliptical questions.',
+    'Do NOT change the time range / filters unless the user explicitly overrides them.',
+    '',
+    summary ? `Conversation summary so far:\n${summary}` : '',
+    safeTurns ? `Recent conversation turns:\n${safeTurns}` : '',
+    '',
+    `Current user question:\n${q}`,
+  ]
+    .filter((x) => String(x || '').trim().length > 0)
+    .join('\n');
+};
+
+const buildNextSummary = async ({ prevSummary, question, explanation }) => {
+  const prev = String(prevSummary || '').trim();
+  const q = String(question || '').trim();
+  const a = String(explanation || '').trim();
+
+  const prompt = [
+    'You are maintaining a running summary of an ERP chat session.',
+    'Write the updated summary in Vietnamese, max 8 bullet points.',
+    'Focus on: chosen metrics, time ranges, filters (customer/product/department), grouping, and any assumptions.',
+    'Do not include SQL. Do not include raw tables. Keep it short.',
+    '',
+    prev ? `Previous summary:\n${prev}` : 'Previous summary: (empty)',
+    '',
+    `New turn - User question:\n${q}`,
+    '',
+    `New turn - Assistant answer (explanation):\n${a}`,
+    '',
+    'Return ONLY the updated summary text.',
+  ].join('\n');
+
+  const text = await gemini_generateText(prompt, { model: 'gemini-2.5-flash', temperature: 0.2 });
+  return String(text || '').trim();
+};
+
 router.post('/query', checkLoginIndex, async (req, res) => {
   const started = Date.now();
   try {
@@ -123,6 +176,8 @@ router.post('/query', checkLoginIndex, async (req, res) => {
     }
 
     const question = req.body?.question || req.body?.DATA?.question;
+    const chat_history = req.body?.chat_history || req.body?.DATA?.chat_history;
+    const chat_summary = req.body?.chat_summary || req.body?.DATA?.chat_summary;
     const sqlOverride = req.body?.sql || req.body?.sql_override || req.body?.DATA?.sql || req.body?.DATA?.sql_override;
     const explain = Boolean(req.body?.explain ?? req.body?.DATA?.explain ?? true);
     if (sqlOverride && String(sqlOverride).trim().length > 0) {
@@ -150,12 +205,22 @@ router.post('/query', checkLoginIndex, async (req, res) => {
       const ms = Date.now() - started;
       console.log('[AI_SQL][manual] done', { ms, query_ms: qMs, rows: result?.recordset?.length || 0 });
 
+      let nextSummary = String(chat_summary || '').trim();
+      if (explain) {
+        try {
+          nextSummary = await buildNextSummary({ prevSummary: nextSummary, question: String(question || ''), explanation });
+        } catch (e) {
+          if (isDebug()) console.log('[AI_SQL][manual] summary_error', e?.message || e);
+        }
+      }
+
       return res.json({
         tk_status: 'OK',
         data: {
           sql: sqlText,
           data: result.recordset || [],
           explanation,
+          chat_summary: nextSummary,
           execution_time_ms: ms,
         },
       });
@@ -165,10 +230,11 @@ router.post('/query', checkLoginIndex, async (req, res) => {
       return res.status(400).json({ tk_status: 'NG', message: 'Missing question' });
     }
 
+    const effectiveQuestion = buildEffectiveQuestion({ question, chat_history, chat_summary });
     console.log('[AI_SQL][query] question', String(question));
 
     const t0 = Date.now();
-    const hits = schemaIndex.search(String(question), 5);
+    const hits = schemaIndex.search(String(effectiveQuestion), 5);
     const searchMs = Date.now() - t0;
     if (isDebug()) {
       console.log(
@@ -200,7 +266,7 @@ router.post('/query', checkLoginIndex, async (req, res) => {
     let sqlRes = await generateSelectSql({
       generateText: gemini_generateText,
       retrievedSchema,
-      question: String(question),
+      question: String(effectiveQuestion),
       maxRetries: 2,
     });
     const genMs = Date.now() - t1;
@@ -264,7 +330,7 @@ router.post('/query', checkLoginIndex, async (req, res) => {
         const fixRes = await generateSelectSqlFix({
           generateText: gemini_generateText,
           retrievedSchema,
-          question: String(question),
+          question: String(effectiveQuestion),
           previousSql: finalSql,
           sqlError: errMsg,
           maxRetries: 1,
@@ -290,6 +356,15 @@ router.post('/query', checkLoginIndex, async (req, res) => {
       }
     }
 
+    let nextSummary = String(chat_summary || '').trim();
+    if (explain) {
+      try {
+        nextSummary = await buildNextSummary({ prevSummary: nextSummary, question: String(question || ''), explanation });
+      } catch (e) {
+        if (isDebug()) console.log('[AI_SQL][query] summary_error', e?.message || e);
+      }
+    }
+
     const ms = Date.now() - started;
     console.log('[AI_SQL][query] done', { ms, query_ms: qMs, rows: result?.recordset?.length || 0 });
 
@@ -300,6 +375,7 @@ router.post('/query', checkLoginIndex, async (req, res) => {
         sql_generation_prompt: finalPrompt || '',
         data: result.recordset || [],
         explanation,
+        chat_summary: nextSummary,
         execution_time_ms: ms,
         attempts,
       },
