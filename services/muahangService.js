@@ -94,7 +94,7 @@ exports.updateTDSStatus = async (req, res, DATA) => {
 };
 exports.selectVendorList = async (req, res, DATA) => {
   let kqua;
-  let query = `SELECT DISTINCT CUST_CD , CUST_NAME_KD  FROM M110 WHERE CTR_CD='${DATA.CTR_CD}' AND CUST_TYPE ='NCC' ORDER BY CUST_NAME_KD ASC`;
+  let query = `SELECT DISTINCT CUST_CD , CUST_NAME_KD  FROM M110 WHERE CTR_CD='${DATA.CTR_CD}' AND CUST_TYPE ='NCC' AND USE_YN='Y' ORDER BY CUST_NAME_KD ASC`;
   kqua = await queryDB(query);
   ////console.log(kqua);
   res.send(kqua);
