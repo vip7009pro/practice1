@@ -849,7 +849,7 @@ router.get('/v2/metadata/relationships', checkLoginIndex, async (req, res) => {
  */
 router.post('/v2/metadata/tables', checkLoginIndex, async (req, res) => {
   try {
-    const { table_name, business_name, description, synonyms, is_fact } = req.body;
+    const { table_name, business_name, description, synonyms, is_fact, use_cases } = req.body;
 
     if (!table_name) {
       return res.status(400).json({
@@ -877,6 +877,7 @@ router.post('/v2/metadata/tables', checkLoginIndex, async (req, res) => {
       description: description || '',
       synonyms: synonyms || [],
       is_fact: is_fact !== undefined ? is_fact : true,
+      use_cases: use_cases || [],
     };
 
     if (existingIdx >= 0) {

@@ -1996,9 +1996,17 @@
       "table_name": "ZTBDelivery",
       "business_name": "ZTBDelivery",
       "description": "Table ZTBDelivery",
-      "synonyms": [],
+      "synonyms": [
+        "doanhthu",
+        "giaohang",
+        "delivery"
+      ],
       "is_fact": true,
-      "created_from_db_sync": true
+      "use_cases": [
+        "tra doanh thu",
+        "lịch sử giao hàng",
+        "đơn hàng tồn"
+      ]
     },
     {
       "table_name": "ZTBEMPLINFO",
@@ -2145,7 +2153,11 @@
         "đơnhàng",
         "lichsudonhang"
       ],
-      "is_fact": true
+      "is_fact": true,
+      "use_cases": [
+        "Khi tra đơn hàng tồn (PO Balance)",
+        "Lịch sử đơn hàng"
+      ]
     },
     {
       "table_name": "ZTBPQC1TABLE",
