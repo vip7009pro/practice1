@@ -48999,11 +48999,11 @@
     {
       "table_name": "ZTBDelivery",
       "column_name": "CUST_CD",
-      "business_name": "고객사 코드 - Mã khách hàng",
-      "description": "고객사 코드 - Mã khách hàng",
+      "business_name": "Khách hàng - Customer code",
+      "description": "Mã code của khách hàng nhận hàng",
       "data_type": "varchar",
       "nullable": true,
-      "synonyms": [],
+      "synonyms": ["khách", "customer", "kh", "mã kh"],
       "is_measure": false,
       "format_hint": "string",
       "created_from_db_sync": true
@@ -49023,11 +49023,11 @@
     {
       "table_name": "ZTBDelivery",
       "column_name": "G_CODE",
-      "business_name": "제품 코드 - Mã sản phẩm",
-      "description": "제품 코드 - Mã sản phẩm",
+      "business_name": "Sản phẩm - Product code",
+      "description": "Mã code của sản phẩm giao hàng",
       "data_type": "varchar",
       "nullable": true,
-      "synonyms": [],
+      "synonyms": ["sản phẩm", "product", "mã sp", "code"],
       "is_measure": false,
       "format_hint": "string",
       "created_from_db_sync": true
@@ -49047,11 +49047,11 @@
     {
       "table_name": "ZTBDelivery",
       "column_name": "DELIVERY_QTY",
-      "business_name": "납품 수량 - Số lượng giao hàng",
-      "description": "납품 수량 - Số lượng giao hàng",
+      "business_name": "Số lượng giao hàng - Delivery quantity",
+      "description": "Tổng số lượng sản phẩm được giao trong lần giao hàng này",
       "data_type": "int",
       "nullable": true,
-      "synonyms": [],
+      "synonyms": ["qty", "số lượng", "quantity", "số cái", "sl"],
       "is_measure": true,
       "format_hint": "number",
       "created_from_db_sync": true
@@ -49059,11 +49059,11 @@
     {
       "table_name": "ZTBDelivery",
       "column_name": "DELIVERY_DATE",
-      "business_name": "납품 일자 - Ngày giao hàng",
-      "description": "납품 일자 - Ngày giao hàng",
+      "business_name": "Ngày giao hàng - Delivery date",
+      "description": "Ngày tháng năm giao hàng, dùng để lọc theo năm, tháng, tuần",
       "data_type": "date",
       "nullable": true,
-      "synonyms": [],
+      "synonyms": ["ngày", "date", "năm", "2026", "tháng", "tuần"],
       "is_measure": false,
       "format_hint": "date",
       "created_from_db_sync": true

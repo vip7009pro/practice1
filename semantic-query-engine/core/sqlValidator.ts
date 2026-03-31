@@ -89,12 +89,17 @@ export class SQLValidator {
 
     if (!ok) {
       logger.warn('SQL validation failed', {
+        sqlPreview: sql.slice(0, 150),
         errorCount: errors.length,
         warningCount: warnings.length,
+        errors: errors.map((e) => ({ code: e.code, message: e.message })),
         ms: validationMs,
       });
     } else {
-      logger.info('SQL validation passed', { ms: validationMs });
+      logger.info('SQL validation passed', {
+        sqlLength: sql.length,
+        ms: validationMs,
+      });
     }
 
     return result;
@@ -150,12 +155,18 @@ export class SQLValidator {
     // Remove trailing semicolon
     const normalized = cleaned.replace(/;\s*$/, '').trim();
 
-    if (!normalized) return false;
+    if (!normalized) {
+      logger.warn('isValidSelectStatement: empty after normalization');
+      return false;
+    }
 
     const upper = normalized.toUpperCase();
 
     // Must start with SELECT or WITH
     if (!upper.startsWith('SELECT') && !upper.startsWith('WITH')) {
+      logger.warn('isValidSelectStatement: does not start with SELECT or WITH', {
+        firstWords: normalized.slice(0, 50),
+      });
       return false;
     }
 
@@ -164,8 +175,18 @@ export class SQLValidator {
     const statementCount = (withoutStrings.match(/;/g) || []).length;
 
     if (statementCount > 0) {
+      logger.warn('isValidSelectStatement: multiple statements detected', {
+        statementCount,
+        semicolonPositions: Array.from(withoutStrings.matchAll(/;/g)).map((m) => m.index),
+      });
       return false;
     }
+
+    logger.info('isValidSelectStatement: valid', {
+      length: normalized.length,
+      startsWithSelect: upper.startsWith('SELECT'),
+      startsWithWith: upper.startsWith('WITH'),
+    });
 
     return true;
   }
@@ -175,6 +196,9 @@ export class SQLValidator {
    */
   private checkSemanticCorrectness(sql: string, context: ExpandedContext): ValidationError[] {
     const errors: ValidationError[] = [];
+
+    // Extract table-alias mappings first
+    const aliasMap = this.extractTableAliases(sql);
 
     // Check for referenced tables
     const referencedTables = this.extractTableNames(sql);
@@ -195,7 +219,10 @@ export class SQLValidator {
     // Check for column references
     const referencedColumns = this.extractColumnReferences(sql);
     for (const { table, column } of referencedColumns) {
-      const tableColumns = context.all_columns_map.get(table.toLowerCase()) || [];
+      // Resolve alias to real table name
+      const realTableName = aliasMap.get(table.toLowerCase()) || table;
+
+      const tableColumns = context.all_columns_map.get(realTableName.toLowerCase()) || [];
       const columnExists = tableColumns.some((c) => c.column_name.toLowerCase() === column.toLowerCase());
 
       if (!columnExists) {
@@ -246,45 +273,96 @@ export class SQLValidator {
     const tables: string[] = [];
     const cleaned = stripSqlComments(sql);
 
-    // Simple extraction: FROM table or JOIN table
-    const fromMatch = cleaned.match(/FROM\s+(\w+)/gi);
-    const joinMatch = cleaned.match(/JOIN\s+(\w+)/gi);
+    // Capture schema-qualified names: dbo.TableName or just TableName
+    const fromMatch = cleaned.match(/FROM\s+((?:\w+\.)?[\w]+)/gi);
+    const joinMatch = cleaned.match(/JOIN\s+((?:\w+\.)?[\w]+)/gi);
 
-    if (fromMatch) {
-      for (const match of fromMatch) {
-        const tableName = match.replace(/^FROM\s+/i, '').trim();
+    const processMatches = (matches: RegExpMatchArray | null) => {
+      if (!matches) return;
+      for (const match of matches) {
+        let tableName = match.replace(/^(FROM|JOIN)\s+/i, '').trim();
+        
+        // Remove schema prefix (dbo.TableName -> TableName)
+        if (tableName.includes('.')) {
+          tableName = tableName.split('.')[1];
+        }
+        
         if (tableName && !tables.includes(tableName)) {
           tables.push(tableName);
         }
       }
-    }
+    };
 
-    if (joinMatch) {
-      for (const match of joinMatch) {
-        const tableName = match.replace(/^JOIN\s+/i, '').trim();
-        if (tableName && !tables.includes(tableName)) {
-          tables.push(tableName);
-        }
-      }
-    }
+    processMatches(fromMatch);
+    processMatches(joinMatch);
 
     return tables;
   }
 
   /**
-   * Extract column references
+   * Extract table-alias mappings from SQL
+   * e.g., "dbo.ZTBDelivery AS T1" -> { "t1": "ZTBDelivery" }
+   */
+  private extractTableAliases(sql: string): Map<string, string> {
+    const aliasMap = new Map<string, string>();
+    const cleaned = stripSqlComments(sql);
+
+    // Match: (schema.)TableName AS AliasName
+    // Pattern: word.word AS word, or word AS word
+    const aliasPattern = /(?:FROM|JOIN)\s+((?:\w+\.)?[\w]+)\s+(?:AS\s+)?(\w+)(?:\s|,|WHERE|JOIN|$)/gi;
+    let match;
+
+    while ((match = aliasPattern.exec(cleaned)) !== null) {
+      let tableName = match[1].trim();
+      const aliasName = match[2].trim();
+
+      // Skip if alias is a keyword (ON, INNER, LEFT, etc.)
+      if (['ON', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'CROSS', 'WHERE', 'AND', 'OR'].includes(aliasName.toUpperCase())) {
+        continue;
+      }
+
+      // Remove schema prefix (dbo.TableName -> TableName)
+      if (tableName.includes('.')) {
+        tableName = tableName.split('.')[1];
+      }
+
+      // Map alias to real table name (case-insensitive)
+      aliasMap.set(aliasName.toLowerCase(), tableName);
+    }
+
+    return aliasMap;
+  }
+
+  /**
+   * Extract column references (table.column patterns, excluding schema.table patterns)
    */
   private extractColumnReferences(sql: string): Array<{ table: string; column: string }> {
     const references: Array<{ table: string; column: string }> = [];
+    const cleaned = stripSqlComments(sql);
 
-    // Simple pattern: table.column
+    // Pattern: table.column (excluding aliases and schema qualifiers)
+    // Match word.word but skip dbo.something patterns
     const columnPattern = /(\w+)\.(\w+)/g;
     let match;
+    const seen = new Set<string>();
 
-    while ((match = columnPattern.exec(sql)) !== null) {
+    while ((match = columnPattern.exec(cleaned)) !== null) {
+      const potentialTable = match[1];
+      const potentialColumn = match[2];
+
+      // Skip common schema names (dbo, schema, sys, tempdb, etc.)
+      if (['dbo', 'schema', 'sys', 'tempdb', 'guest', 'information_schema'].includes(potentialTable.toLowerCase())) {
+        continue;
+      }
+
+      // Skip if it looks like an alias reference (usually all caps or mixed case after AS)
+      const key = `${potentialTable}.${potentialColumn}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
       references.push({
-        table: match[1],
-        column: match[2],
+        table: potentialTable,
+        column: potentialColumn,
       });
     }
 

@@ -78,9 +78,15 @@ export class QueryRewriter {
     const lower = query.toLowerCase();
     const intents: string[] = [];
 
-    // Metric query detection
+    // List/browse detection - check this FIRST before metric detection
+    if (/danh sách|list|xem|browse|hiển thị|lịch sử|history/.test(lower)) {
+      intents.push('list_query');
+    }
+
+    // Metric query detection - skip if already list_query
     if (
-      /doanh thu|lợi nhuận|profit|revenue|sales|bán|tổng|tính|số lượng|qty|giá trị/.test(lower)
+      !intents.includes('list_query') &&
+      /doanh thu|lợi nhuận|profit|revenue|sales|tính|giá trị/.test(lower)
     ) {
       intents.push('metric_query');
     }
@@ -103,11 +109,6 @@ export class QueryRewriter {
     // Trend analysis
     if (/trend|xu hướng|tăng|giảm|growth|decline|development/.test(lower)) {
       intents.push('trend_analysis');
-    }
-
-    // List/browse
-    if (/danh sách|list|xem|browse|hiển thị/.test(lower)) {
-      intents.push('list_query');
     }
 
     // Filter/search

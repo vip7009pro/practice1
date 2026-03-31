@@ -113,6 +113,15 @@ export class SemanticQueryHandler {
         context.expanded_context!,
         joinPaths,
       );
+      
+      // Log generated SQL detail
+      logger.info('[SemanticQueryHandler] SQL generated', {
+        sql: context.generated_sql!.sql.slice(0, 300),
+        sqlLength: context.generated_sql!.sql.length,
+        metricsUsed: context.generated_sql!.metrics_used,
+        generationMs: context.generated_sql!.generation_ms,
+      });
+      
       this.markStepComplete('SQLGenerator', context);
 
       // Step 6: Validate SQL
@@ -124,6 +133,11 @@ export class SemanticQueryHandler {
       this.markStepComplete('SQLValidator', context);
 
       if (!context.validation_result!.ok) {
+        logger.error('[SemanticQueryHandler] SQL validation failed after generation', {
+          sql: context.generated_sql!.sql.slice(0, 300),
+          errors: context.validation_result!.errors,
+        });
+        
         throw new SemanticEngineError(
           'VALIDATION_FAILED',
           `SQL validation failed: ${context.validation_result!.errors[0]?.message}`,

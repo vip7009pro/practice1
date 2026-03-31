@@ -8,9 +8,12 @@ import {
   SemanticEngineError,
 } from '../types';
 import { createLogger } from '../utils/logger';
-import { MAX_ROW_LIMIT, QUERY_TIMEOUT_MS } from '../config/constants';
+import { SEMANTIC_ENGINE_CONFIG } from '../config/constants';
 
 const logger = createLogger('Executor');
+
+const MAX_ROW_LIMIT = SEMANTIC_ENGINE_CONFIG.MAX_ROW_LIMIT;
+const QUERY_TIMEOUT_MS = SEMANTIC_ENGINE_CONFIG.QUERY_TIMEOUT_MS;
 
 interface DBPool {
   request(): {

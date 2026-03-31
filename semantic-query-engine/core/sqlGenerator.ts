@@ -91,11 +91,27 @@ export class SQLGenerator {
       rewrittenQuery.detected_metrics.includes(m.id),
     );
 
+    // If no metrics found in context but were detected, fall back to standard query
     if (relevantMetrics.length === 0) {
-      throw new SemanticEngineError(
-        'METRICS_NOT_FOUND',
-        'Requested metrics not found in metadata',
-      );
+      logger.warn('Detected metrics not found in context, falling back to standard query', {
+        detected: rewrittenQuery.detected_metrics,
+        contextMetrics: context.metrics_context.map((m) => m.id),
+      });
+
+      // Fall back to standard SELECT generation
+      const prompt = this.buildPrompt(rewrittenQuery, context, joinPaths);
+      const sqlText = await this.generateText(prompt);
+      const generationMs = Date.now() - startTime;
+
+      return {
+        sql: sqlText,
+        explanation: 'Query generated based on business context (standard mode)',
+        join_paths_used: Array.from(joinPaths.values()),
+        metrics_used: [],
+        prompt,
+        generation_ms: generationMs,
+        model: 'gemini-2.5-flash',
+      };
     }
 
     // Build SQL from metric formulas
@@ -106,7 +122,23 @@ export class SQLGenerator {
       joinPaths,
     );
 
-    const sqlText = await this.generateText(prompt);
+    logger.info('Generating metric SQL', {
+      metricsCount: relevantMetrics.length,
+      metricIds: relevantMetrics.map((m) => m.id),
+      promptLength: prompt.length,
+    });
+
+    let sqlText = await this.generateText(prompt);
+    
+    // Clean SQL output from LLM (remove markdown, code blocks, comments, trim)
+    sqlText = this.cleanSqlOutput(sqlText);
+    
+    logger.info('Metric SQL generated', {
+      sqlLength: sqlText.length,
+      sqlPreview: sqlText.slice(0, 200),
+      ms: Date.now() - startTime,
+    });
+
     const generationMs = Date.now() - startTime;
 
     return {
@@ -321,5 +353,39 @@ export class SQLGenerator {
     }
 
     return lines.join('\n');
+  }
+
+  /**
+   * Clean SQL output from LLM (remove markdown, code blocks, comments, etc.)
+   */
+  private cleanSqlOutput(rawSql: string): string {
+    let sql = String(rawSql || '').trim();
+
+    // Remove markdown code blocks (```sql ... ```)
+    sql = sql.replace(/```(?:sql)?\s*\n?/g, '');
+    sql = sql.replace(/```\s*$/g, '');
+
+    // Remove HTML/markdown formatting
+    sql = sql.replace(/<code>|<\/code>/g, '');
+    sql = sql.replace(/\*\*/g, '');
+
+    // Remove SQL comments (-- and /* */)
+    sql = sql.replace(/--.*?$/gm, '');
+    sql = sql.replace(/\/\*.*?\*\//gs, '');
+
+    // Remove GO statements (SQL Server specific)
+    sql = sql.replace(/\bGO\s*$/gmi, '');
+
+    // Normalize whitespace
+    sql = sql
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join('\n');
+
+    // Remove trailing semicolon if present (we'll clean it properly later)
+    sql = sql.replace(/;\s*$/, '');
+
+    return sql.trim();
   }
 }

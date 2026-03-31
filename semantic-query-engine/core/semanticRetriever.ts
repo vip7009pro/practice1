@@ -28,17 +28,35 @@ export class SemanticRetriever {
       const tokens = tokenize(query);
 
       // Step 1: Retrieve relevant tables
-      const relevantTables = this.retrieveTables(normalized, tokens, k);
+      let relevantTables = this.retrieveTables(normalized, tokens, k);
 
-      // Step 2: Retrieve relevant columns
+      // Step 2: Retrieve relevant metrics
+      const relevantMetrics = this.retrieveMetrics(normalized, tokens, Math.ceil(k / 2));
+
+      // Step 2b: Extract tables from found metrics and add to relevant tables
+      if (relevantMetrics.length > 0) {
+        const tablesFromMetrics = this.extractTablesFromMetrics(relevantMetrics);
+        const tableSet = new Map<string, TableMetadata>();
+        
+        // Add initially found tables
+        for (const table of relevantTables) {
+          tableSet.set(table.table_name, table);
+        }
+        
+        // Add tables from metrics
+        for (const table of tablesFromMetrics) {
+          tableSet.set(table.table_name, table);
+        }
+        
+        relevantTables = Array.from(tableSet.values());
+      }
+
+      // Step 3: Retrieve relevant columns
       const relevantColumns = this.retrieveColumns(
         normalized,
         tokens,
         relevantTables,
       );
-
-      // Step 3: Retrieve relevant metrics
-      const relevantMetrics = this.retrieveMetrics(normalized, tokens, Math.ceil(k / 2));
 
       const retrievalMs = Date.now() - startTime;
 
@@ -215,6 +233,42 @@ export class SemanticRetriever {
 
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, topK).map((item) => item.metric);
+  }
+
+  /**
+   * Extract table metadata from found metrics
+   * When metrics are matched, retrieve all tables referenced in those metrics
+   */
+  private extractTablesFromMetrics(metrics: BusinessMetric[]): TableMetadata[] {
+    const allTables = this.metadataService.getAllTables();
+    const tableMap = new Map<string, TableMetadata>();
+
+    // Create lookup map for quick access
+    for (const table of allTables) {
+      tableMap.set(table.table_name.toLowerCase(), table);
+    }
+
+    // Extract all table names referenced in metrics
+    const extractedTables: TableMetadata[] = [];
+    const seenTableNames = new Set<string>();
+
+    for (const metric of metrics) {
+      if (metric.tables && Array.isArray(metric.tables)) {
+        for (const tableName of metric.tables) {
+          const normalizedName = tableName.toLowerCase();
+
+          if (!seenTableNames.has(normalizedName)) {
+            const tableMetadata = tableMap.get(normalizedName);
+            if (tableMetadata) {
+              extractedTables.push(tableMetadata);
+              seenTableNames.add(normalizedName);
+            }
+          }
+        }
+      }
+    }
+
+    return extractedTables;
   }
 
   /**

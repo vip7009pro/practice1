@@ -434,17 +434,17 @@
     },
     {
       "table_name": "IVDT",
-      "business_name": "IVDT",
-      "description": "Table IVDT",
-      "synonyms": [],
+      "business_name": "Chi tiết hóa đơn",
+      "description": "Bảng chi tiết các dòng trong hóa đơn - Invoice detail lines with quantities and prices for each product",
+      "synonyms": ["chi tiết hóa đơn", "invoice detail", "invoice items", "doanh thu chi tiết", "revenue details", "sales line items"],
       "is_fact": true,
       "created_from_db_sync": true
     },
     {
       "table_name": "IVHD",
-      "business_name": "IVHD",
-      "description": "Table IVHD",
-      "synonyms": [],
+      "business_name": "Hóa đơn",
+      "description": "Bảng hóa đơn - Invoice header with totals, discounts, customer info, and invoice dates",
+      "synonyms": ["hóa đơn", "invoice", "invoice header", "doanh thu", "revenue", "sales", "bán hàng", "sales order", "đơn bán"],
       "is_fact": true,
       "created_from_db_sync": true
     },
@@ -1994,18 +1994,29 @@
     },
     {
       "table_name": "ZTBDelivery",
-      "business_name": "ZTBDelivery",
-      "description": "Table ZTBDelivery",
+      "business_name": "Lịch sử giao hàng",
+      "description": "Bảng lịch sử giao hàng - Ghi lại chi tiết từng lần giao hàng bao gồm ngày giao, số lượng, khách hàng, sản phẩm, và trạng thái giao hàng",
       "synonyms": [
         "doanhthu",
         "giaohang",
-        "delivery"
+        "delivery",
+        "delivery_history",
+        "lịch giao",
+        "lịch sử",
+        "shipping",
+        "shipment",
+        "klisngu"
       ],
       "is_fact": true,
       "use_cases": [
         "tra doanh thu",
         "lịch sử giao hàng",
-        "đơn hàng tồn"
+        "đơn hàng tồn",
+        "giao hàng 2026",
+        "lịch sử giao hàng theo khách hàng",
+        "lịch sử giao hàng theo sản phẩm",
+        "giao hàng theo ngày",
+        "thống kê giao hàng"
       ]
     },
     {
