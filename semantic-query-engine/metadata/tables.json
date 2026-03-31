@@ -2138,11 +2138,14 @@
     },
     {
       "table_name": "ZTBPOTable",
-      "business_name": "ZTBPOTable",
-      "description": "Table ZTBPOTable",
-      "synonyms": [],
-      "is_fact": true,
-      "created_from_db_sync": true
+      "business_name": "Bảng đơn hàng",
+      "description": "Chứa thông tin đơn hàng",
+      "synonyms": [
+        "doanhthu",
+        "đơnhàng",
+        "lichsudonhang"
+      ],
+      "is_fact": true
     },
     {
       "table_name": "ZTBPQC1TABLE",
