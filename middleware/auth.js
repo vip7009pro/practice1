@@ -16,7 +16,14 @@ const checkLoginIndex = (req, res, next) => {
     req.body.DATA = decrypted;
   }
 
-    const token = req.cookies.token || req.body.DATA?.token_string || req.body.token_string;  
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+    const queryToken = req.query?.token_string || req.query?.token;
+    let token = req.cookies.token || req.body.DATA?.token_string || req.body.token_string || queryToken;
+
+    if (!token && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      token = authHeader.slice('Bearer '.length);
+    }
+
   try {
     if (!token) {
       throw new Error("No token provided");

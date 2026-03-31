@@ -1,0 +1,130 @@
+{
+  "glossary": [
+    {
+      "id": "revenue_terms",
+      "user_terms": ["doanh thu", "thu nhập", "bán hàng", "bán", "sales", "revenue", "bán được"],
+      "canonical_term": "doanh thu",
+      "metric_ids": ["revenue_total", "revenue_net"],
+      "description": "Tất cả các cách gọi liên quan đến giá trị bán hàng"
+    },
+    {
+      "id": "profit_terms",
+      "user_terms": ["lợi nhuận", "lãi", "profit", "lãi suất", "lợi", "lãi lỗ"],
+      "canonical_term": "lợi nhuận",
+      "metric_ids": ["profit"],
+      "description": "Các từ liên quan đến lợi nhuận"
+    },
+    {
+      "id": "quantity_terms",
+      "user_terms": ["số lượng", "qty", "cái", "chiếc", "bao nhiêu", "bán bao nhiêu", "tổng cộng"],
+      "canonical_term": "số lượng",
+      "metric_ids": ["quantity_sold"],
+      "description": "Các từ liên quan đến số lượng"
+    },
+    {
+      "id": "customer_terms",
+      "user_terms": ["khách hàng", "khách", "customer", "client", "đối tác", "công ty", "doanh nghiệp"],
+      "canonical_term": "khách hàng",
+      "table_names": ["customers"],
+      "description": "Các từ liên quan đến khách hàng"
+    },
+    {
+      "id": "product_terms",
+      "user_terms": ["sản phẩm", "hàng hóa", "goods", "product", "mặt hàng", "item"],
+      "canonical_term": "sản phẩm",
+      "table_names": ["products"],
+      "description": "Các từ liên quan đến sản phẩm"
+    },
+    {
+      "id": "order_terms",
+      "user_terms": ["đơn hàng", "hóa đơn", "bill", "order", "đơn", "invoice", "phiếu bán"],
+      "canonical_term": "đơn hàng",
+      "table_names": ["orders"],
+      "description": "Các từ liên quan đến đơn hàng"
+    },
+    {
+      "id": "today_terms",
+      "user_terms": ["hôm nay", "today", "cái nay", "ngày hôm nay", "current day"],
+      "canonical_term": "ngày hôm nay",
+      "time_filter": "today",
+      "description": "Các cách gọi để lọc dữ liệu hôm nay"
+    },
+    {
+      "id": "month_terms",
+      "user_terms": ["tháng này", "this month", "tháng hiện tại", "tháng 3", "tháng 03"],
+      "canonical_term": "tháng hiện tại",
+      "time_filter": "current_month",
+      "description": "Các cách gọi để lọc dữ liệu theo tháng"
+    },
+    {
+      "id": "week_terms",
+      "user_terms": ["tuần này", "this week", "tuần hiện tại", "7 ngày qua"],
+      "canonical_term": "tuần hiện tại",
+      "time_filter": "current_week",
+      "description": "Các cách gọi để lọc dữ liệu theo tuần"
+    },
+    {
+      "id": "year_terms",
+      "user_terms": ["năm này", "this year", "năm 2024", "năm nay"],
+      "canonical_term": "năm hiện tại",
+      "time_filter": "current_year",
+      "description": "Các cách gọi để lọc dữ liệu theo năm"
+    },
+    {
+      "id": "top_terms",
+      "user_terms": ["top", "hàng đầu", "cao nhất", "lớn nhất", "bán chạy", "bán nhiều nhất"],
+      "canonical_term": "hàng đầu",
+      "operation": "order_desc_limit",
+      "description": "Các từ để lọc top N items"
+    },
+    {
+      "id": "bottom_terms",
+      "user_terms": ["dưới cùng", "thấp nhất", "bán chậm", "ít nhất"],
+      "canonical_term": "dưới cùng",
+      "operation": "order_asc_limit",
+      "description": "Các từ để lọc bottom N items"
+    },
+    {
+      "id": "region_terms",
+      "user_terms": ["khu vực", "region", "tỉnh", "miền", "thành phố", "địa phương"],
+      "canonical_term": "khu vực",
+      "column_names": ["region"],
+      "description": "Các từ liên quan đến khu vực địa lý"
+    },
+    {
+      "id": "category_terms",
+      "user_terms": ["danh mục", "loại", "category", "thể loại", "nhóm sản phẩm"],
+      "canonical_term": "danh mục",
+      "column_names": ["category"],
+      "description": "Các từ liên quan đến danh mục sản phẩm"
+    },
+    {
+      "id": "status_terms",
+      "user_terms": ["trạng thái", "status", "tình trạng", "hoạt động", "dừng hoạt động"],
+      "canonical_term": "trạng thái",
+      "column_names": ["status"],
+      "description": "Các từ liên quan đến trạng thái"
+    },
+    {
+      "id": "vs_comparison_terms",
+      "user_terms": ["so với", "vs", "so sánh", "giữa", "với"],
+      "canonical_term": "so sánh",
+      "operation": "comparison",
+      "description": "Các từ để đánh dấu so sánh"
+    },
+    {
+      "id": "growth_terms",
+      "user_terms": ["tăng", "tăng trưởng", "growth", "lớn hơn", "cao hơn"],
+      "canonical_term": "tăng",
+      "operation": "increase",
+      "description": "Các từ liên quan đến tăng trưởng"
+    },
+    {
+      "id": "decline_terms",
+      "user_terms": ["giảm", "giảm xuống", "decline", "thấp hơn", "ít hơn"],
+      "canonical_term": "giảm",
+      "operation": "decrease",
+      "description": "Các từ liên quan đến giảm"
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "metrics": [
+    {
+      "id": "revenue_total",
+      "name": "Doanh thu tổng cộng",
+      "business_name": "Doanh thu",
+      "description": "Tổng giá trị bán hàng (sau chiết khấu và thành tiền)",
+      "formula": "SUM(oi.quantity * oi.unit_price - oi.discount) WHERE o.status IN ('confirmed', 'shipped', 'delivered')",
+      "tables": ["orders", "order_items"],
+      "data_type": "currency",
+      "unit": "VND",
+      "conditions": ["order_items.quantity > 0", "orders.status NOT IN ('cancelled', 'pending')"],
+      "related_dimensions": ["order_date", "customer_id", "product_id", "category"],
+      "examples": [
+        {
+          "question": "Doanh thu hôm nay",
+          "expected_metric_value": "150,000,000"
+        },
+        {
+          "question": "Doanh thu tháng này",
+          "expected_metric_value": "2,500,000,000"
+        }
+      ]
+    },
+    {
+      "id": "revenue_net",
+      "name": "Doanh thu thuần",
+      "business_name": "Doanh thu thuần",
+      "description": "Doanh thu sau chiết khấu toàn bộ",
+      "formula": "SUM(o.total_amount - o.discount) WHERE o.status IN ('confirmed', 'shipped', 'delivered')",
+      "tables": ["orders"],
+      "data_type": "currency",
+      "unit": "VND",
+      "related_dimensions": ["order_date", "customer_id"],
+      "examples": [
+        {
+          "question": "Doanh thu thuần tháng này",
+          "expected_metric_value": "2,400,000,000"
+        }
+      ]
+    },
+    {
+      "id": "profit",
+      "name": "Lợi nhuận",
+      "business_name": "Lợi nhuận",
+      "description": "Lợi nhuận = Doanh thu - Chi phí vốn",
+      "formula": "SUM((oi.quantity * oi.unit_price - oi.discount) - (oi.quantity * p.cost_price))",
+      "tables": ["order_items", "products", "orders"],
+      "data_type": "currency",
+      "unit": "VND",
+      "conditions": ["orders.status IN ('confirmed', 'shipped', 'delivered')"],
+      "related_dimensions": ["product_id", "customer_id", "order_date"],
+      "examples": [
+        {
+          "question": "Lợi nhuận theo sản phẩm",
+          "expected_metric_value": "400,000,000"
+        }
+      ]
+    },
+    {
+      "id": "profit_margin",
+      "name": "Tỷ suất lợi nhuận",
+      "business_name": "Tỷ suất lợi nhuận",
+      "description": "Tỷ lệ phần trăm lợi nhuận trên doanh thu",
+      "formula": "(SUM((oi.quantity * oi.unit_price - oi.discount) - (oi.quantity * p.cost_price)) / SUM(oi.quantity * oi.unit_price - oi.discount)) * 100",
+      "tables": ["order_items", "products"],
+      "data_type": "percentage",
+      "unit": "%",
+      "related_dimensions": ["product_id", "category"],
+      "examples": [
+        {
+          "question": "Tỷ suất lợi nhuận sản phẩm",
+          "expected_metric_value": "25"
+        }
+      ]
+    },
+    {
+      "id": "sales_count",
+      "name": "Số đơn hàng",
+      "business_name": "Số đơn",
+      "description": "Tổng số đơn hàng",
+      "formula": "COUNT(DISTINCT o.order_id)",
+      "tables": ["orders"],
+      "data_type": "count",
+      "conditions": ["orders.status NOT IN ('cancelled', 'pending')"],
+      "related_dimensions": ["order_date", "customer_id"],
+      "examples": [
+        {
+          "question": "Số đơn hàng hôm nay",
+          "expected_metric_value": "42"
+        }
+      ]
+    },
+    {
+      "id": "avg_order_value",
+      "name": "Giá trị đơn hàng trung bình",
+      "business_name": "AOV",
+      "description": "Giá trị trung bình của mỗi đơn hàng",
+      "formula": "AVG(o.total_amount - o.discount) WHERE o.status IN ('confirmed', 'shipped', 'delivered')",
+      "tables": ["orders"],
+      "data_type": "currency",
+      "unit": "VND",
+      "related_dimensions": ["customer_id", "order_date"],
+      "examples": [
+        {
+          "question": "AOV tháng này",
+          "expected_metric_value": "57,142,857"
+        }
+      ]
+    },
+    {
+      "id": "quantity_sold",
+      "name": "Số lượng bán ra",
+      "business_name": "Tổng lượng",
+      "description": "Tổng số lượng sản phẩm bán ra",
+      "formula": "SUM(oi.quantity) WHERE o.status NOT IN ('cancelled')",
+      "tables": ["order_items", "orders"],
+      "data_type": "count",
+      "related_dimensions": ["product_id", "category", "order_date"],
+      "examples": [
+        {
+          "question": "Bán bao nhiêu cái hôm nay",
+          "expected_metric_value": "156"
+        }
+      ]
+    },
+    {
+      "id": "top_products",
+      "name": "Sản phẩm bán chạy nhất",
+      "business_name": "Top sản phẩm",
+      "description": "Các sản phẩm có doanh số bán cao nhất",
+      "formula": "SUM(oi.quantity) GROUP BY p.product_id ORDER BY SUM(oi.quantity) DESC",
+      "tables": ["order_items", "products", "orders"],
+      "data_type": "count",
+      "related_dimensions": ["product_id", "category"],
+      "examples": [
+        {
+          "question": "Top 10 sản phẩm bán chạy tháng này",
+          "expected_metric_value": "Điều hòa 1HP: 45 cái"
+        }
+      ]
+    },
+    {
+      "id": "top_customers",
+      "name": "Khách hàng mua nhiều nhất",
+      "business_name": "Top khách",
+      "description": "Khách hàng có giá trị đơn hàng cao nhất",
+      "formula": "SUM(o.total_amount - o.discount) GROUP BY c.customer_id ORDER BY SUM(o.total_amount - o.discount) DESC",
+      "tables": ["orders", "customers"],
+      "data_type": "currency",
+      "unit": "VND",
+      "related_dimensions": ["customer_id", "region"],
+      "examples": [
+        {
+          "question": "Top 5 khách hàng tháng này",
+          "expected_metric_value": "ABC Corp: 500M"
+        }
+      ]
+    },
+    {
+      "id": "customer_count",
+      "name": "Số khách hàng",
+      "business_name": "Số KH",
+      "description": "Tổng số khách hàng có đơn hàng",
+      "formula": "COUNT(DISTINCT o.customer_id) WHERE o.status NOT IN ('cancelled')",
+      "tables": ["orders", "customers"],
+      "data_type": "count",
+      "related_dimensions": ["region", "order_date"],
+      "examples": [
+        {
+          "question": "Bao nhiêu khách hàng mua hôm nay",
+          "expected_metric_value": "28"
+        }
+      ]
+    }
+  ]
+}

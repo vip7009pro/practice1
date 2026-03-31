@@ -1,0 +1,2347 @@
+{
+  "tables": [
+    {
+      "table_name": "customers",
+      "schema": "dbo",
+      "business_name": "Khách hàng",
+      "description": "Danh sách khách hàng, nhà cung cấp, đối tác kinh doanh",
+      "use_cases": [
+        "Xem danh sách khách hàng",
+        "Tìm khách hàng theo tên hoặc mã",
+        "Phân tích tiểu sử mua hàng của khách hàng",
+        "Quản lý thông tin liên lạc khách hàng"
+      ],
+      "synonyms": [
+        "customers",
+        "khác hàng",
+        "client",
+        "partner"
+      ]
+    },
+    {
+      "table_name": "products",
+      "schema": "dbo",
+      "business_name": "Sản phẩm",
+      "description": "Danh mục sản phẩm, hàng hóa, dịch vụ",
+      "use_cases": [
+        "Danh sách sản phẩm",
+        "Giá bán, tồn kho sản phẩm",
+        "Phân tích doanh số bán hàng theo sản phẩm",
+        "Quản lý danh mục sản phẩm"
+      ],
+      "synonyms": [
+        "products",
+        "sản phẩm",
+        "goods",
+        "items"
+      ]
+    },
+    {
+      "table_name": "orders",
+      "schema": "dbo",
+      "business_name": "Đơn hàng",
+      "description": "Hóa đơn bán hàng, đơn đặt hàng bán lẻ và sỉ",
+      "use_cases": [
+        "Danh sách đơn hàng",
+        "Doanh thu bán hàng",
+        "Tìm kiếm đơn hàng theo khách hàng",
+        "Phân tích xu hướng bán hàng"
+      ],
+      "synonyms": [
+        "orders",
+        "đơn hàng",
+        "invoices",
+        "sales"
+      ]
+    },
+    {
+      "table_name": "order_items",
+      "schema": "dbo",
+      "business_name": "Chi tiết đơn hàng",
+      "description": "Các sản phẩm trong mỗi đơn hàng",
+      "use_cases": [
+        "Chi tiết từng sản phẩm trong đơn hàng",
+        "Số lượng, giá, chiết khấu sản phẩm",
+        "Phân tích lợi nhuận theo sản phẩm"
+      ],
+      "synonyms": [
+        "order_items",
+        "order details",
+        "line items"
+      ]
+    },
+    {
+      "table_name": "inventory",
+      "schema": "dbo",
+      "business_name": "Tồn kho",
+      "description": "Số lượng tồn kho theo sản phẩm và kho hàng",
+      "use_cases": [
+        "Kiểm tra tồn kho sản phẩm",
+        "Tìm sản phẩm hết hàng",
+        "Phân tích lịch sử tồn kho"
+      ],
+      "synonyms": [
+        "inventory",
+        "stock",
+        "tồn kho",
+        "warehouse"
+      ]
+    },
+    {
+      "table_name": "employees",
+      "schema": "dbo",
+      "business_name": "Nhân viên",
+      "description": "Thông tin nhân sự, cán bộ nhân viên",
+      "use_cases": [
+        "Danh sách nhân viên",
+        "Tìm nhân viên theo tên hoặc phòng ban",
+        "Phân tích hiệu suất bán hàng theo nhân viên"
+      ],
+      "synonyms": [
+        "employees",
+        "staff",
+        "nhân viên"
+      ]
+    },
+    {
+      "table_name": "departments",
+      "schema": "dbo",
+      "business_name": "Phòng ban",
+      "description": "Danh sách các phòng ban, bộ phận trong công ty",
+      "use_cases": [
+        "Quản lý cơ cấu tổ chức",
+        "Phân tích hiệu suất theo phòng ban",
+        "Tìm nhân viên theo phòng ban"
+      ],
+      "synonyms": [
+        "departments",
+        "phòng ban",
+        "divisions"
+      ]
+    },
+    {
+      "table_name": "AMAZONE_DATA",
+      "business_name": "AMAZONE_DATA",
+      "description": "Table AMAZONE_DATA",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ANHNV",
+      "business_name": "ANHNV",
+      "description": "Table ANHNV",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "AQL_TB",
+      "business_name": "AQL_TB",
+      "description": "Table AQL_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "AUDIT",
+      "business_name": "AUDIT",
+      "description": "Table AUDIT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "AUDIT_DETAIL_TABLE",
+      "business_name": "AUDIT_DETAIL_TABLE",
+      "description": "Table AUDIT_DETAIL_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "AUDIT_INFO_TABLE",
+      "business_name": "AUDIT_INFO_TABLE",
+      "description": "Table AUDIT_INFO_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "AUDIT_RESULT_DETAIL",
+      "business_name": "AUDIT_RESULT_DETAIL",
+      "description": "Table AUDIT_RESULT_DETAIL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "AUDIT_RESULT_TABLE",
+      "business_name": "AUDIT_RESULT_TABLE",
+      "description": "Table AUDIT_RESULT_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Bang_TB_TheoLan_TheoTuan",
+      "business_name": "Bang_TB_TheoLan_TheoTuan",
+      "description": "Table Bang_TB_TheoLan_TheoTuan",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Bang_TrungBinh_GioTheoTuan",
+      "business_name": "Bang_TrungBinh_GioTheoTuan",
+      "description": "Table Bang_TrungBinh_GioTheoTuan",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "BO1",
+      "business_name": "BO1",
+      "description": "Table BO1",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "BO2",
+      "business_name": "BO2",
+      "description": "Table BO2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "BOM_AMAZONE",
+      "business_name": "BOM_AMAZONE",
+      "description": "Table BOM_AMAZONE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "C001",
+      "business_name": "C001",
+      "description": "Table C001",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CODE_PRICE_TEST",
+      "business_name": "CODE_PRICE_TEST",
+      "description": "Table CODE_PRICE_TEST",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ComponentAttributes",
+      "business_name": "ComponentAttributes",
+      "description": "Table ComponentAttributes",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_CONFIRM_TABLE",
+      "business_name": "CS_CONFIRM_TABLE",
+      "description": "Table CS_CONFIRM_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_CONTACT_TABLE",
+      "business_name": "CS_CONTACT_TABLE",
+      "description": "Table CS_CONTACT_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_RMA_DELIVERY",
+      "business_name": "CS_RMA_DELIVERY",
+      "description": "Table CS_RMA_DELIVERY",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_RMA_TABLE",
+      "business_name": "CS_RMA_TABLE",
+      "description": "Table CS_RMA_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_SORTING_TABLE",
+      "business_name": "CS_SORTING_TABLE",
+      "description": "Table CS_SORTING_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_SPECIAL_APPROVE_TABLE",
+      "business_name": "CS_SPECIAL_APPROVE_TABLE",
+      "description": "Table CS_SPECIAL_APPROVE_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "CS_TAXI_TABLE",
+      "business_name": "CS_TAXI_TABLE",
+      "description": "Table CS_TAXI_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "DATETABLE",
+      "business_name": "DATETABLE",
+      "description": "Table DATETABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "DEFECT_MANAGEMENT",
+      "business_name": "DEFECT_MANAGEMENT",
+      "description": "Table DEFECT_MANAGEMENT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "DESIGN_AMAZONE",
+      "business_name": "DESIGN_AMAZONE",
+      "description": "Table DESIGN_AMAZONE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "DSDT",
+      "business_name": "DSDT",
+      "description": "Table DSDT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ERR_NAME",
+      "business_name": "ERR_NAME",
+      "description": "Table ERR_NAME",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ERROR_TABLE",
+      "business_name": "ERROR_TABLE",
+      "description": "Table ERROR_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "F800",
+      "business_name": "F800",
+      "description": "Table F800",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Fields",
+      "business_name": "Fields",
+      "description": "Table Fields",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "FormData",
+      "business_name": "FormData",
+      "description": "Table FormData",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Forms",
+      "business_name": "Forms",
+      "description": "Table Forms",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "FormViewTracking",
+      "business_name": "FormViewTracking",
+      "description": "Table FormViewTracking",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "HOLDING_TB",
+      "business_name": "HOLDING_TB",
+      "description": "Table HOLDING_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I200",
+      "business_name": "I200",
+      "description": "Table I200",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I201",
+      "business_name": "I201",
+      "description": "Table I201",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I210",
+      "business_name": "I210",
+      "description": "Table I210",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I220",
+      "business_name": "I220",
+      "description": "Table I220",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I221",
+      "business_name": "I221",
+      "description": "Table I221",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I222",
+      "business_name": "I222",
+      "description": "Table I222",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I500",
+      "business_name": "I500",
+      "description": "Table I500",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I510",
+      "business_name": "I510",
+      "description": "Table I510",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I511",
+      "business_name": "I511",
+      "description": "Table I511",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I512",
+      "business_name": "I512",
+      "description": "Table I512",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I660",
+      "business_name": "I660",
+      "description": "Table I660",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I700",
+      "business_name": "I700",
+      "description": "Table I700",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I801",
+      "business_name": "I801",
+      "description": "Table I801",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I802",
+      "business_name": "I802",
+      "description": "Table I802",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I803",
+      "business_name": "I803",
+      "description": "Table I803",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "I901",
+      "business_name": "I901",
+      "description": "Table I901",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "IN_KHO_SX",
+      "business_name": "IN_KHO_SX",
+      "description": "Table IN_KHO_SX",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "IN_KHO_SX_SUB",
+      "business_name": "IN_KHO_SX_SUB",
+      "description": "Table IN_KHO_SX_SUB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "IQC1_TABLE",
+      "business_name": "IQC1_TABLE",
+      "description": "Table IQC1_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "IVDT",
+      "business_name": "IVDT",
+      "description": "Table IVDT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "IVHD",
+      "business_name": "IVHD",
+      "description": "Table IVHD",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "KIEMKE_NVL",
+      "business_name": "KIEMKE_NVL",
+      "description": "Table KIEMKE_NVL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "KNIFE_FILM",
+      "business_name": "KNIFE_FILM",
+      "description": "Table KNIFE_FILM",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "LOTLABELDATA",
+      "business_name": "LOTLABELDATA",
+      "description": "Table LOTLABELDATA",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M000",
+      "business_name": "M000",
+      "description": "Table M000",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M010",
+      "business_name": "M010",
+      "description": "Table M010",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M050",
+      "business_name": "M050",
+      "description": "Table M050",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M060",
+      "business_name": "M060",
+      "description": "Table M060",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M070",
+      "business_name": "M070",
+      "description": "Table M070",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M080",
+      "business_name": "M080",
+      "description": "Table M080",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M090",
+      "business_name": "M090",
+      "description": "Table M090",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M090_20140909",
+      "business_name": "M090_20140909",
+      "description": "Table M090_20140909",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M091",
+      "business_name": "M091",
+      "description": "Table M091",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M100",
+      "business_name": "M100",
+      "description": "Table M100",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M100_20140919",
+      "business_name": "M100_20140919",
+      "description": "Table M100_20140919",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M100_20141015_0020",
+      "business_name": "M100_20141015_0020",
+      "description": "Table M100_20141015_0020",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M110",
+      "business_name": "M110",
+      "description": "Table M110",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M120",
+      "business_name": "M120",
+      "description": "Table M120",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M130",
+      "business_name": "M130",
+      "description": "Table M130",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M140",
+      "business_name": "M140",
+      "description": "Table M140",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "M999",
+      "business_name": "M999",
+      "description": "Table M999",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "NHAP_NVL",
+      "business_name": "NHAP_NVL",
+      "description": "Table NHAP_NVL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O300",
+      "business_name": "O300",
+      "description": "Table O300",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O301",
+      "business_name": "O301",
+      "description": "Table O301",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O302",
+      "business_name": "O302",
+      "description": "Table O302",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O610",
+      "business_name": "O610",
+      "description": "Table O610",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O611",
+      "business_name": "O611",
+      "description": "Table O611",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O612",
+      "business_name": "O612",
+      "description": "Table O612",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "O660",
+      "business_name": "O660",
+      "description": "Table O660",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "OUT_KHO_SX",
+      "business_name": "OUT_KHO_SX",
+      "description": "Table OUT_KHO_SX",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "OUT_KNIFE_FILM",
+      "business_name": "OUT_KNIFE_FILM",
+      "description": "Table OUT_KNIFE_FILM",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "P400",
+      "business_name": "P400",
+      "description": "Table P400",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "P410",
+      "business_name": "P410",
+      "description": "Table P410",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "P500",
+      "business_name": "P500",
+      "description": "Table P500",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "P500_SUB",
+      "business_name": "P500_SUB",
+      "description": "Table P500_SUB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "P501",
+      "business_name": "P501",
+      "description": "Table P501",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PageComponents",
+      "business_name": "PageComponents",
+      "description": "Table PageComponents",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Pages",
+      "business_name": "Pages",
+      "description": "Table Pages",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PO3",
+      "business_name": "PO3",
+      "description": "Table PO3",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PODT",
+      "business_name": "PODT",
+      "description": "Table PODT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "POHD",
+      "business_name": "POHD",
+      "description": "Table POHD",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PQC_CCB_TABLE",
+      "business_name": "PQC_CCB_TABLE",
+      "description": "Table PQC_CCB_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PQC_CCB_TYPE",
+      "business_name": "PQC_CCB_TYPE",
+      "description": "Table PQC_CCB_TYPE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PROD_PRICE_TABLE",
+      "business_name": "PROD_PRICE_TABLE",
+      "description": "Table PROD_PRICE_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PROGRAM_AUTH_INFO",
+      "business_name": "PROGRAM_AUTH_INFO",
+      "description": "Table PROGRAM_AUTH_INFO",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "PROGRAM_INFO",
+      "business_name": "PROGRAM_INFO",
+      "description": "Table PROGRAM_INFO",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Q660",
+      "business_name": "Q660",
+      "description": "Table Q660",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Records",
+      "business_name": "Records",
+      "description": "Table Records",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Relationships",
+      "business_name": "Relationships",
+      "description": "Table Relationships",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "RETURN_NVL",
+      "business_name": "RETURN_NVL",
+      "description": "Table RETURN_NVL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "S600",
+      "business_name": "S600",
+      "description": "Table S600",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "S700",
+      "business_name": "S700",
+      "description": "Table S700",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "S710",
+      "business_name": "S710",
+      "description": "Table S710",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "S800",
+      "business_name": "S800",
+      "description": "Table S800",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "S900",
+      "business_name": "S900",
+      "description": "Table S900",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "SORTING_TABLE",
+      "business_name": "SORTING_TABLE",
+      "description": "Table SORTING_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "SPST",
+      "business_name": "SPST",
+      "description": "Table SPST",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "sysdiagrams",
+      "business_name": "sysdiagrams",
+      "description": "Table sysdiagrams",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Arletfifo",
+      "business_name": "tbl_Arletfifo",
+      "description": "Table tbl_Arletfifo",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Block",
+      "business_name": "tbl_Block",
+      "description": "Table tbl_Block",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Block2",
+      "business_name": "tbl_Block2",
+      "description": "Table tbl_Block2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Bxin",
+      "business_name": "tbl_Bxin",
+      "description": "Table tbl_Bxin",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Bxout",
+      "business_name": "tbl_Bxout",
+      "description": "Table tbl_Bxout",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Bxout2",
+      "business_name": "tbl_Bxout2",
+      "description": "Table tbl_Bxout2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Cartonbox",
+      "business_name": "tbl_Cartonbox",
+      "description": "Table tbl_Cartonbox",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_CartonPacking",
+      "business_name": "tbl_CartonPacking",
+      "description": "Table tbl_CartonPacking",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Chat",
+      "business_name": "tbl_Chat",
+      "description": "Table tbl_Chat",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Codekho",
+      "business_name": "tbl_Codekho",
+      "description": "Table tbl_Codekho",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Customer",
+      "business_name": "tbl_Customer",
+      "description": "Table tbl_Customer",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_ImageBarcode",
+      "business_name": "tbl_ImageBarcode",
+      "description": "Table tbl_ImageBarcode",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_InputOutput",
+      "business_name": "tbl_InputOutput",
+      "description": "Table tbl_InputOutput",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Loa",
+      "business_name": "tbl_Loa",
+      "description": "Table tbl_Loa",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Location",
+      "business_name": "tbl_Location",
+      "description": "Table tbl_Location",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Location2",
+      "business_name": "tbl_Location2",
+      "description": "Table tbl_Location2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Lot_Product",
+      "business_name": "tbl_Lot_Product",
+      "description": "Table tbl_Lot_Product",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Lotphu",
+      "business_name": "tbl_Lotphu",
+      "description": "Table tbl_Lotphu",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_NHAP",
+      "business_name": "tbl_NHAP",
+      "description": "Table tbl_NHAP",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Person",
+      "business_name": "tbl_Person",
+      "description": "Table tbl_Person",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Printer",
+      "business_name": "tbl_Printer",
+      "description": "Table tbl_Printer",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Product",
+      "business_name": "tbl_Product",
+      "description": "Table tbl_Product",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Product_In_BOX_STOCK",
+      "business_name": "tbl_Product_In_BOX_STOCK",
+      "description": "Table tbl_Product_In_BOX_STOCK",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Product_In_Out",
+      "business_name": "tbl_Product_In_Out",
+      "description": "Table tbl_Product_In_Out",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Product2",
+      "business_name": "tbl_Product2",
+      "description": "Table tbl_Product2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Sorting",
+      "business_name": "tbl_Sorting",
+      "description": "Table tbl_Sorting",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_Warehouse",
+      "business_name": "tbl_Warehouse",
+      "description": "Table tbl_Warehouse",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "tbl_XUAT",
+      "business_name": "tbl_XUAT",
+      "description": "Table tbl_XUAT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_BOM",
+      "business_name": "View_BOM",
+      "description": "Table View_BOM",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_BOM2",
+      "business_name": "View_BOM2",
+      "description": "Table View_BOM2",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_IQC1_TABLE",
+      "business_name": "View_IQC1_TABLE",
+      "description": "Table View_IQC1_TABLE",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_M010",
+      "business_name": "View_M010",
+      "description": "Table View_M010",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_M100",
+      "business_name": "View_M100",
+      "description": "Table View_M100",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_M110",
+      "business_name": "View_M110",
+      "description": "Table View_M110",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_ZTB_QLSXCHITHI",
+      "business_name": "View_ZTB_QLSXCHITHI",
+      "description": "Table View_ZTB_QLSXCHITHI",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_ZTB_QLSXPLAN",
+      "business_name": "View_ZTB_QLSXPLAN",
+      "description": "Table View_ZTB_QLSXPLAN",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_ZTB_SX_RESULT",
+      "business_name": "View_ZTB_SX_RESULT",
+      "description": "Table View_ZTB_SX_RESULT",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_ZTBDelivery",
+      "business_name": "View_ZTBDelivery",
+      "description": "Table View_ZTBDelivery",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_ZTBEMPLINFO",
+      "business_name": "View_ZTBEMPLINFO",
+      "description": "Table View_ZTBEMPLINFO",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "View_ZTBPOTable",
+      "business_name": "View_ZTBPOTable",
+      "description": "Table View_ZTBPOTable",
+      "synonyms": [],
+      "is_fact": false,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "VSI_CONFIG",
+      "business_name": "VSI_CONFIG",
+      "description": "Table VSI_CONFIG",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "VSI_TB",
+      "business_name": "VSI_TB",
+      "description": "Table VSI_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "WI600",
+      "business_name": "WI600",
+      "description": "Table WI600",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "WYFC",
+      "business_name": "WYFC",
+      "description": "Table WYFC",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Z_CNDBTABLE",
+      "business_name": "Z_CNDBTABLE",
+      "description": "Table Z_CNDBTABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Z_SPECIAL_M_LOT",
+      "business_name": "Z_SPECIAL_M_LOT",
+      "description": "Table Z_SPECIAL_M_LOT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Z_SPECIAL_PRODUCT",
+      "business_name": "Z_SPECIAL_PRODUCT",
+      "description": "Table Z_SPECIAL_PRODUCT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Z001",
+      "business_name": "Z001",
+      "description": "Table Z001",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "Z002",
+      "business_name": "Z002",
+      "description": "Table Z002",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZBTVERTABLE",
+      "business_name": "ZBTVERTABLE",
+      "description": "Table ZBTVERTABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZCHATTB",
+      "business_name": "ZCHATTB",
+      "description": "Table ZCHATTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZETB",
+      "business_name": "ZETB",
+      "description": "Table ZETB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_ALL_DOC_TB",
+      "business_name": "ZTB_ALL_DOC_TB",
+      "description": "Table ZTB_ALL_DOC_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_ALL_FILE_TB",
+      "business_name": "ZTB_ALL_FILE_TB",
+      "description": "Table ZTB_ALL_FILE_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_ATTCHECK",
+      "business_name": "ZTB_ATTCHECK",
+      "description": "Table ZTB_ATTCHECK",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_AUDIT_HISTORY",
+      "business_name": "ZTB_AUDIT_HISTORY",
+      "description": "Table ZTB_AUDIT_HISTORY",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_BANG_CONG",
+      "business_name": "ZTB_BANG_CONG",
+      "description": "Table ZTB_BANG_CONG",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_BARCODE_MANAGER",
+      "business_name": "ZTB_BARCODE_MANAGER",
+      "description": "Table ZTB_BARCODE_MANAGER",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_BEP_CONFIG",
+      "business_name": "ZTB_BEP_CONFIG",
+      "description": "Table ZTB_BEP_CONFIG",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_BOM2",
+      "business_name": "ZTB_BOM2",
+      "description": "Table ZTB_BOM2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_CALV",
+      "business_name": "ZTB_CALV",
+      "description": "Table ZTB_CALV",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_CHATROOM_MEMBER",
+      "business_name": "ZTB_CHATROOM_MEMBER",
+      "description": "Table ZTB_CHATROOM_MEMBER",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_CHATROOM_TB",
+      "business_name": "ZTB_CHATROOM_TB",
+      "description": "Table ZTB_CHATROOM_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_CHECKMAINVL",
+      "business_name": "ZTB_CHECKMAINVL",
+      "description": "Table ZTB_CHECKMAINVL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DEPARTMENT_TB",
+      "business_name": "ZTB_DEPARTMENT_TB",
+      "description": "Table ZTB_DEPARTMENT_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DM_HISTORY",
+      "business_name": "ZTB_DM_HISTORY",
+      "description": "Table ZTB_DM_HISTORY",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DM_HISTORY2",
+      "business_name": "ZTB_DM_HISTORY2",
+      "description": "Table ZTB_DM_HISTORY2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DOC_CATEGORY1_TB",
+      "business_name": "ZTB_DOC_CATEGORY1_TB",
+      "description": "Table ZTB_DOC_CATEGORY1_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DOC_CATEGORY2_TB",
+      "business_name": "ZTB_DOC_CATEGORY2_TB",
+      "description": "Table ZTB_DOC_CATEGORY2_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DOC_TB",
+      "business_name": "ZTB_DOC_TB",
+      "description": "Table ZTB_DOC_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_DTC_PATROL",
+      "business_name": "ZTB_DTC_PATROL",
+      "description": "Table ZTB_DTC_PATROL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_FAKE_HSD",
+      "business_name": "ZTB_FAKE_HSD",
+      "description": "Table ZTB_FAKE_HSD",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_FILE_TRANSFER",
+      "business_name": "ZTB_FILE_TRANSFER",
+      "description": "Table ZTB_FILE_TRANSFER",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_FSC_TB",
+      "business_name": "ZTB_FSC_TB",
+      "description": "Table ZTB_FSC_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_G_CODE_PLAN_TB",
+      "business_name": "ZTB_G_CODE_PLAN_TB",
+      "description": "Table ZTB_G_CODE_PLAN_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_GIAONHAN_M_LOT",
+      "business_name": "ZTB_GIAONHAN_M_LOT",
+      "description": "Table ZTB_GIAONHAN_M_LOT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_HALF_GOODS",
+      "business_name": "ZTB_HALF_GOODS",
+      "description": "Table ZTB_HALF_GOODS",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_INS_QL_SAMPLE",
+      "business_name": "ZTB_INS_QL_SAMPLE",
+      "description": "Table ZTB_INS_QL_SAMPLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_INS_STATUS",
+      "business_name": "ZTB_INS_STATUS",
+      "description": "Table ZTB_INS_STATUS",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_IQC_NCRTB",
+      "business_name": "ZTB_IQC_NCRTB",
+      "description": "Table ZTB_IQC_NCRTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KHCT_TABLE",
+      "business_name": "ZTB_KHCT_TABLE",
+      "description": "Table ZTB_KHCT_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KNIFE_FILM_ERR_TABLE",
+      "business_name": "ZTB_KNIFE_FILM_ERR_TABLE",
+      "description": "Table ZTB_KNIFE_FILM_ERR_TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KPI_DEF",
+      "business_name": "ZTB_KPI_DEF",
+      "description": "Table ZTB_KPI_DEF",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KPI_MONTH",
+      "business_name": "ZTB_KPI_MONTH",
+      "description": "Table ZTB_KPI_MONTH",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KPI_TB",
+      "business_name": "ZTB_KPI_TB",
+      "description": "Table ZTB_KPI_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KPI_WEEK",
+      "business_name": "ZTB_KPI_WEEK",
+      "description": "Table ZTB_KPI_WEEK",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_KPI_YEAR",
+      "business_name": "ZTB_KPI_YEAR",
+      "description": "Table ZTB_KPI_YEAR",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_MATERIAL_TB",
+      "business_name": "ZTB_MATERIAL_TB",
+      "description": "Table ZTB_MATERIAL_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_MENU_TB",
+      "business_name": "ZTB_MENU_TB",
+      "description": "Table ZTB_MENU_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_MOBILE_SUBSCRIPTION",
+      "business_name": "ZTB_MOBILE_SUBSCRIPTION",
+      "description": "Table ZTB_MOBILE_SUBSCRIPTION",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_NG_SX100",
+      "business_name": "ZTB_NG_SX100",
+      "description": "Table ZTB_NG_SX100",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_NOTIFICATION",
+      "business_name": "ZTB_NOTIFICATION",
+      "description": "Table ZTB_NOTIFICATION",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_OQC_TB",
+      "business_name": "ZTB_OQC_TB",
+      "description": "Table ZTB_OQC_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_POINT_VISION",
+      "business_name": "ZTB_POINT_VISION",
+      "description": "Table ZTB_POINT_VISION",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_POST_TB",
+      "business_name": "ZTB_POST_TB",
+      "description": "Table ZTB_POST_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_PROD_OVER_TB",
+      "business_name": "ZTB_PROD_OVER_TB",
+      "description": "Table ZTB_PROD_OVER_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_PROD_PLAN_TB",
+      "business_name": "ZTB_PROD_PLAN_TB",
+      "description": "Table ZTB_PROD_PLAN_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_PROD_PROCESS_TB",
+      "business_name": "ZTB_PROD_PROCESS_TB",
+      "description": "Table ZTB_PROD_PROCESS_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QL_KNIFE_FILM",
+      "business_name": "ZTB_QL_KNIFE_FILM",
+      "description": "Table ZTB_QL_KNIFE_FILM",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QLSXCHITHI",
+      "business_name": "ZTB_QLSXCHITHI",
+      "description": "Table ZTB_QLSXCHITHI",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QLSXPLAN",
+      "business_name": "ZTB_QLSXPLAN",
+      "description": "Table ZTB_QLSXPLAN",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QUERY_FILTER",
+      "business_name": "ZTB_QUERY_FILTER",
+      "description": "Table ZTB_QUERY_FILTER",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QUERYTB",
+      "business_name": "ZTB_QUERYTB",
+      "description": "Table ZTB_QUERYTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QUOTATION_CALC_TB",
+      "business_name": "ZTB_QUOTATION_CALC_TB",
+      "description": "Table ZTB_QUOTATION_CALC_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_QUOTATION_MATERIAL",
+      "business_name": "ZTB_QUOTATION_MATERIAL",
+      "description": "Table ZTB_QUOTATION_MATERIAL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_CPK_RESULT",
+      "business_name": "ZTB_REL_CPK_RESULT",
+      "description": "Table ZTB_REL_CPK_RESULT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_REQUESTTABLE",
+      "business_name": "ZTB_REL_REQUESTTABLE",
+      "description": "Table ZTB_REL_REQUESTTABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_RESULT",
+      "business_name": "ZTB_REL_RESULT",
+      "description": "Table ZTB_REL_RESULT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_SPECTTABLE",
+      "business_name": "ZTB_REL_SPECTTABLE",
+      "description": "Table ZTB_REL_SPECTTABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_TESTPOINT",
+      "business_name": "ZTB_REL_TESTPOINT",
+      "description": "Table ZTB_REL_TESTPOINT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_TESTTABLE",
+      "business_name": "ZTB_REL_TESTTABLE",
+      "description": "Table ZTB_REL_TESTTABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_REL_TESTTYPE",
+      "business_name": "ZTB_REL_TESTTYPE",
+      "description": "Table ZTB_REL_TESTTYPE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_RETURN_IQC_PRODUCT",
+      "business_name": "ZTB_RETURN_IQC_PRODUCT",
+      "description": "Table ZTB_RETURN_IQC_PRODUCT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_RNR_RESULT",
+      "business_name": "ZTB_RNR_RESULT",
+      "description": "Table ZTB_RNR_RESULT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_RNR_TEST",
+      "business_name": "ZTB_RNR_TEST",
+      "description": "Table ZTB_RNR_TEST",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SAMPLE_MONITOR",
+      "business_name": "ZTB_SAMPLE_MONITOR",
+      "description": "Table ZTB_SAMPLE_MONITOR",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SHORTAGE_LIST",
+      "business_name": "ZTB_SHORTAGE_LIST",
+      "description": "Table ZTB_SHORTAGE_LIST",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SUBMENU_TB",
+      "business_name": "ZTB_SUBMENU_TB",
+      "description": "Table ZTB_SUBMENU_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SUBSCRIPTION_TB",
+      "business_name": "ZTB_SUBSCRIPTION_TB",
+      "description": "Table ZTB_SUBSCRIPTION_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SX_EFFICIENCY",
+      "business_name": "ZTB_SX_EFFICIENCY",
+      "description": "Table ZTB_SX_EFFICIENCY",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SX_EQ_STATUS",
+      "business_name": "ZTB_SX_EQ_STATUS",
+      "description": "Table ZTB_SX_EQ_STATUS",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SX_NG_MATERIAL",
+      "business_name": "ZTB_SX_NG_MATERIAL",
+      "description": "Table ZTB_SX_NG_MATERIAL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SX_QL_SAMPLE",
+      "business_name": "ZTB_SX_QL_SAMPLE",
+      "description": "Table ZTB_SX_QL_SAMPLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_SX_RESULT",
+      "business_name": "ZTB_SX_RESULT",
+      "description": "Table ZTB_SX_RESULT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_TBG_CONFIG",
+      "business_name": "ZTB_TBG_CONFIG",
+      "description": "Table ZTB_TBG_CONFIG",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_TBG_CONFIG2",
+      "business_name": "ZTB_TBG_CONFIG2",
+      "description": "Table ZTB_TBG_CONFIG2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_TON_BTP",
+      "business_name": "ZTB_TON_BTP",
+      "description": "Table ZTB_TON_BTP",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_VENDOR",
+      "business_name": "ZTB_VENDOR",
+      "description": "Table ZTB_VENDOR",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_VENDOR_HISTORY_LABEL_LOT",
+      "business_name": "ZTB_VENDOR_HISTORY_LABEL_LOT",
+      "description": "Table ZTB_VENDOR_HISTORY_LABEL_LOT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_VENDOR_MATERIAL_INFO",
+      "business_name": "ZTB_VENDOR_MATERIAL_INFO",
+      "description": "Table ZTB_VENDOR_MATERIAL_INFO",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_VISION_DATA",
+      "business_name": "ZTB_VISION_DATA",
+      "description": "Table ZTB_VISION_DATA",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_VISION_TB",
+      "business_name": "ZTB_VISION_TB",
+      "description": "Table ZTB_VISION_TB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_WAIT_INSPECT",
+      "business_name": "ZTB_WAIT_INSPECT",
+      "description": "Table ZTB_WAIT_INSPECT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_WEB_SETTING",
+      "business_name": "ZTB_WEB_SETTING",
+      "description": "Table ZTB_WEB_SETTING",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTB_WORK_HOURS",
+      "business_name": "ZTB_WORK_HOURS",
+      "description": "Table ZTB_WORK_HOURS",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBATTENDANCETB",
+      "business_name": "ZTBATTENDANCETB",
+      "description": "Table ZTBATTENDANCETB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBDelivery",
+      "business_name": "ZTBDelivery",
+      "description": "Table ZTBDelivery",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBEMPLINFO",
+      "business_name": "ZTBEMPLINFO",
+      "description": "Table ZTBEMPLINFO",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBFACTORY",
+      "business_name": "ZTBFACTORY",
+      "description": "Table ZTBFACTORY",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBFCSTTB",
+      "business_name": "ZTBFCSTTB",
+      "description": "Table ZTBFCSTTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBGIAONHANEMPLTB",
+      "business_name": "ZTBGIAONHANEMPLTB",
+      "description": "Table ZTBGIAONHANEMPLTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBHistory",
+      "business_name": "ZTBHistory",
+      "description": "Table ZTBHistory",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBINSPECTINPUTTB",
+      "business_name": "ZTBINSPECTINPUTTB",
+      "description": "Table ZTBINSPECTINPUTTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBINSPECTION_PATROL",
+      "business_name": "ZTBINSPECTION_PATROL",
+      "description": "Table ZTBINSPECTION_PATROL",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBINSPECTNGTB",
+      "business_name": "ZTBINSPECTNGTB",
+      "description": "Table ZTBINSPECTNGTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBINSPECTNGTB_OQC",
+      "business_name": "ZTBINSPECTNGTB_OQC",
+      "description": "Table ZTBINSPECTNGTB_OQC",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBINSPECTNGTB2",
+      "business_name": "ZTBINSPECTNGTB2",
+      "description": "Table ZTBINSPECTNGTB2",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBINSPECTOUTPUTTB",
+      "business_name": "ZTBINSPECTOUTPUTTB",
+      "description": "Table ZTBINSPECTOUTPUTTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBJOB",
+      "business_name": "ZTBJOB",
+      "description": "Table ZTBJOB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBLOTPRINTHISTORYTB",
+      "business_name": "ZTBLOTPRINTHISTORYTB",
+      "description": "Table ZTBLOTPRINTHISTORYTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBMAINDEPARMENT",
+      "business_name": "ZTBMAINDEPARMENT",
+      "description": "Table ZTBMAINDEPARMENT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBOFFREGISTRATIONTB",
+      "business_name": "ZTBOFFREGISTRATIONTB",
+      "description": "Table ZTBOFFREGISTRATIONTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBPLANTB",
+      "business_name": "ZTBPLANTB",
+      "description": "Table ZTBPLANTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBPOSITION",
+      "business_name": "ZTBPOSITION",
+      "description": "Table ZTBPOSITION",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBPOTable",
+      "business_name": "ZTBPOTable",
+      "description": "Table ZTBPOTable",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBPQC1TABLE",
+      "business_name": "ZTBPQC1TABLE",
+      "description": "Table ZTBPQC1TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBPQC2TABLE",
+      "business_name": "ZTBPQC2TABLE",
+      "description": "Table ZTBPQC2TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBPQC3TABLE",
+      "business_name": "ZTBPQC3TABLE",
+      "description": "Table ZTBPQC3TABLE",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBREASON",
+      "business_name": "ZTBREASON",
+      "description": "Table ZTBREASON",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBSEX",
+      "business_name": "ZTBSEX",
+      "description": "Table ZTBSEX",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBSUBDEPARTMENT",
+      "business_name": "ZTBSUBDEPARTMENT",
+      "description": "Table ZTBSUBDEPARTMENT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBTHUONGPHATTB",
+      "business_name": "ZTBTHUONGPHATTB",
+      "description": "Table ZTBTHUONGPHATTB",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBWORKPOSITION",
+      "business_name": "ZTBWORKPOSITION",
+      "description": "Table ZTBWORKPOSITION",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBWORKSHIFT",
+      "business_name": "ZTBWORKSHIFT",
+      "description": "Table ZTBWORKSHIFT",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    },
+    {
+      "table_name": "ZTBWORKSTATUS",
+      "business_name": "ZTBWORKSTATUS",
+      "description": "Table ZTBWORKSTATUS",
+      "synonyms": [],
+      "is_fact": true,
+      "created_from_db_sync": true
+    }
+  ]
+}
