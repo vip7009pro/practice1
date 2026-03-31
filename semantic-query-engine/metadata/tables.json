@@ -1,128 +1,9 @@
 {
   "tables": [
     {
-      "table_name": "customers",
-      "schema": "dbo",
-      "business_name": "Khách hàng",
-      "description": "Danh sách khách hàng, nhà cung cấp, đối tác kinh doanh",
-      "use_cases": [
-        "Xem danh sách khách hàng",
-        "Tìm khách hàng theo tên hoặc mã",
-        "Phân tích tiểu sử mua hàng của khách hàng",
-        "Quản lý thông tin liên lạc khách hàng"
-      ],
-      "synonyms": [
-        "customers",
-        "khác hàng",
-        "client",
-        "partner"
-      ]
-    },
-    {
-      "table_name": "products",
-      "schema": "dbo",
-      "business_name": "Sản phẩm",
-      "description": "Danh mục sản phẩm, hàng hóa, dịch vụ",
-      "use_cases": [
-        "Danh sách sản phẩm",
-        "Giá bán, tồn kho sản phẩm",
-        "Phân tích doanh số bán hàng theo sản phẩm",
-        "Quản lý danh mục sản phẩm"
-      ],
-      "synonyms": [
-        "products",
-        "sản phẩm",
-        "goods",
-        "items"
-      ]
-    },
-    {
-      "table_name": "orders",
-      "schema": "dbo",
-      "business_name": "Đơn hàng",
-      "description": "Hóa đơn bán hàng, đơn đặt hàng bán lẻ và sỉ",
-      "use_cases": [
-        "Danh sách đơn hàng",
-        "Doanh thu bán hàng",
-        "Tìm kiếm đơn hàng theo khách hàng",
-        "Phân tích xu hướng bán hàng"
-      ],
-      "synonyms": [
-        "orders",
-        "đơn hàng",
-        "invoices",
-        "sales"
-      ]
-    },
-    {
-      "table_name": "order_items",
-      "schema": "dbo",
-      "business_name": "Chi tiết đơn hàng",
-      "description": "Các sản phẩm trong mỗi đơn hàng",
-      "use_cases": [
-        "Chi tiết từng sản phẩm trong đơn hàng",
-        "Số lượng, giá, chiết khấu sản phẩm",
-        "Phân tích lợi nhuận theo sản phẩm"
-      ],
-      "synonyms": [
-        "order_items",
-        "order details",
-        "line items"
-      ]
-    },
-    {
-      "table_name": "inventory",
-      "schema": "dbo",
-      "business_name": "Tồn kho",
-      "description": "Số lượng tồn kho theo sản phẩm và kho hàng",
-      "use_cases": [
-        "Kiểm tra tồn kho sản phẩm",
-        "Tìm sản phẩm hết hàng",
-        "Phân tích lịch sử tồn kho"
-      ],
-      "synonyms": [
-        "inventory",
-        "stock",
-        "tồn kho",
-        "warehouse"
-      ]
-    },
-    {
-      "table_name": "employees",
-      "schema": "dbo",
-      "business_name": "Nhân viên",
-      "description": "Thông tin nhân sự, cán bộ nhân viên",
-      "use_cases": [
-        "Danh sách nhân viên",
-        "Tìm nhân viên theo tên hoặc phòng ban",
-        "Phân tích hiệu suất bán hàng theo nhân viên"
-      ],
-      "synonyms": [
-        "employees",
-        "staff",
-        "nhân viên"
-      ]
-    },
-    {
-      "table_name": "departments",
-      "schema": "dbo",
-      "business_name": "Phòng ban",
-      "description": "Danh sách các phòng ban, bộ phận trong công ty",
-      "use_cases": [
-        "Quản lý cơ cấu tổ chức",
-        "Phân tích hiệu suất theo phòng ban",
-        "Tìm nhân viên theo phòng ban"
-      ],
-      "synonyms": [
-        "departments",
-        "phòng ban",
-        "divisions"
-      ]
-    },
-    {
       "table_name": "AMAZONE_DATA",
       "business_name": "AMAZONE_DATA",
-      "description": "Table AMAZONE_DATA",
+      "description": "아마존 데이타 표 - Bảng data Amazon",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -130,7 +11,7 @@
     {
       "table_name": "ANHNV",
       "business_name": "ANHNV",
-      "description": "Table ANHNV",
+      "description": "직원 사진 표 - Bảng lưuu ảnh nhân viên",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -138,7 +19,7 @@
     {
       "table_name": "AQL_TB",
       "business_name": "AQL_TB",
-      "description": "Table AQL_TB",
+      "description": "AQL 정의 표 - Bảng định nghĩa AQL",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -154,7 +35,7 @@
     {
       "table_name": "AUDIT_DETAIL_TABLE",
       "business_name": "AUDIT_DETAIL_TABLE",
-      "description": "Table AUDIT_DETAIL_TABLE",
+      "description": "AUDIT (심사) 상세한 정보 표 - Bảng chi tiết của audit",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -162,7 +43,7 @@
     {
       "table_name": "AUDIT_INFO_TABLE",
       "business_name": "AUDIT_INFO_TABLE",
-      "description": "Table AUDIT_INFO_TABLE",
+      "description": "AUDIT (심사) 정보 표 - Bảng thông tin của audit",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -170,7 +51,7 @@
     {
       "table_name": "AUDIT_RESULT_DETAIL",
       "business_name": "AUDIT_RESULT_DETAIL",
-      "description": "Table AUDIT_RESULT_DETAIL",
+      "description": "AUDIT (심사) 상세 결과 표 - Bảng kết quả chi tiết của audit",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -178,7 +59,7 @@
     {
       "table_name": "AUDIT_RESULT_TABLE",
       "business_name": "AUDIT_RESULT_TABLE",
-      "description": "Table AUDIT_RESULT_TABLE",
+      "description": "AUDIT (심사) 결과 표 - Bảng kết quả audit",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -218,7 +99,7 @@
     {
       "table_name": "BOM_AMAZONE",
       "business_name": "BOM_AMAZONE",
-      "description": "Table BOM_AMAZONE",
+      "description": "AMAZON 제품의 BOM 표 - Bảng BOM AMAZON",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -226,7 +107,7 @@
     {
       "table_name": "C001",
       "business_name": "C001",
-      "description": "Table C001",
+      "description": "지문 출석기 데이타 표 - Bảng data chấm công vân tay",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -250,7 +131,7 @@
     {
       "table_name": "CS_CONFIRM_TABLE",
       "business_name": "CS_CONFIRM_TABLE",
-      "description": "Table CS_CONFIRM_TABLE",
+      "description": "고객사 이슈 확인 이력 표 - Bảng lịch sử xác nhận lỗi khách hàng của CS",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -258,7 +139,7 @@
     {
       "table_name": "CS_CONTACT_TABLE",
       "business_name": "CS_CONTACT_TABLE",
-      "description": "Table CS_CONTACT_TABLE",
+      "description": "고객사 담당자 연락처 표 - Bảng thông tin liên lạc PIC khách hàng của CS",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -266,7 +147,7 @@
     {
       "table_name": "CS_RMA_DELIVERY",
       "business_name": "CS_RMA_DELIVERY",
-      "description": "Table CS_RMA_DELIVERY",
+      "description": "고객사에 RMA 보상 납품 이력 표 - Bảng thông tin lịch sử giao hàng RMA CS",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -274,7 +155,7 @@
     {
       "table_name": "CS_RMA_TABLE",
       "business_name": "CS_RMA_TABLE",
-      "description": "Table CS_RMA_TABLE",
+      "description": "고객사 RMA 정보 표 - Bảng thông tin lịch sử yêu cầu RMA của khách hàng của CS",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -282,7 +163,7 @@
     {
       "table_name": "CS_SORTING_TABLE",
       "business_name": "CS_SORTING_TABLE",
-      "description": "Table CS_SORTING_TABLE",
+      "description": "회수 품 선별 결과 표 - Bảng kết quả sorting sản phẩm thu hồi về của CS",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -290,7 +171,7 @@
     {
       "table_name": "CS_SPECIAL_APPROVE_TABLE",
       "business_name": "CS_SPECIAL_APPROVE_TABLE",
-      "description": "Table CS_SPECIAL_APPROVE_TABLE",
+      "description": "고객사 특채 의뢰 이력 표 - Bảng lịch xử xin chấp nhận đặc biệt tại khách hàng của CS (CNDB)",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -298,7 +179,7 @@
     {
       "table_name": "CS_TAXI_TABLE",
       "business_name": "CS_TAXI_TABLE",
-      "description": "Table CS_TAXI_TABLE",
+      "description": "택시비 이력 표 - Bảng lịch sử chi phí sử dụng taxi",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -354,7 +235,7 @@
     {
       "table_name": "F800",
       "business_name": "F800",
-      "description": "Table F800",
+      "description": "수요예측-제품별",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -402,7 +283,7 @@
     {
       "table_name": "I200",
       "business_name": "I200",
-      "description": "Table I200",
+      "description": "자재발주-Header",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -410,7 +291,7 @@
     {
       "table_name": "I201",
       "business_name": "I201",
-      "description": "Table I201",
+      "description": "자재발주-Detail",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -418,7 +299,7 @@
     {
       "table_name": "I210",
       "business_name": "I210",
-      "description": "Table I210",
+      "description": "자재LOT정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -426,7 +307,7 @@
     {
       "table_name": "I220",
       "business_name": "I220",
-      "description": "Table I220",
+      "description": "자재입고정보-Header",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -434,7 +315,7 @@
     {
       "table_name": "I221",
       "business_name": "I221",
-      "description": "Table I221",
+      "description": "자재입고정보-Detail LOT",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -442,7 +323,7 @@
     {
       "table_name": "I222",
       "business_name": "I222",
-      "description": "Table I222",
+      "description": "자재입고정보-Detail LOT",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -450,7 +331,7 @@
     {
       "table_name": "I500",
       "business_name": "I500",
-      "description": "Table I500",
+      "description": "제품LOT정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -458,7 +339,7 @@
     {
       "table_name": "I510",
       "business_name": "I510",
-      "description": "Table I510",
+      "description": "제품입고정보-Header",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -466,7 +347,7 @@
     {
       "table_name": "I511",
       "business_name": "I511",
-      "description": "Table I511",
+      "description": "제품입고정보-Detail",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -474,7 +355,7 @@
     {
       "table_name": "I512",
       "business_name": "I512",
-      "description": "Table I512",
+      "description": "제품입고정보-LOT",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -594,7 +475,7 @@
     {
       "table_name": "M000",
       "business_name": "M000",
-      "description": "Table M000",
+      "description": "시스템공통관리",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -602,7 +483,7 @@
     {
       "table_name": "M010",
       "business_name": "M010",
-      "description": "Table M010",
+      "description": "사원정보(로그인)",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -610,7 +491,7 @@
     {
       "table_name": "M050",
       "business_name": "M050",
-      "description": "Table M050",
+      "description": "센터정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -618,7 +499,7 @@
     {
       "table_name": "M060",
       "business_name": "M060",
-      "description": "Table M060",
+      "description": "부서정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -626,7 +507,7 @@
     {
       "table_name": "M070",
       "business_name": "M070",
-      "description": "Table M070",
+      "description": "창고정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -634,7 +515,7 @@
     {
       "table_name": "M080",
       "business_name": "M080",
-      "description": "Table M080",
+      "description": "로케이션정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -642,7 +523,7 @@
     {
       "table_name": "M090",
       "business_name": "M090",
-      "description": "Table M090",
+      "description": "품목정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -658,7 +539,7 @@
     {
       "table_name": "M091",
       "business_name": "M091",
-      "description": "Table M091",
+      "description": "원단분류코드",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -666,7 +547,7 @@
     {
       "table_name": "M100",
       "business_name": "M100",
-      "description": "Table M100",
+      "description": "제품코드정보 - Bảng thông tin sản phẩm",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -690,7 +571,7 @@
     {
       "table_name": "M110",
       "business_name": "M110",
-      "description": "Table M110",
+      "description": "거래처정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -698,7 +579,7 @@
     {
       "table_name": "M120",
       "business_name": "M120",
-      "description": "Table M120",
+      "description": "장비Master",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -706,7 +587,7 @@
     {
       "table_name": "M130",
       "business_name": "M130",
-      "description": "Table M130",
+      "description": "금형코드정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -714,7 +595,7 @@
     {
       "table_name": "M140",
       "business_name": "M140",
-      "description": "Table M140",
+      "description": "BOM정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -738,7 +619,7 @@
     {
       "table_name": "O300",
       "business_name": "O300",
-      "description": "Table O300",
+      "description": "자재출고정보-Header",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -746,7 +627,7 @@
     {
       "table_name": "O301",
       "business_name": "O301",
-      "description": "Table O301",
+      "description": "자재출고정보-Detail",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -754,7 +635,7 @@
     {
       "table_name": "O302",
       "business_name": "O302",
-      "description": "Table O302",
+      "description": "자재출고정보-Detail LOT",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -762,7 +643,7 @@
     {
       "table_name": "O610",
       "business_name": "O610",
-      "description": "Table O610",
+      "description": "제품출하정보-Header",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -770,7 +651,7 @@
     {
       "table_name": "O611",
       "business_name": "O611",
-      "description": "Table O611",
+      "description": "제품출하정보-Detail",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -778,7 +659,7 @@
     {
       "table_name": "O612",
       "business_name": "O612",
-      "description": "Table O612",
+      "description": "제품출하정보-LOT",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -810,7 +691,7 @@
     {
       "table_name": "P400",
       "business_name": "P400",
-      "description": "Table P400",
+      "description": "생산요청정보 - Bảng quản lý yêu cầu sản xuất",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -818,7 +699,7 @@
     {
       "table_name": "P410",
       "business_name": "P410",
-      "description": "Table P410",
+      "description": "생산실적",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -826,7 +707,7 @@
     {
       "table_name": "P500",
       "business_name": "P500",
-      "description": "Table P500",
+      "description": "DT투입이력",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -834,7 +715,7 @@
     {
       "table_name": "P500_SUB",
       "business_name": "P500_SUB",
-      "description": "Table P500_SUB",
+      "description": "DT투입이력",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -842,7 +723,7 @@
     {
       "table_name": "P501",
       "business_name": "P501",
-      "description": "Table P501",
+      "description": "DT발행이력",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -914,7 +795,7 @@
     {
       "table_name": "PROGRAM_AUTH_INFO",
       "business_name": "PROGRAM_AUTH_INFO",
-      "description": "Table PROGRAM_AUTH_INFO",
+      "description": "프로그램권한마스터",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -922,7 +803,7 @@
     {
       "table_name": "PROGRAM_INFO",
       "business_name": "PROGRAM_INFO",
-      "description": "Table PROGRAM_INFO",
+      "description": "프로그램마스터",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -970,7 +851,7 @@
     {
       "table_name": "S700",
       "business_name": "S700",
-      "description": "Table S700",
+      "description": "자재재고정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
@@ -978,7 +859,7 @@
     {
       "table_name": "S710",
       "business_name": "S710",
-      "description": "Table S710",
+      "description": "제품재고정보",
       "synonyms": [],
       "is_fact": true,
       "created_from_db_sync": true
