@@ -59,11 +59,12 @@ export class SQLValidator {
 
     // Step 3: Check for single SELECT statement
     if (!this.isValidSelectStatement(sql)) {
-      errors.push({
+      const err: ValidationError = {
         code: 'INVALID_STATEMENT',
         message: 'Query must be a single SELECT statement',
         severity: 'error',
-      });
+      };
+      errors.push(err);
     }
 
     // Step 4: Semantic checks if context provided
@@ -116,11 +117,12 @@ export class SQLValidator {
     for (const keyword of FORBIDDEN_KEYWORDS) {
       const regex = new RegExp(`\\b${keyword}\\b`, 'g');
       if (regex.test(upper)) {
-        errors.push({
+        const err: ValidationError = {
           code: 'FORBIDDEN_KEYWORD',
           message: `Forbidden SQL keyword: ${keyword}. Only SELECT queries are allowed.`,
           severity: 'error',
-        });
+        };
+        errors.push(err);
       }
     }
 
@@ -135,11 +137,12 @@ export class SQLValidator {
 
     for (const pattern of DANGEROUS_PATTERNS) {
       if (pattern.test(sql)) {
-        errors.push({
+        const err: ValidationError = {
           code: 'DANGEROUS_PATTERN',
           message: `Detected dangerous SQL pattern: ${pattern.source}`,
           severity: 'error',
-        });
+        };
+        errors.push(err);
       }
     }
 
@@ -208,11 +211,12 @@ export class SQLValidator {
 
     for (const table of referencedTables) {
       if (!validTableNames.has(table.toLowerCase())) {
-        errors.push({
+        const err: ValidationError = {
           code: 'UNKNOWN_TABLE',
           message: `Table not found in schema: ${table}`,
           severity: 'error',
-        });
+        };
+        errors.push(err);
       }
     }
 
@@ -226,11 +230,12 @@ export class SQLValidator {
       const columnExists = tableColumns.some((c) => c.column_name.toLowerCase() === column.toLowerCase());
 
       if (!columnExists) {
-        errors.push({
+        const err: ValidationError = {
           code: 'UNKNOWN_COLUMN',
           message: `Column not found: ${table}.${column}`,
           severity: 'error',
-        });
+        };
+        errors.push(err);
       }
     }
 

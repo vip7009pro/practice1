@@ -12,6 +12,7 @@
   "author": "Hung Nguyen Page",
   "license": "ISC",
   "dependencies": {
+    "@xenova/transformers": "^2.17.2",
     "axios": "^0.27.2",
     "body-parser": "^1.20.2",
     "cheerio": "^1.1.2",

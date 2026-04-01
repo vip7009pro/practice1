@@ -12,6 +12,72 @@ const { openConnection } = require('../config/database');
 
 const isDebug = () => String(process.env.AI_SQL_DEBUG || '').trim() === '1';
 
+/**
+ * Map error codes to HTTP status codes and helpful messages
+ */
+const getErrorResponse = (errorCode, errorMessage) => {
+  const errorMappings = {
+    'NO_PATH': {
+      status: 400,
+      title: 'Không tìm thấy đường kết nối giữa các bảng',
+      description: 'Hệ thống không thể tìm thấy relationships giữa các bảng cần thiết. Điều này xảy ra khi metadata relationships chưa được định nghĩa đầy đủ.',
+      suggestion: 'Vui lòng kiểm tra metadata relationships trong Database Schema hoặc thử câu hỏi với điều kiện tìm kiếm cụ thể hơn.',
+    },
+    'SCHEMA_RETRIEVAL_FAILED': {
+      status: 404,
+      title: 'Không thể lấy metadata schema',
+      description: 'Hệ thống không tìm thấy schema metadata cần thiết để thực hiện truy vấn.',
+      suggestion: 'Vui lòng kiểm tra cài đặt database và metadata configuration.',
+    },
+    'SQL_GENERATION_FAILED': {
+      status: 400,
+      title: 'Không thể tạo SQL query',
+      description: 'LLM không tạo được SQL query hợp lệ từ câu hỏi của bạn.',
+      suggestion: 'Hãy thử rephrase câu hỏi của bạn hoặc kiểm tra logs để chi tiết thêm.',
+    },
+    'VALIDATION_FAILED': {
+      status: 400,
+      title: 'SQL validation thất bại', 
+      description: 'SQL query được tạo ra không đáp ứng các yêu cầu bảo mật hoặc syntax.',
+      suggestion: 'Vui lòng kiểm tra validation rules và thử lại.',
+    },
+    'EXECUTION_FAILED': {
+      status: 500,
+      title: 'Thực thi query thất bại',
+      description: 'Database không thực thi được query.',
+      suggestion: 'Vui lòng kiểm tra logs để chi tiết lỗi database.',
+    },
+    'TIMEOUT': {
+      status: 408,
+      title: 'Truy vấn quá thời gian cho phép',
+      description: 'Query mất quá lâu để hoàn thành (>30 giây).',
+      suggestion: 'Vui lòng thêm điều kiện WHERE hoặc giới hạn kết quả.',
+    },
+    'FORMATTING_FAILED': {
+      status: 500,
+      title: 'Định dạng kết quả thất bại',
+      description: 'Không thể định dạng kết quả từ database.',
+      suggestion: 'Đây là lỗi nội bộ, vui lòng thử lại.',
+    },
+    'INTERNAL_ERROR': {
+      status: 500,
+      title: 'Lỗi nội bộ',
+      description: 'Đã xảy ra lỗi không mong muốn trong quá trình xử lý.',
+      suggestion: 'Vui lòng kiểm tra logs server để chi tiết thêm.',
+    },
+  };
+
+  const mapping = errorMappings[errorCode] || errorMappings['INTERNAL_ERROR'];
+  
+  return {
+    status: mapping.status,
+    title: mapping.title,
+    description: mapping.description,
+    suggestion: mapping.suggestion,
+    originalMessage: errorMessage,
+  };
+};
+
 async function ensureSemanticQueryHandler() {
   if (global.semanticQueryHandler) {
     return global.semanticQueryHandler;
@@ -477,8 +543,31 @@ router.post('/v2/query', checkLoginIndex, async (req, res) => {
     const ms = Date.now() - started;
 
     if (response.tk_status === 'NG') {
-      console.log('[V2_API] Query failed', { ms, error: response.error?.code });
-      return res.json(response);
+      const errorCode = response.error?.code || 'INTERNAL_ERROR';
+      const errorMessage = response.error?.message || 'Unknown error';
+      const errorDetails = getErrorResponse(errorCode, errorMessage);
+      
+      // Log error details
+      console.log('[V2_API] Query failed', { 
+        ms, 
+        error: errorCode,
+        message: errorMessage,
+        httpStatus: errorDetails.status 
+      });
+      
+      // Return error with HTTP status code and detailed info
+      return res.status(errorDetails.status).json({
+        tk_status: 'NG',
+        error: {
+          code: errorCode,
+          message: errorMessage,
+          http_status: errorDetails.status,
+          title: errorDetails.title,
+          description: errorDetails.description,
+          suggestion: errorDetails.suggestion,
+          debug_info: isDebug() ? { stack: response.error?.stack } : undefined,
+        },
+      });
     }
 
     // Build next summary if explain is enabled
@@ -516,12 +605,52 @@ router.post('/v2/query', checkLoginIndex, async (req, res) => {
     });
   } catch (e) {
     const ms = Date.now() - started;
-    console.error('[V2_API] Unexpected error', { ms, message: e?.message });
+    const errorMessage = e?.message || 'Internal server error';
+    const errorStatus = e?.response?.status;
+    
+    // Handle 429 rate limiting errors specially
+    if (errorStatus === 429) {
+      console.error('[V2_API] Gemini API rate limit exceeded (429)', { ms, message: errorMessage });
+      return res.status(429).json({
+        tk_status: 'NG',
+        error: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: errorMessage,
+          http_status: 429,
+          title: 'Gemini API rate limit exceeded',
+          description: 'Hệ thống đã vượt quá giới hạn cuộc gọi tới Gemini API. Điều này xảy ra khi có quá nhiều request trong thời gian ngắn.',
+          suggestion: 'Vui lòng chờ một lát rồi thử lại. Nếu vấn đề vẫn tiếp tục, vui lòng liên hệ admin để tăng API quota.',
+          retry_after_seconds: 5,
+        },
+      });
+    }
+    
+    // Handle other HTTP errors
+    if (errorStatus && errorStatus >= 400) {
+      console.error('[V2_API] HTTP error', { ms, status: errorStatus, message: errorMessage });
+      return res.status(Math.min(errorStatus, 500)).json({
+        tk_status: 'NG',
+        error: {
+          code: 'HTTP_ERROR',
+          message: errorMessage,
+          http_status: errorStatus,
+          title: `HTTP ${errorStatus} Error`,
+          description: `Lỗi HTTP khi gọi external service: ${errorMessage}`,
+        },
+      });
+    }
+    
+    // Generic internal error
+    console.error('[V2_API] Unexpected error', { ms, message: errorMessage });
     return res.status(500).json({
       tk_status: 'NG',
       error: {
         code: 'INTERNAL_ERROR',
-        message: e?.message || 'Internal server error',
+        message: errorMessage,
+        http_status: 500,
+        title: 'Lỗi nội bộ server',
+        description: 'Đã xảy ra lỗi không mong muốn.',
+        debug_info: isDebug() ? { stack: e?.stack } : undefined,
       },
     });
   }
@@ -843,13 +972,31 @@ router.get('/v2/metadata/relationships', checkLoginIndex, async (req, res) => {
   }
 });
 
+async function refreshMetadataAndEmbeddingCache(reason) {
+  if (!global.semanticQueryHandler) {
+    return;
+  }
+
+  try {
+    await global.semanticQueryHandler.metadataService.initialize(
+      './semantic-query-engine/metadata'
+    );
+    global.semanticQueryHandler.clearEmbeddingCache();
+    if (isDebug()) {
+      console.log(`[V2_API] Metadata refreshed and embedding cache regenerated after ${reason}`);
+    }
+  } catch (e) {
+    console.log('[V2_API] Note: Could not refresh metadata/cache', e?.message);
+  }
+}
+
 /**
  * Add/Update a table metadata
  * POST /ai/v2/metadata/tables
  */
 router.post('/v2/metadata/tables', checkLoginIndex, async (req, res) => {
   try {
-    const { table_name, business_name, description, synonyms, is_fact, use_cases } = req.body;
+    const { table_name, business_name, description, synonyms, is_fact } = req.body;
 
     if (!table_name) {
       return res.status(400).json({
@@ -877,7 +1024,6 @@ router.post('/v2/metadata/tables', checkLoginIndex, async (req, res) => {
       description: description || '',
       synonyms: synonyms || [],
       is_fact: is_fact !== undefined ? is_fact : true,
-      use_cases: use_cases || [],
     };
 
     if (existingIdx >= 0) {
@@ -888,16 +1034,7 @@ router.post('/v2/metadata/tables', checkLoginIndex, async (req, res) => {
 
     fs.writeFileSync(tablesFile, JSON.stringify(data, null, 2));
 
-    // Reinitialize if needed
-    if (global.semanticQueryHandler) {
-      try {
-        await global.semanticQueryHandler.metadataService.initialize(
-          './semantic-query-engine/metadata'
-        );
-      } catch (e) {
-        console.log('[V2_API] Note: Could not reinitialize metadata service', e?.message);
-      }
-    }
+    await refreshMetadataAndEmbeddingCache('table metadata update');
 
     return res.json({
       tk_status: 'OK',
@@ -975,15 +1112,7 @@ router.post('/v2/metadata/columns', checkLoginIndex, async (req, res) => {
 
     fs.writeFileSync(columnsFile, JSON.stringify(data, null, 2));
 
-    if (global.semanticQueryHandler) {
-      try {
-        await global.semanticQueryHandler.metadataService.initialize(
-          './semantic-query-engine/metadata'
-        );
-      } catch (e) {
-        console.log('[V2_API] Note: Could not reinitialize metadata service', e?.message);
-      }
-    }
+    await refreshMetadataAndEmbeddingCache('column metadata update');
 
     return res.json({
       tk_status: 'OK',
@@ -1057,15 +1186,7 @@ router.post('/v2/metadata/relationships', checkLoginIndex, async (req, res) => {
 
     fs.writeFileSync(relFile, JSON.stringify(data, null, 2));
 
-    if (global.semanticQueryHandler) {
-      try {
-        await global.semanticQueryHandler.metadataService.initialize(
-          './semantic-query-engine/metadata'
-        );
-      } catch (e) {
-        console.log('[V2_API] Note: Could not reinitialize metadata service', e?.message);
-      }
-    }
+    await refreshMetadataAndEmbeddingCache('relationship metadata update');
 
     return res.json({
       tk_status: 'OK',
@@ -1077,6 +1198,528 @@ router.post('/v2/metadata/relationships', checkLoginIndex, async (req, res) => {
       tk_status: 'NG',
       error: { code: 'FAILED', message: e?.message || 'Failed to save relationship' },
     });
+  }
+});
+
+/**
+ * Delete table metadata (also removes related columns/relationships)
+ * DELETE /ai/v2/metadata/tables/:tableName
+ */
+router.delete('/v2/metadata/tables/:tableName', checkLoginIndex, async (req, res) => {
+  try {
+    const tableName = decodeURIComponent(req.params.tableName || '').trim();
+    if (!tableName) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: { code: 'MISSING_FIELD', message: 'tableName is required' },
+      });
+    }
+
+    const metadataDir = path.join('./semantic-query-engine/metadata');
+    const tablesFile = path.join(metadataDir, 'tables.json');
+    const columnsFile = path.join(metadataDir, 'columns.json');
+    const relFile = path.join(metadataDir, 'relationships.json');
+
+    let removed = { tables: 0, columns: 0, relationships: 0 };
+
+    if (fs.existsSync(tablesFile)) {
+      const data = JSON.parse(fs.readFileSync(tablesFile, 'utf-8') || '{"tables":[]}');
+      const before = Array.isArray(data.tables) ? data.tables.length : 0;
+      data.tables = (data.tables || []).filter(
+        (t) => String(t.table_name || '').toLowerCase() !== tableName.toLowerCase()
+      );
+      removed.tables = before - data.tables.length;
+      fs.writeFileSync(tablesFile, JSON.stringify(data, null, 2));
+    }
+
+    if (fs.existsSync(columnsFile)) {
+      const data = JSON.parse(fs.readFileSync(columnsFile, 'utf-8') || '{"columns":[]}');
+      const before = Array.isArray(data.columns) ? data.columns.length : 0;
+      data.columns = (data.columns || []).filter(
+        (c) => String(c.table_name || '').toLowerCase() !== tableName.toLowerCase()
+      );
+      removed.columns = before - data.columns.length;
+      fs.writeFileSync(columnsFile, JSON.stringify(data, null, 2));
+    }
+
+    if (fs.existsSync(relFile)) {
+      const data = JSON.parse(fs.readFileSync(relFile, 'utf-8') || '{"relationships":[]}');
+      const before = Array.isArray(data.relationships) ? data.relationships.length : 0;
+      data.relationships = (data.relationships || []).filter((r) => {
+        const sourceTable = String(r.source_table || r.from_table || '').toLowerCase();
+        const targetTable = String(r.target_table || r.to_table || '').toLowerCase();
+        return sourceTable !== tableName.toLowerCase() && targetTable !== tableName.toLowerCase();
+      });
+      removed.relationships = before - data.relationships.length;
+      fs.writeFileSync(relFile, JSON.stringify(data, null, 2));
+    }
+
+    await refreshMetadataAndEmbeddingCache('table metadata delete');
+
+    return res.json({
+      tk_status: 'OK',
+      data: { table_name: tableName, removed, message: 'Table metadata deleted' },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to delete table metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to delete table metadata' },
+    });
+  }
+});
+
+/**
+ * Delete column metadata
+ * DELETE /ai/v2/metadata/columns/:tableName/:columnName
+ */
+router.delete('/v2/metadata/columns/:tableName/:columnName', checkLoginIndex, async (req, res) => {
+  try {
+    const tableName = decodeURIComponent(req.params.tableName || '').trim();
+    const columnName = decodeURIComponent(req.params.columnName || '').trim();
+    if (!tableName || !columnName) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: { code: 'MISSING_FIELD', message: 'tableName and columnName are required' },
+      });
+    }
+
+    const columnsFile = path.join('./semantic-query-engine/metadata', 'columns.json');
+    let removed = 0;
+
+    if (fs.existsSync(columnsFile)) {
+      const data = JSON.parse(fs.readFileSync(columnsFile, 'utf-8') || '{"columns":[]}');
+      const before = Array.isArray(data.columns) ? data.columns.length : 0;
+      data.columns = (data.columns || []).filter(
+        (c) =>
+          String(c.table_name || '').toLowerCase() !== tableName.toLowerCase() ||
+          String(c.column_name || '').toLowerCase() !== columnName.toLowerCase()
+      );
+      removed = before - data.columns.length;
+      fs.writeFileSync(columnsFile, JSON.stringify(data, null, 2));
+    }
+
+    await refreshMetadataAndEmbeddingCache('column metadata delete');
+
+    return res.json({
+      tk_status: 'OK',
+      data: {
+        table_name: tableName,
+        column_name: columnName,
+        removed,
+        message: 'Column metadata deleted',
+      },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to delete column metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to delete column metadata' },
+    });
+  }
+});
+
+/**
+ * Delete relationship metadata
+ * DELETE /ai/v2/metadata/relationships/:sourceTable/:sourceColumn/:targetTable/:targetColumn
+ */
+router.delete('/v2/metadata/relationships/:sourceTable/:sourceColumn/:targetTable/:targetColumn', checkLoginIndex, async (req, res) => {
+  try {
+    const sourceTable = decodeURIComponent(req.params.sourceTable || '').trim();
+    const sourceColumn = decodeURIComponent(req.params.sourceColumn || '').trim();
+    const targetTable = decodeURIComponent(req.params.targetTable || '').trim();
+    const targetColumn = decodeURIComponent(req.params.targetColumn || '').trim();
+
+    if (!sourceTable || !sourceColumn || !targetTable || !targetColumn) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: { code: 'MISSING_FIELD', message: 'All relationship params are required' },
+      });
+    }
+
+    const relFile = path.join('./semantic-query-engine/metadata', 'relationships.json');
+    let removed = 0;
+
+    if (fs.existsSync(relFile)) {
+      const data = JSON.parse(fs.readFileSync(relFile, 'utf-8') || '{"relationships":[]}');
+      const before = Array.isArray(data.relationships) ? data.relationships.length : 0;
+
+      data.relationships = (data.relationships || []).filter((r) => {
+        const rSourceTable = String(r.source_table || r.from_table || '').toLowerCase();
+        const rSourceColumn = String(r.source_column || r.from_column || '').toLowerCase();
+        const rTargetTable = String(r.target_table || r.to_table || '').toLowerCase();
+        const rTargetColumn = String(r.target_column || r.to_column || '').toLowerCase();
+
+        return !(
+          rSourceTable === sourceTable.toLowerCase() &&
+          rSourceColumn === sourceColumn.toLowerCase() &&
+          rTargetTable === targetTable.toLowerCase() &&
+          rTargetColumn === targetColumn.toLowerCase()
+        );
+      });
+
+      removed = before - data.relationships.length;
+      fs.writeFileSync(relFile, JSON.stringify(data, null, 2));
+    }
+
+    await refreshMetadataAndEmbeddingCache('relationship metadata delete');
+
+    return res.json({
+      tk_status: 'OK',
+      data: {
+        source_table: sourceTable,
+        source_column: sourceColumn,
+        target_table: targetTable,
+        target_column: targetColumn,
+        removed,
+        message: 'Relationship metadata deleted',
+      },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to delete relationship metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to delete relationship metadata' },
+    });
+  }
+});
+
+/**
+ * Get all metrics metadata
+ * GET /ai/v2/metadata/metrics
+ */
+router.get('/v2/metadata/metrics', checkLoginIndex, async (req, res) => {
+  try {
+    await ensureSemanticQueryHandler();
+    const metrics = global.semanticQueryHandler.metadataService.getAllMetrics();
+    return res.json({
+      tk_status: 'OK',
+      data: { metrics, count: metrics.length },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to get metrics metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to get metrics metadata' },
+    });
+  }
+});
+
+/**
+ * Add/Update a metric metadata
+ * POST /ai/v2/metadata/metrics
+ */
+router.post('/v2/metadata/metrics', checkLoginIndex, async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      business_name,
+      description,
+      formula,
+      tables,
+      data_type,
+      unit,
+      conditions,
+      related_dimensions,
+      examples,
+    } = req.body || {};
+
+    if (!id || !name || !business_name || !formula || !Array.isArray(tables) || tables.length === 0) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: {
+          code: 'MISSING_FIELD',
+          message: 'id, name, business_name, formula, and non-empty tables are required',
+        },
+      });
+    }
+
+    const metricsFile = path.join('./semantic-query-engine/metadata', 'metrics.json');
+    let data = { metrics: [] };
+    if (fs.existsSync(metricsFile)) {
+      data = JSON.parse(fs.readFileSync(metricsFile, 'utf-8') || '{"metrics":[]}');
+    }
+
+    const metricId = String(id).trim();
+    const existingIdx = (data.metrics || []).findIndex(
+      (m) => String(m.id || '').toLowerCase() === metricId.toLowerCase()
+    );
+
+    const newMetric = {
+      id: metricId,
+      name: String(name).trim(),
+      business_name: String(business_name).trim(),
+      description: description || '',
+      formula: String(formula).trim(),
+      tables: tables,
+      data_type: data_type || 'count',
+      unit: unit || undefined,
+      conditions: Array.isArray(conditions) ? conditions : undefined,
+      related_dimensions: Array.isArray(related_dimensions) ? related_dimensions : undefined,
+      examples: Array.isArray(examples) ? examples : undefined,
+    };
+
+    if (existingIdx >= 0) {
+      data.metrics[existingIdx] = newMetric;
+    } else {
+      data.metrics.push(newMetric);
+    }
+
+    fs.writeFileSync(metricsFile, JSON.stringify(data, null, 2));
+    await refreshMetadataAndEmbeddingCache('metrics metadata update');
+
+    return res.json({
+      tk_status: 'OK',
+      data: { metric: newMetric, message: 'Metric metadata saved' },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to save metric metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to save metric metadata' },
+    });
+  }
+});
+
+/**
+ * Delete metric metadata
+ * DELETE /ai/v2/metadata/metrics/:metricId
+ */
+router.delete('/v2/metadata/metrics/:metricId', checkLoginIndex, async (req, res) => {
+  try {
+    const metricId = decodeURIComponent(req.params.metricId || '').trim();
+    if (!metricId) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: { code: 'MISSING_FIELD', message: 'metricId is required' },
+      });
+    }
+
+    const metricsFile = path.join('./semantic-query-engine/metadata', 'metrics.json');
+    let removed = 0;
+
+    if (fs.existsSync(metricsFile)) {
+      const data = JSON.parse(fs.readFileSync(metricsFile, 'utf-8') || '{"metrics":[]}');
+      const before = Array.isArray(data.metrics) ? data.metrics.length : 0;
+      data.metrics = (data.metrics || []).filter(
+        (m) => String(m.id || '').toLowerCase() !== metricId.toLowerCase()
+      );
+      removed = before - data.metrics.length;
+      fs.writeFileSync(metricsFile, JSON.stringify(data, null, 2));
+    }
+
+    await refreshMetadataAndEmbeddingCache('metrics metadata delete');
+
+    return res.json({
+      tk_status: 'OK',
+      data: { id: metricId, removed, message: 'Metric metadata deleted' },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to delete metric metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to delete metric metadata' },
+    });
+  }
+});
+
+/**
+ * Get all glossary metadata
+ * GET /ai/v2/metadata/glossary
+ */
+router.get('/v2/metadata/glossary', checkLoginIndex, async (req, res) => {
+  try {
+    const glossaryFile = path.join('./semantic-query-engine/metadata', 'glossary.json');
+    let data = { glossary: [] };
+    if (fs.existsSync(glossaryFile)) {
+      data = JSON.parse(fs.readFileSync(glossaryFile, 'utf-8') || '{"glossary":[]}');
+    }
+    return res.json({
+      tk_status: 'OK',
+      data: { glossary: data.glossary || [], count: (data.glossary || []).length },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to get glossary metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to get glossary metadata' },
+    });
+  }
+});
+
+/**
+ * Add/Update glossary metadata entry
+ * POST /ai/v2/metadata/glossary
+ */
+router.post('/v2/metadata/glossary', checkLoginIndex, async (req, res) => {
+  try {
+    const {
+      id,
+      user_terms,
+      canonical_term,
+      metric_ids,
+      table_names,
+      column_names,
+      time_filter,
+      operation,
+      description,
+    } = req.body || {};
+
+    if (!id || !canonical_term || !Array.isArray(user_terms) || user_terms.length === 0) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: {
+          code: 'MISSING_FIELD',
+          message: 'id, canonical_term and non-empty user_terms are required',
+        },
+      });
+    }
+
+    const glossaryFile = path.join('./semantic-query-engine/metadata', 'glossary.json');
+    let data = { glossary: [] };
+    if (fs.existsSync(glossaryFile)) {
+      data = JSON.parse(fs.readFileSync(glossaryFile, 'utf-8') || '{"glossary":[]}');
+    }
+
+    const entryId = String(id).trim();
+    const existingIdx = (data.glossary || []).findIndex(
+      (g) => String(g.id || '').toLowerCase() === entryId.toLowerCase()
+    );
+
+    const newEntry = {
+      id: entryId,
+      user_terms,
+      canonical_term: String(canonical_term).trim(),
+      metric_ids: Array.isArray(metric_ids) ? metric_ids : undefined,
+      table_names: Array.isArray(table_names) ? table_names : undefined,
+      column_names: Array.isArray(column_names) ? column_names : undefined,
+      time_filter: time_filter || undefined,
+      operation: operation || undefined,
+      description: description || '',
+    };
+
+    if (existingIdx >= 0) {
+      data.glossary[existingIdx] = newEntry;
+    } else {
+      data.glossary.push(newEntry);
+    }
+
+    fs.writeFileSync(glossaryFile, JSON.stringify(data, null, 2));
+    await refreshMetadataAndEmbeddingCache('glossary metadata update');
+
+    return res.json({
+      tk_status: 'OK',
+      data: { glossary: newEntry, message: 'Glossary metadata saved' },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to save glossary metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to save glossary metadata' },
+    });
+  }
+});
+
+/**
+ * Delete glossary metadata entry
+ * DELETE /ai/v2/metadata/glossary/:entryId
+ */
+router.delete('/v2/metadata/glossary/:entryId', checkLoginIndex, async (req, res) => {
+  try {
+    const entryId = decodeURIComponent(req.params.entryId || '').trim();
+    if (!entryId) {
+      return res.status(400).json({
+        tk_status: 'NG',
+        error: { code: 'MISSING_FIELD', message: 'entryId is required' },
+      });
+    }
+
+    const glossaryFile = path.join('./semantic-query-engine/metadata', 'glossary.json');
+    let removed = 0;
+
+    if (fs.existsSync(glossaryFile)) {
+      const data = JSON.parse(fs.readFileSync(glossaryFile, 'utf-8') || '{"glossary":[]}');
+      const before = Array.isArray(data.glossary) ? data.glossary.length : 0;
+      data.glossary = (data.glossary || []).filter(
+        (g) => String(g.id || '').toLowerCase() !== entryId.toLowerCase()
+      );
+      removed = before - data.glossary.length;
+      fs.writeFileSync(glossaryFile, JSON.stringify(data, null, 2));
+    }
+
+    await refreshMetadataAndEmbeddingCache('glossary metadata delete');
+
+    return res.json({
+      tk_status: 'OK',
+      data: { id: entryId, removed, message: 'Glossary metadata deleted' },
+    });
+  } catch (e) {
+    console.error('[V2_API] Failed to delete glossary metadata', e);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Failed to delete glossary metadata' },
+    });
+  }
+});
+
+/**
+ * Clear embedding cache (manual invalidation)
+ * POST /ai/v2/cache/clear
+ * Useful when metadata changes need to force refresh embeddings
+ */
+router.post('/v2/cache/clear', checkLoginIndex, async (req, res) => {
+  console.log('[V2_API] ========== CACHE CLEAR START ==========');
+  try {
+    const startTime = Date.now();
+    console.log('[V2_API] Manual cache clear requested');
+
+    // Ensure handler is initialized (lazy loading)
+    const handler = await ensureSemanticQueryHandler();
+    console.log('[V2_API] Handler initialized:', handler ? 'YES' : 'NO');
+
+    if (!handler) {
+      console.log('[V2_API] ERROR: Failed to initialize semantic query handler');
+      return res.status(503).json({
+        tk_status: 'NG',
+        error: { code: 'SERVICE_NOT_READY', message: 'Failed to initialize handler' },
+      });
+    }
+
+    console.log('[V2_API] About to call clearEmbeddingCache()');
+    try {
+      handler.clearEmbeddingCache();
+      const ms = Date.now() - startTime;
+      console.log('[V2_API] Embedding cache cleared successfully', { ms });
+
+      const response = {
+        tk_status: 'OK',
+        data: {
+          message: 'Embedding cache cleared successfully',
+          cached_entries: 0,
+          cleared_at: new Date().toISOString(),
+          execution_time_ms: ms,
+        },
+      };
+      console.log('[V2_API] Sending OK response:', response);
+      return res.json(response);
+    } catch (error) {
+      console.error('[V2_API] Exception in inner try-catch:', error?.message || error);
+      console.error('[V2_API] Stack trace:', error?.stack);
+      return res.status(500).json({
+        tk_status: 'NG',
+        error: { code: 'CLEAR_FAILED', message: error?.message || 'Failed to clear cache' },
+      });
+    }
+  } catch (e) {
+    console.error('[V2_API] Exception in outer try-catch:', e?.message || e);
+    console.error('[V2_API] Stack trace:', e?.stack);
+    return res.status(500).json({
+      tk_status: 'NG',
+      error: { code: 'FAILED', message: e?.message || 'Unexpected error' },
+    });
+  } finally {
+    console.log('[V2_API] ========== CACHE CLEAR END ==========');
   }
 });
 

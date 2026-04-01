@@ -4,9 +4,12 @@
       "table_name": "AMAZONE_DATA",
       "business_name": "AMAZONE_DATA",
       "description": "아마존 데이타 표 - Bảng data Amazon",
-      "synonyms": [],
-      "is_fact": true,
-      "created_from_db_sync": true
+      "synonyms": [
+        "amazondata",
+        "amazon",
+        "amz"
+      ],
+      "is_fact": true
     },
     {
       "table_name": "ANHNV",
@@ -436,7 +439,14 @@
       "table_name": "IVDT",
       "business_name": "Chi tiết hóa đơn",
       "description": "Bảng chi tiết các dòng trong hóa đơn - Invoice detail lines with quantities and prices for each product",
-      "synonyms": ["chi tiết hóa đơn", "invoice detail", "invoice items", "doanh thu chi tiết", "revenue details", "sales line items"],
+      "synonyms": [
+        "chi tiết hóa đơn",
+        "invoice detail",
+        "invoice items",
+        "doanh thu chi tiết",
+        "revenue details",
+        "sales line items"
+      ],
       "is_fact": true,
       "created_from_db_sync": true
     },
@@ -444,7 +454,17 @@
       "table_name": "IVHD",
       "business_name": "Hóa đơn",
       "description": "Bảng hóa đơn - Invoice header with totals, discounts, customer info, and invoice dates",
-      "synonyms": ["hóa đơn", "invoice", "invoice header", "doanh thu", "revenue", "sales", "bán hàng", "sales order", "đơn bán"],
+      "synonyms": [
+        "hóa đơn",
+        "invoice",
+        "invoice header",
+        "doanh thu",
+        "revenue",
+        "sales",
+        "bán hàng",
+        "sales order",
+        "đơn bán"
+      ],
       "is_fact": true,
       "created_from_db_sync": true
     },

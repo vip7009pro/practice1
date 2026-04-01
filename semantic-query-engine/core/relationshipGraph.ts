@@ -143,6 +143,23 @@ export class RelationshipGraph {
         paths.set(key, this.resolvePath(from, to, depth));
       } catch (error) {
         logger.warn(`Cannot resolve path from ${from} to ${to}`, error);
+        
+        // Log additional debugging info
+        const fromNode = this.nodes.get(from.toLowerCase());
+        const toNode = this.nodes.get(to.toLowerCase());
+        
+        if (!fromNode) {
+          logger.warn(`  -> Table '${from}' not found in graph. Available tables: ${Array.from(this.nodes.keys()).slice(0, 5).join(', ')}...`);
+        } else {
+          logger.warn(`  -> Table '${from}' has ${fromNode.neighbors.length} direct relationships`);
+        }
+        
+        if (!toNode) {
+          logger.warn(`  -> Table '${to}' not found in graph`);
+        }
+        
+        logger.warn(`  -> Reason: ${error?.message || 'Path not found'}`);
+        logger.warn(`  -> Suggestion: Check metadata relationships or simplify the query`);
       }
     }
 

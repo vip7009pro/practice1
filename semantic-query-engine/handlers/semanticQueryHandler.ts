@@ -264,7 +264,19 @@ export class SemanticQueryHandler {
       validation_result: context.validation_result,
     };
   }
-}
+  /**
+   * Clear embedding cache when metadata changes
+   * Called when tables/columns/relationships are updated
+   */
+  public clearEmbeddingCache(): void {
+    try {
+      this.semanticRetriever.clearEmbeddingCache();
+      logger.info('Embedding cache cleared');
+    } catch (error) {
+      logger.error('Failed to clear embedding cache', error);
+      throw error;
+    }
+  }}
 
 /**
  * Factory function to create handler

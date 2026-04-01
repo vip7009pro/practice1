@@ -2,6 +2,9 @@
  * Configuration Constants
  */
 
+// Direct export for commonly used constant
+export const DEFAULT_TOP_K = 7;
+
 export const SEMANTIC_ENGINE_CONFIG = {
   // Query execution limits
   MAX_ROW_LIMIT: parseInt(process.env.SEMANTIC_MAX_ROW_LIMIT || '10000', 10),
@@ -9,7 +12,7 @@ export const SEMANTIC_ENGINE_CONFIG = {
   
   // Relationship expansion
   MAX_RELATIONSHIP_DEPTH: parseInt(process.env.SEMANTIC_MAX_DEPTH || '2', 10),
-  DEFAULT_TOP_K: parseInt(process.env.SEMANTIC_TOP_K || '7', 10),
+  DEFAULT_TOP_K: parseInt(process.env.SEMANTIC_TOP_K || String(DEFAULT_TOP_K), 10),
   
   // Semantic retrieval
   SIMILARITY_THRESHOLD: 0.5,

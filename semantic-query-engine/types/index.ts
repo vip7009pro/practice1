@@ -291,10 +291,10 @@ export class SemanticEngineError extends Error {
   }
 }
 
-export class ValidationError extends SemanticEngineError {
+export class ValidationException extends SemanticEngineError {
   constructor(message: string, details?: any) {
     super('VALIDATION_ERROR', message, details);
-    this.name = 'ValidationError';
+    this.name = 'ValidationException';
   }
 }
 
