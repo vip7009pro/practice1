@@ -1,357 +1,303 @@
-const { openConnection } = require('../../config/database');
-const { createLogger } = require('../utils/logger');
-const fs = require('fs');
-const path = require('path');
-
-const logger = createLogger('DbSyncService');
-const METADATA_DIR = path.join(__dirname, '../metadata');
-
+"use strict";
+/**
+ * Database Sync Service - Load metadata from actual database
+ * Smart merging to avoid overwriting existing metadata
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const database_1 = require("../../config/database");
+const logger_1 = require("../utils/logger");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const logger = logger_1.createLogger('DbSyncService');
+const METADATA_DIR = path_1.default.join(__dirname, '../metadata');
 class DbSyncService {
-  /**
-   * Load all tables from DB, including MS_Description comment as TABLE_DESCRIPTION.
-   */
-  async loadTablesFromDB() {
-    try {
-      const pool = await openConnection();
-      const query = `
-        SELECT
-          t.TABLE_CATALOG,
-          t.TABLE_SCHEMA,
-          t.TABLE_NAME,
-          t.TABLE_TYPE,
-          CAST(ep.value AS NVARCHAR(500)) AS TABLE_DESCRIPTION
-        FROM INFORMATION_SCHEMA.TABLES t
-        LEFT JOIN sys.extended_properties ep
-          ON ep.major_id = OBJECT_ID(t.TABLE_SCHEMA + '.' + t.TABLE_NAME)
-          AND ep.minor_id = 0
-          AND ep.name = 'MS_Description'
-        WHERE t.TABLE_SCHEMA NOT IN ('sys', 'INFORMATION_SCHEMA', 'pg_catalog')
-        ORDER BY t.TABLE_NAME
+    /**
+     * Load table schema from database
+     */
+    async loadTablesFromDB() {
+        try {
+            const pool = await database_1.openConnection();
+            const query = `
+        SELECT 
+          TABLE_CATALOG,
+          TABLE_SCHEMA,
+          TABLE_NAME,
+          TABLE_TYPE
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA NOT IN ('sys', 'INFORMATION_SCHEMA', 'pg_catalog')
+        ORDER BY TABLE_NAME
       `;
-      const result = await pool.request().query(query);
-      return result.recordset || [];
-    } catch (error) {
-      logger.error('Failed to load tables from DB', error);
-      throw error;
+            const result = await pool.request().query(query);
+            return result.recordset || [];
+        }
+        catch (error) {
+            logger.error('Failed to load tables from DB', error);
+            throw error;
+        }
     }
-  }
-
-  /**
-   * Load columns for a single table, including MS_Description comment.
-   */
-  async loadColumnsFromDB(tableName) {
-    try {
-      const pool = await openConnection();
-      const query = `
-        SELECT
-          c.COLUMN_NAME,
-          c.DATA_TYPE,
-          c.IS_NULLABLE,
-          c.COLUMN_DEFAULT,
-          c.CHARACTER_MAXIMUM_LENGTH,
-          c.NUMERIC_PRECISION,
-          c.NUMERIC_SCALE,
-          CAST(ep.value AS NVARCHAR(500)) AS COLUMN_DESCRIPTION
-        FROM INFORMATION_SCHEMA.COLUMNS c
-        LEFT JOIN sys.extended_properties ep
-          ON ep.major_id = OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME)
-          AND ep.minor_id = COLUMNPROPERTY(
-            OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME),
-            c.COLUMN_NAME, 'ColumnId')
-          AND ep.name = 'MS_Description'
-        WHERE c.TABLE_NAME = @tableName
-        ORDER BY c.ORDINAL_POSITION
+    /**
+     * Load columns from database for a specific table
+     */
+    async loadColumnsFromDB(tableName) {
+        try {
+            const pool = await database_1.openConnection();
+            const query = `
+        SELECT 
+          COLUMN_NAME,
+          DATA_TYPE,
+          IS_NULLABLE,
+          COLUMN_DEFAULT,
+          CHARACTER_MAXIMUM_LENGTH,
+          NUMERIC_PRECISION,
+          NUMERIC_SCALE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = @tableName
+        ORDER BY ORDINAL_POSITION
       `;
-      const result = await pool
-        .request()
-        .input('tableName', tableName)
-        .query(query);
-      return result.recordset || [];
-    } catch (error) {
-      logger.error(`Failed to load columns for table ${tableName}`, error);
-      throw error;
+            const result = await pool
+                .request()
+                .input('tableName', tableName)
+                .query(query);
+            return result.recordset || [];
+        }
+        catch (error) {
+            logger.error(`Failed to load columns for table ${tableName}`, error);
+            throw error;
+        }
     }
-  }
-
-  /**
-   * Bulk-load ALL columns for ALL tables in a single query (avoids N+1 DB calls).
-   * Includes MS_Description as COLUMN_DESCRIPTION.
-   */
-  async loadAllColumnsFromDB() {
-    try {
-      const pool = await openConnection();
-      const query = `
-        SELECT
-          c.TABLE_NAME,
-          c.COLUMN_NAME,
-          c.DATA_TYPE,
-          c.IS_NULLABLE,
-          c.COLUMN_DEFAULT,
-          c.CHARACTER_MAXIMUM_LENGTH,
-          c.NUMERIC_PRECISION,
-          c.NUMERIC_SCALE,
-          CAST(ep.value AS NVARCHAR(500)) AS COLUMN_DESCRIPTION
-        FROM INFORMATION_SCHEMA.COLUMNS c
-        JOIN INFORMATION_SCHEMA.TABLES t
-          ON t.TABLE_NAME   = c.TABLE_NAME
-          AND t.TABLE_SCHEMA = c.TABLE_SCHEMA
-          AND t.TABLE_SCHEMA NOT IN ('sys', 'INFORMATION_SCHEMA', 'pg_catalog')
-        LEFT JOIN sys.extended_properties ep
-          ON ep.major_id = OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME)
-          AND ep.minor_id = COLUMNPROPERTY(
-            OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME),
-            c.COLUMN_NAME, 'ColumnId')
-          AND ep.name = 'MS_Description'
-        ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
-      `;
-      const result = await pool.request().query(query);
-      const rows = result.recordset || [];
-
-      // Group by table name
-      const columnsDict = {};
-      for (const row of rows) {
-        if (!columnsDict[row.TABLE_NAME]) columnsDict[row.TABLE_NAME] = [];
-        columnsDict[row.TABLE_NAME].push(row);
-      }
-      return columnsDict;
-    } catch (error) {
-      logger.error('Failed to load all columns from DB', error);
-      throw error;
+    /**
+     * Load all columns for all tables
+     */
+    async loadAllColumnsFromDB() {
+        try {
+            const tables = await this.loadTablesFromDB();
+            const columnsDict = {};
+            for (const table of tables) {
+                const columns = await this.loadColumnsFromDB(table.TABLE_NAME);
+                columnsDict[table.TABLE_NAME] = columns;
+            }
+            return columnsDict;
+        }
+        catch (error) {
+            logger.error('Failed to load all columns from DB', error);
+            throw error;
+        }
     }
-  }
-
-  /**
-   * Detect FK relationships using sys.foreign_keys + sys.foreign_key_columns.
-   *
-   * FIX: The previous INFORMATION_SCHEMA approach cross-joined KCU1 and KCU2
-   * without matching ORDINAL_POSITION, so each FK column was paired with every
-   * PK column producing N×M duplicates per FK relationship.
-   *
-   * sys.foreign_key_columns always gives exactly one row per FK column pair.
-   */
-  async detectRelationshipsFromDB() {
-    try {
-      const pool = await openConnection();
-      const query = `
-        SELECT
-          OBJECT_NAME(fk.parent_object_id)                        AS source_table,
-          COL_NAME(fk.parent_object_id, fkc.parent_column_id)    AS source_column,
-          OBJECT_NAME(fk.referenced_object_id)                    AS target_table,
-          COL_NAME(fk.referenced_object_id, fkc.referenced_column_id) AS target_column,
-          OBJECT_NAME(fk.object_id)                               AS CONSTRAINT_NAME
-        FROM sys.foreign_keys          AS fk
-        INNER JOIN sys.foreign_key_columns AS fkc
-          ON fk.object_id = fkc.constraint_object_id
+    /**
+     * Detect relationships from foreign keys
+     */
+    async detectRelationshipsFromDB() {
+        try {
+            const pool = await database_1.openConnection();
+            const query = `
+        SELECT 
+          KCU1.TABLE_NAME AS source_table,
+          KCU1.COLUMN_NAME AS source_column,
+          KCU2.TABLE_NAME AS target_table,
+          KCU2.COLUMN_NAME AS target_column,
+          RC.CONSTRAINT_NAME
+        FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS RC
+        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU1
+          ON KCU1.CONSTRAINT_NAME = RC.CONSTRAINT_NAME
+          AND KCU1.TABLE_SCHEMA = RC.CONSTRAINT_SCHEMA
+        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
+          ON KCU2.CONSTRAINT_NAME = RC.UNIQUE_CONSTRAINT_NAME
+          AND KCU2.TABLE_SCHEMA = RC.UNIQUE_CONSTRAINT_SCHEMA
         ORDER BY source_table, source_column
       `;
-      const result = await pool.request().query(query);
-      return result.recordset || [];
-    } catch (error) {
-      logger.error('Failed to detect relationships from DB', error);
-      throw error;
-    }
-  }
-
-  loadExistingMetadata(fileName) {
-    const filePath = path.join(METADATA_DIR, fileName);
-    if (!fs.existsSync(filePath)) {
-      return { tables: [], columns: [], relationships: [] };
-    }
-
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      return JSON.parse(content);
-    } catch (error) {
-      logger.warn(`Failed to parse existing metadata file: ${fileName}`, error);
-      return { tables: [], columns: [], relationships: [] };
-    }
-  }
-
-  async syncMetadataFromDB(forceSync = false) {
-    try {
-      const startTime = Date.now();
-
-      // When forceSync=true, treat existing metadata as empty → full overwrite
-      const existingTables        = forceSync ? { tables: []        } : this.loadExistingMetadata('tables.json');
-      const existingColumns       = forceSync ? { columns: []       } : this.loadExistingMetadata('columns.json');
-      const existingRelationships = forceSync ? { relationships: [] } : this.loadExistingMetadata('relationships.json');
-
-      const dbTables        = await this.loadTablesFromDB();
-      const dbColumnsDict   = await this.loadAllColumnsFromDB();
-      const dbRelationships = await this.detectRelationshipsFromDB();
-
-      const existingTableNames = new Set(
-        (existingTables.tables || []).map((t) => String(t.table_name || '').toLowerCase())
-      );
-      const existingColumnKeys = new Set(
-        (existingColumns.columns || []).map(
-          (c) => `${String(c.table_name || '').toLowerCase()}.${String(c.column_name || '').toLowerCase()}`
-        )
-      );
-      const existingRelKeys = new Set(
-        (existingRelationships.relationships || []).map((r) => this.getRelationshipKey(r))
-      );
-
-      // ── Tables ──────────────────────────────────────────────────────────────
-      const mergedTables = [...(existingTables.tables || [])];
-      for (const dbTable of dbTables) {
-        const tableNameLower = String(dbTable.TABLE_NAME || '').toLowerCase();
-        if (!existingTableNames.has(tableNameLower)) {
-          mergedTables.push({
-            table_name:   dbTable.TABLE_NAME,
-            business_name: dbTable.TABLE_NAME,
-            // Use DB comment (MS_Description) as description when available
-            description:  dbTable.TABLE_DESCRIPTION
-              ? String(dbTable.TABLE_DESCRIPTION).trim()
-              : `Table ${dbTable.TABLE_NAME}`,
-            synonyms:     [],
-            is_fact:      dbTable.TABLE_TYPE === 'VIEW' ? false : true,
-            created_from_db_sync: true,
-          });
-        } else if (forceSync && dbTable.TABLE_DESCRIPTION) {
-          // forceSync: refresh description from DB comment for existing tables
-          const idx = mergedTables.findIndex(
-            (t) => String(t.table_name || '').toLowerCase() === tableNameLower
-          );
-          if (idx >= 0 && !mergedTables[idx].description_custom) {
-            mergedTables[idx].description = String(dbTable.TABLE_DESCRIPTION).trim();
-          }
+            const result = await pool.request().query(query);
+            return result.recordset || [];
         }
-      }
-
-      // ── Columns ─────────────────────────────────────────────────────────────
-      const mergedColumns = [...(existingColumns.columns || [])];
-      for (const [tableName, dbCols] of Object.entries(dbColumnsDict)) {
-        for (const dbCol of dbCols) {
-          const colKey = `${String(tableName).toLowerCase()}.${String(dbCol.COLUMN_NAME || '').toLowerCase()}`;
-          if (!existingColumnKeys.has(colKey)) {
-            const comment = dbCol.COLUMN_DESCRIPTION ? String(dbCol.COLUMN_DESCRIPTION).trim() : null;
-            mergedColumns.push({
-              table_name:    tableName,
-              column_name:   dbCol.COLUMN_NAME,
-              // Use comment as business_name when available (often Vietnamese label in this ERP)
-              business_name: comment || dbCol.COLUMN_NAME,
-              description:   comment || `Column ${dbCol.COLUMN_NAME}`,
-              data_type:     dbCol.DATA_TYPE,
-              nullable:      dbCol.IS_NULLABLE === 'YES',
-              synonyms:      [],
-              is_measure:    ['int', 'decimal', 'bigint', 'float', 'real']
-                .includes(String(dbCol.DATA_TYPE || '').toLowerCase()),
-              format_hint:   this.guessFormat(dbCol.DATA_TYPE),
-              created_from_db_sync: true,
-            });
-          } else if (forceSync && dbCol.COLUMN_DESCRIPTION) {
-            // forceSync: refresh description for existing columns
-            const idx = mergedColumns.findIndex(
-              (c) =>
-                String(c.table_name  || '').toLowerCase() === String(tableName).toLowerCase() &&
-                String(c.column_name || '').toLowerCase() === String(dbCol.COLUMN_NAME || '').toLowerCase()
-            );
-            if (idx >= 0 && !mergedColumns[idx].description_custom) {
-              const comment = String(dbCol.COLUMN_DESCRIPTION).trim();
-              mergedColumns[idx].description   = comment;
-              if (!mergedColumns[idx].business_name_custom) {
-                mergedColumns[idx].business_name = comment;
-              }
+        catch (error) {
+            logger.error('Failed to detect relationships from DB', error);
+            throw error;
+        }
+    }
+    /**
+     * Load existing metadata from JSON files
+     */
+    loadExistingMetadata(fileName) {
+        const filePath = path_1.default.join(METADATA_DIR, fileName);
+        if (!fs_1.default.existsSync(filePath)) {
+            return { tables: [], columns: [], relationships: [] };
+        }
+        try {
+            const content = fs_1.default.readFileSync(filePath, 'utf-8');
+            return JSON.parse(content);
+        }
+        catch (error) {
+            logger.warn(`Failed to parse existing metadata file: ${fileName}`, error);
+            return { tables: [], columns: [], relationships: [] };
+        }
+    }
+    /**
+     * Smart merge: sync DB schema with existing metadata
+     * Never overwrites existing metadata, only adds new items
+     */
+    async syncMetadataFromDB(forceSync) {
+        try {
+            const startTime = Date.now();
+            // Load existing metadata
+            const existingTables = forceSync ? { tables: [] } : this.loadExistingMetadata('tables.json');
+            const existingColumns = forceSync ? { columns: [] } : this.loadExistingMetadata('columns.json');
+            const existingRelationships = forceSync ? { relationships: [] } : this.loadExistingMetadata('relationships.json');
+            // Load from DB
+            const dbTables = await this.loadTablesFromDB();
+            const dbColumnsDict = await this.loadAllColumnsFromDB();
+            const dbRelationships = await this.detectRelationshipsFromDB();
+            // Create lookup sets for existing items
+            const existingTableNames = new Set(existingTables.tables?.map((t) => t.table_name.toLowerCase()) || []);
+            const existingColumnKeys = new Set(existingColumns.columns?.map((c) => `${c.table_name.toLowerCase()}.${c.column_name.toLowerCase()}`) || []);
+            const existingRelKeys = new Set(existingRelationships.relationships?.map((r) => this.getRelationshipKey(r)) || []);
+            // Merge tables
+            const mergedTables = [...(existingTables.tables || [])];
+            for (const dbTable of dbTables) {
+                if (!existingTableNames.has(dbTable.TABLE_NAME.toLowerCase())) {
+                    mergedTables.push({
+                        table_name: dbTable.TABLE_NAME,
+                        business_name: dbTable.TABLE_NAME,
+                        description: `Table ${dbTable.TABLE_NAME}`,
+                        synonyms: [],
+                        is_fact: dbTable.TABLE_TYPE === 'VIEW' ? false : true,
+                        created_from_db_sync: true,
+                    });
+                }
             }
-          }
+            // Merge columns
+            const mergedColumns = [...(existingColumns.columns || [])];
+            for (const [tableName, dbCols] of Object.entries(dbColumnsDict)) {
+                for (const dbCol of dbCols) {
+                    const colKey = `${tableName.toLowerCase()}.${dbCol.COLUMN_NAME.toLowerCase()}`;
+                    if (!existingColumnKeys.has(colKey)) {
+                        mergedColumns.push({
+                            table_name: tableName,
+                            column_name: dbCol.COLUMN_NAME,
+                            business_name: dbCol.COLUMN_NAME,
+                            description: `Column ${dbCol.COLUMN_NAME}`,
+                            data_type: dbCol.DATA_TYPE,
+                            nullable: dbCol.IS_NULLABLE === 'YES',
+                            synonyms: [],
+                            is_measure: ['int', 'decimal', 'bigint', 'float', 'real'].includes(dbCol.DATA_TYPE.toLowerCase()),
+                            format_hint: this.guessFormat(dbCol.DATA_TYPE),
+                            created_from_db_sync: true,
+                        });
+                    }
+                }
+            }
+            // Merge relationships
+            const mergedRelationships = [...(existingRelationships.relationships || [])];
+            for (const dbRel of dbRelationships) {
+                const relKey = this.getRelationshipKey({
+                    source_table: dbRel.source_table,
+                    source_column: dbRel.source_column,
+                    target_table: dbRel.target_table,
+                    target_column: dbRel.target_column,
+                });
+                if (!existingRelKeys.has(relKey)) {
+                    mergedRelationships.push({
+                        name: `${dbRel.source_table}_to_${dbRel.target_table}`,
+                        source_table: dbRel.source_table,
+                        source_column: dbRel.source_column,
+                        target_table: dbRel.target_table,
+                        target_column: dbRel.target_column,
+                        cardinality: 'N:1',
+                        business_meaning: `${dbRel.source_table} references ${dbRel.target_table}`,
+                        is_hidden: false,
+                        created_from_db_sync: true,
+                    });
+                }
+            }
+            // Generate sync report
+            const syncReport = {
+                timestamp: new Date().toISOString(),
+                duration_ms: Date.now() - startTime,
+                tables: {
+                    existing: (existingTables.tables || []).length,
+                    from_db: dbTables.length,
+                    new_added: mergedTables.length - (existingTables.tables || []).length,
+                    total: mergedTables.length,
+                },
+                columns: {
+                    existing: (existingColumns.columns || []).length,
+                    from_db: Object.values(dbColumnsDict).flat().length,
+                    new_added: mergedColumns.length - (existingColumns.columns || []).length,
+                    total: mergedColumns.length,
+                },
+                relationships: {
+                    existing: (existingRelationships.relationships || []).length,
+                    from_db: dbRelationships.length,
+                    new_added: mergedRelationships.length - (existingRelationships.relationships || []).length,
+                    total: mergedRelationships.length,
+                },
+            };
+            logger.info('Metadata sync completed', syncReport);
+            return {
+                tables: mergedTables,
+                columns: mergedColumns,
+                relationships: mergedRelationships,
+                syncReport,
+            };
         }
-      }
-
-      // ── Relationships ────────────────────────────────────────────────────────
-      const mergedRelationships = [...(existingRelationships.relationships || [])];
-      for (const dbRel of dbRelationships) {
-        const relKey = this.getRelationshipKey({
-          source_table:  dbRel.source_table,
-          source_column: dbRel.source_column,
-          target_table:  dbRel.target_table,
-          target_column: dbRel.target_column,
-        });
-        if (!existingRelKeys.has(relKey)) {
-          existingRelKeys.add(relKey); // prevent double-add within same sync batch
-          mergedRelationships.push({
-            // Include source_column in name → guarantees unique names per FK column pair
-            name:             `${dbRel.source_table}_${dbRel.source_column}_to_${dbRel.target_table}`,
-            source_table:     dbRel.source_table,
-            source_column:    dbRel.source_column,
-            target_table:     dbRel.target_table,
-            target_column:    dbRel.target_column,
-            cardinality:      'N:1',
-            business_meaning: `${dbRel.source_table}.${dbRel.source_column} \u2192 ${dbRel.target_table}.${dbRel.target_column}`,
-            is_hidden:        false,
-            created_from_db_sync: true,
-          });
+        catch (error) {
+            logger.error('Failed to sync metadata from DB', error);
+            throw error;
         }
-      }
-
-      const syncReport = {
-        timestamp:    new Date().toISOString(),
-        duration_ms:  Date.now() - startTime,
-        forceSync,
-        tables: {
-          existing:  forceSync ? 0 : (existingTables.tables || []).length,
-          from_db:   dbTables.length,
-          new_added: mergedTables.length - (forceSync ? 0 : (existingTables.tables || []).length),
-          total:     mergedTables.length,
-        },
-        columns: {
-          existing:  forceSync ? 0 : (existingColumns.columns || []).length,
-          from_db:   Object.values(dbColumnsDict).reduce((s, c) => s + c.length, 0),
-          new_added: mergedColumns.length - (forceSync ? 0 : (existingColumns.columns || []).length),
-          total:     mergedColumns.length,
-        },
-        relationships: {
-          existing:  forceSync ? 0 : (existingRelationships.relationships || []).length,
-          from_db:   dbRelationships.length,
-          new_added: mergedRelationships.length - (forceSync ? 0 : (existingRelationships.relationships || []).length),
-          total:     mergedRelationships.length,
-        },
-      };
-
-      return {
-        tables:        mergedTables,
-        columns:       mergedColumns,
-        relationships: mergedRelationships,
-        syncReport,
-      };
-    } catch (error) {
-      logger.error('Failed to sync metadata from database', error);
-      throw error;
     }
-  }
-
-  async saveMetadata(tables, columns, relationships) {
-    try {
-      if (!fs.existsSync(METADATA_DIR)) {
-        fs.mkdirSync(METADATA_DIR, { recursive: true });
-      }
-      fs.writeFileSync(path.join(METADATA_DIR, 'tables.json'),        JSON.stringify({ tables },        null, 2));
-      fs.writeFileSync(path.join(METADATA_DIR, 'columns.json'),       JSON.stringify({ columns },       null, 2));
-      fs.writeFileSync(path.join(METADATA_DIR, 'relationships.json'), JSON.stringify({ relationships }, null, 2));
-      return true;
-    } catch (error) {
-      logger.error('Failed to save metadata', error);
-      throw error;
+    /**
+     * Save synced metadata to JSON files
+     */
+    async saveMetadata(tables, columns, relationships) {
+        try {
+            // Ensure metadata directory exists
+            if (!fs_1.default.existsSync(METADATA_DIR)) {
+                fs_1.default.mkdirSync(METADATA_DIR, { recursive: true });
+            }
+            // Save tables
+            const tablesPath = path_1.default.join(METADATA_DIR, 'tables.json');
+            fs_1.default.writeFileSync(tablesPath, JSON.stringify({ tables }, null, 2));
+            // Save columns
+            const columnsPath = path_1.default.join(METADATA_DIR, 'columns.json');
+            fs_1.default.writeFileSync(columnsPath, JSON.stringify({ columns }, null, 2));
+            // Save relationships
+            const relationshipsPath = path_1.default.join(METADATA_DIR, 'relationships.json');
+            fs_1.default.writeFileSync(relationshipsPath, JSON.stringify({ relationships }, null, 2));
+            logger.info('Metadata saved successfully', {
+                tables: tables.length,
+                columns: columns.length,
+                relationships: relationships.length,
+            });
+        }
+        catch (error) {
+            logger.error('Failed to save metadata', error);
+            throw error;
+        }
     }
-  }
-
-  guessFormat(dataType) {
-    const dt = String(dataType || '').toLowerCase();
-    if (['datetime', 'smalldatetime', 'date', 'time', 'datetime2'].includes(dt))            return 'date';
-    if (['int', 'bigint', 'smallint', 'tinyint', 'decimal', 'numeric',
-         'float', 'real', 'money', 'smallmoney'].includes(dt))                               return 'number';
-    if (['varchar', 'nvarchar', 'char', 'nchar', 'text', 'ntext'].includes(dt))             return 'string';
-    return 'string';
-  }
-
-  getRelationshipKey(rel) {
-    // Support both new schema (source_table/target_table) and old schema (from_table/to_table)
-    const source_table  = String(rel.source_table  || rel.from_table  || '').toLowerCase();
-    const target_table  = String(rel.target_table  || rel.to_table    || '').toLowerCase();
-    const source_column = String(rel.source_column || rel.from_column || '').toLowerCase();
-    const target_column = String(rel.target_column || rel.to_column   || '').toLowerCase();
-    return `${source_table}.${source_column}:${target_table}.${target_column}`;
-  }
+    /**
+     * Helper: Generate unique key for relationship
+     */
+    getRelationshipKey(rel) {
+        return `${rel.source_table.toLowerCase()}.${rel.source_column.toLowerCase()}->${rel.target_table.toLowerCase()}.${rel.target_column.toLowerCase()}`;
+    }
+    /**
+     * Helper: Guess column format from data type
+     */
+    guessFormat(dataType) {
+        const type = dataType.toLowerCase();
+        if (type.includes('int'))
+            return 'number';
+        if (type.includes('decimal') || type.includes('float') || type.includes('real'))
+            return 'decimal';
+        if (type.includes('date') || type.includes('time'))
+            return 'datetime';
+        if (type.includes('bit'))
+            return 'boolean';
+        if (type.includes('char') || type.includes('text'))
+            return 'text';
+        return 'text';
+    }
 }
-
-module.exports = { DbSyncService };
+exports.DbSyncService = DbSyncService;
+exports.dbSyncService = new DbSyncService();

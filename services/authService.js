@@ -2,6 +2,19 @@ const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { queryDB, asyncQuery, queryDB_New } = require("../config/database");
 const { publicKey } = require("../config/env");
+
+const getFirstLoginAttemptRow = (result) => {
+  if (result?.tk_status !== "OK") {
+    return null;
+  }
+
+  if (!Array.isArray(result.data) || result.data.length === 0) {
+    return null;
+  }
+
+  return result.data[0];
+};
+
 exports.login = async (req, res, DATA) => {
   const { user, pass, ctr_cd } = req.body || DATA;
   let username = user;
@@ -15,35 +28,38 @@ exports.login = async (req, res, DATA) => {
     CTR_CD: ctr_cd,
     EMPL_NO: username,
   });
-  if (
-    resultCheckLoginAttempt.tk_status === "OK" &&
-    resultCheckLoginAttempt.data.length > 0
-  ) {
-    console.log(
-      "login attempt: " + resultCheckLoginAttempt.data[0].LOGIN_ATTEMPT
+  const loginAttemptRow = getFirstLoginAttemptRow(resultCheckLoginAttempt);
+  if (!loginAttemptRow) {
+    res.send({
+      tk_status: "ng",
+      message: resultCheckLoginAttempt.message || "Không tìm thấy tài khoản",
+    });
+    return;
+  }
+  console.log(
+    "login attempt: " + loginAttemptRow.LOGIN_ATTEMPT
+  );
+  if (loginAttemptRow.LOGIN_ATTEMPT >= maxLoginAttempt) {
+    let lastOnlineDateTime = moment(
+      moment.utc(loginAttemptRow.ONLINE_DATETIME)
     );
-    if (resultCheckLoginAttempt.data[0].LOGIN_ATTEMPT >= maxLoginAttempt) {
-      let lastOnlineDateTime = moment(
-        moment.utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
-      );
-      let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
-      let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
-      if (diffMinutes < 5) {
-        loginResult = false;
-      } else {
-        await queryDB_New(queryResetLoginAttempt, {
-          CTR_CD: ctr_cd,
-          EMPL_NO: username,
-        });
-        loginResult = true;
-      }
+    let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
+    let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
+    if (diffMinutes < 5) {
+      loginResult = false;
     } else {
-      await queryDB_New(queryIncreaseLoginAttempt, {
+      await queryDB_New(queryResetLoginAttempt, {
         CTR_CD: ctr_cd,
         EMPL_NO: username,
       });
       loginResult = true;
     }
+  } else {
+    await queryDB_New(queryIncreaseLoginAttempt, {
+      CTR_CD: ctr_cd,
+      EMPL_NO: username,
+    });
+    loginResult = true;
   }
   let anhHung = false;  
   if(user?.toUpperCase() === 'NHU1903') {
@@ -149,7 +165,7 @@ exports.login = async (req, res, DATA) => {
     }
   } else {
     let tryAgainTime = moment
-      .utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
+      .utc(loginAttemptRow.ONLINE_DATETIME)
       .add(5, "minutes")
       .format("YYYY-MM-DD HH:mm:ss");
     res.send({
@@ -174,38 +190,41 @@ exports.loginVendors = async (req, res, DATA) => {
     CTR_CD: ctr_cd,
     EMPL_NO: username,
   });
-  if (
-    resultCheckLoginAttempt.tk_status === "OK" &&
-    resultCheckLoginAttempt.data.length > 0
-  ) {
-    console.log(
-      "login attempt: " + resultCheckLoginAttempt.data[0].LOGIN_ATTEMPT
+  const loginAttemptRow = getFirstLoginAttemptRow(resultCheckLoginAttempt);
+  if (!loginAttemptRow) {
+    res.send({
+      tk_status: "ng",
+      message: resultCheckLoginAttempt.message || "Không tìm thấy tài khoản",
+    });
+    return;
+  }
+  console.log(
+    "login attempt: " + loginAttemptRow.LOGIN_ATTEMPT
+  );
+  if (loginAttemptRow.LOGIN_ATTEMPT >= maxLoginAttempt) {
+    let lastOnlineDateTime = moment(
+      moment.utc(loginAttemptRow.ONLINE_DATETIME)
     );
-    if (resultCheckLoginAttempt.data[0].LOGIN_ATTEMPT >= maxLoginAttempt) {
-      let lastOnlineDateTime = moment(
-        moment.utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
-      );
-      console.log("lastOnlineDateTime", lastOnlineDateTime);
-      let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
-      console.log("now", now);
-      let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
-      console.log("diffMinutes", diffMinutes);
-      if (diffMinutes < 5) {
-        loginResult = false;
-      } else {
-        await queryDB_New(queryResetLoginAttempt, {
-          CTR_CD: ctr_cd,
-          EMPL_NO: username,
-        });
-        loginResult = true;
-      }
+    console.log("lastOnlineDateTime", lastOnlineDateTime);
+    let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
+    console.log("now", now);
+    let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
+    console.log("diffMinutes", diffMinutes);
+    if (diffMinutes < 5) {
+      loginResult = false;
     } else {
-      await queryDB_New(queryIncreaseLoginAttempt, {
+      await queryDB_New(queryResetLoginAttempt, {
         CTR_CD: ctr_cd,
         EMPL_NO: username,
       });
       loginResult = true;
     }
+  } else {
+    await queryDB_New(queryIncreaseLoginAttempt, {
+      CTR_CD: ctr_cd,
+      EMPL_NO: username,
+    });
+    loginResult = true;
   }
   if (loginResult) {
     const query = `
@@ -295,7 +314,7 @@ exports.loginVendors = async (req, res, DATA) => {
     }
   } else {
     let tryAgainTime = moment
-      .utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
+      .utc(loginAttemptRow.ONLINE_DATETIME)
       .add(5, "minutes")
       .format("YYYY-MM-DD HH:mm:ss");
     res.send({
@@ -321,38 +340,41 @@ exports.login2 = async (req, res, DATA) => {
         CTR_CD: DATA.CTR_CD,
         EMPL_NO: username,
       });
-      if (
-        resultCheckLoginAttempt.tk_status === "OK" &&
-        resultCheckLoginAttempt.data.length > 0
-      ) {
-        console.log(
-          "login attempt: " + resultCheckLoginAttempt.data[0].LOGIN_ATTEMPT
+      const loginAttemptRow = getFirstLoginAttemptRow(resultCheckLoginAttempt);
+      if (!loginAttemptRow) {
+        res.send({
+          tk_status: "ng",
+          message: resultCheckLoginAttempt.message || "Không tìm thấy tài khoản",
+        });
+        return;
+      }
+      console.log(
+        "login attempt: " + loginAttemptRow.LOGIN_ATTEMPT
+      );
+      if (loginAttemptRow.LOGIN_ATTEMPT >= maxLoginAttempt) {
+        let lastOnlineDateTime = moment(
+          moment.utc(loginAttemptRow.ONLINE_DATETIME)
         );
-        if (resultCheckLoginAttempt.data[0].LOGIN_ATTEMPT >= maxLoginAttempt) {
-          let lastOnlineDateTime = moment(
-            moment.utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
-          );
-          console.log("lastOnlineDateTime", lastOnlineDateTime);
-          let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
-          console.log("now", now);
-          let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
-          console.log("diffMinutes", diffMinutes);
-          if (diffMinutes < 5) {
-            loginResult = false;
-          } else {
-            await queryDB_New(queryResetLoginAttempt, {
-              CTR_CD: DATA.CTR_CD,
-              EMPL_NO: username,
-            });
-            loginResult = true;
-          }
+        console.log("lastOnlineDateTime", lastOnlineDateTime);
+        let now = moment.utc(moment().format("YYYY-MM-DD HH:mm:ss"));
+        console.log("now", now);
+        let diffMinutes = now.diff(lastOnlineDateTime, "minutes");
+        console.log("diffMinutes", diffMinutes);
+        if (diffMinutes < 5) {
+          loginResult = false;
         } else {
-          await queryDB_New(queryIncreaseLoginAttempt, {
+          await queryDB_New(queryResetLoginAttempt, {
             CTR_CD: DATA.CTR_CD,
             EMPL_NO: username,
           });
           loginResult = true;
         }
+      } else {
+        await queryDB_New(queryIncreaseLoginAttempt, {
+          CTR_CD: DATA.CTR_CD,
+          EMPL_NO: username,
+        });
+        loginResult = true;
       }
       let anhHung = false;
       if(username.toUpperCase() === "NHU1903"){
@@ -459,7 +481,7 @@ exports.login2 = async (req, res, DATA) => {
         }
       } else {
         let tryAgainTime = moment
-          .utc(resultCheckLoginAttempt.data[0].ONLINE_DATETIME)
+          .utc(loginAttemptRow.ONLINE_DATETIME)
           .add(5, "minutes")
           .format("YYYY-MM-DD HH:mm:ss");
         res.send({

@@ -1,18 +1,16 @@
 /**
  * Embedding Service - Generate and cache text embeddings
- * Uses @xenova/transformers for multilingual embeddings
  */
 
-import { env, pipeline } from '@xenova/transformers';
+import crypto from 'crypto';
 import { createLogger } from '../utils/logger';
+import { normalizeText, tokenize } from '../utils/helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const logger = createLogger('EmbeddingService');
+type EmbeddingProvider = 'local' | 'xenova';
 
-// Set custom models path to reduce downloads
-env.allowRemoteModels = true;
-env.allowLocalModels = true;
+const logger = createLogger('EmbeddingService');
 
 export interface Embedding {
   text: string;
@@ -31,8 +29,13 @@ export class EmbeddingService {
   private initialized = false;
   private cacheUpdateCounter = 0;
   private readonly CACHE_SAVE_INTERVAL = 10; // Save after every 10 new embeddings
+  private readonly embeddingDimension = 256;
+  private provider: EmbeddingProvider;
 
   constructor(cacheDir: string = './semantic-query-engine/.embeddings') {
+    this.provider = String(process.env.SEMANTIC_EMBEDDING_PROVIDER || 'local').toLowerCase() === 'xenova'
+      ? 'xenova'
+      : 'local';
     this.cacheFile = path.join(cacheDir, 'embeddings-cache.json');
     this.loadCache();
   }
@@ -43,11 +46,18 @@ export class EmbeddingService {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
+    if (this.provider !== 'xenova') {
+      this.initialized = true;
+      return;
+    }
+
     try {
       logger.info('Initializing embedding model...');
-      // Use multilingual model that supports English + Vietnamese
-      // intfloat/multilingual-e5-small is fast and optimal for this use case
-      this.embeddingModel = await pipeline(
+      const moduleName = ['@xenova', 'transformers'].join('/');
+      const transformers = eval('require')(moduleName);
+      transformers.env.allowRemoteModels = true;
+      transformers.env.allowLocalModels = true;
+      this.embeddingModel = await transformers.pipeline(
         'feature-extraction',
         'Xenova/multilingual-e5-small',
       );
@@ -57,8 +67,10 @@ export class EmbeddingService {
       // Save cache after initialization
       await this.saveCache();
     } catch (error) {
-      logger.error('Failed to initialize embedding model', error);
-      throw error;
+      logger.warn('Failed to initialize Xenova embeddings, falling back to local embeddings', error);
+      this.embeddingModel = null;
+      this.provider = 'local';
+      this.initialized = true;
     }
   }
 
@@ -73,86 +85,142 @@ export class EmbeddingService {
       return this.cache[normalized];
     }
 
-    // Initialize model if not done yet
-    if (!this.initialized) {
-      await this.initialize();
-    }
-
-    try {
-      // Generate embedding
-      const embedding = await this.embeddingModel(text, {
-        pooling: 'mean',
-        normalize: true,
-      });
-
-      // Debug: log embedding structure
-      logger.info(`Embedding result type: ${typeof embedding}, keys: ${Object.keys(embedding || {}).join(', ')}`, {
-        hasData: 'data' in (embedding || {}),
-        isArray: Array.isArray(embedding),
-        constructor: embedding?.constructor?.name,
-      });
-
-      // Extract vector from various possible formats
-      let vector: number[];
-      
-      // Case 1: Direct tensor with data property
-      if (embedding && typeof embedding.data !== 'undefined') {
-        logger.info('Using embedding.data format');
-        vector = Array.from(embedding.data);
-      }
-      // Case 2: Direct array
-      else if (Array.isArray(embedding)) {
-        logger.info('Using direct array format');
-        vector = Array.from(embedding);
-      }
-      // Case 3: Tensor object - need to convert to array
-      else if (embedding && typeof embedding === 'object') {
-        logger.info('Using tensor object format');
-        // Try to convert tensor to array using tolist() or similar
-        if (typeof (embedding as any).tolist === 'function') {
-          logger.info('Tensor has tolist() method');
-          vector = (embedding as any).tolist();
-        } else if (typeof (embedding as any).toArray === 'function') {
-          logger.info('Tensor has toArray() method');
-          vector = (embedding as any).toArray();
-        } else if ((embedding as any).data && Array.isArray((embedding as any).data)) {
-          logger.info('Tensor.data is array');
-          vector = (embedding as any).data;
-        } else {
-          logger.info('Fallback: spreading object values');
-          // Fallback: try spreading or converting
-          vector = Object.values(embedding).flat() as number[];
-        }
-      } else {
-        throw new Error(`Invalid embedding format: expected array or tensor, got ${typeof embedding}`);
-      }
-
-      // Validate vector
-      if (!Array.isArray(vector) || vector.length === 0) {
-        throw new Error(`Invalid vector: expected non-empty array, got length=${Array.isArray(vector) ? vector.length : 'N/A'}`);
-      }
-
-      logger.info(`Successfully embedded text, vector size: ${vector.length}`, {
-        textLength: text.length,
-        vectorSize: vector.length,
-        sample: vector.slice(0, 3),
-      });
-
-      // Cache it
+    if (this.provider === 'local') {
+      const vector = this.embedLocally(text);
       this.cache[normalized] = vector;
-
-      // Save cache periodically
       this.cacheUpdateCounter++;
       if (this.cacheUpdateCounter >= this.CACHE_SAVE_INTERVAL) {
         await this.saveCache();
         this.cacheUpdateCounter = 0;
       }
+      return vector;
+    }
 
+    // Initialize model if not done yet
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    if (this.provider !== 'xenova' || !this.embeddingModel) {
+      const vector = this.embedLocally(text);
+      this.cache[normalized] = vector;
+      this.cacheUpdateCounter++;
+      if (this.cacheUpdateCounter >= this.CACHE_SAVE_INTERVAL) {
+        await this.saveCache();
+        this.cacheUpdateCounter = 0;
+      }
+      return vector;
+    }
+
+    try {
+      const vector = await this.embedWithXenova(text);
+      this.cache[normalized] = vector;
+      this.cacheUpdateCounter++;
+      if (this.cacheUpdateCounter >= this.CACHE_SAVE_INTERVAL) {
+        await this.saveCache();
+        this.cacheUpdateCounter = 0;
+      }
       return vector;
     } catch (error) {
-      logger.error(`Failed to embed text: "${text}"`, error);
-      throw error;
+      logger.warn(`Failed to embed text with Xenova, falling back to local provider: "${text}"`, error);
+      this.provider = 'local';
+      this.embeddingModel = null;
+      const vector = this.embedLocally(text);
+      this.cache[normalized] = vector;
+      this.cacheUpdateCounter++;
+      if (this.cacheUpdateCounter >= this.CACHE_SAVE_INTERVAL) {
+        await this.saveCache();
+        this.cacheUpdateCounter = 0;
+      }
+      return vector;
     }
+  }
+
+  private async embedWithXenova(text: string): Promise<number[]> {
+    const embedding = await this.embeddingModel(text, {
+      pooling: 'mean',
+      normalize: true,
+    });
+
+    let vector: number[];
+
+    if (embedding && typeof embedding.data !== 'undefined') {
+      vector = Array.from(embedding.data);
+    } else if (Array.isArray(embedding)) {
+      vector = Array.from(embedding);
+    } else if (embedding && typeof embedding === 'object') {
+      if (typeof (embedding as any).tolist === 'function') {
+        vector = (embedding as any).tolist();
+      } else if (typeof (embedding as any).toArray === 'function') {
+        vector = (embedding as any).toArray();
+      } else if ((embedding as any).data && Array.isArray((embedding as any).data)) {
+        vector = (embedding as any).data;
+      } else {
+        vector = Object.values(embedding).flat() as number[];
+      }
+    } else {
+      throw new Error(`Invalid embedding format: expected array or tensor, got ${typeof embedding}`);
+    }
+
+    if (!Array.isArray(vector) || vector.length === 0) {
+      throw new Error(`Invalid vector: expected non-empty array, got length=${Array.isArray(vector) ? vector.length : 'N/A'}`);
+    }
+
+    logger.info(`Successfully embedded text, vector size: ${vector.length}`, {
+      textLength: text.length,
+      vectorSize: vector.length,
+      sample: vector.slice(0, 3),
+      provider: 'xenova',
+    });
+
+    return vector;
+  }
+
+  private embedLocally(text: string): number[] {
+    const normalizedText = normalizeText(text);
+    const tokens = tokenize(normalizedText);
+    const features = tokens.length > 0 ? tokens : (normalizedText ? [normalizedText] : ['']);
+    const vector = new Array(this.embeddingDimension).fill(0);
+
+    for (const feature of features) {
+      const digest = crypto.createHash('sha256').update(feature).digest();
+
+      for (let slot = 0; slot < 4; slot++) {
+        const offset = slot * 4;
+        const rawIndex = digest.readUInt32LE(offset);
+        const index = rawIndex % this.embeddingDimension;
+        const sign = digest[16 + slot] % 2 === 0 ? 1 : -1;
+        const weight = 1 + (digest[20 + slot] / 255);
+        vector[index] += sign * weight;
+      }
+    }
+
+    const compactText = normalizedText.replace(/\s+/g, '');
+    for (let i = 0; i + 2 < compactText.length; i++) {
+      const trigram = compactText.slice(i, i + 3);
+      const digest = crypto.createHash('sha256').update(`gram:${trigram}`).digest();
+      const index = digest.readUInt32LE(0) % this.embeddingDimension;
+      const sign = digest[4] % 2 === 0 ? 1 : -1;
+      vector[index] += sign * 0.5;
+    }
+
+    for (let i = 0; i + 1 < tokens.length; i++) {
+      const tokenPair = `${tokens[i]}::${tokens[i + 1]}`;
+      const digest = crypto.createHash('sha256').update(tokenPair).digest();
+      const index = digest.readUInt32LE(0) % this.embeddingDimension;
+      vector[index] += 0.75;
+    }
+
+    return this.normalizeVector(vector);
+  }
+
+  private normalizeVector(vector: number[]): number[] {
+    const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + (value * value), 0));
+    if (magnitude === 0) {
+      return vector;
+    }
+
+    return vector.map((value) => value / magnitude);
   }
 
   /**

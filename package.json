@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "pm2 start ecosystem.config.js",
     "stop": "pm2 stop index",
-    "build": " pkg index.js --target  node18-win-x64 -o outbinary/updatebe.exe"
+    "build:semantic-engine": "node scripts/build-semantic-engine.js",
+    "build": "npm run build:semantic-engine && pkg --no-bytecode --public --public-packages \"*\" index.js --target node18-win-x64 -o outbinary/updatebe.exe"
   },
   "author": "Hung Nguyen Page",
   "license": "ISC",
