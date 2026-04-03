@@ -21,6 +21,12 @@ const {loadDataSX, nhapkhoao, resetKhoSX_IQC1, resetKhoSX_IQC2, loadtiledat, get
 const {check_PLAN_ID_KHO_AO, checkPLANID_O300, checkPLANID_O301, getO300_LAST_OUT_NO, getP400, insertO300, getO300_ROW, deleteM_CODE_O301, checkM_CODE_PLAN_ID_Exist_in_O301, insertO301, updatePlanQLSX, updatePlanOrder, getqlsxplan2, getqlsxplan2_New, deleteMCODEExistIN_O302, updateLIEUQL_SX_M140, deleteM_CODE_ZTB_QLSXCHITHI, updateChiThi, insertChiThi, traYCSXDataFull_QLSX_New, updateDKXLPLAN, updateXUATLIEUCHINH_PLAN, update_XUAT_DAO_FILM_PLAN, updateO301, checkPLANID_O302, neededSXQtyByYCSX, getSystemDateTime, deleteDMYCSX, deleteDMYCSX2, checkTonTaiXuatKhoSub, nhapkhosubao, tralichsutemlotsx, loadDMSX, updateO301_OUT_CFM_QTY_FROM_O302, updateUSE_YN_I222_RETURN_NVL, addProdProcessDataQLSX, updateProdProcessDataQLSX, checkProcessExist, isM_LOT_NO_in_O302, getI221Lastest_IN_NO, getI222Lastest_M_LOT_NO, insert_I221, insert_I222, loadBTPAuto2, loadBTPSummaryAuto2, updateKHSXDAIHAN, deleteNotExistKHSXDAIHAN, cancelProductionLot, traDataPlanLossSX, datasxdailylosstrend, datasxweeklylosstrend, datasxmonthlylosstrend, datasxyearlylosstrend, dailyEQEffTrending, weeklyEQEffTrending, monthlyEQEffTrending, yearlyEQEffTrending, sxdailyachivementtrending, sxweeklyachivementtrending, sxmonthlyachivementtrending, sxyearlyachivementtrending, sxLossTimeByReason, sxLossTimeByEmpl, loadBaoCaoTheoRoll, trasxlosstrendingdata, dailysxlosstrend, weeklysxlosstrend, monthlysxlosstrend, yearlysxlosstrend, loadquanlydaofilm, lichsuxuatdaofilm, machinecounting2, dailysxdata, sxweeklytrenddata, sxmonthlytrenddata, machineTimeEfficiency, sxachivementdata, tinhhinhchotbaocaosx, materialLotStatus, checkRollLieuBienMat, checkM_CODE_PLAN_ID_Exist, checkRollLieuBienMatDaily, loadFullRollData, tinhluongP3, update_M_PRICE_P500, checkProcessLotNoInfo, updateLOT_SX_STATUS, checkM_LOT_NO_QTY_P500, loadSX_KPI_NV_DATA_Daily } = require("./sanxuatService");
 const { insertData_Amazon_SuperFast } = require("./amazonServices");
 const { gemini_prompt } = require("./aiServices");
+const {
+  translation_dictionary_list,
+  translation_dictionary_upsert,
+  translation_dictionary_delete,
+  translation_dictionary_replace_all,
+} = require('./translationDictionaryService');
 
 const { subscription_status, subscription_verify } = require("./subscriptionService");
 
@@ -35,6 +41,10 @@ const { rebuild_schema_index } = require('./schemaAdminService');
 
 const commandHandlers = {
   gemini_prompt,
+  translation_dictionary_list,
+  translation_dictionary_upsert,
+  translation_dictionary_delete,
+  translation_dictionary_replace_all,
   subscription_status,
   subscription_verify,
   get_column_comments,
