@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-03T13:10:44.260Z",
+  "updatedAt": "2026-04-04T01:00:45.926Z",
   "entries": [
     {
       "id": "1775221844246_ba1d383a6736f",
@@ -15,6 +15,20 @@
       "enabled": true,
       "createdAt": "2026-04-03T13:10:44.259Z",
       "updatedAt": "2026-04-03T13:10:44.259Z"
+    },
+    {
+      "id": "1775264445889_28d2bb9e79301",
+      "terms": {
+        "vi": "Nhật ký kiểm tra ngoại quan",
+        "ko": "외관 검사일보",
+        "en": "Visual inspection test report",
+        "cn": ""
+      },
+      "aliases": [],
+      "note": "",
+      "enabled": true,
+      "createdAt": "2026-04-04T01:00:45.925Z",
+      "updatedAt": "2026-04-04T01:00:45.925Z"
     }
   ]
 }
