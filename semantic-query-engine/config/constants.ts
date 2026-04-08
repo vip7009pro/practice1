@@ -2,6 +2,9 @@
  * Configuration Constants
  */
 
+import os from 'os';
+import path from 'path';
+
 // Direct export for commonly used constant
 export const DEFAULT_TOP_K = 7;
 
@@ -79,7 +82,8 @@ export const LLM_CONFIG = {
 
 export const METADATA_CONFIG = {
   // Metadata directory
-  METADATA_DIR: String(process.env.SEMANTIC_METADATA_DIR || './semantic-query-engine/metadata'),
+  METADATA_DIR: resolveSemanticMetadataDir(),
+  BUNDLED_METADATA_DIR: path.resolve(__dirname, '..', 'metadata'),
   
   // Files
   TABLES_FILE: 'tables.json',
@@ -88,6 +92,21 @@ export const METADATA_CONFIG = {
   METRICS_FILE: 'metrics.json',
   GLOSSARY_FILE: 'glossary.json',
 };
+
+function resolveSemanticMetadataDir(): string {
+  const explicit = String(process.env.SEMANTIC_METADATA_DIR || '').trim();
+  if (explicit) {
+    return path.resolve(explicit);
+  }
+
+  if ((process as any).pkg) {
+    const localAppData = String(process.env.LOCALAPPDATA || '').trim();
+    const baseDir = localAppData || path.join(os.homedir(), 'AppData', 'Local');
+    return path.join(baseDir, 'practice1', 'semantic-query-engine', 'metadata');
+  }
+
+  return path.resolve(__dirname, '..', 'metadata');
+}
 
 export const PIPELINE_CONFIG = {
   // Step timeouts

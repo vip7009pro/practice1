@@ -26,7 +26,7 @@ export class MetadataService {
   private _isLoaded = false;
 
   async initialize(metadataDir?: string): Promise<void> {
-    const dir = metadataDir || METADATA_CONFIG.METADATA_DIR;
+    const dir = this.resolveMetadataDir(metadataDir);
 
     // Clear all state before reloading to prevent duplicates on re-initialize
     this.tables = new Map();
@@ -129,6 +129,16 @@ export class MetadataService {
 
   private loadJsonFile(filePath: string): any {
     if (!fs.existsSync(filePath)) {
+      const fallbackPath = path.join(METADATA_CONFIG.BUNDLED_METADATA_DIR, path.basename(filePath));
+      if (fallbackPath !== filePath && fs.existsSync(fallbackPath)) {
+        try {
+          const fallbackContent = fs.readFileSync(fallbackPath, 'utf-8');
+          return JSON.parse(fallbackContent);
+        } catch (error) {
+          throw new MetadataError(`Failed to parse metadata file: ${fallbackPath}`, error);
+        }
+      }
+
       throw new MetadataError(`Metadata file not found: ${filePath}`);
     }
 
@@ -138,6 +148,23 @@ export class MetadataService {
     } catch (error) {
       throw new MetadataError(`Failed to parse metadata file: ${filePath}`, error);
     }
+  }
+
+  private resolveMetadataDir(metadataDir?: string): string {
+    const provided = String(metadataDir || '').trim();
+    if (provided) {
+      if (path.isAbsolute(provided)) {
+        return provided;
+      }
+
+      if ((process as any).pkg) {
+        return METADATA_CONFIG.METADATA_DIR;
+      }
+
+      return path.resolve(provided);
+    }
+
+    return METADATA_CONFIG.METADATA_DIR;
   }
 
   // ============ TABLE QUERIES ============

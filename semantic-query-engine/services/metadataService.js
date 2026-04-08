@@ -23,7 +23,7 @@ class MetadataService {
         this._isLoaded = false;
     }
     async initialize(metadataDir) {
-        const dir = metadataDir || constants_1.METADATA_CONFIG.METADATA_DIR;
+        const dir = this.resolveMetadataDir(metadataDir);
         // Clear all state before reloading to prevent duplicates on re-initialize
         this.tables = new Map();
         this.columns = new Map();
@@ -110,6 +110,16 @@ class MetadataService {
     }
     loadJsonFile(filePath) {
         if (!fs_1.default.existsSync(filePath)) {
+            const fallbackPath = path_1.default.join(constants_1.METADATA_CONFIG.BUNDLED_METADATA_DIR, path_1.default.basename(filePath));
+            if (fallbackPath !== filePath && fs_1.default.existsSync(fallbackPath)) {
+                try {
+                    const fallbackContent = fs_1.default.readFileSync(fallbackPath, 'utf-8');
+                    return JSON.parse(fallbackContent);
+                }
+                catch (error) {
+                    throw new types_1.MetadataError(`Failed to parse metadata file: ${fallbackPath}`, error);
+                }
+            }
             throw new types_1.MetadataError(`Metadata file not found: ${filePath}`);
         }
         try {
@@ -119,6 +129,19 @@ class MetadataService {
         catch (error) {
             throw new types_1.MetadataError(`Failed to parse metadata file: ${filePath}`, error);
         }
+    }
+    resolveMetadataDir(metadataDir) {
+        const provided = String(metadataDir || '').trim();
+        if (provided) {
+            if (path_1.default.isAbsolute(provided)) {
+                return provided;
+            }
+            if (process.pkg) {
+                return constants_1.METADATA_CONFIG.METADATA_DIR;
+            }
+            return path_1.default.resolve(provided);
+        }
+        return constants_1.METADATA_CONFIG.METADATA_DIR;
     }
     // ============ TABLE QUERIES ============
     getTable(tableName) {

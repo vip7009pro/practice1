@@ -4,6 +4,7 @@
  */
 
 import { openConnection } from '../../config/database';
+import { METADATA_CONFIG } from '../config/constants';
 import {
   TableMetadata,
   ColumnMetadata,
@@ -14,7 +15,8 @@ import fs from 'fs';
 import path from 'path';
 
 const logger = createLogger('DbSyncService');
-const METADATA_DIR = path.join(__dirname, '../metadata');
+const METADATA_DIR = METADATA_CONFIG.METADATA_DIR;
+const BUNDLED_METADATA_DIR = METADATA_CONFIG.BUNDLED_METADATA_DIR;
 
 export class DbSyncService {
   /**
@@ -128,7 +130,7 @@ export class DbSyncService {
    * Load existing metadata from JSON files
    */
   private loadExistingMetadata(fileName: string): any {
-    const filePath = path.join(METADATA_DIR, fileName);
+    const filePath = this.resolveMetadataFilePath(fileName);
     if (!fs.existsSync(filePath)) {
       return { tables: [], columns: [], relationships: [] };
     }
@@ -313,6 +315,20 @@ export class DbSyncService {
       logger.error('Failed to save metadata', error);
       throw error;
     }
+  }
+
+  private resolveMetadataFilePath(fileName: string): string {
+    const writablePath = path.join(METADATA_DIR, fileName);
+    if (fs.existsSync(writablePath)) {
+      return writablePath;
+    }
+
+    const bundledPath = path.join(BUNDLED_METADATA_DIR, fileName);
+    if (bundledPath !== writablePath && fs.existsSync(bundledPath)) {
+      return bundledPath;
+    }
+
+    return writablePath;
   }
 
   /**

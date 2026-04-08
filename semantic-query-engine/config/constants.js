@@ -2,7 +2,12 @@
 /**
  * Configuration Constants
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const os_1 = __importDefault(require("os"));
+const path_1 = __importDefault(require("path"));
 // Direct export for commonly used constant
 exports.DEFAULT_TOP_K = 7;
 exports.SEMANTIC_ENGINE_CONFIG = {
@@ -66,7 +71,8 @@ exports.LLM_CONFIG = {
 };
 exports.METADATA_CONFIG = {
     // Metadata directory
-    METADATA_DIR: String(process.env.SEMANTIC_METADATA_DIR || './semantic-query-engine/metadata'),
+    METADATA_DIR: resolveSemanticMetadataDir(),
+    BUNDLED_METADATA_DIR: path_1.default.resolve(__dirname, '..', 'metadata'),
     // Files
     TABLES_FILE: 'tables.json',
     COLUMNS_FILE: 'columns.json',
@@ -74,6 +80,18 @@ exports.METADATA_CONFIG = {
     METRICS_FILE: 'metrics.json',
     GLOSSARY_FILE: 'glossary.json',
 };
+function resolveSemanticMetadataDir() {
+    const explicit = String(process.env.SEMANTIC_METADATA_DIR || '').trim();
+    if (explicit) {
+        return path_1.default.resolve(explicit);
+    }
+    if (process.pkg) {
+        const localAppData = String(process.env.LOCALAPPDATA || '').trim();
+        const baseDir = localAppData || path_1.default.join(os_1.default.homedir(), 'AppData', 'Local');
+        return path_1.default.join(baseDir, 'practice1', 'semantic-query-engine', 'metadata');
+    }
+    return path_1.default.resolve(__dirname, '..', 'metadata');
+}
 exports.PIPELINE_CONFIG = {
     // Step timeouts
     STEP_REWRITE_TIMEOUT_MS: 15000,

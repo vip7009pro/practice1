@@ -8,11 +8,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = require("../../config/database");
+const constants_1 = require("../config/constants");
 const logger_1 = require("../utils/logger");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const logger = logger_1.createLogger('DbSyncService');
-const METADATA_DIR = path_1.default.join(__dirname, '../metadata');
+const METADATA_DIR = constants_1.METADATA_CONFIG.METADATA_DIR;
+const BUNDLED_METADATA_DIR = constants_1.METADATA_CONFIG.BUNDLED_METADATA_DIR;
 class DbSyncService {
     /**
      * Load table schema from database
@@ -120,7 +122,7 @@ class DbSyncService {
      * Load existing metadata from JSON files
      */
     loadExistingMetadata(fileName) {
-        const filePath = path_1.default.join(METADATA_DIR, fileName);
+        const filePath = this.resolveMetadataFilePath(fileName);
         if (!fs_1.default.existsSync(filePath)) {
             return { tables: [], columns: [], relationships: [] };
         }
@@ -274,6 +276,17 @@ class DbSyncService {
             logger.error('Failed to save metadata', error);
             throw error;
         }
+    }
+    resolveMetadataFilePath(fileName) {
+        const writablePath = path_1.default.join(METADATA_DIR, fileName);
+        if (fs_1.default.existsSync(writablePath)) {
+            return writablePath;
+        }
+        const bundledPath = path_1.default.join(BUNDLED_METADATA_DIR, fileName);
+        if (bundledPath !== writablePath && fs_1.default.existsSync(bundledPath)) {
+            return bundledPath;
+        }
+        return writablePath;
     }
     /**
      * Helper: Generate unique key for relationship
