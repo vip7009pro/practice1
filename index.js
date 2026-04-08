@@ -26,17 +26,35 @@ const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
 const geoip = require('geoip-lite');
+app.set("trust proxy", true);
 
 httpServer.setTimeout(parseInt(process.env.SERVER_TIMEOUT_MS || "0", 100) || 100 * 60 * 1000);
 httpServer.keepAliveTimeout = parseInt(process.env.KEEPALIVE_TIMEOUT_MS || "0", 100) || 100 * 60 * 1000;
 httpServer.headersTimeout = parseInt(process.env.HEADERS_TIMEOUT_MS || "0", 100) || 110 * 60 * 1000;
 //loc IP
 const allowCountries = ['VN']; // Việt Nam
+const GEOIP_BYPASS = true;
+
+const getClientIp = (req) => {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const rawIp = (typeof forwardedFor === 'string' ? forwardedFor.split(',')[0] : forwardedFor) || req.ip || req.socket.remoteAddress || '';
+  return rawIp.replace(/^::ffff:/, '');
+};
+
+// Middleware
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use((req, res, next) => {
-  const ip =
-    req.headers['x-forwarded-for']?.split(',')[0] ||
-    req.socket.remoteAddress;
+  if (req.method === "OPTIONS") {
+    return next();
+  }
+
+  if (GEOIP_BYPASS) {
+    return next();
+  }
+
+  const ip = getClientIp(req);
 
   const geo = geoip.lookup(ip);
 
@@ -49,9 +67,7 @@ app.use((req, res, next) => {
 
   next();
 });
-// Middleware
 app.use(compression({ level: 9, threshold: 10 * 1024 }));
-app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
