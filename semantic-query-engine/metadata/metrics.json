@@ -6,11 +6,20 @@
       "business_name": "Doanh thu",
       "description": "Tổng giá trị bán hàng (sau chiết khấu và thành tiền)",
       "formula": "SUM(CAST(IVDT.UNIT_PRICE AS FLOAT) * CAST(IVDT.QTY AS FLOAT)) WHERE IVHD.STATUS NOT IN ('cancelled', 'pending')",
-      "tables": ["IVHD", "IVDT"],
+      "tables": [
+        "IVHD",
+        "IVDT"
+      ],
       "data_type": "currency",
       "unit": "VND",
-      "conditions": ["IVDT.QTY > 0", "IVHD.STATUS NOT IN ('cancelled', 'pending')"],
-      "related_dimensions": ["invoice_date", "customer_id"],
+      "conditions": [
+        "IVDT.QTY > 0",
+        "IVHD.STATUS NOT IN ('cancelled', 'pending')"
+      ],
+      "related_dimensions": [
+        "invoice_date",
+        "customer_id"
+      ],
       "examples": [
         {
           "question": "Doanh thu hôm nay",
@@ -28,10 +37,15 @@
       "business_name": "Doanh thu thuần",
       "description": "Doanh thu sau chiết khấu toàn bộ",
       "formula": "SUM(CAST(IVHD.NET_AMT AS FLOAT)) WHERE IVHD.STATUS NOT IN ('cancelled', 'pending')",
-      "tables": ["IVHD"],
+      "tables": [
+        "IVHD"
+      ],
       "data_type": "currency",
       "unit": "VND",
-      "related_dimensions": ["invoice_date", "customer_id"],
+      "related_dimensions": [
+        "invoice_date",
+        "customer_id"
+      ],
       "examples": [
         {
           "question": "Doanh thu thuần tháng này",
@@ -45,11 +59,20 @@
       "business_name": "Lợi nhuận",
       "description": "Lợi nhuận = Doanh thu - Chi phí vốn",
       "formula": "SUM(CAST(IVDT.UNIT_PRICE AS FLOAT) * CAST(IVDT.QTY AS FLOAT)) - SUM(CAST(IVDT.COST_PRICE AS FLOAT) * CAST(IVDT.QTY AS FLOAT))",
-      "tables": ["IVDT", "IVHD"],
+      "tables": [
+        "IVDT",
+        "IVHD"
+      ],
       "data_type": "currency",
       "unit": "VND",
-      "conditions": ["IVHD.STATUS NOT IN ('cancelled', 'pending')"],
-      "related_dimensions": ["G_CODE", "CUST_CD", "INV_DATE"],
+      "conditions": [
+        "IVHD.STATUS NOT IN ('cancelled', 'pending')"
+      ],
+      "related_dimensions": [
+        "G_CODE",
+        "CUST_CD",
+        "INV_DATE"
+      ],
       "examples": [
         {
           "question": "Lợi nhuận theo sản phẩm",
@@ -63,10 +86,14 @@
       "business_name": "Tỷ suất lợi nhuận",
       "description": "Tỷ lệ phần trăm lợi nhuận trên doanh thu",
       "formula": "(SUM(CAST(IVDT.UNIT_PRICE AS FLOAT) * CAST(IVDT.QTY AS FLOAT)) - SUM(CAST(IVDT.COST_PRICE AS FLOAT) * CAST(IVDT.QTY AS FLOAT))) / SUM(CAST(IVDT.UNIT_PRICE AS FLOAT) * CAST(IVDT.QTY AS FLOAT)) * 100",
-      "tables": ["IVDT"],
+      "tables": [
+        "IVDT"
+      ],
       "data_type": "percentage",
       "unit": "%",
-      "related_dimensions": ["G_CODE"],
+      "related_dimensions": [
+        "G_CODE"
+      ],
       "examples": [
         {
           "question": "Tỷ suất lợi nhuận sản phẩm",
@@ -80,10 +107,17 @@
       "business_name": "Số đơn",
       "description": "Tổng số đơn hàng",
       "formula": "COUNT(DISTINCT IVHD.IV_NO)",
-      "tables": ["IVHD"],
+      "tables": [
+        "IVHD"
+      ],
       "data_type": "count",
-      "conditions": ["IVHD.STATUS NOT IN ('cancelled', 'pending')"],
-      "related_dimensions": ["INV_DATE", "CUST_CD"],
+      "conditions": [
+        "IVHD.STATUS NOT IN ('cancelled', 'pending')"
+      ],
+      "related_dimensions": [
+        "INV_DATE",
+        "CUST_CD"
+      ],
       "examples": [
         {
           "question": "Số đơn hàng hôm nay",
@@ -97,10 +131,15 @@
       "business_name": "AOV",
       "description": "Giá trị trung bình của mỗi đơn hàng",
       "formula": "AVG(CAST(IVHD.NET_AMT AS FLOAT))",
-      "tables": ["IVHD"],
+      "tables": [
+        "IVHD"
+      ],
       "data_type": "currency",
       "unit": "VND",
-      "related_dimensions": ["CUST_CD", "INV_DATE"],
+      "related_dimensions": [
+        "CUST_CD",
+        "INV_DATE"
+      ],
       "examples": [
         {
           "question": "AOV tháng này",
@@ -114,9 +153,15 @@
       "business_name": "Tổng lượng",
       "description": "Tổng số lượng sản phẩm bán ra",
       "formula": "SUM(CAST(IVDT.QTY AS FLOAT)) WHERE IVHD.STATUS NOT IN ('cancelled')",
-      "tables": ["IVDT", "IVHD"],
+      "tables": [
+        "IVDT",
+        "IVHD"
+      ],
       "data_type": "count",
-      "related_dimensions": ["G_CODE", "INV_DATE"],
+      "related_dimensions": [
+        "G_CODE",
+        "INV_DATE"
+      ],
       "examples": [
         {
           "question": "Bán bao nhiêu cái hôm nay",
@@ -130,9 +175,14 @@
       "business_name": "Top sản phẩm",
       "description": "Các sản phẩm có doanh số bán cao nhất",
       "formula": "SUM(CAST(IVDT.QTY AS FLOAT)) GROUP BY IVDT.G_CODE ORDER BY SUM(IVDT.QTY) DESC",
-      "tables": ["IVDT", "IVHD"],
+      "tables": [
+        "IVDT",
+        "IVHD"
+      ],
       "data_type": "count",
-      "related_dimensions": ["G_CODE"],
+      "related_dimensions": [
+        "G_CODE"
+      ],
       "examples": [
         {
           "question": "Top 10 sản phẩm bán chạy tháng này",
@@ -146,10 +196,14 @@
       "business_name": "Top khách",
       "description": "Khách hàng có giá trị đơn hàng cao nhất",
       "formula": "SUM(CAST(IVHD.NET_AMT AS FLOAT)) GROUP BY IVHD.CUST_CD ORDER BY SUM(IVHD.NET_AMT) DESC",
-      "tables": ["IVHD"],
+      "tables": [
+        "IVHD"
+      ],
       "data_type": "currency",
       "unit": "VND",
-      "related_dimensions": ["CUST_CD"],
+      "related_dimensions": [
+        "CUST_CD"
+      ],
       "examples": [
         {
           "question": "Top 5 khách hàng tháng này",
@@ -163,9 +217,13 @@
       "business_name": "Số KH",
       "description": "Tổng số khách hàng có đơn hàng",
       "formula": "COUNT(DISTINCT IVHD.CUST_CD) WHERE IVHD.STATUS NOT IN ('cancelled')",
-      "tables": ["IVHD"],
+      "tables": [
+        "IVHD"
+      ],
       "data_type": "count",
-      "related_dimensions": ["INV_DATE"],
+      "related_dimensions": [
+        "INV_DATE"
+      ],
       "examples": [
         {
           "question": "Bao nhiêu khách hàng mua hôm nay",
@@ -179,9 +237,15 @@
       "business_name": "Số lần giao",
       "description": "Tổng số lần giao hàng",
       "formula": "COUNT(DISTINCT delivery_id) WHERE NOCANCEL = 1",
-      "tables": ["ZTBDelivery"],
+      "tables": [
+        "ZTBDelivery"
+      ],
       "data_type": "count",
-      "related_dimensions": ["DELIVERY_DATE", "CUST_CD", "G_CODE"],
+      "related_dimensions": [
+        "DELIVERY_DATE",
+        "CUST_CD",
+        "G_CODE"
+      ],
       "examples": [
         {
           "question": "Lịch sử giao hàng 2026",
@@ -195,10 +259,19 @@
       "business_name": "Số lượng giao",
       "description": "Tổng số lượng sản phẩm đã giao",
       "formula": "SUM(DELIVERY_QTY) WHERE NOCANCEL = 1",
-      "tables": ["ZTBDelivery"],
+      "tables": [
+        "ZTBDelivery"
+      ],
       "data_type": "count",
-      "conditions": ["NOCANCEL = 1"],
-      "related_dimensions": ["DELIVERY_DATE", "CUST_CD", "G_CODE", "CTR_CD"],
+      "conditions": [
+        "NOCANCEL = 1"
+      ],
+      "related_dimensions": [
+        "DELIVERY_DATE",
+        "CUST_CD",
+        "G_CODE",
+        "CTR_CD"
+      ],
       "examples": [
         {
           "question": "Tổng số lượng giao hàng tháng này",
@@ -212,10 +285,16 @@
       "business_name": "Giao hàng ngày",
       "description": "Giao hàng được nhóm theo từng ngày",
       "formula": "SUM(DELIVERY_QTY) GROUP BY DELIVERY_DATE WHERE NOCANCEL = 1",
-      "tables": ["ZTBDelivery"],
+      "tables": [
+        "ZTBDelivery"
+      ],
       "data_type": "count",
-      "conditions": ["NOCANCEL = 1"],
-      "related_dimensions": ["DELIVERY_DATE"],
+      "conditions": [
+        "NOCANCEL = 1"
+      ],
+      "related_dimensions": [
+        "DELIVERY_DATE"
+      ],
       "examples": [
         {
           "question": "Lịch sử giao hàng 2026",
@@ -229,10 +308,17 @@
       "business_name": "Giao hàng khách",
       "description": "Giao hàng được nhóm theo khách hàng",
       "formula": "SUM(DELIVERY_QTY) GROUP BY CUST_CD WHERE NOCANCEL = 1",
-      "tables": ["ZTBDelivery"],
+      "tables": [
+        "ZTBDelivery"
+      ],
       "data_type": "count",
-      "conditions": ["NOCANCEL = 1"],
-      "related_dimensions": ["CUST_CD", "DELIVERY_DATE"],
+      "conditions": [
+        "NOCANCEL = 1"
+      ],
+      "related_dimensions": [
+        "CUST_CD",
+        "DELIVERY_DATE"
+      ],
       "examples": [
         {
           "question": "Lịch sử giao hàng theo khách hàng",
@@ -246,15 +332,44 @@
       "business_name": "Giao hàng sản phẩm",
       "description": "Giao hàng được nhóm theo sản phẩm",
       "formula": "SUM(DELIVERY_QTY) GROUP BY G_CODE WHERE NOCANCEL = 1",
-      "tables": ["ZTBDelivery"],
+      "tables": [
+        "ZTBDelivery"
+      ],
       "data_type": "count",
-      "conditions": ["NOCANCEL = 1"],
-      "related_dimensions": ["G_CODE", "DELIVERY_DATE"],
+      "conditions": [
+        "NOCANCEL = 1"
+      ],
+      "related_dimensions": [
+        "G_CODE",
+        "DELIVERY_DATE"
+      ],
       "examples": [
         {
           "question": "Lịch sử giao hàng theo sản phẩm",
           "expected_metric_value": "Multi-row result"
         }
+      ]
+    },
+    {
+      "id": "delivery_amount",
+      "name": "Số tiền giao",
+      "business_name": "Số tiền giao hàng",
+      "description": "Số tiền giao hàng",
+      "formula": "SUM(DELIVERY_QTY * PROD_PRICE) AS DELIVERY_AMOUNT",
+      "tables": [
+        "ZTBDelivery",
+        "ZTBPOTable"
+      ],
+      "data_type": "currency",
+      "unit": "USD",
+      "conditions": [
+        "NO_CANCEL= 1"
+      ],
+      "related_dimensions": [
+        "CTR_CD",
+        "G_CODE",
+        "CUST_CD",
+        "PO_NO"
       ]
     }
   ]
