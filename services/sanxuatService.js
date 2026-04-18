@@ -1,6 +1,26 @@
 const moment = require("moment");
 const { queryDB } = require("../config/database");
 const { generate_condition_get_ycsx } = require("../utils/sqlUtils");
+
+const resolveDaoFilmReportDateRange = (DATA = {}) => {
+  const today = moment();
+  const defaultFrom = "2020-01-01";
+  const defaultTo = today.format("YYYY-MM-DD");
+  const useAllTime = DATA.USE_ALL_TIME === true || DATA.USE_DEFAULT_MONTH === true;
+
+  if (useAllTime) {
+    return {
+      fromDate: defaultFrom,
+      toDate: defaultTo,
+    };
+  }
+
+  return {
+    fromDate: DATA.FROM_DATE && DATA.FROM_DATE !== "" ? DATA.FROM_DATE : defaultFrom,
+    toDate: DATA.TO_DATE && DATA.TO_DATE !== "" ? DATA.TO_DATE : defaultTo,
+  };
+};
+
 exports.loadDataSX = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = " WHERE 1=1  ";
@@ -4794,7 +4814,43 @@ exports.lichsuxuatdaofilm = async (req, res, DATA) => {
   if (DATA.FACTORY !== 'All') {
     condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY = '${DATA.FACTORY}'`
   }
-  let setpdQuery = `SELECT OUT_KNIFE_FILM.*, M100.G_NAME, M100.G_NAME_KD, ZTB_SX_RESULT.INS_EMPL AS SX_EMPL_NO, ZTB_QLSXPLAN.PLAN_DATE, ZTB_SX_RESULT.SX_DATE, OUT_KNIFE_FILM.CTR_CD, ZTB_KNIFE_FILM_ERR_TABLE.ERR_NAME 
+  let setpdQuery = `SELECT 
+    OUT_KNIFE_FILM.*, 
+    M100.G_NAME, 
+    M100.G_NAME_KD, 
+    ZTB_SX_RESULT.INS_EMPL AS SX_EMPL_NO, 
+    ZTB_QLSXPLAN.PLAN_DATE, 
+    ZTB_SX_RESULT.SX_DATE, 
+    OUT_KNIFE_FILM.CTR_CD, 
+    ZTB_KNIFE_FILM_ERR_TABLE.ERR_NAME,
+    -- Bo sung thong tin ma dao
+    KF.MA_DAO, 
+    ZKF.KT_KNIFE_CODE AS MA_DAO_KT
+FROM OUT_KNIFE_FILM
+-- Lien ket de lay thong tin chi tiet dao
+LEFT JOIN ZTB_QL_KNIFE_FILM ZKF 
+    ON ZKF.KNIFE_FILM_NO = OUT_KNIFE_FILM.KNIFE_FILM_NO 
+    AND ZKF.CTR_CD = OUT_KNIFE_FILM.CTR_CD
+LEFT JOIN KNIFE_FILM KF 
+    ON KF.KNIFE_FILM_ID = ZKF.KNIFE_FILM_ID 
+    AND KF.G_CODE = ZKF.G_CODE
+-- Cac lien ket cu cua ban
+LEFT JOIN ZTB_QLSXPLAN 
+    ON ZTB_QLSXPLAN.PLAN_ID = OUT_KNIFE_FILM.PLAN_ID 
+    AND ZTB_QLSXPLAN.CTR_CD = OUT_KNIFE_FILM.CTR_CD
+LEFT JOIN ZTB_SX_RESULT 
+    ON ZTB_SX_RESULT.PLAN_ID = OUT_KNIFE_FILM.PLAN_ID 
+    AND ZTB_SX_RESULT.CTR_CD = OUT_KNIFE_FILM.CTR_CD
+LEFT JOIN M100 
+    ON M100.G_CODE = ZTB_QLSXPLAN.G_CODE 
+    AND M100.CTR_CD = ZTB_QLSXPLAN.CTR_CD
+LEFT JOIN ZTB_KNIFE_FILM_ERR_TABLE 
+    ON ZTB_KNIFE_FILM_ERR_TABLE.CTR_CD = OUT_KNIFE_FILM.CTR_CD 
+    AND ZTB_KNIFE_FILM_ERR_TABLE.ERR_CODE = OUT_KNIFE_FILM.ERR_CODE
+  ${condition}
+  AND OUT_KNIFE_FILM.CTR_CD='${DATA.CTR_CD}' ORDER BY OUT_KNIFE_FILM.INS_DATE DESC
+  `;
+/*   let setpdQuery = `SELECT OUT_KNIFE_FILM.*, M100.G_NAME, M100.G_NAME_KD, ZTB_SX_RESULT.INS_EMPL AS SX_EMPL_NO, ZTB_QLSXPLAN.PLAN_DATE, ZTB_SX_RESULT.SX_DATE, OUT_KNIFE_FILM.CTR_CD, ZTB_KNIFE_FILM_ERR_TABLE.ERR_NAME 
   FROM OUT_KNIFE_FILM
   LEFT JOIN ZTB_QLSXPLAN ON ZTB_QLSXPLAN.PLAN_ID=OUT_KNIFE_FILM.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD=OUT_KNIFE_FILM.CTR_CD
   LEFT JOIN ZTB_SX_RESULT ON ZTB_SX_RESULT.PLAN_ID=OUT_KNIFE_FILM.PLAN_ID AND ZTB_SX_RESULT.CTR_CD=OUT_KNIFE_FILM.CTR_CD
@@ -4802,10 +4858,278 @@ exports.lichsuxuatdaofilm = async (req, res, DATA) => {
   LEFT JOIN ZTB_KNIFE_FILM_ERR_TABLE ON ZTB_KNIFE_FILM_ERR_TABLE.CTR_CD = OUT_KNIFE_FILM.CTR_CD AND ZTB_KNIFE_FILM_ERR_TABLE.ERR_CODE = OUT_KNIFE_FILM.ERR_CODE
   ${condition}
   AND OUT_KNIFE_FILM.CTR_CD='${DATA.CTR_CD}'
-  `;
+  `; */
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const { fromDate, toDate } = resolveDaoFilmReportDateRange(DATA);
+
+  let setpdQuery = `
+  WITH Summary_CTE AS (
+    SELECT
+      A.MA_DAO,
+      B.KT_KNIFE_CODE AS MA_DAO_KT,
+      MAX(B.STANDARD_PRESS_QTY) AS StandardQty,
+      SUM(ISNULL(C.PRESS_QTY, 0)) AS TotalPress,
+      COUNT(C.KNIFE_FILM_NO) AS ExportCount,
+      MIN(A.NGAYBANGIAO) AS NgayBanGiao
+    FROM [dbo].[KNIFE_FILM] A
+    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
+      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
+      AND A.G_CODE = B.G_CODE
+      AND A.CTR_CD = B.CTR_CD
+    LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
+      ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
+      AND C.CTR_CD = A.CTR_CD
+    WHERE
+      A.LOAIBANGIAO_PDP = 'D'
+      AND A.LOAIPHATHANH = 'PH'
+      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
+      AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
+      AND A.CTR_CD = '${DATA.CTR_CD}'
+    GROUP BY
+      A.MA_DAO,
+      B.KT_KNIFE_CODE
+  )
+  SELECT
+    ROW_NUMBER() OVER (ORDER BY MA_DAO) AS STT,
+    MA_DAO,
+    MA_DAO_KT,
+    StandardQty,
+    TotalPress,
+    ExportCount,
+    NgayBanGiao AS NGAY_BAN_GIAO,
+    CASE
+      WHEN TotalPress < StandardQty THEN 'OK'
+      ELSE 'NG'
+    END AS OVER_STATUS,
+    CASE
+      WHEN ISNULL(StandardQty, 0) = 0 THEN 0
+      ELSE ROUND((CAST(TotalPress AS FLOAT) / StandardQty) * 100, 2)
+    END AS OVER_PERCENTAGE
+  FROM Summary_CTE
+  ORDER BY TotalPress DESC`;
+  console.log(setpdQuery);
+
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.loadDaoFilmReportWidgetData = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const { fromDate, toDate } = resolveDaoFilmReportDateRange(DATA);
+
+  let setpdQuery = `
+  WITH Summary_CTE AS (
+    SELECT
+      A.MA_DAO,
+      SUM(ISNULL(C.PRESS_QTY, 0)) AS TotalPress,
+      MAX(B.STANDARD_PRESS_QTY) AS StandardQty
+    FROM [dbo].[KNIFE_FILM] A
+    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
+      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
+      AND A.G_CODE = B.G_CODE
+      AND A.CTR_CD = B.CTR_CD
+    LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
+      ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
+      AND C.CTR_CD = A.CTR_CD
+    WHERE
+      A.LOAIBANGIAO_PDP = 'D'
+      AND A.LOAIPHATHANH = 'PH'
+      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
+      AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
+      AND A.CTR_CD = '${DATA.CTR_CD}'
+    GROUP BY A.MA_DAO, B.KT_KNIFE_CODE
+  )
+  SELECT
+    COUNT(*) AS Total_Knife,
+    SUM(CASE WHEN TotalPress < StandardQty THEN 1 ELSE 0 END) AS Total_OK_Knife,
+    SUM(CASE WHEN TotalPress >= StandardQty THEN 1 ELSE 0 END) AS Total_NG_Knife
+  FROM Summary_CTE`;
+
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.loadDaoFilmReportUsagePieData = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const { fromDate, toDate } = resolveDaoFilmReportDateRange(DATA);
+
+  let setpdQuery = `
+  WITH Summary_CTE AS (
+    SELECT
+      A.MA_DAO,
+      CASE
+        WHEN MAX(B.STANDARD_PRESS_QTY) = 0 THEN 0
+        ELSE (CAST(SUM(ISNULL(C.PRESS_QTY, 0)) AS FLOAT) / MAX(B.STANDARD_PRESS_QTY)) * 100
+      END AS UsagePct
+    FROM [dbo].[KNIFE_FILM] A
+    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
+      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
+      AND A.G_CODE = B.G_CODE
+      AND A.CTR_CD = B.CTR_CD
+    LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
+      ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
+      AND C.CTR_CD = A.CTR_CD
+    WHERE
+      A.LOAIBANGIAO_PDP = 'D'
+      AND A.LOAIPHATHANH = 'PH'
+      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
+      AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
+      AND A.CTR_CD = '${DATA.CTR_CD}'
+    GROUP BY A.MA_DAO, B.KT_KNIFE_CODE
+  ),
+  Grouped_Data AS (
+    SELECT
+      CASE
+        WHEN UsagePct = 0 THEN '0%'
+        WHEN UsagePct > 0 AND UsagePct <= 10 THEN '1 - 10%'
+        WHEN UsagePct > 10 AND UsagePct <= 20 THEN '11 - 20%'
+        WHEN UsagePct > 20 AND UsagePct <= 50 THEN '21 - 50%'
+        WHEN UsagePct > 50 AND UsagePct < 100 THEN '51 - 99%'
+        WHEN UsagePct >= 100 AND UsagePct <= 300 THEN '100 - 300%'
+        WHEN UsagePct > 300 AND UsagePct <= 500 THEN '301 - 500%'
+        ELSE '>= 500%'
+      END AS Nhom_Phan_Tram,
+      CASE
+        WHEN UsagePct = 0 THEN 1
+        WHEN UsagePct > 0 AND UsagePct <= 10 THEN 2
+        WHEN UsagePct > 10 AND UsagePct <= 20 THEN 3
+        WHEN UsagePct > 20 AND UsagePct <= 50 THEN 4
+        WHEN UsagePct > 50 AND UsagePct < 100 THEN 5
+        WHEN UsagePct >= 100 AND UsagePct <= 300 THEN 6
+        WHEN UsagePct > 300 AND UsagePct <= 500 THEN 7
+        ELSE 8
+      END AS SortOrder
+    FROM Summary_CTE
+  )
+  SELECT
+    Nhom_Phan_Tram AS NHOM_PHAN_TRAM,
+    COUNT(*) AS SO_LUONG_DAO
+  FROM Grouped_Data
+  GROUP BY Nhom_Phan_Tram, SortOrder
+  ORDER BY SortOrder`;
+
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.loadDaoFilmReportExportPieData = async (req, res, DATA) => {
+  let checkkq = "OK";
+  const { fromDate, toDate } = resolveDaoFilmReportDateRange(DATA);
+
+  let setpdQuery = `
+  WITH Summary_CTE AS (
+    SELECT
+      A.MA_DAO,
+      COUNT(C.KNIFE_FILM_NO) AS ExportCount
+    FROM [dbo].[KNIFE_FILM] A
+    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
+      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
+      AND A.G_CODE = B.G_CODE
+      AND A.CTR_CD = B.CTR_CD
+    LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
+      ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
+      AND C.CTR_CD = A.CTR_CD
+    WHERE
+      A.LOAIBANGIAO_PDP = 'D'
+      AND A.LOAIPHATHANH = 'PH'
+      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
+      AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
+      AND A.CTR_CD = '${DATA.CTR_CD}'
+    GROUP BY A.MA_DAO, B.KT_KNIFE_CODE
+  ),
+  Grouped_Data AS (
+    SELECT
+      CASE
+        WHEN ExportCount = 0 THEN '0 lan'
+        WHEN ExportCount = 1 THEN '1 lan'
+        WHEN ExportCount BETWEEN 2 AND 3 THEN '2 - 3 lan'
+        WHEN ExportCount BETWEEN 4 AND 5 THEN '4 - 5 lan'
+        WHEN ExportCount BETWEEN 6 AND 10 THEN '6 - 10 lan'
+        WHEN ExportCount BETWEEN 11 AND 50 THEN '11 - 50 lan'
+        WHEN ExportCount BETWEEN 51 AND 100 THEN '51 - 100 lan'
+        WHEN ExportCount BETWEEN 101 AND 300 THEN '100 - 300 lan'
+        WHEN ExportCount BETWEEN 301 AND 500 THEN '300 - 500 lan'
+        ELSE '> 500 lan'
+      END AS Nhom_So_Lan_Xuat,
+      CASE
+        WHEN ExportCount = 0 THEN 1
+        WHEN ExportCount = 1 THEN 2
+        WHEN ExportCount BETWEEN 2 AND 3 THEN 3
+        WHEN ExportCount BETWEEN 4 AND 5 THEN 4
+        WHEN ExportCount BETWEEN 6 AND 10 THEN 5
+        WHEN ExportCount BETWEEN 11 AND 50 THEN 6
+        WHEN ExportCount BETWEEN 51 AND 100 THEN 7
+        WHEN ExportCount BETWEEN 101 AND 300 THEN 8
+        WHEN ExportCount BETWEEN 301 AND 500 THEN 9
+        ELSE 10
+      END AS SortOrder
+    FROM Summary_CTE
+  )
+  SELECT
+    Nhom_So_Lan_Xuat AS NHOM_SO_LAN_XUAT,
+    COUNT(*) AS SO_LUONG_DAO
+  FROM Grouped_Data
+  GROUP BY Nhom_So_Lan_Xuat, SortOrder
+  ORDER BY SortOrder`;
+
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
+  let checkkq = "OK";
+
+  if (!DATA.MA_DAO || !DATA.MA_DAO_KT) {
+    return res.send({ tk_status: "OK", data: [] });
+  }
+
+  let setpdQuery = `
+  SELECT
+    A.MA_DAO,
+    B.KT_KNIFE_CODE AS MA_DAO_KT,
+    M.G_CODE,
+    M.G_NAME,
+    C.PD,
+    C.CAVITY,
+    C.QTY_KNIFE_FILM AS QTY,
+    C.PRESS_QTY,
+    C.EMPL_NO,
+    C.SX_EMPL,
+    R.SX_DATE,
+    C.PLAN_ID
+  FROM [dbo].[OUT_KNIFE_FILM] C
+  INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
+    ON C.KNIFE_FILM_NO = B.KNIFE_FILM_NO
+    AND C.CTR_CD = B.CTR_CD
+  INNER JOIN [dbo].[KNIFE_FILM] A
+    ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID
+    AND B.G_CODE = A.G_CODE
+    AND B.CTR_CD = A.CTR_CD
+  INNER JOIN [dbo].[M100] M
+    ON A.G_CODE = M.G_CODE
+    AND A.CTR_CD = M.CTR_CD
+  LEFT JOIN [dbo].[ZTB_SX_RESULT] R
+    ON C.PLAN_ID = R.PLAN_ID
+    AND C.CTR_CD = R.CTR_CD
+  WHERE
+    A.MA_DAO = '${DATA.MA_DAO}'
+    AND B.KT_KNIFE_CODE = '${DATA.MA_DAO_KT}'
+    AND A.LOAIBANGIAO_PDP = 'D'
+    AND A.LOAIPHATHANH = 'PH'
+    AND A.KNIFE_FILM_STATUS = 'OK'
+    AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
+    AND A.CTR_CD = '${DATA.CTR_CD}'
+  ORDER BY
+    R.SX_DATE DESC,
+    C.PLAN_ID DESC`;
+
+  checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
 exports.machinecounting2 = async (req, res, DATA) => {
