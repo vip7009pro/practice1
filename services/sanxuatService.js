@@ -4869,12 +4869,29 @@ exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
   const { fromDate, toDate } = resolveDaoFilmReportDateRange(DATA);
 
   let setpdQuery = `
-  WITH Summary_CTE AS (
+  WITH R_SUM AS (
+    SELECT
+      CTR_CD,
+      PLAN_ID,
+      KNIFE_FILM_NO,
+      SUM(ISNULL(SX_RESULT, 0)) AS SX_RESULT,
+      MAX(ISNULL(CAVITY, 0)) AS CAVITY,
+      MAX(SX_DATE) AS SX_DATE
+    FROM [dbo].[ZTB_SX_RESULT]
+    WHERE FINAL_YN = 'Y'
+    GROUP BY CTR_CD, PLAN_ID, KNIFE_FILM_NO
+  ),
+  Summary_CTE AS (
     SELECT
       B.FULL_KNIFE_CODE AS MA_DAO,
       B.KT_KNIFE_CODE AS MA_DAO_KT,
       MAX(B.STANDARD_PRESS_QTY) AS StandardQty,
-      SUM(ISNULL(C.PRESS_QTY, 0)) AS TotalPress,
+      CAST(ROUND(SUM(
+        CASE
+          WHEN ISNULL(R_SUM.CAVITY, 0) = 0 THEN 0
+          ELSE CAST(ISNULL(R_SUM.SX_RESULT, 0) AS FLOAT) / R_SUM.CAVITY
+        END
+      ), 0) AS BIGINT) AS TotalPress,
       COUNT(C.KNIFE_FILM_NO) AS ExportCount,
       MIN(A.NGAYBANGIAO) AS NgayBanGiao
     FROM [dbo].[KNIFE_FILM] A
@@ -4885,6 +4902,10 @@ exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
     LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
       ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
       AND C.CTR_CD = A.CTR_CD
+    LEFT JOIN R_SUM
+      ON C.PLAN_ID = R_SUM.PLAN_ID
+      AND C.KNIFE_FILM_NO = R_SUM.KNIFE_FILM_NO
+      AND C.CTR_CD = R_SUM.CTR_CD
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
@@ -4927,16 +4948,13 @@ exports.loadDaoFilmReportWidgetData = async (req, res, DATA) => {
   WITH Summary_CTE AS (
     SELECT
       B.FULL_KNIFE_CODE AS MA_DAO,
-      SUM(ISNULL(C.PRESS_QTY, 0)) AS TotalPress,
+      MAX(ISNULL(B.TOTAL_PRESS2, 0)) AS TotalPress,
       MAX(B.STANDARD_PRESS_QTY) AS StandardQty
     FROM [dbo].[KNIFE_FILM] A
     INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
       ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
       AND A.G_CODE = B.G_CODE
       AND A.CTR_CD = B.CTR_CD
-    LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
-      ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
-      AND C.CTR_CD = A.CTR_CD
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
@@ -4965,16 +4983,13 @@ exports.loadDaoFilmReportUsagePieData = async (req, res, DATA) => {
       B.FULL_KNIFE_CODE AS MA_DAO,
       CASE
         WHEN MAX(B.STANDARD_PRESS_QTY) = 0 THEN 0
-        ELSE (CAST(SUM(ISNULL(C.PRESS_QTY, 0)) AS FLOAT) / MAX(B.STANDARD_PRESS_QTY)) * 100
+        ELSE (CAST(MAX(ISNULL(B.TOTAL_PRESS2, 0)) AS FLOAT) / MAX(B.STANDARD_PRESS_QTY)) * 100
       END AS UsagePct
     FROM [dbo].[KNIFE_FILM] A
     INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
       ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
       AND A.G_CODE = B.G_CODE
       AND A.CTR_CD = B.CTR_CD
-    LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
-      ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
-      AND C.CTR_CD = A.CTR_CD
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
@@ -5090,18 +5105,33 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
   }
 
   let setpdQuery = `
+  WITH R_SUM AS (
+    SELECT
+      CTR_CD,
+      PLAN_ID,
+      KNIFE_FILM_NO,
+      SUM(ISNULL(SX_RESULT, 0)) AS SX_RESULT,
+      MAX(ISNULL(CAVITY, 0)) AS CAVITY,
+      MAX(SX_DATE) AS SX_DATE
+    FROM [dbo].[ZTB_SX_RESULT]
+    WHERE FINAL_YN = 'Y'
+    GROUP BY CTR_CD, PLAN_ID, KNIFE_FILM_NO
+  )
   SELECT
     B.FULL_KNIFE_CODE AS MA_DAO,
     B.KT_KNIFE_CODE AS MA_DAO_KT,
     M.G_CODE,
     M.G_NAME,
     C.PD,
-    C.CAVITY,
+    ISNULL(C.CAVITY, R_SUM.CAVITY) AS CAVITY,
     C.QTY_KNIFE_FILM AS QTY,
-    C.PRESS_QTY,
+    CASE
+      WHEN ISNULL(R_SUM.CAVITY, 0) = 0 THEN 0
+      ELSE ROUND(CAST(ISNULL(R_SUM.SX_RESULT, 0) AS FLOAT) / R_SUM.CAVITY, 0)
+    END AS PRESS_QTY,
     C.EMPL_NO,
     C.SX_EMPL,
-    R.SX_DATE,
+    R_SUM.SX_DATE,
     C.PLAN_ID
   FROM [dbo].[OUT_KNIFE_FILM] C
   INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
@@ -5114,9 +5144,10 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
   INNER JOIN [dbo].[M100] M
     ON A.G_CODE = M.G_CODE
     AND A.CTR_CD = M.CTR_CD
-  LEFT JOIN [dbo].[ZTB_SX_RESULT] R
-    ON C.PLAN_ID = R.PLAN_ID
-    AND C.CTR_CD = R.CTR_CD
+  LEFT JOIN R_SUM
+    ON C.PLAN_ID = R_SUM.PLAN_ID
+    AND C.KNIFE_FILM_NO = R_SUM.KNIFE_FILM_NO
+    AND C.CTR_CD = R_SUM.CTR_CD
   WHERE
     B.FULL_KNIFE_CODE = '${DATA.MA_DAO}'
     AND B.KT_KNIFE_CODE = '${DATA.MA_DAO_KT}'
@@ -5126,7 +5157,7 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
     AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
     AND A.CTR_CD = '${DATA.CTR_CD}'
   ORDER BY
-    R.SX_DATE DESC,
+    R_SUM.SX_DATE DESC,
     C.PLAN_ID DESC`;
 
   checkkq = await queryDB(setpdQuery);
