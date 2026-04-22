@@ -4871,7 +4871,7 @@ exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
   let setpdQuery = `
   WITH Summary_CTE AS (
     SELECT
-      A.MA_DAO,
+      B.FULL_KNIFE_CODE AS MA_DAO,
       B.KT_KNIFE_CODE AS MA_DAO_KT,
       MAX(B.STANDARD_PRESS_QTY) AS StandardQty,
       SUM(ISNULL(C.PRESS_QTY, 0)) AS TotalPress,
@@ -4893,7 +4893,7 @@ exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
       AND A.CTR_CD = '${DATA.CTR_CD}'
     GROUP BY
-      A.MA_DAO,
+      B.FULL_KNIFE_CODE,
       B.KT_KNIFE_CODE
   )
   SELECT
@@ -4926,7 +4926,7 @@ exports.loadDaoFilmReportWidgetData = async (req, res, DATA) => {
   let setpdQuery = `
   WITH Summary_CTE AS (
     SELECT
-      A.MA_DAO,
+      B.FULL_KNIFE_CODE AS MA_DAO,
       SUM(ISNULL(C.PRESS_QTY, 0)) AS TotalPress,
       MAX(B.STANDARD_PRESS_QTY) AS StandardQty
     FROM [dbo].[KNIFE_FILM] A
@@ -4944,7 +4944,7 @@ exports.loadDaoFilmReportWidgetData = async (req, res, DATA) => {
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
       AND A.CTR_CD = '${DATA.CTR_CD}'
-    GROUP BY A.MA_DAO, B.KT_KNIFE_CODE
+    GROUP BY B.FULL_KNIFE_CODE, B.KT_KNIFE_CODE
   )
   SELECT
     COUNT(*) AS Total_Knife,
@@ -4962,7 +4962,7 @@ exports.loadDaoFilmReportUsagePieData = async (req, res, DATA) => {
   let setpdQuery = `
   WITH Summary_CTE AS (
     SELECT
-      A.MA_DAO,
+      B.FULL_KNIFE_CODE AS MA_DAO,
       CASE
         WHEN MAX(B.STANDARD_PRESS_QTY) = 0 THEN 0
         ELSE (CAST(SUM(ISNULL(C.PRESS_QTY, 0)) AS FLOAT) / MAX(B.STANDARD_PRESS_QTY)) * 100
@@ -4982,7 +4982,7 @@ exports.loadDaoFilmReportUsagePieData = async (req, res, DATA) => {
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
       AND A.CTR_CD = '${DATA.CTR_CD}'
-    GROUP BY A.MA_DAO, B.KT_KNIFE_CODE
+    GROUP BY B.FULL_KNIFE_CODE, B.KT_KNIFE_CODE
   ),
   Grouped_Data AS (
     SELECT
@@ -5025,7 +5025,7 @@ exports.loadDaoFilmReportExportPieData = async (req, res, DATA) => {
   let setpdQuery = `
   WITH Summary_CTE AS (
     SELECT
-      A.MA_DAO,
+      B.FULL_KNIFE_CODE AS MA_DAO,
       COUNT(C.KNIFE_FILM_NO) AS ExportCount
     FROM [dbo].[KNIFE_FILM] A
     INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
@@ -5042,7 +5042,7 @@ exports.loadDaoFilmReportExportPieData = async (req, res, DATA) => {
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
       AND A.CTR_CD = '${DATA.CTR_CD}'
-    GROUP BY A.MA_DAO, B.KT_KNIFE_CODE
+    GROUP BY B.FULL_KNIFE_CODE, B.KT_KNIFE_CODE
   ),
   Grouped_Data AS (
     SELECT
@@ -5091,7 +5091,7 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
 
   let setpdQuery = `
   SELECT
-    A.MA_DAO,
+    B.FULL_KNIFE_CODE AS MA_DAO,
     B.KT_KNIFE_CODE AS MA_DAO_KT,
     M.G_CODE,
     M.G_NAME,
@@ -5118,7 +5118,7 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
     ON C.PLAN_ID = R.PLAN_ID
     AND C.CTR_CD = R.CTR_CD
   WHERE
-    A.MA_DAO = '${DATA.MA_DAO}'
+    B.FULL_KNIFE_CODE = '${DATA.MA_DAO}'
     AND B.KT_KNIFE_CODE = '${DATA.MA_DAO_KT}'
     AND A.LOAIBANGIAO_PDP = 'D'
     AND A.LOAIPHATHANH = 'PH'
