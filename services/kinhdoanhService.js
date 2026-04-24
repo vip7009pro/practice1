@@ -1171,6 +1171,12 @@ exports.deletegia = async (req, res, DATA) => {
   let setpdQuery = `DELETE FROM PROD_PRICE_TABLE WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ} AND PRICE_DATE='${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}'`;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
+  if(checkkq.tk_status === 'OK'){
+    let EMPL_NO = req.payload_data['EMPL_NO'];
+    let insertDeletedQuery = `INSERT INTO PROD_PRICE_TABLE_DELETED (CTR_CD,CUST_CD,G_CODE,PRICE_DATE,MOQ,PROD_PRICE,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,REMARK,FINAL,CURRENCY,RATE,PROD_ID,BEP) VALUES ('${DATA.CTR_CD}','${DATA.CUST_CD}','${DATA.G_CODE}','${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}',${DATA.MOQ},${DATA.PROD_PRICE},'${moment.utc().format('YYYY-MM-DD HH:mm:ss')}','${EMPL_NO}','${moment.utc().format('YYYY-MM-DD HH:mm:ss')}','${EMPL_NO}','${DATA.REMARK}','${DATA.FINAL}','${DATA.CURRENCY ?? 'USD'}',${DATA.RATE ?? 0},${DATA.PROD_ID},${DATA.BEP})`;
+    console.log(insertDeletedQuery);
+    await queryDB(insertDeletedQuery);
+  }
   //console.log(checkkq);
   res.send(checkkq);
 };
@@ -1179,6 +1185,41 @@ exports.updategia = async (req, res, DATA) => {
   let checkkq = 'OK';
   let setpdQuery = `UPDATE PROD_PRICE_TABLE SET FINAL='${DATA.FINAL}', PROD_PRICE=${DATA.PROD_PRICE}, BEP=${DATA.BEP}, MOQ = ${DATA.MOQ}, PRICE_DATE = '${DATA.PRICE_DATE}', INS_DATE=GETDATE(), INS_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND PROD_ID = ${DATA.PROD_ID}`;
   console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  //console.log(checkkq);
+  res.send(checkkq);
+};
+exports.loadbanggiaDeletedHistory = async (req, res, DATA) => {
+  let checkkq = 'OK';
+  let condition = ` WHERE 1=1`;
+  if (DATA.ALLTIME !== true) {
+    condition += ` AND PROD_PRICE_TABLE_DELETED.PRICE_DATE BETWEEN '${DATA.FROM_DATE}' AND '${DATA.TO_DATE}'`;
+  }
+  if (DATA.G_CODE !== '') {
+    condition += ` AND M100.G_CODE='${DATA.G_CODE}'`;
+  }
+  if (DATA.G_NAME !== '') {
+    condition += ` AND M100.G_NAME LIKE '%${DATA.G_NAME}%'`;
+  }
+  if (DATA.M_NAME !== '') {
+    condition += ` AND M100.PROD_MAIN_MATERIAL LIKE '%${DATA.M_NAME}%'`;
+  }
+  if (DATA.CUST_NAME_KD !== '') {
+    condition += ` AND M110.CUST_NAME_KD LIKE '%${DATA.CUST_NAME_KD}%'`;
+  }
+  let setpdQuery = `
+  SELECT PROD_PRICE_TABLE_DELETED.PROD_ID, M100.PROD_MAIN_MATERIAL, M110.CUST_NAME_KD, PROD_PRICE_TABLE_DELETED.CUST_CD, PROD_PRICE_TABLE_DELETED.G_CODE, M100.G_NAME, M100.G_NAME_KD, M100.DESCR, M100.PROD_DVT, PROD_PRICE_TABLE_DELETED.PRICE_DATE, PROD_PRICE_TABLE_DELETED.MOQ, PROD_PRICE_TABLE_DELETED.PROD_PRICE, PROD_PRICE_TABLE_DELETED.BEP, PROD_PRICE_TABLE_DELETED.INS_DATE, PROD_PRICE_TABLE_DELETED.INS_EMPL, PROD_PRICE_TABLE_DELETED.UPD_DATE, PROD_PRICE_TABLE_DELETED.UPD_EMPL, PROD_PRICE_TABLE_DELETED.REMARK, PROD_PRICE_TABLE_DELETED.FINAL, PROD_PRICE_TABLE_DELETED.CURRENCY, PROD_PRICE_TABLE_DELETED.RATE
+  FROM
+  PROD_PRICE_TABLE_DELETED
+  LEFT JOIN
+  M100 ON (M100.G_CODE = PROD_PRICE_TABLE_DELETED.G_CODE AND M100.CTR_CD = PROD_PRICE_TABLE_DELETED.CTR_CD)
+  LEFT JOIN
+  M110 ON (M110.CUST_CD = PROD_PRICE_TABLE_DELETED.CUST_CD AND M110.CTR_CD = PROD_PRICE_TABLE_DELETED.CTR_CD)
+    ${condition}
+    AND PROD_PRICE_TABLE_DELETED.CTR_CD='${DATA.CTR_CD}'
+    ORDER BY PROD_PRICE_TABLE_DELETED.INS_DATE DESC, PROD_PRICE_TABLE_DELETED.PROD_ID DESC
+    `;
+  //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
   res.send(checkkq);
