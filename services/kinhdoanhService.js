@@ -1168,16 +1168,18 @@ exports.checkShortageExist = async (req, res, DATA) => {
 };
 exports.deletegia = async (req, res, DATA) => {
   let checkkq = 'OK';
-  let setpdQuery = `DELETE FROM PROD_PRICE_TABLE WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ} AND PRICE_DATE='${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}'`;
-  //console.log(setpdQuery);
+  let EMPL_NO = req.payload_data['EMPL_NO'];
+  let setpdQuery = `DELETE FROM PROD_PRICE_TABLE WHERE CTR_CD='${DATA.CTR_CD}' AND G_CODE='${DATA.G_CODE}' AND CUST_CD ='${DATA.CUST_CD}' AND MOQ=${DATA.MOQ} AND PRICE_DATE='${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}' AND INS_EMPL='${EMPL_NO}'`;
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
+
   if(checkkq.tk_status === 'OK'){
     let EMPL_NO = req.payload_data['EMPL_NO'];
-    let insertDeletedQuery = `INSERT INTO PROD_PRICE_TABLE_DELETED (CTR_CD,CUST_CD,G_CODE,PRICE_DATE,MOQ,PROD_PRICE,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,REMARK,FINAL,CURRENCY,RATE,PROD_ID,BEP) VALUES ('${DATA.CTR_CD}','${DATA.CUST_CD}','${DATA.G_CODE}','${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}',${DATA.MOQ},${DATA.PROD_PRICE},'${moment.utc().format('YYYY-MM-DD HH:mm:ss')}','${EMPL_NO}','${moment.utc().format('YYYY-MM-DD HH:mm:ss')}','${EMPL_NO}','${DATA.REMARK}','${DATA.FINAL}','${DATA.CURRENCY ?? 'USD'}',${DATA.RATE ?? 0},${DATA.PROD_ID},${DATA.BEP})`;
+    let insertDeletedQuery = `INSERT INTO PROD_PRICE_TABLE_DELETED (CTR_CD,CUST_CD,G_CODE,PRICE_DATE,MOQ,PROD_PRICE,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,REMARK,FINAL,CURRENCY,RATE,PROD_ID,BEP) VALUES ('${DATA.CTR_CD}','${DATA.CUST_CD}','${DATA.G_CODE}','${moment.utc(DATA.PRICE_DATE).format('YYYY-MM-DD')}',${DATA.MOQ},${DATA.PROD_PRICE},GETDATE(),'${EMPL_NO}',GETDATE(),'${EMPL_NO}','${DATA.REMARK}','${DATA.FINAL}','${DATA.CURRENCY ?? 'USD'}',${DATA.RATE ?? 0},${DATA.PROD_ID},${DATA.BEP})`;
     console.log(insertDeletedQuery);
     await queryDB(insertDeletedQuery);
   }
-  //console.log(checkkq);
+  console.log(checkkq);
   res.send(checkkq);
 };
 exports.updategia = async (req, res, DATA) => {
