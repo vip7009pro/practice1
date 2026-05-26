@@ -11,7 +11,7 @@ exports.processApi = async (req, res) => {
     return res.send({ tk_status: "NG", message: `Command '${command}' not supported` });
   }
   try {
-    if (DATA.COMPANY === "CMS") {
+    if (DATA.COMPANY === "PVN") {
       if (process.env.TO && parseInt(process.env.TO) > 0) {
         await new Promise(resolve => setTimeout(resolve, parseInt(process.env.TO)));
       }
