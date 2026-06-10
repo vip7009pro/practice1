@@ -4894,14 +4894,12 @@ exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
       ), 0) AS BIGINT) AS TotalPress,
       COUNT(C.KNIFE_FILM_NO) AS ExportCount,
       MIN(A.NGAYBANGIAO) AS NgayBanGiao
-    FROM [dbo].[KNIFE_FILM] A
-    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
-      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
-      AND A.G_CODE = B.G_CODE
-      AND A.CTR_CD = B.CTR_CD
+    FROM [dbo].[ZTB_QL_KNIFE_FILM] B
+    LEFT JOIN [dbo].[KNIFE_FILM] A
+      ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID
     LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
       ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
-      AND C.CTR_CD = A.CTR_CD
+      AND C.CTR_CD = B.CTR_CD
     LEFT JOIN R_SUM
       ON C.PLAN_ID = R_SUM.PLAN_ID
       AND C.KNIFE_FILM_NO = R_SUM.KNIFE_FILM_NO
@@ -4909,10 +4907,10 @@ exports.loadDaoFilmReportBackData = async (req, res, DATA) => {
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
-      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_STATUS = 'OK'
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
-      AND A.CTR_CD = '${DATA.CTR_CD}'
+      AND B.CTR_CD = '${DATA.CTR_CD}'   -- Chuyển từ A.CTR_CD sang B.CTR_CD cho hợp lý
     GROUP BY
       B.FULL_KNIFE_CODE,
       B.KT_KNIFE_CODE
@@ -4950,19 +4948,19 @@ exports.loadDaoFilmReportWidgetData = async (req, res, DATA) => {
       B.FULL_KNIFE_CODE AS MA_DAO,
       MAX(ISNULL(B.TOTAL_PRESS2, 0)) AS TotalPress,
       MAX(B.STANDARD_PRESS_QTY) AS StandardQty
-    FROM [dbo].[KNIFE_FILM] A
-    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
-      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
-      AND A.G_CODE = B.G_CODE
-      AND A.CTR_CD = B.CTR_CD
+    FROM [dbo].[ZTB_QL_KNIFE_FILM] B
+    LEFT JOIN [dbo].[KNIFE_FILM] A
+      ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
-      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_STATUS = 'OK'
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
-      AND A.CTR_CD = '${DATA.CTR_CD}'
-    GROUP BY B.FULL_KNIFE_CODE, B.KT_KNIFE_CODE
+      AND B.CTR_CD = '${DATA.CTR_CD}'        -- Chuyển từ A.CTR_CD sang B.CTR_CD
+    GROUP BY 
+      B.FULL_KNIFE_CODE, 
+      B.KT_KNIFE_CODE
   )
   SELECT
     COUNT(*) AS Total_Knife,
@@ -4985,18 +4983,16 @@ exports.loadDaoFilmReportUsagePieData = async (req, res, DATA) => {
         WHEN MAX(B.STANDARD_PRESS_QTY) = 0 THEN 0
         ELSE (CAST(MAX(ISNULL(B.TOTAL_PRESS2, 0)) AS FLOAT) / MAX(B.STANDARD_PRESS_QTY)) * 100
       END AS UsagePct
-    FROM [dbo].[KNIFE_FILM] A
-    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
-      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
-      AND A.G_CODE = B.G_CODE
-      AND A.CTR_CD = B.CTR_CD
+    FROM [dbo].[ZTB_QL_KNIFE_FILM] B
+    LEFT JOIN [dbo].[KNIFE_FILM] A
+      ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
-      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_STATUS = 'OK'
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
-      AND A.CTR_CD = '${DATA.CTR_CD}'
+      AND B.CTR_CD = '${DATA.CTR_CD}'        -- Chuyển từ A.CTR_CD sang B.CTR_CD
     GROUP BY B.FULL_KNIFE_CODE, B.KT_KNIFE_CODE
   ),
   Grouped_Data AS (
@@ -5042,21 +5038,19 @@ exports.loadDaoFilmReportExportPieData = async (req, res, DATA) => {
     SELECT
       B.FULL_KNIFE_CODE AS MA_DAO,
       COUNT(C.KNIFE_FILM_NO) AS ExportCount
-    FROM [dbo].[KNIFE_FILM] A
-    INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
-      ON A.KNIFE_FILM_ID = B.KNIFE_FILM_ID
-      AND A.G_CODE = B.G_CODE
-      AND A.CTR_CD = B.CTR_CD
+    FROM [dbo].[ZTB_QL_KNIFE_FILM] B
+    LEFT JOIN [dbo].[KNIFE_FILM] A
+      ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID
     LEFT JOIN [dbo].[OUT_KNIFE_FILM] C
       ON B.KNIFE_FILM_NO = C.KNIFE_FILM_NO
-      AND C.CTR_CD = A.CTR_CD
+      AND C.CTR_CD = B.CTR_CD
     WHERE
       A.LOAIBANGIAO_PDP = 'D'
       AND A.LOAIPHATHANH = 'PH'
-      AND A.KNIFE_FILM_STATUS = 'OK'
+      AND B.KNIFE_STATUS = 'OK'
       AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
       AND A.NGAYBANGIAO BETWEEN '${fromDate}' AND '${toDate}'
-      AND A.CTR_CD = '${DATA.CTR_CD}'
+      AND B.CTR_CD = '${DATA.CTR_CD}'        -- Chuyển từ A.CTR_CD sang B.CTR_CD
     GROUP BY B.FULL_KNIFE_CODE, B.KT_KNIFE_CODE
   ),
   Grouped_Data AS (
@@ -5134,16 +5128,15 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
     R_SUM.SX_DATE,
     C.PLAN_ID
   FROM [dbo].[OUT_KNIFE_FILM] C
-  INNER JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
+  LEFT JOIN [dbo].[ZTB_QL_KNIFE_FILM] B
     ON C.KNIFE_FILM_NO = B.KNIFE_FILM_NO
     AND C.CTR_CD = B.CTR_CD
-  INNER JOIN [dbo].[KNIFE_FILM] A
-    ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID
-    AND B.G_CODE = A.G_CODE
+  LEFT JOIN [dbo].[KNIFE_FILM] A
+    ON B.KNIFE_FILM_ID = A.KNIFE_FILM_ID   
     AND B.CTR_CD = A.CTR_CD
-  INNER JOIN [dbo].[M100] M
-    ON A.G_CODE = M.G_CODE
-    AND A.CTR_CD = M.CTR_CD
+  LEFT JOIN [dbo].[M100] M
+    ON B.G_CODE = M.G_CODE
+    AND B.CTR_CD = M.CTR_CD
   LEFT JOIN R_SUM
     ON C.PLAN_ID = R_SUM.PLAN_ID
     AND C.KNIFE_FILM_NO = R_SUM.KNIFE_FILM_NO
@@ -5153,12 +5146,14 @@ exports.loadDaoFilmReportDetailData = async (req, res, DATA) => {
     AND B.KT_KNIFE_CODE = '${DATA.MA_DAO_KT}'
     AND A.LOAIBANGIAO_PDP = 'D'
     AND A.LOAIPHATHANH = 'PH'
-    AND A.KNIFE_FILM_STATUS = 'OK'
+    AND B.KNIFE_STATUS = 'OK'
     AND B.KNIFE_TYPE IN ('PVC', 'PINACLE')
     AND A.CTR_CD = '${DATA.CTR_CD}'
   ORDER BY
     R_SUM.SX_DATE DESC,
-    C.PLAN_ID DESC`;
+    C.PLAN_ID DESC
+  `;
+  console.log(setpdQuery);
 
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
