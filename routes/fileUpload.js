@@ -1,11 +1,22 @@
 const express = require("express");
 const multer = require("multer");
+const fs = require("fs");
 const router = express.Router();
 const { uploadFile } = require("../services/fileService");
 const { checkLoginUpdateIndex } = require("../middleware/auth");
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, process.env.TEMP_UPLOAD_FOLDER),
+  destination: (req, file, cb) => {
+    const tempDir = process.env.TEMP_UPLOAD_FOLDER;
+    if (tempDir && !fs.existsSync(tempDir)) {
+      try {
+        fs.mkdirSync(tempDir, { recursive: true });
+      } catch (err) {
+        console.error("Error creating TEMP_UPLOAD_FOLDER:", err);
+      }
+    }
+    cb(null, tempDir);
+  },
   filename: (req, file, cb) => cb(null, file.originalname),
 });
 const upload = multer({

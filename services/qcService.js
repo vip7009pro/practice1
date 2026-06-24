@@ -2771,6 +2771,20 @@ exports.update_ncr_image = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
+exports.update_ncr_process_status = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE ZTB_IQC_NCRTB SET PROCESS_STATUS='${DATA.process_status}', UPD_DATE=GETDATE(), UPD_EMPL='${req.payload_data["EMPL_NO"]}' WHERE CTR_CD='${DATA.CTR_CD}' AND NCR_ID=${DATA.NCR_ID}`;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.update_ncr_countermeasure = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `UPDATE ZTB_IQC_NCRTB SET COUNTERMEASURE='${DATA.countermeasure}', COUNTERMEASURE_EXT='${DATA.countermeasure_ext}', UPD_DATE=GETDATE(), UPD_EMPL='${req.payload_data["EMPL_NO"]}' WHERE CTR_CD='${DATA.CTR_CD}' AND NCR_ID=${DATA.NCR_ID}`;
+  console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
 exports.loadNCRData = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `SELECT ZTB_IQC_NCRTB.*, M110.CUST_NAME_KD AS VENDOR, I222.M_CODE, M090.WIDTH_CD FROM ZTB_IQC_NCRTB 
@@ -2803,7 +2817,7 @@ exports.loadHoldingMaterialByNCR_ID = async (req, res, DATA) => {
 exports.insertNCRData = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let setpdQuery = `INSERT INTO ZTB_IQC_NCRTB (CTR_CD,FACTORY,NCR_NO,NCR_DATE,RESPONSE_REQ_DATE,CUST_CD,M_NAME,CMS_LOT,VENDOR_LOT,DEFECT_TITLE,DEFECT_DETAIL,REMARK,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${DATA.FACTORY}','${DATA.NCR_NO}','${DATA.NCR_DATE}','${DATA.RESPONSE_REQ_DATE}','${DATA.CUST_CD}','${DATA.M_NAME}','${DATA.CMS_LOT}','${DATA.VENDOR_LOT}',N'${DATA.DEFECT_TITLE}',N'${DATA.DEFECT_DETAIL}',N'${DATA.REMARK}',GETDATE(),'${EMPL_NO}')`;
+  let setpdQuery = `INSERT INTO ZTB_IQC_NCRTB (CTR_CD,FACTORY,NCR_NO,NCR_DATE,RESPONSE_REQ_DATE,CUST_CD,M_NAME,CMS_LOT,VENDOR_LOT,DEFECT_TITLE,DEFECT_DETAIL,REMARK,INS_DATE,INS_EMPL,COUNTERMEASURE,COUNTERMEASURE_EXT) VALUES ('${DATA.CTR_CD}','${DATA.FACTORY}','${DATA.NCR_NO}','${DATA.NCR_DATE}','${DATA.RESPONSE_REQ_DATE}','${DATA.CUST_CD}','${DATA.M_NAME}','${DATA.CMS_LOT}','${DATA.VENDOR_LOT}',N'${DATA.DEFECT_TITLE}',N'${DATA.DEFECT_DETAIL}',N'${DATA.REMARK}',GETDATE(),'${EMPL_NO}','N','')`;
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -5614,3 +5628,106 @@ exports.common = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 }
+
+exports.qc_get_equipment_list = async (req, res, DATA) => {
+  let setpdQuery = `
+    SELECT 
+      E.*,
+      H.CAL_PERIOD,
+      H.CAL_DATE AS LAST_CAL_DATE,
+      H.NEXT_CAL_DATE,
+      H.STAMP_IMAGE_URL
+    FROM QC_EQUIPMENT_LIST E
+    OUTER APPLY (
+        SELECT TOP 1 CAL_PERIOD, CAL_DATE, NEXT_CAL_DATE, STAMP_IMAGE_URL
+        FROM QC_CALIBRATION_HISTORY
+        WHERE EQ_ID = E.EQ_ID AND CTR_CD = E.CTR_CD
+        ORDER BY CAL_DATE DESC
+    ) H
+    WHERE E.CTR_CD = '${DATA.CTR_CD}'
+    ORDER BY E.EQ_ID DESC
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_insert_equipment = async (req, res, DATA) => {
+  let setpdQuery = `
+    INSERT INTO QC_EQUIPMENT_LIST (CTR_CD, EQ_NAME, CONTROL_NO, SERIES_MODEL, MAKER, IMAGE_URL, STATUS, DEPARTMENT, LOCATION, INS_DATE, INS_EMPL)
+    VALUES ('${DATA.CTR_CD}', N'${DATA.EQ_NAME || ''}', N'${DATA.CONTROL_NO || ''}', N'${DATA.SERIES_MODEL || ''}', N'${DATA.MAKER || ''}', N'${DATA.IMAGE_URL || ''}', '${DATA.STATUS || 'IN_USE'}', N'${DATA.DEPARTMENT || ''}', N'${DATA.LOCATION || ''}', GETDATE(), '${DATA.USER || ''}')
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_update_equipment = async (req, res, DATA) => {
+  let setpdQuery = `
+    UPDATE QC_EQUIPMENT_LIST
+    SET EQ_NAME = N'${DATA.EQ_NAME || ''}',
+        CONTROL_NO = N'${DATA.CONTROL_NO || ''}',
+        SERIES_MODEL = N'${DATA.SERIES_MODEL || ''}',
+        MAKER = N'${DATA.MAKER || ''}',
+        IMAGE_URL = N'${DATA.IMAGE_URL || ''}',
+        STATUS = '${DATA.STATUS || 'IN_USE'}',
+        DEPARTMENT = N'${DATA.DEPARTMENT || ''}',
+        LOCATION = N'${DATA.LOCATION || ''}',
+        UPD_DATE = GETDATE(),
+        UPD_EMPL = '${DATA.USER || ''}'
+    WHERE EQ_ID = ${DATA.EQ_ID} AND CTR_CD = '${DATA.CTR_CD}'
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_delete_equipment = async (req, res, DATA) => {
+  let setpdQuery = `
+    DELETE FROM QC_CALIBRATION_HISTORY WHERE EQ_ID = ${DATA.EQ_ID} AND CTR_CD = '${DATA.CTR_CD}';
+    DELETE FROM QC_EQUIPMENT_LIST WHERE EQ_ID = ${DATA.EQ_ID} AND CTR_CD = '${DATA.CTR_CD}';
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_get_calibration_history = async (req, res, DATA) => {
+  let setpdQuery = `
+    SELECT * FROM QC_CALIBRATION_HISTORY
+    WHERE EQ_ID = ${DATA.EQ_ID} AND CTR_CD = '${DATA.CTR_CD}'
+    ORDER BY CAL_DATE DESC
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_insert_calibration = async (req, res, DATA) => {
+  let setpdQuery = `
+    INSERT INTO QC_CALIBRATION_HISTORY (CTR_CD, EQ_ID, CAL_DATE, NEXT_CAL_DATE, CAL_PERIOD, STAMP_IMAGE_URL, CAL_PERSON, REMARK, INS_DATE, INS_EMPL)
+    VALUES ('${DATA.CTR_CD}', ${DATA.EQ_ID}, '${DATA.CAL_DATE}', '${DATA.NEXT_CAL_DATE}', ${DATA.CAL_PERIOD || 0}, N'${DATA.STAMP_IMAGE_URL || ''}', N'${DATA.CAL_PERSON || ''}', N'${DATA.REMARK || ''}', GETDATE(), '${DATA.USER || ''}')
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_update_calibration = async (req, res, DATA) => {
+  let setpdQuery = `
+    UPDATE QC_CALIBRATION_HISTORY
+    SET CAL_DATE = '${DATA.CAL_DATE}',
+        NEXT_CAL_DATE = '${DATA.NEXT_CAL_DATE}',
+        CAL_PERIOD = ${DATA.CAL_PERIOD || 0},
+        STAMP_IMAGE_URL = N'${DATA.STAMP_IMAGE_URL || ''}',
+        CAL_PERSON = N'${DATA.CAL_PERSON || ''}',
+        REMARK = N'${DATA.REMARK || ''}',
+        UPD_DATE = GETDATE(),
+        UPD_EMPL = '${DATA.USER || ''}'
+    WHERE CAL_ID = ${DATA.CAL_ID} AND CTR_CD = '${DATA.CTR_CD}'
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+
+exports.qc_delete_calibration = async (req, res, DATA) => {
+  let setpdQuery = `
+    DELETE FROM QC_CALIBRATION_HISTORY WHERE CAL_ID = ${DATA.CAL_ID} AND CTR_CD = '${DATA.CTR_CD}'
+  `;
+  let checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
