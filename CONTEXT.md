@@ -1,5 +1,6 @@
 # Current Context
 
+- Database Migration & Query Updates (2026-07-02): Added `PART_CODE_OTHERS` column (VARCHAR(1000) NULL) to table `DEFECT_MANAGEMENT` via a migration script. Updated SQL SELECT query in `loadQTRData` (`services/qcService.js`) to retrieve and return `PART_CODE_OTHERS`.
 - Entry point: [index.js](index.js)
 - There is a geo-IP middleware in `index.js`, but `GEOIP_BYPASS = true`, so it returns early and does not block requests.
 - If bypass is turned off, only country `VN` is allowed and other countries receive HTTP 403 with `Access denied: country not allowed`.
