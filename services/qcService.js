@@ -977,9 +977,25 @@ exports.checkLabelID2 = async (req, res, DATA) => {
   res.send(checkkq);
 };
 exports.registerDTCTest = async (req, res, DATA) => {
+  if (!DATA.REQUEST_DEPT_CODE || String(DATA.REQUEST_DEPT_CODE).trim() === '') {
+    res.send({ tk_status: 'NG', message: 'Mã bộ phận (REQUEST_DEPT_CODE) không được phép rỗng. Đăng ký thất bại!' });
+    return;
+  }
+  if (!DATA.DTC_ID || Number(DATA.DTC_ID) <= 0) {
+    res.send({ tk_status: 'NG', message: 'Mã DTC_ID không hợp lệ (<= 0). Đăng ký thất bại!' });
+    return;
+  }
+  if (!DATA.M_CODE || String(DATA.M_CODE).trim() === '') {
+    res.send({ tk_status: 'NG', message: 'Mã nguyên vật liệu (M_CODE) không được phép rỗng. Đăng ký thất bại!' });
+    return;
+  }
+  if (!DATA.G_CODE || String(DATA.G_CODE).trim() === '') {
+    res.send({ tk_status: 'NG', message: 'Mã sản phẩm (G_CODE) không được phép rỗng. Đăng ký thất bại!' });
+    return;
+  }
   let checkkq = "OK";
   let WORK_POSITION_CODE = req.payload_data["WORK_POSITION_CODE"];
-  let setpdQuery = ` INSERT INTO ZTB_REL_REQUESTTABLE (CTR_CD,DTC_ID,TEST_CODE,TEST_TYPE_CODE,REQUEST_DEPT_CODE,PROD_REQUEST_NO,PROD_REQUEST_DATE,REQUEST_EMPL_NO,REQUEST_DATETIME,REMARK,G_CODE,M_CODE,M_LOT_NO, WORK_POSITION_CODE) VALUES ('${DATA.CTR_CD}',${DATA.DTC_ID}, ${DATA.TEST_CODE},  ${DATA.TEST_TYPE_CODE},  ${DATA.REQUEST_DEPT_CODE}, '${DATA.PROD_REQUEST_NO}', '${DATA.PROD_REQUEST_DATE}', '${DATA.REQUEST_EMPL_NO}',GETDATE(),'${DATA.REMARK}','${DATA.G_CODE}','${DATA.M_CODE}','${DATA.M_LOT_NO}', '${WORK_POSITION_CODE}')`;
+  let setpdQuery = ` INSERT INTO ZTB_REL_REQUESTTABLE (CTR_CD,DTC_ID,TEST_CODE,TEST_TYPE_CODE,REQUEST_DEPT_CODE,PROD_REQUEST_NO,PROD_REQUEST_DATE,REQUEST_EMPL_NO,REQUEST_DATETIME,REMARK,G_CODE,M_CODE,M_LOT_NO, WORK_POSITION_CODE) VALUES ('${DATA.CTR_CD}',${DATA.DTC_ID}, ${DATA.TEST_CODE},  ${DATA.TEST_TYPE_CODE},  '${DATA.REQUEST_DEPT_CODE}', '${DATA.PROD_REQUEST_NO}', '${DATA.PROD_REQUEST_DATE}', '${DATA.REQUEST_EMPL_NO}',GETDATE(),'${DATA.REMARK}','${DATA.G_CODE}','${DATA.M_CODE}','${DATA.M_LOT_NO}', '${WORK_POSITION_CODE}')`;
   console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
