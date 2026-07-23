@@ -287,6 +287,13 @@ exports.checkPROCESS_LOT_NO = async (req, res, DATA) => {
   );
   res.send(checkkq);
 };
+exports.checkG_CODE_From_PROCESS_LOT_NO = async (req, res, DATA) => {
+  let checkkq = await queryDB_New(
+    `SELECT DISTINCT ZTB_QLSXPLAN.G_CODE, M100.G_NAME_KD  FROM P501 LEFT JOIN ZTB_QLSXPLAN ON (ZTB_QLSXPLAN.PLAN_ID = P501.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = P501.CTR_CD) LEFT JOIN M100 ON (M100.G_CODE = ZTB_QLSXPLAN.G_CODE AND M100.CTR_CD = ZTB_QLSXPLAN.CTR_CD) WHERE P501.CTR_CD=@ctr_cd AND P501.PROCESS_LOT_NO=@process_lot_no`,
+    { ctr_cd: DATA.CTR_CD, process_lot_no: DATA.PROCESS_LOT_NO }
+  );
+  res.send(checkkq);
+};
 
 exports.check_m_code_m140_main = async (req, res, DATA) => {
   let checkkq = await queryDB_New(
