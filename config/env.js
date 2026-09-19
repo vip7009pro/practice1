@@ -26,7 +26,7 @@ module.exports = {
       "http://cmsvina4285.com:3006",
       "http://cmsvina4285.com:3001",
       "http://cmsvina4285.com:3000",
-      /* "http://192.168.1.136:3001", */
+      "http://192.168.1.136:3001",
       /* "https://cms.ddns.net:3004",
       "http://cms.ddns.net:3010",
       "https://cms.ddns.net:3010",
@@ -101,7 +101,7 @@ QZ8flz50tyO4IltLtbM9m9bXUU17ACq2ifIbWGBPjyWamFRkxCCmXOkl2PhH5ejz
 L3oHLUzDJVxcRntmUyszpdY54zDnHbp+bnGnrWn54lXamVqwmT0FIYCif36hu2P1
 eeP4GBK09qJiI6HO1Z7p9Q==
 -----END PRIVATE KEY-----`,
-publicKey: `-----BEGIN PUBLIC KEY-----
+  publicKey: `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAo3gBiZprLwUNg4vp+vx1
 Jy39CdFo9LJTiIzTWKST3RGmsnFaBi0OzpzoAt4mz7Vc91v9MTqYxQTczv0HKhvo
 DmSUbNmdeuH+pj6PD1XF8tfkf8n43ysQIDrihRHHmQtz1L1XJ+D5n11ZkjwbpAJS
