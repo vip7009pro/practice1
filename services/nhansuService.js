@@ -167,7 +167,10 @@ exports.setdiemdanhnhom = async (req, res, DATA) => {
       res.send(update_dd);
     }
   } else {
-    res.send("NO_LEADER");
+    res.send({
+      tk_status: "NG",
+      message: "Không có quyền: chỉ Leader / Sub Leader / Dept Staff / ADMIN mới được điểm danh",
+    });
   }
 };
 exports.setdiemdanhnhom2 = async (req, res, DATA) => {
@@ -197,7 +200,10 @@ exports.setdiemdanhnhom2 = async (req, res, DATA) => {
       res.send(update_dd);
     }
   } else {
-    res.send("NO_LEADER");
+    res.send({
+      tk_status: "NG",
+      message: "Không có quyền: chỉ Leader / Sub Leader / Dept Staff / ADMIN mới được điểm danh",
+    });
   }
 };
 exports.dangkytangcanhom = async (req, res, DATA) => {
@@ -1957,7 +1963,10 @@ exports.setdiemdanhnhom2 = async (req, res, DATA) => {
       res.send(update_dd);
     }
   } else {
-    res.send("NO_LEADER");
+    res.send({
+      tk_status: "NG",
+      message: "Không có quyền: chỉ Leader / Sub Leader / Dept Staff / ADMIN mới được điểm danh",
+    });
   }
 };
 exports.fixWorkHour = async (req, res, DATA) => {
@@ -2004,7 +2013,10 @@ exports.fixWorkHour = async (req, res, DATA) => {
       res.send(update_dd);
     }
   } else {
-    res.send("NO_LEADER");
+    res.send({
+      tk_status: "NG",
+      message: "Không có quyền: chỉ Leader / Sub Leader / Dept Staff / ADMIN mới được điểm danh",
+    });
   }
 };
 exports.fixTime = async (req, res, DATA) => {
