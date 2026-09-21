@@ -213,6 +213,15 @@ exports.checkMNAMEfromLot = async (req, res, DATA) => {
   );
   res.send(kqua);
 };
+exports.checkMNAMEfromLotLineQC = async (req, res, DATA) => {
+  let kqua = await queryDB_New(
+    `SELECT I222.M_CODE, M090.M_NAME,M090.WIDTH_CD, I222.IN_CFM_QTY, I222.ROLL_QTY, I222.INS_DATE AS OUT_DATE FROM I222 
+LEFT JOIN M090 ON M090.CTR_CD = I222.CTR_CD AND M090.M_CODE = I222.M_CODE
+WHERE I222.M_LOT_NO=@m_lot_no AND I222.CTR_CD=@ctr_cd`,    
+    { m_lot_no: DATA.M_LOT_NO, ctr_cd: DATA.CTR_CD }
+  );
+  res.send(kqua);
+};
 
 exports.checkPLAN_ID = async (req, res, DATA) => {
   let checkkq = await queryDB_New(
@@ -264,6 +273,16 @@ exports.checkPLAN_ID_Exist = async (req, res, DATA) => {
 exports.checkPlanIdP501 = async (req, res, DATA) => {
   let checkkq = await queryDB_New(
     `SELECT TOP 1 * FROM P501 WHERE CTR_CD=@ctr_cd AND PLAN_ID=@plan_id`,
+    { ctr_cd: DATA.CTR_CD, plan_id: DATA.PLAN_ID }
+  );
+  res.send(checkkq);
+};
+exports.checkPlanIdLineQC = async (req, res, DATA) => {
+  let checkkq = await queryDB_New(
+    `SELECT ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.G_CODE, M100.G_NAME,ZTB_QLSXPLAN.PROD_REQUEST_NO, P400.PROD_REQUEST_DATE FROM ZTB_QLSXPLAN
+LEFT JOIN M100 ON M100.CTR_CD = ZTB_QLSXPLAN.CTR_CD AND M100.G_CODE = ZTB_QLSXPLAN.G_CODE
+LEFT JOIN P400 ON P400.CTR_CD = ZTB_QLSXPLAN.CTR_CD AND P400.PROD_REQUEST_NO = ZTB_QLSXPLAN.PROD_REQUEST_NO
+WHERE ZTB_QLSXPLAN.CTR_CD=@ctr_cd AND ZTB_QLSXPLAN.PLAN_ID=@plan_id`,
     { ctr_cd: DATA.CTR_CD, plan_id: DATA.PLAN_ID }
   );
   res.send(checkkq);

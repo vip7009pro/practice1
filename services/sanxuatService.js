@@ -2608,6 +2608,248 @@ exports.getqlsxplan2 = async (req, res, DATA) => {
   let checkkq = "OK";
   let condition = " WHERE 1=1 ";
   if (DATA.FACTORY !== "ALL") {
+    condition += ` AND qp.PLAN_FACTORY='${DATA.FACTORY}'`;
+  }
+  if (DATA.MACHINE !== "ALL") {
+    condition += ` AND SUBSTRING(qp.PLAN_EQ,1,2)='${DATA.MACHINE}'`;
+  }
+  condition += ` AND  qp.PLAN_DATE='${DATA.PLAN_DATE}'`;
+  let setpdQuery = `
+  WITH FilteredPlan AS (
+    SELECT 
+        qp.*,
+        m.EQ1, m.EQ2, m.EQ3, m.EQ4,
+        m.Setting1, m.Setting2, m.Setting3, m.Setting4,
+        m.UPH1, m.UPH2, m.UPH3, m.UPH4,
+        m.PD, m.G_C, m.G_C_R,
+        m.LOSS_SX1, m.LOSS_SX2, m.LOSS_SX3, m.LOSS_SX4,
+        m.LOSS_SETTING1, m.LOSS_SETTING2, m.LOSS_SETTING3, m.LOSS_SETTING4,
+        m.PROD_PRINT_TIMES, m.USE_YN, m.PDBV, m.PDBV_EMPL, m.PDBV_DATE,
+        m.FACTORY, m.Step1, m.Step2, m.Step3, m.Step4, m.NOTE, m.G_NAME, m.G_NAME_KD
+    FROM ZTB_QLSXPLAN qp WITH (INDEX = ZTB_QLSXPLAN_INDEX)
+    INNER JOIN M100 m ON m.G_CODE = qp.G_CODE AND m.CTR_CD = qp.CTR_CD
+     ${condition}
+),
+
+DMTB AS (
+    SELECT 
+        PLAN_FACTORY, PLAN_DATE, G_CODE, PLAN_EQ, PLAN_ORDER, PLAN_ID, PLAN_QTY, CTR_CD, IS_SETTING,
+        CASE 
+            WHEN IS_SETTING = 'Y' AND SUBSTRING(PLAN_EQ,1,2) = EQ1 THEN ISNULL(Setting1, 9999)
+            WHEN IS_SETTING = 'Y' AND SUBSTRING(PLAN_EQ,1,2) = EQ2 THEN ISNULL(Setting2, 9999)
+            WHEN IS_SETTING = 'Y' AND SUBSTRING(PLAN_EQ,1,2) = EQ3 THEN ISNULL(Setting3, 9999)
+            WHEN IS_SETTING = 'Y' AND SUBSTRING(PLAN_EQ,1,2) = EQ4 THEN ISNULL(Setting4, 9999)
+            ELSE 0
+        END AS SETTING_TIME,
+        CASE 
+            WHEN SUBSTRING(PLAN_EQ,1,2) = EQ1 THEN ISNULL(NULLIF(UPH1, 0), 1)
+            WHEN SUBSTRING(PLAN_EQ,1,2) = EQ2 THEN ISNULL(NULLIF(UPH2, 0), 1)
+            WHEN SUBSTRING(PLAN_EQ,1,2) = EQ3 THEN ISNULL(NULLIF(UPH3, 0), 1)
+            WHEN SUBSTRING(PLAN_EQ,1,2) = EQ4 THEN ISNULL(NULLIF(UPH4, 0), 1)
+            ELSE 1
+        END AS UPH
+    FROM FilteredPlan
+),
+
+LEATIMETB AS (
+    SELECT 
+        PLAN_ID, PLAN_FACTORY, CTR_CD,
+        (SETTING_TIME + PLAN_QTY * 1.0 / UPH * 60) AS LEADTIME,
+        SUM(SETTING_TIME + PLAN_QTY * 1.0 / UPH * 60) 
+            OVER (PARTITION BY PLAN_EQ, PLAN_FACTORY ORDER BY PLAN_ORDER) AS ACC_TIME
+    FROM DMTB
+),
+
+TEMP_TB AS (
+    SELECT 
+        p.CTR_CD, 
+        p.PLAN_ID, 
+        SUM(ISNULL(p.TEMP_QTY, 0)) AS TEMP_QTY
+    FROM FilteredPlan fp
+    INNER JOIN P501 p ON p.PLAN_ID = fp.PLAN_ID AND p.CTR_CD = fp.CTR_CD
+    WHERE p.REMARK <> N'HUY TEM' OR p.REMARK IS NULL
+    GROUP BY p.CTR_CD, p.PLAN_ID
+),
+
+BB AS (
+    SELECT 
+        PVTB.PROD_REQUEST_NO,
+        ISNULL(PVTB.[1], 0) AS CD1,
+        ISNULL(PVTB.[2], 0) AS CD2,
+        ISNULL(PVTB.[3], 0) AS CD3,
+        ISNULL(PVTB.[4], 0) AS CD4,
+        PVTB.CTR_CD
+    FROM (
+        SELECT 
+            qp.PROD_REQUEST_NO,
+            qp.PROCESS_NUMBER,
+            SUM(ISNULL(sx.SX_RESULT, 0)) AS KETQUASX,
+            qp.CTR_CD
+        FROM ZTB_QLSXPLAN qp
+        LEFT JOIN ZTB_SX_RESULT sx ON qp.PLAN_ID = sx.PLAN_ID AND qp.CTR_CD = sx.CTR_CD
+        WHERE qp.STEP = 0
+          AND qp.CTR_CD = '002'
+          AND EXISTS (SELECT 1 FROM FilteredPlan fp WHERE fp.PROD_REQUEST_NO = qp.PROD_REQUEST_NO)
+        GROUP BY qp.PROD_REQUEST_NO, qp.PROCESS_NUMBER, qp.CTR_CD
+    ) AS PV
+    PIVOT (
+        SUM(KETQUASX) FOR PROCESS_NUMBER IN ([1], [2], [3], [4])
+    ) AS PVTB
+),
+
+-- ========== LOSSKT được viết lại để ổn định ==========
+NeededGCodes AS (
+    SELECT DISTINCT G_CODE, CTR_CD
+    FROM FilteredPlan
+),
+
+DailyInspect AS (
+    SELECT 
+        i.G_CODE,
+        CAST(i.INSPECT_DATETIME AS date) AS INSPECT_DATE,
+        SUM(i.INSPECT_TOTAL_QTY - i.ERR32) AS INSPECT_TOTAL_QTY,
+        SUM(i.ERR1 + i.ERR2 + i.ERR3 + i.ERR4 + i.ERR5 + i.ERR6 + i.ERR7 + i.ERR8 + i.ERR9 + i.ERR10 +
+            i.ERR11 + i.ERR12 + i.ERR13 + i.ERR14 + i.ERR15 + i.ERR16 + i.ERR17 + i.ERR18 + i.ERR19 + i.ERR20 +
+            i.ERR21 + i.ERR22 + i.ERR23 + i.ERR24 + i.ERR25 + i.ERR26 + i.ERR27 + i.ERR28 + i.ERR29 + i.ERR30 + i.ERR31) AS TOTAL_NG,
+        i.CTR_CD
+    FROM NeededGCodes ng
+    INNER JOIN ZTBINSPECTNGTB i WITH (INDEX = IDX_ZTBINSPECTNGTB_G_CODE)   -- ép dùng index G_CODE
+        ON i.G_CODE = ng.G_CODE AND i.CTR_CD = ng.CTR_CD
+    GROUP BY i.G_CODE, CAST(i.INSPECT_DATETIME AS date), i.CTR_CD
+),
+
+LOSSKT AS (
+    SELECT 
+        G_CODE,
+        SUM(INSPECT_TOTAL_QTY) AS INSPECT_TOTAL_QTY,
+        SUM(TOTAL_NG) AS TOTAL_NG,
+        CASE 
+            WHEN SUM(TOTAL_NG) * 1.0 / NULLIF(SUM(INSPECT_TOTAL_QTY), 0) > 0.05 
+            THEN 0.05 
+            ELSE SUM(TOTAL_NG) * 1.0 / NULLIF(SUM(INSPECT_TOTAL_QTY), 0) 
+        END AS NG_RATE,
+        CTR_CD
+    FROM (
+        SELECT 
+            G_CODE, INSPECT_DATE, INSPECT_TOTAL_QTY, TOTAL_NG, CTR_CD,
+            ROW_NUMBER() OVER (PARTITION BY G_CODE ORDER BY INSPECT_DATE DESC) AS RN
+        FROM DailyInspect
+    ) t
+    WHERE RN <= 10 AND INSPECT_TOTAL_QTY <> 0
+    GROUP BY G_CODE, CTR_CD
+)
+-- =====================================================
+
+SELECT 
+    fp.PROD_PRINT_TIMES,
+    p400.IS_TAM_THOI,
+    p400.DELIVERY_DT,
+    fp.USE_YN,
+    fp.PDBV,
+    fp.PDBV_EMPL,
+    fp.PDBV_DATE,
+    fp.IS_SETTING,
+    fp.REQ_DF,
+    fp.XUATDAOFILM,
+    fp.EQ_STATUS,
+    fp.MAIN_MATERIAL,
+    fp.INT_TEM,
+    fp.CHOTBC,
+    fp.DKXL,
+    fp.NEXT_PLAN_ID,
+    temp.TEMP_QTY AS KQ_SX_TAM,
+    fp.KETQUASX,
+    fp.PROCESS_NUMBER,
+    fp.PLAN_ORDER,
+    fp.STEP,
+    fp.PLAN_ID,
+    fp.PLAN_DATE,
+    fp.PROD_REQUEST_NO,
+    fp.PLAN_QTY,
+    fp.OLD_PLAN_QTY,
+    fp.PLAN_EQ,
+    fp.PLAN_FACTORY,
+    fp.PLAN_LEADTIME,
+    fp.INS_EMPL,
+    fp.INS_DATE,
+    fp.UPD_EMPL,
+    fp.UPD_DATE,
+    fp.G_CODE,
+    fp.G_NAME,
+    fp.PD,
+    (fp.G_C * fp.G_C_R) AS CAVITY,
+    fp.G_NAME_KD,
+    p400.PROD_REQUEST_DATE,
+    p400.PROD_REQUEST_QTY,
+    ISNULL(bb.CD1, 0) AS CD1,
+    ISNULL(bb.CD2, 0) AS CD2,
+    ISNULL(bb.CD3, 0) AS CD3,
+    ISNULL(bb.CD4, 0) AS CD4,
+    CASE WHEN fp.EQ1 IN ('NA','NO','') OR fp.EQ1 IS NULL THEN 0 
+         ELSE p400.PROD_REQUEST_QTY - ISNULL(bb.CD1, 0) END AS TON_CD1,
+    CASE WHEN fp.EQ2 IN ('NA','NO','') OR fp.EQ2 IS NULL THEN 0 
+         ELSE p400.PROD_REQUEST_QTY - ISNULL(bb.CD2, 0) END AS TON_CD2,
+    CASE WHEN fp.EQ3 IN ('NA','NO','') OR fp.EQ3 IS NULL THEN 0 
+         ELSE p400.PROD_REQUEST_QTY - ISNULL(bb.CD3, 0) END AS TON_CD3,
+    CASE WHEN fp.EQ4 IN ('NA','NO','') OR fp.EQ4 IS NULL THEN 0 
+         ELSE p400.PROD_REQUEST_QTY - ISNULL(bb.CD4, 0) END AS TON_CD4,
+    fp.FACTORY,
+    fp.EQ1, fp.EQ2,
+    fp.Setting1, fp.Setting2,
+    fp.UPH1, fp.UPH2,
+    fp.Step1, fp.Step2,
+    ISNULL(fp.LOSS_SX1, 0) AS LOSS_SX1,
+    ISNULL(fp.LOSS_SX2, 0) AS LOSS_SX2,
+    ISNULL(fp.LOSS_SETTING1, 0) AS LOSS_SETTING1,
+    ISNULL(fp.LOSS_SETTING2, 0) AS LOSS_SETTING2,
+    fp.Step3, fp.Step4,
+    fp.EQ3, fp.EQ4,
+    fp.UPH3, fp.UPH4,
+    fp.Setting3, fp.Setting4,
+    ISNULL(fp.LOSS_SX3, 0) AS LOSS_SX3,
+    ISNULL(fp.LOSS_SX4, 0) AS LOSS_SX4,
+    ISNULL(fp.LOSS_SETTING3, 0) AS LOSS_SETTING3,
+    ISNULL(fp.LOSS_SETTING4, 0) AS LOSS_SETTING4,
+    fp.NOTE,
+    ISNULL(lk.TOTAL_NG * 1.0 / NULLIF(lk.INSPECT_TOTAL_QTY, 0), 0) * 100 AS LOSS_KT,
+    sx.SETTING_START_TIME,
+    sx.MASS_START_TIME,
+    sx.MASS_END_TIME,
+    lt.LEADTIME AS AT_LEADTIME,
+    lt.ACC_TIME,
+    CASE WHEN fp.PD <> 0 THEN 
+        CEILING(p400.PROD_REQUEST_QTY * (1 + (ISNULL(fp.LOSS_SX2,0)+ISNULL(fp.LOSS_SX3,0)+ISNULL(fp.LOSS_SX4,0))/100.0 + ISNULL(lk.NG_RATE,0))
+              + (ISNULL(fp.LOSS_SETTING2,0)+ISNULL(fp.LOSS_SETTING3,0)+ISNULL(fp.LOSS_SETTING4,0)) * 1.0 / fp.PD * (fp.G_C*fp.G_C_R)*1000)
+    ELSE 0 END AS SLC_CD1,
+    CASE WHEN fp.PD <> 0 THEN 
+        CEILING(p400.PROD_REQUEST_QTY * (1 + (ISNULL(fp.LOSS_SX3,0)+ISNULL(fp.LOSS_SX4,0))/100.0 + ISNULL(lk.NG_RATE,0))
+              + (ISNULL(fp.LOSS_SETTING3,0)+ISNULL(fp.LOSS_SETTING4,0)) * 1.0 / fp.PD * (fp.G_C*fp.G_C_R)*1000)
+    ELSE 0 END AS SLC_CD2,
+    CASE WHEN fp.PD <> 0 THEN 
+        CEILING(p400.PROD_REQUEST_QTY * (1 + ISNULL(fp.LOSS_SX4,0)/100.0 + ISNULL(lk.NG_RATE,0))
+              + ISNULL(fp.LOSS_SETTING4,0) * 1.0 / fp.PD * (fp.G_C*fp.G_C_R)*1000)
+    ELSE 0 END AS SLC_CD3,
+    CASE WHEN fp.PD <> 0 THEN 
+        CEILING(p400.PROD_REQUEST_QTY * (1 + ISNULL(lk.NG_RATE,0)))
+    ELSE 0 END AS SLC_CD4,
+    p400.FL_YN
+FROM FilteredPlan fp
+INNER JOIN P400 p400 ON p400.PROD_REQUEST_NO = fp.PROD_REQUEST_NO AND p400.CTR_CD = fp.CTR_CD
+LEFT JOIN ZTB_SX_RESULT sx ON sx.PLAN_ID = fp.PLAN_ID AND sx.CTR_CD = fp.CTR_CD
+LEFT JOIN LEATIMETB lt ON lt.PLAN_ID = fp.PLAN_ID AND lt.PLAN_FACTORY = fp.PLAN_FACTORY AND lt.CTR_CD = fp.CTR_CD
+LEFT JOIN BB bb ON bb.PROD_REQUEST_NO = fp.PROD_REQUEST_NO AND bb.CTR_CD = fp.CTR_CD
+LEFT JOIN LOSSKT lk ON lk.G_CODE = fp.G_CODE AND lk.CTR_CD = fp.CTR_CD
+LEFT JOIN TEMP_TB temp ON temp.PLAN_ID = fp.PLAN_ID AND temp.CTR_CD = fp.CTR_CD
+ORDER BY fp.PLAN_EQ, fp.PLAN_ORDER;
+ `;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.getqlsxplan2_backup = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let condition = " WHERE 1=1 ";
+  if (DATA.FACTORY !== "ALL") {
     condition += ` AND ZTB_QLSXPLAN.PLAN_FACTORY='${DATA.FACTORY}'`;
   }
   if (DATA.MACHINE !== "ALL") {
@@ -8774,6 +9016,16 @@ exports.common = async (req, res, DATA) => {
 exports.common = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `SELECT * FROM ZTB_QLSXCHITHI WHERE CTR_CD='${DATA.CTR_CD}' AND PLAN_ID='${DATA.PLAN_ID}' AND M_CODE='${DATA.M_CODE}'`;
+  //${moment().format('YYYY-MM-DD')}
+  ////console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  res.send(checkkq);
+};
+exports.loaddatasxlineqc = async (req, res, DATA) => {
+  let checkkq = "OK";
+  let setpdQuery = `SELECT ZTB_QLSXPLAN.PLAN_ID,ZTB_QLSXPLAN.PLAN_DATE, ZTB_SX_RESULT.SX_DATE,ZTB_SX_RESULT.SETTING_START_TIME, ZTB_SX_RESULT.MASS_START_TIME, ZTB_SX_RESULT.MASS_END_TIME,ZTB_SX_RESULT.INS_EMPL,ZTB_QLSXPLAN.STEP,ZTB_SX_RESULT.CAVITY,ZTB_QLSXPLAN.PLAN_FACTORY, ZTB_QLSXPLAN.G_CODE,ZTB_SX_RESULT.EQ_NAME AS EQ_NAME_TT  FROM ZTB_QLSXPLAN
+LEFT JOIN ZTB_SX_RESULT ON ZTB_QLSXPLAN.PLAN_ID = ZTB_SX_RESULT.PLAN_ID AND ZTB_QLSXPLAN.CTR_CD = ZTB_SX_RESULT.CTR_CD
+WHERE ZTB_QLSXPLAN.PLAN_ID='${DATA.PLAN_ID}' AND ZTB_QLSXPLAN.CTR_CD='${DATA.CTR_CD}'`;
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);

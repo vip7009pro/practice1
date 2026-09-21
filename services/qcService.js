@@ -3521,6 +3521,13 @@ exports.checkktdtc = async (req, res, DATA) => {
   kqua = await queryDB(query);
   res.send(kqua);
 };
+exports.checkktdtclineqc = async (req, res, DATA) => {
+  let kqua;
+  let query = ``;
+  ////console.log(query);
+  kqua = await queryDB(query);
+  res.send(kqua);
+};
 exports.checkPlanIdChecksheet = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
