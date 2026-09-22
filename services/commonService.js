@@ -49,6 +49,11 @@ exports.checkloginVendors = async (req, res, DATA) => {
 };
 
 exports.checkMYCHAMCONG = async (req, res, DATA) => {
+  // Token sai/hết hạn => middleware không gán payload_data. Trả NG sạch thay vì throw
+  // (throw làm processApi trả "ng" và client ghi giá trị rác vào cookie token).
+  if (!req.payload_data?.EMPL_NO) {
+    return res.send({ tk_status: "NG", message: "Invalid or expired token" });
+  }
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let PASSWORD = req.payload_data["PASSWORD"]; 
   let checkkq = "OK";
