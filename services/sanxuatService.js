@@ -893,6 +893,142 @@ exports.deletePlanQLSX = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery4);
   res.send(checkkq);
 };
+/**
+ * queryDB() trả về tk_status "NG" + message "Không có dòng dữ liệu nào" khi câu lệnh
+ * không ảnh hưởng dòng nào (ví dụ DELETE một plan chưa từng có dữ liệu ở O300/O301).
+ * Đây KHÔNG phải lỗi => cần phân biệt với lỗi SQL thật để thông báo cho đúng.
+ */
+const NO_ROW_AFFECTED_MESSAGE = "Không có dòng dữ liệu nào";
+const isNoRowAffectedMessage = (message) =>
+  typeof message === "string" && message.trim() === NO_ROW_AFFECTED_MESSAGE;
+/**
+ * deletePlanQLSXFast
+ * GỘP toàn bộ luồng "Xóa PLAN" vào 1 request duy nhất.
+ *
+ * Luồng cũ (frontend) với MỖI plan phải gọi:
+ *   checkPLANID_O302 (SELECT TOP 1 * ...) -> checkPLANID_OUT_KHO_AO (SELECT TOP 1 * ...) -> deletePlanQLSX (4 DELETE)
+ *   => 3 request HTTP/plan, trong đó 2 request chỉ để kiểm tra tồn tại nhưng lại SELECT TOP 1 * (bảng rộng),
+ *      và 4 lệnh DELETE chạy đơn lẻ theo từng plan.
+ *
+ * Bản nhanh:
+ *   - Kiểm tra tồn tại O302 và OUT_KHO_SX cho CẢ batch bằng 2 query (chỉ lấy cột PLAN_ID).
+ *   - DELETE theo batch: mỗi bảng chỉ 1 lệnh với PLAN_ID IN (...).
+ *   - Điều kiện chặn giữ nguyên: CHOTBC (truyền từ frontend) / đã xuất O302 / đã xuất OUT_KHO_SX.
+ *   - Nội dung thông báo lỗi giữ nguyên chuỗi như bản cũ.
+ *
+ * Tham số: ROWS = [{ PLAN_ID, CHOTBC }]
+ * Trả về: { tk_status, data: {deleted: [PLAN_ID...]}, message: err_code }
+ *         message RỖNG nghĩa là thành công hoàn toàn.
+ * Các command cũ (checkPLANID_O302, checkPLANID_OUT_KHO_AO, deletePlanQLSX) vẫn giữ nguyên
+ * cho frontend phiên bản cũ trên production.
+ */
+exports.deletePlanQLSXFast = async (req, res, DATA) => {
+  const rows = Array.isArray(DATA.ROWS) ? DATA.ROWS : [];
+  if (rows.length === 0) {
+    return res.send({ tk_status: "NG", message: "Chọn ít nhất một dòng để xóa" });
+  }
+  const CTR_CD = DATA.CTR_CD;
+  const esc = (v) => String(v === null || v === undefined ? "" : v).replace(/'/g, "''");
+
+  let err_code = "";
+  const planIds = [
+    ...new Set(rows.map((r) => esc(r.PLAN_ID)).filter((v) => v !== "")),
+  ];
+  if (planIds.length === 0) {
+    return res.send({ tk_status: "NG", message: "Dòng chỉ thị không hợp lệ" });
+  }
+  const planIn = planIds.map((v) => `'${v}'`).join(",");
+
+  try {
+    // 1. Batch check: đã xuất Kho NVL (O302) và đã xuất Kho SX Main (OUT_KHO_SX)
+    const onO302Set = new Set();
+    const onOutKhoAoSet = new Set();
+    const chkO302 = await queryDB(
+      `SELECT DISTINCT PLAN_ID FROM O302 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID IN (${planIn})`
+    );
+    if (chkO302.tk_status === "OK") {
+      (chkO302.data || []).forEach((r) => onO302Set.add(r.PLAN_ID));
+    }
+    const chkOutKhoAo = await queryDB(
+      `SELECT DISTINCT PLAN_ID_OUTPUT FROM OUT_KHO_SX WHERE CTR_CD='${CTR_CD}' AND PLAN_ID_OUTPUT IN (${planIn})`
+    );
+    if (chkOutKhoAo.tk_status === "OK") {
+      (chkOutKhoAo.data || []).forEach((r) => onOutKhoAoSet.add(r.PLAN_ID_OUTPUT));
+    }
+
+    // 2. Phân loại plan được xóa / bị chặn (báo lỗi cụ thể theo từng PLAN_ID)
+    const deletableIds = [];
+    const seen = new Set();
+    for (let i = 0; i < rows.length; i++) {
+      const PLAN_ID = esc(rows[i].PLAN_ID);
+      if (PLAN_ID === "" || seen.has(PLAN_ID)) continue;
+      seen.add(PLAN_ID);
+      const isChotBaoCao = rows[i].CHOTBC === "V";
+      const isOnO302 = onO302Set.has(PLAN_ID);
+      const isOnOutKhoAo = onOutKhoAoSet.has(PLAN_ID);
+      if (!isChotBaoCao && !isOnO302 && !isOnOutKhoAo) {
+        deletableIds.push(PLAN_ID);
+      } else if (isChotBaoCao) {
+        err_code += `Chỉ thị ${PLAN_ID}: đã chốt báo cáo nên không xóa được | `;
+      } else if (isOnO302) {
+        err_code += `Chỉ thị ${PLAN_ID}: đã xuất Kho NVL | `;
+      } else if (isOnOutKhoAo) {
+        err_code += `Chỉ thị ${PLAN_ID}: đã xuất Kho SX Main | `;
+      }
+    }
+
+    // 3. DELETE theo batch: mỗi bảng 1 lệnh duy nhất (nhanh cho nhiều dòng)
+    let deleted = [];
+    if (deletableIds.length > 0) {
+      const delIn = deletableIds.map((v) => `'${v}'`).join(",");
+      const delQueries = [
+        `DELETE FROM ZTB_QLSXPLAN WHERE CTR_CD='${CTR_CD}' AND PLAN_ID IN (${delIn})`,
+        `DELETE FROM ZTB_QLSXCHITHI WHERE CTR_CD='${CTR_CD}' AND PLAN_ID IN (${delIn})`,
+        `DELETE FROM O300 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID IN (${delIn})`,
+        `DELETE FROM O301 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID IN (${delIn})`,
+      ];
+      const tableErrors = [];
+      for (let i = 0; i < delQueries.length; i++) {
+        const delRes = await queryDB(delQueries[i]);
+        // queryDB trả NG kèm "Không có dòng dữ liệu nào" khi DELETE không khớp dòng nào
+        // => đây KHÔNG phải lỗi (plan có thể không tồn tại ở bảng đó), chỉ ghi nhận lỗi SQL thật.
+        if (
+          delRes.tk_status === "NG" &&
+          delRes.message &&
+          !isNoRowAffectedMessage(delRes.message)
+        ) {
+          tableErrors.push(delRes.message);
+        }
+      }
+
+      if (tableErrors.length === 0) {
+        deleted = deletableIds;
+      } else {
+        // Có lỗi SQL thật: xác minh plan nào còn tồn tại để báo lỗi cụ thể theo từng PLAN_ID
+        const remainSet = new Set();
+        const remainRes = await queryDB(
+          `SELECT PLAN_ID FROM ZTB_QLSXPLAN WHERE CTR_CD='${CTR_CD}' AND PLAN_ID IN (${delIn})`
+        );
+        if (remainRes.tk_status === "OK") {
+          (remainRes.data || []).forEach((r) => remainSet.add(r.PLAN_ID));
+        }
+        const detail = tableErrors[0];
+        deletableIds.forEach((id) => {
+          if (remainSet.has(id)) {
+            err_code += `Chỉ thị ${id}: không xóa được (${detail}) | `;
+          } else {
+            deleted.push(id);
+          }
+        });
+      }
+    }
+
+    res.send({ tk_status: "OK", data: { deleted: deleted }, message: err_code });
+  } catch (error) {
+    console.log("Error deletePlanQLSXFast:", error);
+    res.send({ tk_status: "NG", message: `${err_code} ${error}` });
+  }
+};
 exports.checkQLSXPLANSTATUS = async (req, res, DATA) => {
   let condition = " WHERE 1=1  ";
   if (DATA.ALLTIME === false) {
