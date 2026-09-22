@@ -967,6 +967,169 @@ exports.addPlanQLSX = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
+const PLAN_ID_ARRAY = [
+  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+];
+/**
+ * addPlanQLSXFast
+ * GỘP toàn bộ luồng "Add to PLAN" vào 1 request duy nhất (thay cho chuỗi 4 request:
+ * checkProd_request_no_Exist_O302 -> getLastestPLAN_ID -> getLastestPLANORDER -> addPlanQLSX
+ * rồi sau đó là updateDMLOSSKT_ZTB_DM_HISTORY quét toàn bảng).
+ *
+ * Tham số:
+ *   PLAN_DATE, PLAN_EQ, PLAN_FACTORY
+ *   ROWS: [{ PROD_REQUEST_NO, G_CODE, PROCESS_NUMBER, PLAN_QTY }]
+ *
+ * Trả về: { tk_status, data: [{PLAN_ID, PLAN_ORDER, PROD_REQUEST_NO, PLAN_QTY}], message: err_code }
+ * Trong đó message là chuỗi lỗi tích luỹ ("" nghĩa là thành công hoàn toàn) - cùng quy ước với FE cũ.
+ * Command cũ (addPlanQLSX, getLastestPLAN_ID, getLastestPLANORDER, updateDMLOSSKT_ZTB_DM_HISTORY)
+ * vẫn giữ nguyên để frontend phiên bản cũ trên production chạy bình thường.
+ */
+exports.addPlanQLSXFast = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data ? req.payload_data["EMPL_NO"] : "ADMIN";
+  const rows = Array.isArray(DATA.ROWS) ? DATA.ROWS : [];
+  if (rows.length === 0) {
+    return res.send({ tk_status: "NG", message: "Chọn ít nhất 1 YCSX để Add !" });
+  }
+  const PLAN_DATE = DATA.PLAN_DATE;
+  const PLAN_EQ = DATA.PLAN_EQ;
+  const PLAN_FACTORY = DATA.PLAN_FACTORY;
+  const CTR_CD = DATA.CTR_CD;
+  // Escape để tránh lỗi cú pháp SQL (giữ nguyên quy ước nội suy của service này)
+  const esc = (v) => String(v === null || v === undefined ? "" : v).replace(/'/g, "''");
+
+  const ycsxList = [
+    ...new Set(rows.map((r) => esc(r.PROD_REQUEST_NO)).filter((v) => v !== "")),
+  ];
+  // Chuỗi lỗi tích luỹ: RỖNG nghĩa là thành công (frontend chỉ hiện cảnh báo khi có nội dung)
+  let err_code = "";
+  if (ycsxList.length === 0) {
+    return res.send({ tk_status: "NG", message: "Dòng YCSX không hợp lệ" });
+  }
+  const ycsxIn = ycsxList.map((v) => `'${v}'`).join(",");
+
+  try {
+    // 1. Kiểm tra YCSX đã chạy ở hệ thống cũ (P500.PLAN_ID is null) - 1 query cho cả batch
+    const oldSystemSet = new Set();
+    const chkOld = await queryDB(
+      `SELECT DISTINCT PROD_REQUEST_NO FROM P500 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID is null AND PROD_REQUEST_NO IN (${ycsxIn})`
+    );
+    if (chkOld.tk_status === "OK") {
+      (chkOld.data || []).forEach((r) => oldSystemSet.add(r.PROD_REQUEST_NO));
+    }
+
+    // 2. Lấy PLAN_ORDER lớn nhất hiện tại của máy trong ngày - 1 query cho cả batch
+    let nextOrder = 0;
+    const orderRes = await queryDB(
+      `SELECT TOP 1 PLAN_ORDER FROM ZTB_QLSXPLAN WHERE CTR_CD='${CTR_CD}' AND PLAN_DATE='${PLAN_DATE}' AND PLAN_EQ='${PLAN_EQ}' AND PLAN_FACTORY='${PLAN_FACTORY}' ORDER BY PLAN_ORDER DESC`
+    );
+    if (orderRes.tk_status === "OK" && orderRes.data && orderRes.data.length > 0) {
+      // Giữ đúng ngữ nghĩa `PLAN_ORDER + 1` của frontend cũ (không ép kiểu)
+      nextOrder = orderRes.data[0].PLAN_ORDER;
+    }
+
+    // 3. Lấy PLAN_ID lớn nhất của từng YCSX - 1 query cho cả batch
+    const lastPlanIdMap = {};
+    const lastIdRes = await queryDB(
+      `SELECT PROD_REQUEST_NO, MAX(PLAN_ID) AS PLAN_ID FROM ZTB_QLSXPLAN WHERE CTR_CD='${CTR_CD}' AND PROD_REQUEST_NO IN (${ycsxIn}) GROUP BY PROD_REQUEST_NO`
+    );
+    if (lastIdRes.tk_status === "OK") {
+      (lastIdRes.data || []).forEach((r) => {
+        lastPlanIdMap[r.PROD_REQUEST_NO] = r.PLAN_ID;
+      });
+    }
+
+    const inserted = [];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const PROD_REQUEST_NO = esc(row.PROD_REQUEST_NO);
+      if (PROD_REQUEST_NO === "") continue;
+      if (oldSystemSet.has(PROD_REQUEST_NO)) {
+        err_code +=
+          "Yêu cầu sản xuất này đã chạy từ hệ thống cũ, không chạy được lẫn lộn cũ mới, hãy chạy hết bằng hệ thống cũ với yc này | ";
+        continue;
+      }
+      const procNumber = parseInt(row.PROCESS_NUMBER ?? 0);
+      if (!(procNumber >= 1 && procNumber <= 4)) {
+        err_code += "Không đúng máy trong BOM | ";
+        continue;
+      }
+
+      // Tính PLAN_ID kế tiếp đúng theo thuật toán frontend cũ
+      const old_plan_id = lastPlanIdMap[PROD_REQUEST_NO];
+      let next_plan_id = PROD_REQUEST_NO;
+      if (old_plan_id) {
+        const s7 = old_plan_id.substring(7, 8);
+        if (s7 === "Z") {
+          const s3 = old_plan_id.substring(3, 4);
+          if (s3 === "0") {
+            next_plan_id = old_plan_id.substring(0, 3) + "A" + old_plan_id.substring(4, 7) + "A";
+          } else {
+            next_plan_id =
+              old_plan_id.substring(0, 3) +
+              PLAN_ID_ARRAY[PLAN_ID_ARRAY.indexOf(s3) + 1] +
+              old_plan_id.substring(4, 7) +
+              "A";
+          }
+        } else {
+          next_plan_id =
+            old_plan_id.substring(0, 7) +
+            PLAN_ID_ARRAY[PLAN_ID_ARRAY.indexOf(s7) + 1];
+        }
+      } else {
+        next_plan_id = PROD_REQUEST_NO + "A";
+      }
+      lastPlanIdMap[PROD_REQUEST_NO] = next_plan_id;
+      nextOrder = nextOrder + 1;
+
+      const planQty = parseFloat(row.PLAN_QTY ?? 0);
+      const insertRes = await queryDB(
+        `INSERT INTO ZTB_QLSXPLAN (CTR_CD,PLAN_ID,PLAN_DATE,PROD_REQUEST_NO,PLAN_QTY,PLAN_EQ,PLAN_FACTORY,PLAN_LEADTIME,STEP,INS_EMPL,INS_DATE,UPD_EMPL,UPD_DATE,PLAN_ORDER, G_CODE, PROCESS_NUMBER, NEXT_PLAN_ID, REQ_DF, IS_SETTING) VALUES('${CTR_CD}','${esc(next_plan_id)}','${esc(PLAN_DATE)}','${PROD_REQUEST_NO}','${planQty}','${esc(PLAN_EQ)}','${esc(PLAN_FACTORY)}','0','0','${esc(EMPL_NO)}',GETDATE(),'${esc(EMPL_NO)}',GETDATE(),'${nextOrder}', '${esc(row.G_CODE)}','${procNumber}','X','R','Y')`
+      );
+      if (insertRes.tk_status === "NG") {
+        err_code += (insertRes.message || "Lỗi thêm plan") + " | ";
+      } else {
+        inserted.push({
+          PLAN_ID: next_plan_id,
+          PLAN_ORDER: nextOrder,
+          PROD_REQUEST_NO: PROD_REQUEST_NO,
+          PLAN_QTY: planQty,
+        });
+      }
+    }
+
+    // 4. Đồng bộ LOSS_KT vào ZTB_DM_HISTORY nhưng CHỈ trong phạm vi các YCSX vừa thêm
+    //    (bản cũ updateDMLOSSKT_ZTB_DM_HISTORY quét toàn bảng nên rất chậm)
+    if (inserted.length > 0) {
+      const syncQuery = `MERGE INTO ZTB_DM_HISTORY
+      USING
+      (
+        SELECT ZTB_DM_HISTORY.PROD_REQUEST_NO, ZTB_DM_HISTORY.CTR_CD, isnull(BB.CURRENT_LOSS_KT,0) AS CURRENT_LOSS_KT
+        FROM ZTB_DM_HISTORY
+        LEFT JOIN (SELECT * FROM (
+          SELECT PROD_REQUEST_NO, CTR_CD, CURRENT_LOSS_KT, INS_DATE,
+                 COUNT(PROD_REQUEST_NO) OVER (PARTITION BY PROD_REQUEST_NO ORDER BY INS_DATE DESC) AS STT
+          FROM ZTB_QLSXPLAN
+          WHERE CURRENT_LOSS_KT is not null AND CURRENT_LOSS_KT <> 5 AND CTR_CD='${CTR_CD}' AND PROD_REQUEST_NO IN (${ycsxIn})
+        ) AS AA
+        ) AS BB
+        ON BB.PROD_REQUEST_NO = ZTB_DM_HISTORY.PROD_REQUEST_NO AND BB.CTR_CD = ZTB_DM_HISTORY.CTR_CD
+        WHERE (BB.STT = 1 OR BB.STT is null) AND ZTB_DM_HISTORY.CTR_CD='${CTR_CD}' AND ZTB_DM_HISTORY.PROD_REQUEST_NO IN (${ycsxIn})
+      ) AS SRC
+      ON (SRC.PROD_REQUEST_NO = ZTB_DM_HISTORY.PROD_REQUEST_NO AND SRC.CTR_CD = ZTB_DM_HISTORY.CTR_CD)
+      WHEN MATCHED THEN
+      UPDATE SET ZTB_DM_HISTORY.LOSS_KT = SRC.CURRENT_LOSS_KT;`;
+      // Đồng bộ phụ trợ: không chặn kết quả thêm plan nếu lỗi
+      await queryDB(syncQuery);
+    }
+
+    res.send({ tk_status: "OK", data: inserted, message: err_code });
+  } catch (error) {
+    console.log("Error addPlanQLSXFast:", error);
+    res.send({ tk_status: "NG", message: `${err_code} ${error}` });
+  }
+};
 exports.quickcheckycsx = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
