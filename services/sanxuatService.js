@@ -3684,6 +3684,301 @@ exports.insertChiThi = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
+/**
+ * luuChiThiVaDangKyXuatLieu
+ * GỘP 2 bước "Lưu CT + ĐKXK" vào 1 request duy nhất.
+ *
+ * Luồng cũ (frontend) cực nặng vì gọi tuần tự rất nhiều request:
+ *  - `f_saveChiThiMaterialTable`: ~4N+1 request (mỗi dòng vật liệu gọi
+ *    updateLIEUQL_SX_M140 + deleteM_CODE_ZTB_QLSXCHITHI + checkM_CODE_PLAN_ID_Exist + updateChiThi/insertChiThi).
+ *  - `f_handleDangKyXuatLieu`: ~5 + N×2..4 request (checkPLANID_O300, getO300_LAST_OUT_NO, getP400, insertO300,
+ *    deleteM_CODE_O301, rồi mỗi dòng checkM_CODE_PLAN_ID_Exist_in_O301 + checkPLANID_O301 + updateDKXLPLAN + insertO301/updateO301).
+ *  => với N=8 liệu có thể lên tới 50+ request HTTP.
+ *
+ * Bản gộp giữ NGUYÊN thứ tự/nghiệp vụ như bản cũ nhưng mọi việc chạy server-side:
+ *  - batch UPDATE M140 (1 lệnh cho nhóm =1, 1 lệnh cho nhóm =0)
+ *  - DELETE M_CODE không còn trong danh sách: 1 lệnh thay vì N lệnh
+ *  - UPSERT ZTB_QLSXCHITHI / O301 bằng MERGE thay cho check-tồn-tại rồi insert/update từng dòng
+ *  - batched check O300/O301 thay vì mỗi dòng 1 request
+ *
+ * Tham số:
+ *   PLAN: { PLAN_ID, G_CODE, PROD_REQUEST_NO, PROD_REQUEST_DATE, PROCESS_NUMBER, FACTORY }
+ *   ROWS: [{ PLAN_ID, M_CODE, M_NAME, LIEUQL_SX, M_ROLL_QTY, M_MET_QTY, M_QTY }]
+ * Trả về: { tk_status, data: {saved, registered}, message } - message RỖNG nghĩa là thành công.
+ * Các command cũ vẫn giữ nguyên cho frontend phiên bản cũ trên production.
+ */
+exports.luuChiThiVaDangKyXuatLieu = async (req, res, DATA) => {
+  const EMPL_NO = req.payload_data ? req.payload_data["EMPL_NO"] : "ADMIN";
+  const CTR_CD = DATA.CTR_CD;
+  const PLAN = DATA.PLAN || {};
+  const rows = Array.isArray(DATA.ROWS) ? DATA.ROWS : [];
+  const esc = (v) => String(v === null || v === undefined ? "" : v).replace(/'/g, "''");
+  const zeroPad3 = (n) => String(n).padStart(3, "0");
+  const num = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  if (rows.length === 0) {
+    return res.send({
+      tk_status: "OK",
+      data: { saved: false, registered: false },
+      message: "Chọn ít nhất một liệu để đăng ký",
+    });
+  }
+
+  const planId = esc(PLAN.PLAN_ID);
+  const gCode = esc(PLAN.G_CODE);
+  const processNumber = parseInt(PLAN.PROCESS_NUMBER ?? 0);
+  const allMCodeIn = rows.map((r) => `'${esc(r.M_CODE)}'`).join(",");
+  let err_code = "";
+
+  try {
+    /* ============================ PHẦN A: LƯU CHỈ THỊ VẬT LIỆU ============================ */
+    const lieuqlList = rows.map((r) => parseInt(r.LIEUQL_SX ?? 0) || 0);
+    let total_lieuql_sx = 0;
+    let check_lieuql_sx_sot = 0;
+    let check_num_lieuql_sx = 1;
+    let check_lieu_qlsx_khac1 = 0;
+    for (let i = 0; i < rows.length; i++) {
+      total_lieuql_sx += lieuqlList[i];
+      if (lieuqlList[i] > 1) check_lieu_qlsx_khac1 += 1;
+    }
+    for (let i = 0; i < rows.length; i++) {
+      if (lieuqlList[i] === 1) {
+        for (let j = 0; j < rows.length; j++) {
+          if (rows[j].M_NAME === rows[i].M_NAME && lieuqlList[j] === 0) {
+            check_lieuql_sx_sot += 1;
+          }
+        }
+      }
+    }
+    for (let i = 0; i < rows.length; i++) {
+      if (lieuqlList[i] === 1) {
+        for (let j = 0; j < rows.length; j++) {
+          if (lieuqlList[j] === 1 && rows[i].M_NAME !== rows[j].M_NAME) {
+            check_num_lieuql_sx = 2;
+          }
+        }
+      }
+    }
+    // Giữ nguyên 4 điều kiện của bản cũ, chỉ đổi cách diễn giải thông báo
+    if (!(total_lieuql_sx > 0 && check_lieuql_sx_sot === 0 && check_num_lieuql_sx === 1 && check_lieu_qlsx_khac1 === 0)) {
+      let reason = "Dữ liệu liệu QL SX không hợp lệ";
+      if (total_lieuql_sx <= 0) {
+        reason = "Chưa chọn liệu QL SX (LIEUQL_SX) cho chỉ thị";
+      } else if (check_lieu_qlsx_khac1 !== 0) {
+        reason = "Liệu QL SX phải có số lượng bằng 1";
+      } else if (check_num_lieuql_sx !== 1) {
+        reason = "Chỉ được chọn 1 liệu QL SX duy nhất";
+      } else if (check_lieuql_sx_sot !== 0) {
+        reason = "Liệu QL SX bị trùng với liệu thường cùng tên";
+      }
+      return res.send({
+        tk_status: "OK",
+        data: { saved: false, registered: false },
+        message: reason,
+      });
+    }
+
+    // A1. Xóa các M_CODE đang có trong chỉ thị nhưng KHÔNG có trong O302
+    await queryDB(
+      `DELETE FROM ZTB_QLSXCHITHI WHERE ZTB_QLSXCHITHI.CTR_CD='${CTR_CD}' AND NOT EXISTS (SELECT * FROM O302 WHERE O302.CTR_CD='${CTR_CD}' AND O302.PLAN_ID = ZTB_QLSXCHITHI.PLAN_ID AND O302.M_CODE = ZTB_QLSXCHITHI.M_CODE) AND ZTB_QLSXCHITHI.PLAN_ID='${planId}'`
+    );
+
+    // A2. Cập nhật LIEUQL_SX ở M140 theo nhóm (batch thay cho từng dòng)
+    const lieuqlOnCodes = [];
+    const lieuqlOffCodes = [];
+    rows.forEach((r, i) => {
+      if (lieuqlList[i] >= 1) lieuqlOnCodes.push(`'${esc(r.M_CODE)}'`);
+      else lieuqlOffCodes.push(`'${esc(r.M_CODE)}'`);
+    });
+    if (lieuqlOnCodes.length > 0) {
+      await queryDB(
+        `UPDATE M140 SET LIEUQL_SX=1, UPD_DATE=GETDATE() WHERE CTR_CD='${CTR_CD}' AND G_CODE='${gCode}' AND M_CODE IN (${lieuqlOnCodes.join(",")})`
+      );
+    }
+    if (lieuqlOffCodes.length > 0) {
+      await queryDB(
+        `UPDATE M140 SET LIEUQL_SX=0, UPD_DATE=GETDATE() WHERE CTR_CD='${CTR_CD}' AND G_CODE='${gCode}' AND M_CODE IN (${lieuqlOffCodes.join(",")})`
+      );
+    }
+
+    // A3. Xóa các M_CODE không còn trong danh sách (bản cũ gọi lặp N lần với cùng 1 danh sách)
+    const hasMetQty = rows.some((r) => num(r.M_MET_QTY) > 0);
+    if (hasMetQty) {
+      await queryDB(
+        `DELETE FROM ZTB_QLSXCHITHI WHERE CTR_CD='${CTR_CD}' AND PLAN_ID='${planId}' AND M_CODE NOT IN (${allMCodeIn})`
+      );
+    }
+
+    // A4. Upsert từng dòng (1 MERGE/dòng, thay cho check + insert/update)
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!(num(r.M_MET_QTY) > 0)) {
+        err_code += `Chỉ thị vật liệu ${r.M_CODE}: số mét = 0 | `;
+        continue;
+      }
+      let m_met_qty = num(r.M_MET_QTY);
+      if (processNumber !== 1 && lieuqlList[i] === 1) m_met_qty = 0;
+      const lieuql = lieuqlList[i] >= 1 ? 1 : 0;
+      const mergeRes = await queryDB(
+        `MERGE INTO ZTB_QLSXCHITHI AS T
+         USING (SELECT '${CTR_CD}' AS CTR_CD, '${planId}' AS PLAN_ID, '${esc(r.M_CODE)}' AS M_CODE) AS S
+         ON (T.CTR_CD = S.CTR_CD AND T.PLAN_ID = S.PLAN_ID AND T.M_CODE = S.M_CODE)
+         WHEN MATCHED THEN
+           UPDATE SET T.LIEUQL_SX=${lieuql}, T.M_MET_QTY='${m_met_qty}', T.UPD_DATE=GETDATE(), T.UPD_EMPL='${esc(EMPL_NO)}'
+         WHEN NOT MATCHED THEN
+           INSERT (CTR_CD, PLAN_ID, M_CODE, M_ROLL_QTY, M_MET_QTY, INS_EMPL, INS_DATE, UPD_EMPL, UPD_DATE, M_QTY, LIEUQL_SX)
+           VALUES ('${CTR_CD}','${planId}','${esc(r.M_CODE)}','${num(r.M_ROLL_QTY)}','${m_met_qty}','${esc(EMPL_NO)}',GETDATE(),'${esc(EMPL_NO)}',GETDATE(),'${num(r.M_QTY)}',${lieuql});`
+      );
+      if (
+        mergeRes.tk_status === "NG" &&
+        mergeRes.message &&
+        !isNoRowAffectedMessage(mergeRes.message)
+      ) {
+        err_code += `Chỉ thị vật liệu ${r.M_CODE}: ${mergeRes.message} | `;
+      }
+    }
+
+    // Lưu chỉ thị có lỗi => dừng, KHÔNG đăng ký xuất liệu (giống bản cũ)
+    if (err_code) {
+      return res.send({
+        tk_status: "OK",
+        data: { saved: true, registered: false },
+        message: err_code,
+      });
+    }
+
+    /* ============================ PHẦN B: ĐĂNG KÝ XUẤT LIỆU ============================ */
+    let NEXT_OUT_NO = "001";
+    let nextOutDateSql = `'${moment().format("YYYYMMDD")}'`;
+    const o300Res = await queryDB(
+      `SELECT TOP 1 OUT_NO, OUT_DATE FROM O300 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID='${planId}'`
+    );
+    if (o300Res.tk_status === "OK" && o300Res.data && o300Res.data.length > 0) {
+      // Đã có O300: giữ nguyên OUT_NO và OUT_DATE hiện tại
+      NEXT_OUT_NO = o300Res.data[0].OUT_NO;
+      const d = o300Res.data[0].OUT_DATE;
+      nextOutDateSql = `'${esc(d instanceof Date ? d.toISOString() : d)}'`;
+    } else {
+      // Chưa có O300: sinh OUT_NO mới trong ngày + lấy CODE_50 từ P400
+      const lastRes = await queryDB(
+        `SELECT TOP 1 OUT_NO FROM O300 WHERE CTR_CD='${CTR_CD}' AND OUT_DATE='${moment().format(
+          "YYYYMMDD"
+        )}' ORDER BY OUT_NO DESC`
+      );
+      if (lastRes.tk_status === "OK" && lastRes.data && lastRes.data.length > 0) {
+        NEXT_OUT_NO = zeroPad3(parseInt(lastRes.data[0].OUT_NO) + 1);
+      } else {
+        NEXT_OUT_NO = "001";
+      }
+      const p400Res = await queryDB(
+        `SELECT TOP 1 CODE_50 FROM P400 WHERE CTR_CD='${CTR_CD}' AND PROD_REQUEST_NO='${esc(
+          PLAN.PROD_REQUEST_NO
+        )}' AND PROD_REQUEST_DATE='${esc(PLAN.PROD_REQUEST_DATE)}'`
+      );
+      const CODE_50 =
+        p400Res.tk_status === "OK" && p400Res.data && p400Res.data.length > 0
+          ? p400Res.data[0].CODE_50 || ""
+          : "";
+      if (CODE_50 === "") {
+        return res.send({
+          tk_status: "OK",
+          data: { saved: true, registered: false },
+          message: "Không tìm thấy mã phân loại giao hàng (P400.CODE_50)",
+        });
+      }
+      await queryDB(
+        `INSERT INTO O300 (CTR_CD,OUT_DATE,OUT_NO,CODE_03,CODE_50,CODE_52,PROD_REQUEST_DATE,PROD_REQUEST_NO,USE_YN,INS_DATE,INS_EMPL,UPD_DATE,UPD_EMPL,FACTORY,PLAN_ID) VALUES('${CTR_CD}',${nextOutDateSql},'${esc(
+          NEXT_OUT_NO
+        )}','01','${esc(CODE_50)}','01','${esc(PLAN.PROD_REQUEST_DATE)}','${esc(
+          PLAN.PROD_REQUEST_NO
+        )}','Y',GETDATE(),'${esc(EMPL_NO)}',GETDATE(),'${esc(EMPL_NO)}','${esc(
+          PLAN.FACTORY
+        )}','${planId}')`
+      );
+    }
+
+    // Kiểm tra tổng số mét đăng ký (giữ đúng thứ tự như bản cũ: sau bước O300)
+    const checkchithimettotal = rows.reduce((sum, r) => sum + num(r.M_MET_QTY), 0);
+    if (checkchithimettotal <= 0) {
+      return res.send({
+        tk_status: "OK",
+        data: { saved: true, registered: false },
+        message: "Tổng số liệu phải lớn hơn 0",
+      });
+    }
+
+    // B1. Xóa các M_CODE không còn trong danh sách O301
+    await queryDB(
+      `DELETE FROM O301 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID='${planId}' AND M_CODE NOT IN (${allMCodeIn})`
+    );
+
+    // B2. 1 query lấy toàn bộ O301 hiện có (M_CODE + OUT_SEQ) thay cho N lần check + N lần lấy OUT_SEQ
+    const existingO301 = new Set();
+    let lastO301Seq = 0;
+    const o301Res = await queryDB(
+      `SELECT M_CODE, OUT_SEQ FROM O301 WHERE CTR_CD='${CTR_CD}' AND PLAN_ID='${planId}'`
+    );
+    if (o301Res.tk_status === "OK") {
+      (o301Res.data || []).forEach((r) => {
+        existingO301.add(r.M_CODE);
+        const seq = parseInt(r.OUT_SEQ);
+        if (Number.isFinite(seq) && seq > lastO301Seq) lastO301Seq = seq;
+      });
+    }
+
+    // B3. Upsert O301 cho từng dòng có số mét > 0
+    const dkxlPlanIds = new Set();
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!(num(r.M_MET_QTY) > 0)) continue;
+      let met_dang_ky = num(r.M_MET_QTY) * num(r.M_QTY);
+      if (processNumber !== 1 && lieuqlList[i] === 1) met_dang_ky = 0;
+      if (lieuqlList[i] === 1) {
+        dkxlPlanIds.add(r.PLAN_ID ? esc(r.PLAN_ID) : planId);
+      }
+      if (!existingO301.has(r.M_CODE)) {
+        // OUT_SEQ dùng đúng công thức cũ: Last_O301_OUT_SEQ + i + 1 (i là index trong danh sách liệu)
+        const outSeq = zeroPad3(lastO301Seq + i + 1);
+        await queryDB(
+          `INSERT INTO O301 (CTR_CD, OUT_DATE, OUT_NO, OUT_SEQ, CODE_03, M_CODE, OUT_PRE_QTY, USE_YN, INS_DATE, INS_EMPL, PLAN_ID, G_CODE) VALUES('${CTR_CD}',${nextOutDateSql},'${esc(
+            NEXT_OUT_NO
+          )}','${outSeq}','01','${esc(r.M_CODE)}','${met_dang_ky}','Y',GETDATE(),'${esc(
+            EMPL_NO
+          )}','${planId}','${gCode}')`
+        );
+        existingO301.add(r.M_CODE);
+      } else {
+        await queryDB(
+          `UPDATE O301 SET OUT_PRE_QTY='${met_dang_ky}', UPD_DATE=GETDATE(), UPD_EMPL='${esc(
+            EMPL_NO
+          )}' WHERE CTR_CD='${CTR_CD}' AND PLAN_ID='${planId}' AND M_CODE='${esc(r.M_CODE)}'`
+        );
+      }
+    }
+
+    // B4. Đánh dấu DKXL cho các plan liên quan (mỗi PLAN_ID 1 lần)
+    for (const pid of dkxlPlanIds) {
+      await queryDB(
+        `UPDATE ZTB_QLSXPLAN SET DKXL='V' WHERE CTR_CD='${CTR_CD}' AND PLAN_ID='${esc(pid)}'`
+      );
+    }
+
+    res.send({
+      tk_status: "OK",
+      data: { saved: true, registered: true },
+      message: "",
+    });
+  } catch (error) {
+    console.log("Error luuChiThiVaDangKyXuatLieu:", error);
+    res.send({
+      tk_status: "NG",
+      message: `${err_code} ${error}`,
+    });
+  }
+};
 exports.traYCSXDataFull_QLSX_New = async (req, res, DATA) => {
   let checkkq = "OK";
   let setpdQuery = `
