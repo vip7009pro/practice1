@@ -1,5 +1,6 @@
 const commandHandlers = {
   ...require("./authService"),
+  ...require("./mfaService"),
   ...require("./fileService"),
   ...require("./commonService"),
   ...require("./userService"),

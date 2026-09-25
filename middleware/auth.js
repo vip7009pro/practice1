@@ -10,6 +10,7 @@ const PUBLIC_COMMANDS = new Set([
   "loadWebSetting",
   "checkWebVer",
   "checkLicense",
+  "verifyMfaLogin",
 ]);
 
 const isEncryptedPayload = (data) =>

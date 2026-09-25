@@ -1,11 +1,14 @@
 # Current Context - practice1
 
+- MFA / Multi-Factor Authentication (Google Authenticator) (2026-09-25):
+  * **Database Migration (`ZTBEMPLINFO`)**: Chạy script `scripts/migrate_mfa_columns.js` bổ sung thành công 4 cột: `MFA_ENABLED` (BIT NOT NULL DEFAULT 0), `MFA_SECRET` (VARCHAR(100) NULL), `MFA_BACKUP_CODES` (NVARCHAR(1000) NULL), `MFA_SETUP_DATE` (DATETIME NULL). Mặc định toàn bộ user là tắt MFA.
+  * **TOTP Engine RFC 6238 (`utils/totpUtils.js`)**: Triển khai thuật toán TOTP chuẩn bằng built-in `crypto` của Node.js (Base32, HMAC-SHA1, step 30s, 6 digits, window ±30s, backup codes generator, otpauth URI) không phụ thuộc external runtime, tương thích 100% với `pkg` (`updatebe.exe`).
+  * **MFA Service (`services/mfaService.js`)**: Triển khai các command handlers: `getMfaStatus` (lấy trạng thái MFA), `setupMfa` (sinh secret & QR URL), `verifyAndEnableMfa` (xác thực OTP lần đầu, bật `MFA_ENABLED = 1` & cấp 8 mã backup codes), `disableMfa` (tắt MFA kèm xác thực an toàn), `verifyMfaLogin` (xác thực bước 2 khi đăng nhập, hỗ trợ cả OTP 6 số và mã dự phòng, tự động hủy mã dự phòng đã dùng).
+  * **Auth Flow Integration (`services/authService.js` & `middleware/auth.js`)**:
+    - Trong `login` và `login2`: Sau khi xác thực đúng tài khoản/mật khẩu, nếu `MFA_ENABLED = 1` trả về `tk_status: "MFA_REQUIRED"` kèm `temp_token` (hạn 5 phút) để yêu cầu nhập mã OTP bước 2.
+    - Thêm `verifyMfaLogin` vào `PUBLIC_COMMANDS` trong `middleware/auth.js`.
+  * **Khởi động lại**: PM2 process `index` (pid 13768) đã restart thành công và nạp code mới.
+
 - Auth Middleware & Payload Decryption (2026-09-25):
-  * Cập nhật `middleware/auth.js`: Thêm helper `isEncryptedPayload` kiểm tra đúng cấu trúc `{ encryptedData, encryptedKey, iv }` trước khi gọi `decryptData`, khắc phục triệt để lỗi TypeError khi nhận plain object từ command `login` hoặc các request không mã hóa.
-  * Di chuyển bước giải mã lên trước whitelist check `PUBLIC_COMMANDS` (`login`, `login2`, `logout`, `checklogin`, `loadWebSetting`, `checkWebVer`, `checkLicense`) để command `checklogin` nhận đúng payload `{ COMPANY, CTR_CD, token_string }`.
-  * Cập nhật `services/dbService.js`: Thêm guard kiểm tra an toàn `DATA?.COMPANY === "CMS"` chống lỗi TypeError khi `DATA` là undefined.
-  * Khi token hết hạn hoặc verify thất bại, trả về HTTP status 401 kèm `{ tk_status: "TOKEN_EXPIRED", message: "Phiên đăng nhập đã hết hạn hoặc không hợp lệ" }` và dừng ngay (không gọi `next()`), bảo vệ các handler nội bộ.
-  * Tối ưu `config/database_mssql.js`: Nâng `DEFAULT_POOL_SIZE` lên 40, giảm timeout từ 300s xuống 60s, thêm `acquireTimeoutMillis: 30000`, thêm event listener `pool.on("error")` tự động phục hồi kết nối database khi đứt mạng.
-- Database Migration & Query Updates (2026-07-02): Added `PART_CODE_OTHERS` column (VARCHAR(1000) NULL) to table `DEFECT_MANAGEMENT` via a migration script. Updated SQL SELECT query in `loadQTRData` (`services/qcService.js`) to retrieve and return `PART_CODE_OTHERS`.
+  * Cập nhật `middleware/auth.js`: Thêm helper `isEncryptedPayload` kiểm tra đúng cấu trúc payload trước khi giải mã; whitelist `PUBLIC_COMMANDS`; tối ưu `config/database_mssql.js`.
 - Entry point: [index.js](file:///g:/NODEJS/practice1/index.js) (PM2 process `index`).
-- File Upload: `routes/fileUpload.js` tự động tạo `TEMP_UPLOAD_FOLDER` đệ quy nếu chưa có.
