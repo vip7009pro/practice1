@@ -1,11 +1,11 @@
-# Current Context
+# Current Context - practice1
 
+- Auth Middleware & Payload Decryption (2026-09-25):
+  * Cập nhật `middleware/auth.js`: Thêm helper `isEncryptedPayload` kiểm tra đúng cấu trúc `{ encryptedData, encryptedKey, iv }` trước khi gọi `decryptData`, khắc phục triệt để lỗi TypeError khi nhận plain object từ command `login` hoặc các request không mã hóa.
+  * Di chuyển bước giải mã lên trước whitelist check `PUBLIC_COMMANDS` (`login`, `login2`, `logout`, `checklogin`, `loadWebSetting`, `checkWebVer`, `checkLicense`) để command `checklogin` nhận đúng payload `{ COMPANY, CTR_CD, token_string }`.
+  * Cập nhật `services/dbService.js`: Thêm guard kiểm tra an toàn `DATA?.COMPANY === "CMS"` chống lỗi TypeError khi `DATA` là undefined.
+  * Khi token hết hạn hoặc verify thất bại, trả về HTTP status 401 kèm `{ tk_status: "TOKEN_EXPIRED", message: "Phiên đăng nhập đã hết hạn hoặc không hợp lệ" }` và dừng ngay (không gọi `next()`), bảo vệ các handler nội bộ.
+  * Tối ưu `config/database_mssql.js`: Nâng `DEFAULT_POOL_SIZE` lên 40, giảm timeout từ 300s xuống 60s, thêm `acquireTimeoutMillis: 30000`, thêm event listener `pool.on("error")` tự động phục hồi kết nối database khi đứt mạng.
 - Database Migration & Query Updates (2026-07-02): Added `PART_CODE_OTHERS` column (VARCHAR(1000) NULL) to table `DEFECT_MANAGEMENT` via a migration script. Updated SQL SELECT query in `loadQTRData` (`services/qcService.js`) to retrieve and return `PART_CODE_OTHERS`.
-- Entry point: [index.js](index.js)
-- There is a geo-IP middleware in `index.js`, but `GEOIP_BYPASS = true`, so it returns early and does not block requests.
-- If bypass is turned off, only country `VN` is allowed and other countries receive HTTP 403 with `Access denied: country not allowed`.
-- CORS middleware runs before the geo-IP check.
-- File Upload Improvement (2026-06-24): Updated `routes/fileUpload.js` to automatically check and recursively create `TEMP_UPLOAD_FOLDER` (via `fs.mkdirSync`) if it doesn't exist, resolving the 400 Bad Request error when uploading files.
-- NCR Database & API Updates (2026-06-24): Added `COUNTERMEASURE` (VARCHAR(10) DEFAULT 'N') and `COUNTERMEASURE_EXT` (VARCHAR(10) DEFAULT '') columns to table `ZTB_IQC_NCRTB`. Added backend endpoints `update_ncr_process_status` and `update_ncr_countermeasure` in `services/qcService.js`. Explicitly populated these columns in `insertNCRData`.
-- IQC Database Update (2026-06-24): Added `NCR_ID` (VARCHAR(50) NULL) column to table `IQC1_TABLE` to link IQC inspections with NCR tickets.
-- IQC Reliability Test Items Addition (2026-06-29): Added 6 new columns (`KEO_KEO`, `BOC_TACH`, `DIEN_TRO`, `TINH_DIEN`, `FT_IR`, `TACK`) as `VARCHAR(1) NOT NULL DEFAULT 'Y'` to table `ZTB_MATERIAL_TB` to control active test status of reliability items. Added backend endpoint `updateMaterialTestItem` in `services/qcService.js` to allow toggling Y/N test items for a given material. Updated `loadIQC1table` query to join and retrieve these test item flags.
+- Entry point: [index.js](file:///g:/NODEJS/practice1/index.js) (PM2 process `index`).
+- File Upload: `routes/fileUpload.js` tự động tạo `TEMP_UPLOAD_FOLDER` đệ quy nếu chưa có.

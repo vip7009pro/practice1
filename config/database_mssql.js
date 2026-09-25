@@ -1,7 +1,9 @@
 const sql = require("mssql");
 require("dotenv").config();
 
-const DEFAULT_POOL_SIZE = parseInt(process.env.DB_POOL_MAX || "20", 10) || 20;
+const DEFAULT_POOL_SIZE = parseInt(process.env.DB_POOL_MAX || "40", 10) || 40;
+const DB_REQUEST_TIMEOUT = parseInt(process.env.DB_REQUEST_TIMEOUT || "60000", 10) || 60000;
+const DB_CONNECTION_TIMEOUT = parseInt(process.env.DB_CONNECTION_TIMEOUT || "60000", 10) || 60000;
 
 const normalizeEnvString = (value) => {
   if (typeof value !== "string") {
@@ -26,12 +28,13 @@ const config = {
     enableArithAbort: true,
     useUTC: true,
   },
-  requestTimeout: 300000,
-  connectionTimeout: 300000,
+  requestTimeout: DB_REQUEST_TIMEOUT,
+  connectionTimeout: DB_CONNECTION_TIMEOUT,
   pool: {
     max: DEFAULT_POOL_SIZE,
     min: 0,
     idleTimeoutMillis: 30000,
+    acquireTimeoutMillis: 30000,
   },
 };
 
@@ -207,6 +210,10 @@ let poolPromise;
 
 const createPool = async () => {
   const pool = new sql.ConnectionPool(config);
+  pool.on("error", (err) => {
+    console.error("Database pool unexpected error:", err?.message || err);
+    poolPromise = null;
+  });
   await pool.connect();
   return new PoolAdapter(pool);
 };
