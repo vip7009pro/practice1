@@ -7,7 +7,8 @@
   * **Auth Flow Integration (`services/authService.js` & `middleware/auth.js`)**:
     - Trong `login` và `login2`: Sau khi xác thực đúng tài khoản/mật khẩu, nếu `MFA_ENABLED = 1` trả về `tk_status: "MFA_REQUIRED"` kèm `temp_token` (hạn 5 phút) để yêu cầu nhập mã OTP bước 2.
     - Thêm `verifyMfaLogin` vào `PUBLIC_COMMANDS` trong `middleware/auth.js`.
-  * **Khởi động lại**: PM2 process `index` (pid 13768) đã restart thành công và nạp code mới.
+  * **Fix Company Not Supported (`services/dbService.js`)**: Cập nhật điều kiện lọc `isCompanyAllowed` cho phép lệnh `verifyMfaLogin` và cho qua khi `DATA.COMPANY` không được truyền hoặc bằng `"CMS"`.
+  * **Khởi động lại**: PM2 process `index` (pid 8476) đã restart thành công và nạp code mới.
 
 - Auth Middleware & Payload Decryption (2026-09-25):
   * Cập nhật `middleware/auth.js`: Thêm helper `isEncryptedPayload` kiểm tra đúng cấu trúc payload trước khi giải mã; whitelist `PUBLIC_COMMANDS`; tối ưu `config/database_mssql.js`.
