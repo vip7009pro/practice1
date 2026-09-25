@@ -66,7 +66,7 @@ exports.updateMaterial = async (req, res, DATA) => {
   let kqua;
   let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
   let query = "";
-  query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE=${DATA.EXP_DATE ==='-' ?  'NULL': `${DATA.EXP_DATE}`}, M_NAME='${DATA.M_NAME.trim()}', CUST_CD ='${DATA.CUST_CD.trim()}',DESCR =N'${DATA.DESCR.trim()}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE CTR_CD='${DATA.CTR_CD}' AND M_ID='${DATA.M_ID}' `;
+  query = `UPDATE ZTB_MATERIAL_TB SET EXP_DATE=${DATA.EXP_DATE === '-' ? 'NULL' : `${DATA.EXP_DATE}`}, M_NAME='${DATA.M_NAME.trim()}', CUST_CD ='${DATA.CUST_CD.trim()}',DESCR =N'${DATA.DESCR.trim()}',SSPRICE ='${DATA.SSPRICE}',CMSPRICE ='${DATA.CMSPRICE}',SLITTING_PRICE ='${DATA.SLITTING_PRICE}', MASTER_WIDTH ='${DATA.MASTER_WIDTH}',ROLL_LENGTH ='${DATA.ROLL_LENGTH}',UPD_EMPL ='${EMPL_NO}', UPD_DATE=GETDATE(), USE_YN='${DATA.USE_YN}', FSC='${DATA.FSC}', FSC_CODE='${DATA.FSC_CODE}'  WHERE CTR_CD='${DATA.CTR_CD}' AND M_ID='${DATA.M_ID}' `;
   kqua = await queryDB(query);
   ////console.log(kqua);
   res.send(kqua);
@@ -406,15 +406,13 @@ exports.checkDocVersion = async (req, res, DATA) => {
   //console.log(checkkq);
   res.send(checkkq);
 };
+
 exports.workdaycheck = async (req, res, DATA) => {
-};
-exports.workdaycheck = async (req, res, DATA) => {
-};
-exports.workdaycheck = async (req, res, DATA) => {
-};
-exports.workdaycheck = async (req, res, DATA) => {
-};
-exports.workdaycheck = async (req, res, DATA) => {
-};
-exports.workdaycheck = async (req, res, DATA) => {
+  let EMPL_NO = req.payload_data["EMPL_NO"];
+  let startOfYear = moment().startOf("year").format("YYYY-MM-DD");
+  let kqua;
+  let query = `SELECT COUNT(EMPL_NO) AS WORK_DAY FROM ZTBATTENDANCETB WHERE EMPL_NO='${EMPL_NO}' AND ON_OFF=1 AND APPLY_DATE >='${startOfYear}' `;
+  ////console.log(query);
+  kqua = await queryDB(query);
+  res.send(kqua);
 };
