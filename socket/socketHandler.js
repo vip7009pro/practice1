@@ -1,6 +1,10 @@
 const { Server } = require("socket.io");
 const { corsOptions } = require("../config/env");
 
+// Các instance socket.io đã khởi tạo — để tầng service phát được sự kiện realtime
+// (ví dụ: phê duyệt từ thông báo đẩy xong thì chuông trong app phải cập nhật ngay).
+const ioInstances = [];
+
 module.exports = (httpServer, httpsServer) => {
   const io = new Server(httpServer, { cors: { origin: corsOptions.origin } });
   const ios = new Server(httpsServer, { cors: { origin: corsOptions.origin } });
@@ -59,4 +63,11 @@ module.exports = (httpServer, httpsServer) => {
 
   io.on("connection", (client) => handleConnection(client, io));
   ios.on("connection", (client) => handleConnection(client, ios));
+
+  ioInstances.push(io, ios);
+};
+
+/** Phát sự kiện tới mọi client đang kết nối (cả cổng HTTP và HTTPS). */
+module.exports.emitToAll = (event, payload) => {
+  ioInstances.forEach((instance) => instance.emit(event, payload));
 };

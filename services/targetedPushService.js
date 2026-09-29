@@ -34,6 +34,8 @@ exports.sendTargetedPushNotification = async ({
   body,
   url = "/nhansu/pheduyetnghi",
   data = {},
+  actions,
+  approval,
 }) => {
   const targets = new Set(
     (Array.isArray(targetEmplNos) ? targetEmplNos : [targetEmplNos])
@@ -50,10 +52,15 @@ exports.sendTargetedPushNotification = async ({
 
   if (result.tk_status !== "OK" || !Array.isArray(result.data)) return;
 
+  // `actions` ⇒ service worker vẽ nút hành động ngay trên thông báo (Phê duyệt / Từ chối).
+  // `approval` ⇒ dữ liệu để SW gọi lại API mà không cần mở web.
+  // JSON.stringify sẽ tự bỏ các key `undefined`.
   const payload = JSON.stringify({
     title,
     body,
     url,
+    actions: Array.isArray(actions) && actions.length > 0 ? actions : undefined,
+    approval: approval || undefined,
     data: {
       ...data,
       url,

@@ -4,8 +4,13 @@ const { removeVietnameseTones } = require("../utils/sqlUtils");
 const { cosineSimilarity, normalizeVector } = require("../utils/faceUtils");
 const { Buffer } = require('buffer');
 const { sendTargetedPushNotification } = require('./targetedPushService');
+const { emitToAll } = require('../socket/socketHandler');
 
 const getRows = (result) => (result?.tk_status === "OK" && Array.isArray(result.data) ? result.data : []);
+
+/** Job được xem là quản lý — dùng chung cho mọi nhánh phân quyền phê duyệt. */
+const HR_APPROVER_JOBS = ["Leader", "Sub Leader", "Dept Staff", "ADMIN"];
+const isHrApprover = (jobName) => HR_APPROVER_JOBS.includes(jobName);
 
 async function getDepartmentApprovers(ctrCd, subDeptName) {
   if (!ctrCd || !subDeptName) return [];
@@ -26,7 +31,7 @@ async function getDepartmentApprovers(ctrCd, subDeptName) {
   return getRows(result).map((row) => row.EMPL_NO).filter(Boolean);
 }
 
-async function notifyRegistrationSubmitted({ ctrCd, subDeptName, title, body, data }) {
+async function notifyRegistrationSubmitted({ ctrCd, subDeptName, title, body, data, actions, approval }) {
   try {
     const approvers = await getDepartmentApprovers(ctrCd, subDeptName);
     await sendTargetedPushNotification({
@@ -36,6 +41,8 @@ async function notifyRegistrationSubmitted({ ctrCd, subDeptName, title, body, da
       body,
       url: '/nhansu/pheduyetnghi',
       data,
+      actions,
+      approval,
     });
   } catch (error) {
     console.warn('HR registration push failed:', error?.message || error);
@@ -44,17 +51,112 @@ async function notifyRegistrationSubmitted({ ctrCd, subDeptName, title, body, da
 
 async function getLeaveRequestRecipient(ctrCd, offId) {
   const result = await queryDB_New(
-    `SELECT TOP 1 O.EMPL_NO AS REQUESTER_EMPL_NO, SD.SUBDEPTNAME,
+    `SELECT TOP 1 O.EMPL_NO AS REQUESTER_EMPL_NO, SD.SUBDEPTNAME, MD.MAINDEPTNAME,
             O.APPLY_DATE, O.CA_NGHI, R.REASON_NAME
      FROM ZTBOFFREGISTRATIONTB O
      JOIN ZTBEMPLINFO E ON E.EMPL_NO=O.EMPL_NO AND E.CTR_CD=O.CTR_CD
      JOIN ZTBWORKPOSITION WP ON WP.WORK_POSITION_CODE=E.WORK_POSITION_CODE AND WP.CTR_CD=E.CTR_CD
      JOIN ZTBSUBDEPARTMENT SD ON SD.SUBDEPTCODE=WP.SUBDEPTCODE AND SD.CTR_CD=WP.CTR_CD
+     LEFT JOIN ZTBMAINDEPARMENT MD ON MD.MAINDEPTCODE=SD.MAINDEPTCODE AND MD.CTR_CD=SD.CTR_CD
      LEFT JOIN ZTBREASON R ON R.REASON_CODE=O.REASON_CODE AND R.CTR_CD=O.CTR_CD
      WHERE O.CTR_CD=@CTR_CD AND O.OFF_ID=@OFF_ID`,
     { CTR_CD: ctrCd, OFF_ID: Number(offId) }
   );
   return getRows(result)[0] || null;
+}
+
+/** Tên hiển thị của nhân viên, dùng cho nội dung thông báo. */
+async function getEmployeeDisplayName(ctrCd, emplNo) {
+  if (!ctrCd || !emplNo) return "";
+  const result = await queryDB_New(
+    `SELECT TOP 1 LTRIM(RTRIM(ISNULL(FIRST_NAME,'') + ' ' + ISNULL(MIDLAST_NAME,''))) AS EMPL_NAME
+     FROM ZTBEMPLINFO WHERE CTR_CD=@CTR_CD AND EMPL_NO=@EMPL_NO`,
+    { CTR_CD: ctrCd, EMPL_NO: String(emplNo).trim().toUpperCase() }
+  );
+  return (getRows(result)[0]?.EMPL_NAME || "").trim();
+}
+
+/**
+ * Đọc TRẠNG THÁI HIỆN TẠI của (các) đơn nghỉ — CHỈ ĐỌC.
+ *
+ * Dùng cho tình huống 2 leader nhận thông báo cùng lúc: người bấm sau cần biết
+ * đơn đã được ai xử lý và theo hướng nào, thay vì chỉ nhận "thất bại" chung chung.
+ */
+async function getLeaveRequestCurrentState(ctrCd, offIds) {
+  if (!ctrCd || !Array.isArray(offIds) || offIds.length === 0) return null;
+
+  const result = await queryDB_New(
+    `SELECT TOP 1 OFF_ID, APPROVAL_STATUS, APPLY_DATE,
+            ISNULL(APPROVE_EMPL, UPD_EMPL) AS ACTOR_EMPL,
+            ISNULL(APPROVED_DATETIME, UPD_DATE) AS ACTED_AT
+     FROM ZTBOFFREGISTRATIONTB
+     WHERE CTR_CD=@CTR_CD AND OFF_ID IN (${offIds.join(",")})`,
+    { CTR_CD: ctrCd }
+  );
+
+  const row = getRows(result)[0];
+  if (!row) return null;
+
+  const status = Number(row.APPROVAL_STATUS);
+  return {
+    offId: row.OFF_ID,
+    approvalStatus: status,
+    applyDate: row.APPLY_DATE,
+    actorEmpl: row.ACTOR_EMPL || "",
+    // useUTC:true ở tầng mssql ⇒ dùng moment.utc để giữ đúng chữ số thời gian đã lưu,
+    // khớp với cách NotificationPanel hiển thị (moment.utc(...)).
+    actedAt: row.ACTED_AT ? moment.utc(row.ACTED_AT).format("DD/MM/YYYY HH:mm") : "",
+    isPending: status === 2,
+    statusText: status === 1 ? "đã duyệt" : status === 0 ? "đã từ chối" : "đang chờ xử lý",
+  };
+}
+
+/**
+ * Chèn thông báo vào chuông trong app (ZTB_NOTIFICATION) và phát realtime qua socket.
+ *
+ * Lưu ý: bảng này giới hạn theo PHÒNG BAN (MAINDEPTNAME/SUBDEPTNAME) chứ không theo
+ * từng user — giống hệt cách NotificationPanel và các trang nghiệp vụ đang làm.
+ */
+async function insertInAppNotification({ ctrCd, title, content, subDeptName, mainDeptName, notiType, emplNo }) {
+  const notification = {
+    CTR_CD: ctrCd,
+    NOTI_ID: -1,
+    NOTI_TYPE: notiType || "info",
+    TITLE: title,
+    CONTENT: content,
+    SUBDEPTNAME: subDeptName || "",
+    MAINDEPTNAME: mainDeptName || "",
+    INS_EMPL: emplNo || "",
+    INS_DATE: moment().format("YYYY-MM-DD HH:mm:ss"),
+    UPD_EMPL: emplNo || "",
+    UPD_DATE: moment().format("YYYY-MM-DD HH:mm:ss"),
+  };
+
+  try {
+    const result = await queryDB_New(
+      `INSERT INTO ZTB_NOTIFICATION (CTR_CD, TITLE, CONTENT, SUBDEPTNAME, MAINDEPTNAME, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, NOTI_TYPE)
+       VALUES (@ctr_cd, @title, @content, @subdeptname, @maindeptname, GETDATE(), @empl_no, GETDATE(), @empl_no, @noti_type)`,
+      {
+        ctr_cd: ctrCd,
+        title,
+        content,
+        subdeptname: subDeptName || "",
+        maindeptname: mainDeptName || "",
+        empl_no: emplNo || "",
+        noti_type: notiType || "info",
+      }
+    );
+
+    if (result?.tk_status === "OK") {
+      emitToAll("notification_panel", notification);
+    } else {
+      console.warn("Insert in-app notification returned:", result?.message || result?.tk_status);
+    }
+    return result;
+  } catch (error) {
+    console.warn("Insert in-app notification failed:", error?.message || error);
+    return null;
+  }
 }
 
 async function notifyApprovalChanged({ ctrCd, offId, approvalValue, approverEmpl }) {
@@ -348,28 +450,47 @@ exports.dangkynghi2 = async (req, res, DATA) => {
   var today = new Date();
   var today_format = moment().format("YYYY-MM-DD");
   let checkkq = "OK";
+  const insertedOffIds = [];
   if (CANGHI === 1) {
     for (var day = from; day <= to; day.setDate(day.getDate() + 1)) {
       let apply_date = moment(day).format("YYYY-MM-DD");
-      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI},GETDATE(),'${EMPL_NO}')`;
+      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) OUTPUT INSERTED.OFF_ID VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI},GETDATE(),'${EMPL_NO}')`;
       kqua = await queryDB(query);
       if (kqua.tk_status != "OK") checkkq = "NG";
+      else if (Array.isArray(kqua.data)) insertedOffIds.push(...kqua.data.map((r) => r.OFF_ID).filter(Boolean));
     }
   } else if (CANGHI === 2) {
     for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
       let apply_date = moment(day).format("YYYY-MM-DD");
-      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI},GETDATE(),'${EMPL_NO}')`;
+      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) OUTPUT INSERTED.OFF_ID VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI},GETDATE(),'${EMPL_NO}')`;
       kqua = await queryDB(query);
       if (kqua.tk_status != "OK") checkkq = "NG";
+      else if (Array.isArray(kqua.data)) insertedOffIds.push(...kqua.data.map((r) => r.OFF_ID).filter(Boolean));
     }
   }
   if (checkkq === "OK") {
+    // Nút Phê duyệt / Từ chối ngay trên thông báo đẩy.
+    // Chỉ gửi kèm khi biết chắc danh sách OFF_ID vừa tạo ⇒ tránh thao tác nhầm đơn khác.
+    const canQuickApprove = insertedOffIds.length > 0;
     void notifyRegistrationSubmitted({
       ctrCd: DATA.CTR_CD,
       subDeptName: req.payload_data.SUBDEPTNAME,
       title: "Có đơn nghỉ cần phê duyệt",
       body: `${EMPL_NO} đã đăng ký nghỉ từ ${START_DATE} đến ${END_DATE}.`,
       data: { type: "leave-registration", emplNo: EMPL_NO, fromDate: START_DATE, toDate: END_DATE },
+      actions: canQuickApprove
+        ? [
+            { action: "approve", title: "Phê duyệt" },
+            { action: "reject", title: "Từ chối" },
+          ]
+        : undefined,
+      approval: canQuickApprove
+        ? {
+            apiUrl: `${req.protocol}://${req.get("host")}/api`,
+            ctrCd: DATA.CTR_CD,
+            offIds: insertedOffIds,
+          }
+        : undefined,
     });
     res.send({ tk_status: "OK" });
   } else {
@@ -583,6 +704,146 @@ exports.setpheduyetnhom = async (req, res, DATA) => {
   } else {
     res.send({ tk_status: "NG", message: "NO_LEADER" });
   }
+};
+/**
+ * Tác dụng phụ sau khi phê duyệt NHANH thành công (từ thông báo đẩy).
+ *
+ * Gồm 3 việc, tất cả đều best-effort — lỗi ở đây KHÔNG được làm hỏng kết quả phê duyệt:
+ * 1. Push kết quả cho người đã đăng ký.
+ * 2. Chèn thông báo vào chuông trong app. Duyệt nhanh không đi qua web nên phải chèn
+ *    ở server; luồng duyệt trên web đã chèn ở client nên KHÔNG chèn lại để tránh trùng.
+ * 3. Báo các leader khác biết đơn đã có người xử lý ⇒ họ không phải bấm nữa.
+ */
+async function notifyQuickApprovalSideEffects({ ctrCd, offIds, approvalValue, approverEmpl }) {
+  try {
+    const approved = Number(approvalValue) === 1;
+    const requester = await getLeaveRequestRecipient(ctrCd, offIds[0]);
+
+    void notifyApprovalChanged({ ctrCd, offId: offIds[0], approvalValue, approverEmpl });
+    if (!requester) return;
+
+    const actorName = (await getEmployeeDisplayName(ctrCd, approverEmpl)) || approverEmpl || "quản lý";
+    const applyDate = requester.APPLY_DATE
+      ? moment.utc(requester.APPLY_DATE).format("DD/MM/YYYY")
+      : "";
+    const requesterNo = requester.REQUESTER_EMPL_NO || "nhân viên";
+
+    // (2) Chuông thông báo trong app.
+    await insertInAppNotification({
+      ctrCd,
+      title: approved ? "Đơn nghỉ đã được duyệt" : "Đơn nghỉ bị từ chối",
+      content: `Đơn nghỉ ngày ${applyDate} của ${requesterNo} đã được ${approved ? "duyệt" : "từ chối"} bởi ${actorName}.`,
+      subDeptName: requester.SUBDEPTNAME,
+      mainDeptName: requester.MAINDEPTNAME,
+      notiType: approved ? "success" : "warning",
+      emplNo: approverEmpl,
+    });
+
+    // (3) Các leader khác: đơn đã xử lý, không kèm nút để tránh thao tác lại.
+    const approvers = await getDepartmentApprovers(ctrCd, requester.SUBDEPTNAME);
+    const actor = String(approverEmpl || "").trim().toUpperCase();
+    const others = approvers.filter((emplNo) => String(emplNo).trim().toUpperCase() !== actor);
+
+    if (others.length > 0) {
+      await sendTargetedPushNotification({
+        ctrCd,
+        targetEmplNos: others,
+        title: "Đơn nghỉ đã được xử lý",
+        body: `${actorName} đã ${approved ? "duyệt" : "từ chối"} đơn nghỉ ngày ${applyDate} của ${requesterNo}.`,
+        url: "/nhansu/pheduyetnghi",
+        data: { type: "leave-approval-taken", offIds },
+      });
+    }
+  } catch (error) {
+    console.warn("Quick approval side effects failed:", error?.message || error);
+  }
+}
+
+/**
+ * Phê duyệt / từ chối NHANH nhiều đơn nghỉ trong một lần gọi.
+ *
+ * Dùng cho nút "Phê duyệt" / "Từ chối" ngay trên thông báo đẩy: service worker gọi
+ * thẳng command này, không cần mở web.
+ *
+ * An toàn:
+ * - Danh sách OFF_ID do CHÍNH backend sinh ra lúc tạo đơn và nhúng vào payload push
+ *   (không do client tự chọn) ⇒ không thể thao tác sang đơn khác.
+ * - Bắt buộc đúng vai trò quản lý (kiểm tra theo JWT của người đang đăng nhập).
+ * - Chỉ cập nhật đơn đang CHỜ DUYỆT (APPROVAL_STATUS = 2) nên bấm lại không ghi đè.
+ */
+exports.pheduyetnhanhnhom = async (req, res, DATA) => {
+  const EMPL_NO = req.payload_data?.["EMPL_NO"];
+  const JOB_NAME = req.payload_data?.["JOB_NAME"];
+  const ctrCd = DATA?.CTR_CD;
+  const approvalValue = Number(DATA?.pheduyetvalue);
+
+  // Chỉ nhận OFF_ID là số nguyên dương. (Number(null) === 0 và Number("abc") === NaN
+  // nên phải loại cả hai, nếu không sẽ lọt xuống câu UPDATE với giá trị rác.)
+  const offIds = Array.isArray(DATA?.off_ids)
+    ? [
+        ...new Set(
+          DATA.off_ids
+            .map((value) => Number(value))
+            .filter((value) => Number.isInteger(value) && value > 0)
+        ),
+      ]
+    : [];
+
+  if (!ctrCd) {
+    return res.send({ tk_status: "NG", message: "Thiếu thông tin công ty (CTR_CD)" });
+  }
+  if (![0, 1].includes(approvalValue)) {
+    return res.send({ tk_status: "NG", message: "Giá trị phê duyệt không hợp lệ" });
+  }
+  if (offIds.length === 0) {
+    return res.send({ tk_status: "NG", message: "Thiếu danh sách đơn cần xử lý" });
+  }
+  if (!isHrApprover(JOB_NAME)) {
+    return res.send({ tk_status: "NG", message: "NO_LEADER" });
+  }
+
+  const query = `UPDATE ZTBOFFREGISTRATIONTB
+    SET APPROVAL_STATUS=${approvalValue}, UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}',
+        APPROVED_DATETIME=GETDATE(), APPROVE_EMPL='${EMPL_NO}'
+    WHERE CTR_CD='${ctrCd}' AND APPROVAL_STATUS=2 AND OFF_ID IN (${offIds.join(",")})`;
+
+  const kqua = await queryDB(query);
+  if (kqua.tk_status !== "OK") {
+    // Không có dòng nào khớp điều kiện APPROVAL_STATUS=2.
+    // Trường hợp thường gặp: 2 leader nhận thông báo cùng lúc, người kia đã xử lý trước.
+    // Đọc lại trạng thái (CHỈ ĐỌC) để báo cho người bấm sau biết chuyện gì đã xảy ra.
+    const current = await getLeaveRequestCurrentState(ctrCd, offIds);
+    if (current && !current.isPending) {
+      const actorName =
+        (await getEmployeeDisplayName(ctrCd, current.actorEmpl)) || current.actorEmpl || "quản lý";
+      const at = current.actedAt ? ` lúc ${current.actedAt}` : "";
+      return res.send({
+        tk_status: "NG",
+        code: "ALREADY_HANDLED",
+        message: `Đơn đã được ${actorName} ${current.statusText}${at}.`,
+        data: { ...current, actorName },
+      });
+    }
+
+    return res.send({
+      tk_status: "NG",
+      message: "Không tìm thấy đơn đang chờ xử lý (có thể đã bị xóa hoặc không thuộc công ty này)",
+    });
+  }
+
+  // Ghi nhận thành công ⇒ chạy các thông báo (push + chuông trong app).
+  void notifyQuickApprovalSideEffects({
+    ctrCd,
+    offIds,
+    approvalValue,
+    approverEmpl: EMPL_NO,
+  });
+
+  res.send({
+    tk_status: "OK",
+    message: approvalValue === 1 ? "Đã phê duyệt đơn nghỉ" : "Đã từ chối đơn nghỉ",
+    data: { offIds, pheduyetvalue: approvalValue },
+  });
 };
 exports.xacnhanchamcongnhom = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
