@@ -229,6 +229,44 @@ async function main() {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
     now.getDate()
   ).padStart(2, "0")}`;
+
+  // Đẩy 1 tin về 20:00 giờ VN hôm nay: đây là "vùng nguy hiểm" của lỗi múi giờ —
+  // nếu mốc ngày bị lệch 7 giờ (00:00 UTC thay vì 00:00 giờ VN) thì tin này sẽ bị loại oan.
+  const pool = await openConnection();
+  await pool.query(
+    `UPDATE ZTB_CHAT_MESSAGE
+        SET CREATED_AT = DATEADD(hour, 20, CAST(CAST(GETDATE() AS date) AS datetime))
+      WHERE MESSAGE_ID = @ID`,
+    { ID: keywordMessage.message.MESSAGE_ID }
+  );
+  const lateMessage = await repo.insertMessage({
+    ctrCd: ctx.ctrCd,
+    conversationId,
+    senderEmplNo: ctx.emplNo,
+    msgType: "TEXT",
+    content: "Tin gui luc 20h toi nay kiem tra mui gio",
+    clientMessageId: `${FIXTURE_PREFIX}${RUN_ID}-msg-late`,
+  });
+  createdMessageIds.push(lateMessage.message.MESSAGE_ID);
+  await pool.query(
+    `UPDATE ZTB_CHAT_MESSAGE
+        SET CREATED_AT = DATEADD(hour, 23, CAST(CAST(GETDATE() AS date) AS datetime))
+      WHERE MESSAGE_ID = @ID`,
+    { ID: lateMessage.message.MESSAGE_ID }
+  );
+
+  const lateHit = await searchOrEmpty({ ...ctx, fromDate: today, toDate: today, limit: 50 });
+  check(
+    "tin nhắn 23:00 giờ VN hôm nay vẫn nằm trong lọc 'hôm nay' (không lệch múi giờ)",
+    Boolean(lateHit?.some((r) => r.MESSAGE_ID === lateMessage.message.MESSAGE_ID))
+  );
+  const lateMiss = await searchOrEmpty({
+    ...ctx,
+    fromDate: "2000-01-01",
+    toDate: "2000-01-02",
+    limit: 50,
+  });
+  check("tin nhắn hôm nay không lọt vào khoảng ngày quá khứ", lateMiss?.length === 0);
   const dateHit = await searchOrEmpty({
     ...ctx,
     fromDate: today,

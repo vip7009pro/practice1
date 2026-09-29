@@ -35,7 +35,12 @@ function fail(res, message, code) {
 }
 
 function fullName(row) {
-  return [row.MIDLAST_NAME, row.FIRST_NAME].filter(Boolean).join(" ").trim();
+  // MIDLAST_NAME trong DB có thể đã có khoảng trắng ở cuối ⇒ gộp nhiều khoảng trắng thành 1.
+  return [row.MIDLAST_NAME, row.FIRST_NAME]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function memberView(row) {
@@ -50,9 +55,16 @@ function memberView(row) {
   };
 }
 
-/** Ghép dữ liệu phòng + thành viên thành payload hiển thị cho FE. */
+/**
+ * Ghép dữ liệu phòng + thành viên thành payload hiển thị cho FE.
+ *
+ * `members` phải là DÒNG THÔ từ `repo.listMembersForConversations` — hàm này tự gọi
+ * `memberView` đúng MỘT lần. Trước đây caller đã map sẵn rồi truyền vào và ở đây map lại
+ * ⇒ mất `MIDLAST_NAME`/`FIRST_NAME` nên `FULL_NAME` rơi về mã nhân viên (tag tên không ra tên).
+ */
 function buildConversationView(conversation, members, myEmplNo) {
-  const active = members.filter((m) => !m.LEFT_AT);
+  const all = (members || []).map(memberView);
+  const active = all.filter((m) => !m.LEFT_AT);
   const others = active.filter((m) => m.EMPL_NO !== myEmplNo);
   const isSelf = conversation.CONV_TYPE === "SELF";
   const isDirect = conversation.CONV_TYPE === "DIRECT";
@@ -75,7 +87,7 @@ function buildConversationView(conversation, members, myEmplNo) {
     PEER_EMPL_NO: peer ? peer.EMPL_NO : null,
     PEER_ONLINE_KEY: peer ? peer.EMPL_NO : null,
     OWNER_EMPL_NO: conversation.OWNER_EMPL_NO || null,
-    MY_ROLE: (members.find((m) => m.EMPL_NO === myEmplNo) || {}).ROLE || "MEMBER",
+    MY_ROLE: (all.find((m) => m.EMPL_NO === myEmplNo) || {}).ROLE || "MEMBER",
     MUTED: Boolean(conversation.MUTED),
     UNREAD_COUNT: Number(conversation.UNREAD_COUNT) || 0,
     LAST_MESSAGE: conversation.LAST_MESSAGE_ID
@@ -88,17 +100,18 @@ function buildConversationView(conversation, members, myEmplNo) {
           DELETED_AT: conversation.LAST_DELETED_AT || null,
         }
       : null,
-    MEMBERS: active.map(memberView),
+    MEMBERS: active,
   };
 }
 
 async function loadConversationView({ ctrCd, conversationId, myEmplNo }) {
   const conversation = await repo.getConversationById({ ctrCd, conversationId });
   if (!conversation) return null;
-  const members = (await repo.listMembersForConversations({
+  // Truyền DÒNG THÔ — buildConversationView tự map.
+  const members = await repo.listMembersForConversations({
     ctrCd,
     conversationIds: [conversationId],
-  })).map(memberView);
+  });
   return buildConversationView({ ...conversation, UNREAD_COUNT: 0 }, members, myEmplNo);
 }
 
@@ -176,7 +189,7 @@ exports.chatBootstrap = async (req, res, DATA) => {
     const membersByConversation = new Map();
     allMembers.forEach((row) => {
       const list = membersByConversation.get(row.CONVERSATION_ID) || [];
-      list.push(memberView(row));
+      list.push(row); // dòng thô
       membersByConversation.set(row.CONVERSATION_ID, list);
     });
 
@@ -240,7 +253,7 @@ exports.chatSync = async (req, res, DATA) => {
     const byConversation = new Map();
     members.forEach((row) => {
       const list = byConversation.get(row.CONVERSATION_ID) || [];
-      list.push(memberView(row));
+      list.push(row); // dòng thô
       byConversation.set(row.CONVERSATION_ID, list);
     });
 
@@ -1086,7 +1099,7 @@ async function decorateSearchRows({ ctrCd, emplNo, rows }) {
   const byConversation = new Map();
   members.forEach((row) => {
     const list = byConversation.get(row.CONVERSATION_ID) || [];
-    list.push(memberView(row));
+    list.push(row); // dòng thô
     byConversation.set(row.CONVERSATION_ID, list);
   });
 

@@ -700,26 +700,34 @@ async function ensureSelfConversation({ ctrCd, emplNo }) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Phân tích mốc ngày theo GIỜ ĐỊA PHƯƠNG của server.
+ * Phân tích mốc ngày cho bộ lọc.
  *
- * `new Date("2026-09-30")` bị hiểu là 00:00 UTC ⇒ lệch múi giờ (VN +7) khiến tin nhắn
- * tạo trong khoảng 00:00–07:00 giờ địa phương bị loại oan. Vì DB lưu GETDATE() (giờ máy),
- * phải dựng mốc ngày bằng giờ địa phương.
+ * Bối cảnh (rất dễ sai): SQL Server dùng `GETDATE()` ⇒ cột thời gian lưu GIỜ VIỆT NAM,
+ * còn driver mssql cấu hình `useUTC: true` ⇒ khi gửi tham số kiểu Date, driver lấy các
+ * thành phần **UTC** của Date đó. Vì vậy muốn so với "00:00 ngày 30/09 giờ VN" thì phải
+ * dựng Date bằng `Date.UTC(...)` (KHÔNG dùng `new Date(y, m, d)` — sẽ bị lệch múi giờ).
  */
 function parseDayStart(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
   const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
-  if (ymd) return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]), 0, 0, 0, 0);
+  if (ymd) {
+    return new Date(Date.UTC(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]), 0, 0, 0, 0));
+  }
   const parsed = new Date(raw);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 /** Mốc kết thúc (loại trừ) = 00:00 ngày kế tiếp để bao trọn ngày người dùng chọn. */
 function parseDayEnd(value) {
+  const raw = String(value ?? "").trim();
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (ymd) {
+    return new Date(Date.UTC(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]) + 1, 0, 0, 0, 0));
+  }
   const start = parseDayStart(value);
   if (!start) return null;
-  return new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
+  return new Date(start.getTime() + 24 * 3600 * 1000);
 }
 
 /** Đuôi tệp theo từng nhóm — dùng để lọc "loại file" khi tìm kiếm. */
