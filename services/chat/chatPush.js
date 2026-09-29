@@ -8,6 +8,7 @@
  */
 const { isUserOnline, getOnlineEmplNos } = require("../../socket/presence");
 const { sendTargetedPushNotification } = require("../targetedPushService");
+const repo = require("./chatRepository");
 
 const PREVIEW_LENGTH = 140;
 

@@ -12,6 +12,7 @@ const repo = require("./chatRepository");
 const core = require("./chatMessageCore");
 const { pushOfflineChat } = require("./chatPush");
 const { emitToConversation, emitToUsers } = require("../../socket/socketHandler");
+const { getOnlineEmplNos } = require("../../socket/presence");
 
 const MAX_GROUP_MEMBERS = 200;
 
@@ -188,6 +189,8 @@ exports.chatBootstrap = async (req, res, DATA) => {
     ok(res, {
       conversations,
       unreadTotal: conversations.reduce((sum, c) => sum + c.UNREAD_COUNT, 0),
+      // Danh sách đang online để FE hiển thị đúng trạng thái ngay khi mở panel.
+      onlineEmplNos: getOnlineEmplNos(),
       friends: friendRows.map((f) => ({
         FRIEND_ID: f.FRIEND_ID,
         PARTNER: f.REQUESTER === emplNo ? f.RECIPIENT : f.REQUESTER,
@@ -229,6 +232,7 @@ exports.chatSync = async (req, res, DATA) => {
     ok(res, {
       conversations,
       unreadTotal: conversations.reduce((sum, c) => sum + c.UNREAD_COUNT, 0),
+      onlineEmplNos: getOnlineEmplNos(),
     });
   } catch (error) {
     console.error("[chatSync]", error);
@@ -417,11 +421,12 @@ exports.chatLoadMessages = async (req, res, DATA) => {
       conversationId,
       beforeMessageId: DATA?.beforeMessageId,
       limit: DATA?.limit || 40,
+      emplNo,
     });
-    const enriched = await core.attachFiles(conversationId, rows);
+    const messages = await core.enrichMessages(conversationId, rows);
     ok(res, {
       conversationId,
-      messages: enriched.map((row) => core.toClientMessage(row, row.ATTACHMENTS || [])),
+      messages,
       hasMore: rows.length >= Math.min(Number(DATA?.limit) || 40, 100),
     });
   } catch (error) {
@@ -451,7 +456,7 @@ exports.chatSendMessage = async (req, res, DATA) => {
 
     const payload = {
       conversationId: Number(DATA?.conversationId),
-      message: core.toClientMessage(result.message),
+      message: await core.enrichMessage(Number(DATA?.conversationId), result.message, result.attachments),
     };
     emitToConversation(payload.conversationId, "chat:message", payload);
     // Phát thêm tới room riêng từng thành viên: nếu client gửi qua HTTP (socket không
@@ -547,8 +552,190 @@ exports.chatDeleteMessage = async (req, res, DATA) => {
   }
 };
 
-/* ------------------------------ Thành viên ------------------------- */
+/* ------------------------ Cảm xúc / ẩn / chuyển tiếp ------------------------ */
 
+/** Thả hoặc bỏ cảm xúc cho 1 tin nhắn (mỗi người tối đa 1 cảm xúc / tin). */
+async function applyReaction({ ctrCd, conversationId, messageId, emplNo, reaction }) {
+  const membership = await core.getActiveMembership(conversationId, emplNo);
+  if (!membership) return { ok: false, message: "Bạn không có quyền truy cập phòng chat này" };
+
+  const rows = await repo.listMessagesByIds({ conversationId, messageIds: [messageId], emplNo });
+  if (!rows || rows.length === 0) return { ok: false, message: "Tin nhắn không tồn tại" };
+
+  const normalized = String(reaction || "").trim().toUpperCase();
+  const removed = !normalized || normalized === "NONE";
+
+  if (removed) {
+    await repo.removeReaction({ messageId, emplNo });
+  } else {
+    if (!core.REACTION_TYPES.has(normalized)) return { ok: false, message: "Cảm xúc không hợp lệ" };
+    await repo.setReaction({ ctrCd, messageId, emplNo, reaction: normalized });
+  }
+
+  const payload = {
+    conversationId,
+    messageId,
+    emplNo,
+    reaction: removed ? null : normalized,
+    removed,
+    // Bản tổng hợp mới nhất để client thay thế nguyên trạng.
+    reactions: core.buildReactions(await repo.listReactionsForMessages({ messageIds: [messageId] })),
+  };
+
+  // Phát cho người đang mở phòng + room riêng từng thành viên (panel đang đóng vẫn cập nhật).
+  const members = await repo.listActiveMemberNos({ conversationId });
+  emitToConversation(conversationId, "chat:reaction", payload);
+  emitToUsers(members.map((row) => row.EMPL_NO), "chat:reaction", payload);
+  return { ok: true, ...payload };
+}
+
+exports.chatReact = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    const messageId = Number(DATA?.messageId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || !Number.isInteger(messageId)) {
+      return fail(res, "Tin nhắn không hợp lệ");
+    }
+
+    const result = await applyReaction({
+      ctrCd,
+      conversationId,
+      messageId,
+      emplNo,
+      reaction: DATA?.reaction,
+    });
+    if (!result.ok) return fail(res, result.message);
+
+    ok(res, result);
+  } catch (error) {
+    console.error("[chatReact]", error);
+    fail(res, "Không thả được cảm xúc");
+  }
+};
+
+/** "Xoá ở phía tôi": chỉ ẩn với người dùng hiện tại, người khác vẫn thấy. */
+exports.chatHideMessage = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    const messageId = Number(DATA?.messageId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+
+    await repo.hideMessageForUser({ messageId, emplNo });
+    await repo.writeAudit({
+      ctrCd,
+      conversationId,
+      actor: emplNo,
+      action: "MESSAGE_HIDDEN_ONE_SIDE",
+      target: String(messageId),
+    });
+
+    // Chỉ phát cho chính user này (các tab khác của họ cũng ẩn).
+    emitToUsers([emplNo], "chat:message-hidden", { conversationId, messageId });
+    ok(res, { conversationId, messageId });
+  } catch (error) {
+    console.error("[chatHideMessage]", error);
+    fail(res, "Không xoá được tin nhắn");
+  }
+};
+
+/** Chuyển tiếp 1 tin nhắn sang một hoặc nhiều phòng khác. */
+exports.chatForward = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo, emplName } = getCtx(req, DATA);
+    const sourceConversationId = Number(DATA?.conversationId);
+    const messageId = Number(DATA?.messageId);
+    const targets = Array.isArray(DATA?.targetConversationIds)
+      ? DATA.targetConversationIds.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0)
+      : [];
+
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(messageId) || targets.length === 0) {
+      return fail(res, "Thiếu thông tin chuyển tiếp");
+    }
+
+    const sourceMembership = await core.getActiveMembership(sourceConversationId, emplNo);
+    if (!sourceMembership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+
+    const [sourceRows, sourceAttachments] = await Promise.all([
+      repo.listMessagesByIds({ conversationId: sourceConversationId, messageIds: [messageId], emplNo }),
+      repo.listAttachmentsByMessageIds({ conversationId: sourceConversationId, messageIds: [messageId] }),
+    ]);
+
+    const source = sourceRows && sourceRows[0];
+    if (!source) return fail(res, "Tin nhắn nguồn không tồn tại");
+
+    const forwarded = [];
+    for (const targetId of [...new Set(targets)]) {
+      const targetMembership = await core.getActiveMembership(targetId, emplNo);
+      if (!targetMembership) continue;
+
+      // Nhân bản đính kèm sang phòng đích (dùng lại file vật lý, không copy file).
+      const clonedIds = await repo.cloneAttachments({
+        attachmentIds: sourceAttachments.map((row) => row.ATTACHMENT_ID),
+        targetConversationId: targetId,
+        ctrCd,
+        emplNo,
+      });
+
+      const result = await core.sendMessage({
+        ctrCd,
+        conversationId: targetId,
+        senderEmplNo: emplNo,
+        msgType: source.MSG_TYPE === "SYSTEM" ? "TEXT" : source.MSG_TYPE,
+        content: source.CONTENT,
+        attachmentIds: clonedIds,
+        forwardedFromMessageId: messageId,
+      });
+
+      if (!result.ok) continue;
+
+      const payload = {
+        conversationId: targetId,
+        message: await core.enrichMessage(targetId, result.message, result.attachments),
+      };
+      emitToConversation(targetId, "chat:message", payload);
+      emitToUsers(result.memberNos, "chat:message", payload);
+
+      void pushOfflineChat({
+        ctrCd,
+        memberNos: result.memberNos,
+        senderEmplNo: emplNo,
+        senderName: emplName || emplNo,
+        conversationTitle:
+          result.conversation?.CONV_TYPE === "GROUP" ? result.conversation?.TITLE : undefined,
+        content: payload.message.CONTENT,
+        conversationId: targetId,
+        msgType: payload.message.MSG_TYPE,
+      });
+
+      forwarded.push(targetId);
+    }
+
+    if (forwarded.length === 0) return fail(res, "Không chuyển tiếp được tới phòng nào");
+
+    await repo.writeAudit({
+      ctrCd,
+      conversationId: sourceConversationId,
+      actor: emplNo,
+      action: "MESSAGE_FORWARDED",
+      target: String(messageId),
+      detail: forwarded.join(","),
+    });
+
+    ok(res, { messageId, forwarded });
+  } catch (error) {
+    console.error("[chatForward]", error);
+    fail(res, "Không chuyển tiếp được tin nhắn");
+  }
+};
+
+/* ------------------------------ Thành viên ------------------------- */
 async function assertManager({ conversationId, emplNo }) {
   const membership = await core.getActiveMembership(conversationId, emplNo);
   if (!membership) return { error: "Bạn không có quyền truy cập phòng chat này" };

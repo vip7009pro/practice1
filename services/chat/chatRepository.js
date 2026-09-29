@@ -7,6 +7,8 @@
 const { openConnection, openDedicatedConnection } = require("../../config/database");
 
 const MAX_MESSAGE_LENGTH = 4000;
+/** Loại tin hợp lệ — khai báo tại đây để repository không phụ thuộc vào tầng core. */
+const MSG_TYPES = new Set(["TEXT", "IMAGE", "FILE", "SYSTEM"]);
 
 async function queryRows(sql, params = {}) {
   const pool = await openConnection();
@@ -220,22 +222,45 @@ async function listActiveMemberNos({ conversationId }) {
 /* Tin nhắn                                                           */
 /* ------------------------------------------------------------------ */
 
-async function listMessages({ conversationId, beforeMessageId, limit = 40 }) {
+async function listMessages({ conversationId, beforeMessageId, limit = 40, emplNo }) {
   const safeLimit = Math.min(Math.max(Number(limit) || 40, 1), 100);
   const before = Number(beforeMessageId);
   const hasCursor = Number.isInteger(before) && before > 0;
+  const viewer = String(emplNo || "").trim().toUpperCase();
   const rows = await queryRows(
-    `SELECT TOP (@LIMIT) * FROM ZTB_CHAT_MESSAGE
-     WHERE CONVERSATION_ID = @CONVERSATION_ID
-       ${hasCursor ? "AND MESSAGE_ID < @BEFORE_ID" : ""}
-     ORDER BY MESSAGE_ID DESC`,
+    `SELECT TOP (@LIMIT) m.* FROM ZTB_CHAT_MESSAGE m
+     WHERE m.CONVERSATION_ID = @CONVERSATION_ID
+       ${hasCursor ? "AND m.MESSAGE_ID < @BEFORE_ID" : ""}
+       AND NOT EXISTS (
+         SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
+         WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER
+       )
+     ORDER BY m.MESSAGE_ID DESC`,
     {
       LIMIT: safeLimit,
       CONVERSATION_ID: Number(conversationId),
+      VIEWER: viewer,
       ...(hasCursor ? { BEFORE_ID: before } : {}),
     }
   );
   return rows.reverse();
+}
+
+/** Lấy 1 số tin nhắn theo id (dùng để dựng nội dung được trích dẫn khi reply). */
+async function listMessagesByIds({ conversationId, messageIds, emplNo }) {
+  const ids = (messageIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  if (ids.length === 0) return [];
+  const viewer = String(emplNo || "").trim().toUpperCase();
+  return queryRows(
+    `SELECT m.MESSAGE_ID, m.SENDER_EMPL_NO, m.MSG_TYPE, m.CONTENT, m.DELETED_AT, m.CONVERSATION_ID
+     FROM ZTB_CHAT_MESSAGE m
+     WHERE m.CONVERSATION_ID = @CONVERSATION_ID AND m.MESSAGE_ID IN (${ids.join(",")})
+       AND NOT EXISTS (
+         SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
+         WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER
+       )`,
+    { CONVERSATION_ID: Number(conversationId), VIEWER: viewer }
+  );
 }
 
 async function findMessageByClientId({ ctrCd, senderEmplNo, clientMessageId }) {
@@ -261,6 +286,7 @@ async function insertMessage({
   replyToMessageId,
   clientMessageId,
   attachmentIds,
+  forwardedFromMessageId,
 }) {
   return withTransaction(async ({ query }) => {
     if (clientMessageId) {
@@ -270,45 +296,68 @@ async function insertMessage({
         { CTR_CD: ctrCd, SENDER_EMPL_NO: senderEmplNo, CLIENT_MESSAGE_ID: clientMessageId }
       );
       if (existing.recordset && existing.recordset.length > 0) {
-        return { message: existing.recordset[0], duplicated: true };
+        return { message: existing.recordset[0], duplicated: true, attachments: [] };
       }
+    }
+
+    // File đính kèm hợp lệ: do chính người gửi upload, đúng phòng, chưa gắn tin nào.
+    const rawIds = (attachmentIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+    let attachments = [];
+    if (rawIds.length > 0) {
+      const found = await query(
+        `SELECT ATTACHMENT_ID, MESSAGE_ID, CONVERSATION_ID, UPLOADED_BY, ORIGINAL_NAME, MIME_TYPE, FILE_SIZE
+         FROM ZTB_CHAT_ATTACHMENT
+         WHERE ATTACHMENT_ID IN (${rawIds.join(",")})`,
+        {}
+      );
+      attachments = (found.recordset || []).filter(
+        (row) =>
+          String(row.UPLOADED_BY || "").trim().toUpperCase() === senderEmplNo &&
+          Number(row.CONVERSATION_ID) === Number(conversationId) &&
+          !row.MESSAGE_ID
+      );
+    }
+
+    // Suy ra loại tin từ đính kèm: gửi ảnh/file mà không kèm chữ vẫn phải là IMAGE/FILE.
+    let type = MSG_TYPES.has(msgType) ? msgType : "TEXT";
+    if (attachments.length > 0 && (type === "TEXT" || !String(content || "").trim())) {
+      type = attachments.some((row) => /^image\//i.test(String(row.MIME_TYPE || ""))) ? "IMAGE" : "FILE";
     }
 
     const inserted = await query(
       `INSERT INTO ZTB_CHAT_MESSAGE
-         (CONVERSATION_ID, CTR_CD, SENDER_EMPL_NO, MSG_TYPE, CONTENT, MENTIONS, REPLY_TO_MESSAGE_ID, CLIENT_MESSAGE_ID)
+         (CONVERSATION_ID, CTR_CD, SENDER_EMPL_NO, MSG_TYPE, CONTENT, MENTIONS,
+          REPLY_TO_MESSAGE_ID, CLIENT_MESSAGE_ID, FORWARDED_FROM_MESSAGE_ID)
        OUTPUT INSERTED.*
-       VALUES (@CONVERSATION_ID, @CTR_CD, @SENDER_EMPL_NO, @MSG_TYPE, @CONTENT, @MENTIONS, @REPLY_TO_MESSAGE_ID, @CLIENT_MESSAGE_ID)`,
+       VALUES (@CONVERSATION_ID, @CTR_CD, @SENDER_EMPL_NO, @MSG_TYPE, @CONTENT, @MENTIONS,
+               @REPLY_TO_MESSAGE_ID, @CLIENT_MESSAGE_ID, @FORWARDED_FROM_MESSAGE_ID)`,
       {
         CONVERSATION_ID: Number(conversationId),
         CTR_CD: ctrCd,
         SENDER_EMPL_NO: senderEmplNo,
-        MSG_TYPE: msgType,
+        MSG_TYPE: type,
         CONTENT: content ? String(content).slice(0, MAX_MESSAGE_LENGTH) : null,
         MENTIONS: mentions ? JSON.stringify(mentions).slice(0, 1000) : null,
         REPLY_TO_MESSAGE_ID: Number.isInteger(Number(replyToMessageId)) && Number(replyToMessageId) > 0
           ? Number(replyToMessageId)
           : null,
         CLIENT_MESSAGE_ID: clientMessageId || null,
+        FORWARDED_FROM_MESSAGE_ID:
+          Number.isInteger(Number(forwardedFromMessageId)) && Number(forwardedFromMessageId) > 0
+            ? Number(forwardedFromMessageId)
+            : null,
       }
     );
 
     const message = inserted.recordset[0];
 
-    if (Array.isArray(attachmentIds) && attachmentIds.length > 0) {
-      const ids = attachmentIds.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
-      if (ids.length > 0) {
-        await query(
-          `UPDATE ZTB_CHAT_ATTACHMENT SET MESSAGE_ID = @MESSAGE_ID
-           WHERE ATTACHMENT_ID IN (${ids.join(",")}) AND CONVERSATION_ID = @CONVERSATION_ID
-             AND UPLOADED_BY = @UPLOADED_BY AND MESSAGE_ID IS NULL`,
-          {
-            MESSAGE_ID: message.MESSAGE_ID,
-            CONVERSATION_ID: Number(conversationId),
-            UPLOADED_BY: senderEmplNo,
-          }
-        );
-      }
+    if (attachments.length > 0) {
+      const ids = attachments.map((row) => row.ATTACHMENT_ID).join(",");
+      await query(
+        `UPDATE ZTB_CHAT_ATTACHMENT SET MESSAGE_ID = @MESSAGE_ID
+         WHERE ATTACHMENT_ID IN (${ids}) AND MESSAGE_ID IS NULL`,
+        { MESSAGE_ID: message.MESSAGE_ID }
+      );
     }
 
     await query(
@@ -318,7 +367,16 @@ async function insertMessage({
       { MESSAGE_ID: message.MESSAGE_ID, CREATED_AT: message.CREATED_AT, CONVERSATION_ID: Number(conversationId) }
     );
 
-    return { message, duplicated: false };
+    return {
+      message,
+      duplicated: false,
+      attachments: attachments.map((row) => ({
+        attachmentId: row.ATTACHMENT_ID,
+        originalName: row.ORIGINAL_NAME,
+        mimeType: row.MIME_TYPE,
+        fileSize: row.FILE_SIZE,
+      })),
+    };
   });
 }
 
@@ -393,6 +451,108 @@ async function insertAttachment(record) {
     }
   );
   return inserted[0];
+}
+
+/* ------------------------------------------------------------------ */
+/* Cảm xúc (reaction) & ẩn tin theo từng user                          */
+/* ------------------------------------------------------------------ */
+
+async function listReactionsForMessages({ messageIds }) {
+  const ids = (messageIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  if (ids.length === 0) return [];
+  return queryRows(
+    `SELECT MESSAGE_ID, EMPL_NO, REACTION, ISNULL(RX_COUNT, 1) AS RX_COUNT
+     FROM ZTB_CHAT_REACTION WHERE MESSAGE_ID IN (${ids.join(",")})`,
+    {}
+  );
+}
+
+async function getReaction({ messageId, emplNo }) {
+  return queryOne(
+    `SELECT * FROM ZTB_CHAT_REACTION WHERE MESSAGE_ID = @MESSAGE_ID AND EMPL_NO = @EMPL_NO`,
+    { MESSAGE_ID: Number(messageId), EMPL_NO: emplNo }
+  );
+}
+
+/**
+ * Thả cảm xúc: mỗi người 1 DÒNG/tin.
+ *  - Chưa có ⇒ tạo mới với RX_COUNT = 1.
+ *  - Đã có ĐÚNG loại đó ⇒ tăng RX_COUNT (cho phép thả vô hạn, giống tim bay).
+ *  - Đã có loại KHÁC ⇒ đổi loại và đặt lại RX_COUNT = 1.
+ */
+async function setReaction({ ctrCd, messageId, emplNo, reaction }) {
+  const pool = await openConnection();
+  await pool.query(
+    `IF EXISTS (SELECT 1 FROM ZTB_CHAT_REACTION WHERE MESSAGE_ID=@MESSAGE_ID AND EMPL_NO=@EMPL_NO)
+       UPDATE ZTB_CHAT_REACTION
+       SET RX_COUNT = CASE WHEN REACTION = @REACTION THEN ISNULL(RX_COUNT,1) + 1 ELSE 1 END,
+           REACTION = @REACTION,
+           CREATED_AT = GETDATE()
+       WHERE MESSAGE_ID=@MESSAGE_ID AND EMPL_NO=@EMPL_NO
+     ELSE
+       INSERT INTO ZTB_CHAT_REACTION (MESSAGE_ID, EMPL_NO, CTR_CD, REACTION, RX_COUNT)
+       VALUES (@MESSAGE_ID, @EMPL_NO, @CTR_CD, @REACTION, 1)`,
+    {
+      MESSAGE_ID: Number(messageId),
+      EMPL_NO: emplNo,
+      CTR_CD: ctrCd,
+      REACTION: reaction,
+    }
+  );
+}
+
+async function removeReaction({ messageId, emplNo }) {
+  const pool = await openConnection();
+  await pool.query(
+    `DELETE FROM ZTB_CHAT_REACTION WHERE MESSAGE_ID=@MESSAGE_ID AND EMPL_NO=@EMPL_NO`,
+    { MESSAGE_ID: Number(messageId), EMPL_NO: emplNo }
+  );
+}
+
+/** "Xoá ở phía tôi": ẩn tin với riêng user, KHÔNG ảnh hưởng người khác. */
+async function hideMessageForUser({ messageId, emplNo }) {
+  const pool = await openConnection();
+  await pool.query(
+    `IF NOT EXISTS (SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN WHERE MESSAGE_ID=@MESSAGE_ID AND EMPL_NO=@EMPL_NO)
+       INSERT INTO ZTB_CHAT_MESSAGE_HIDDEN (MESSAGE_ID, EMPL_NO) VALUES (@MESSAGE_ID, @EMPL_NO)`,
+    { MESSAGE_ID: Number(messageId), EMPL_NO: emplNo }
+  );
+}
+
+/** Nhân bản đính kèm sang phòng khác (chuyển tiếp) — dùng lại file vật lý, không copy. */
+async function cloneAttachments({ attachmentIds, targetConversationId, ctrCd, emplNo }) {
+  const ids = (attachmentIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  if (ids.length === 0) return [];
+
+  return withTransaction(async ({ query }) => {
+    const source = await query(
+      `SELECT ATTACHMENT_ID, ORIGINAL_NAME, STORAGE_PATH, MIME_TYPE, FILE_SIZE, STORED_NAME
+       FROM ZTB_CHAT_ATTACHMENT WHERE ATTACHMENT_ID IN (${ids.join(",")}) AND DELETED_AT IS NULL`,
+      {}
+    );
+
+    const clonedIds = [];
+    for (const row of source.recordset || []) {
+      const inserted = await query(
+        `INSERT INTO ZTB_CHAT_ATTACHMENT
+           (CONVERSATION_ID, CTR_CD, ORIGINAL_NAME, STORED_NAME, STORAGE_PATH, MIME_TYPE, FILE_SIZE, UPLOADED_BY)
+         OUTPUT INSERTED.ATTACHMENT_ID
+         VALUES (@CONVERSATION_ID, @CTR_CD, @ORIGINAL_NAME, @STORED_NAME, @STORAGE_PATH, @MIME_TYPE, @FILE_SIZE, @UPLOADED_BY)`,
+        {
+          CONVERSATION_ID: Number(targetConversationId),
+          CTR_CD: ctrCd,
+          ORIGINAL_NAME: row.ORIGINAL_NAME,
+          STORED_NAME: row.STORED_NAME,
+          STORAGE_PATH: row.STORAGE_PATH,
+          MIME_TYPE: row.MIME_TYPE,
+          FILE_SIZE: row.FILE_SIZE,
+          UPLOADED_BY: emplNo,
+        }
+      );
+      clonedIds.push(inserted.recordset[0].ATTACHMENT_ID);
+    }
+    return clonedIds;
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -498,6 +658,7 @@ module.exports = {
   getParticipant,
   listActiveMemberNos,
   listMessages,
+  listMessagesByIds,
   findMessageByClientId,
   insertMessage,
   markRead,
@@ -505,6 +666,12 @@ module.exports = {
   listAttachmentsByMessageIds,
   getAttachmentById,
   insertAttachment,
+  cloneAttachments,
+  listReactionsForMessages,
+  getReaction,
+  setReaction,
+  removeReaction,
+  hideMessageForUser,
   listFriends,
   listFriendRequests,
   findFriendRequest,

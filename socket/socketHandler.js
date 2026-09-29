@@ -65,7 +65,10 @@ module.exports = (httpServer, httpsServer) => {
     if (client.data.authenticated && client.data.emplNo) {
       client.join(userRoom(client.data.emplNo));
       markOnline(client.data.emplNo, client.id);
-      client.broadcast.emit("chat:presence", { emplNo: client.data.emplNo, online: true });
+      // Phát cho MỌI instance (io + ios) và gửi kèm danh sách online đầy đủ,
+      // nếu không client mới mở trang sẽ thấy tất cả là "không hoạt động".
+      emitToAll("chat:presence", { emplNo: client.data.emplNo, online: true });
+      emitToAll("chat:presence-list", { emplNos: getOnlineEmplNos() });
     }
     client.on("send", (data) => {
       ioInstance.sockets.emit("send", data);
@@ -159,7 +162,12 @@ module.exports = (httpServer, httpsServer) => {
         }
 
         // Persist xong mới phát realtime (persist-before-emit).
-        const clientMessage = chatCore.toClientMessage(result.message);
+        // Phải enrich để tin nhắn vừa gửi có luôn ĐÍNH KÈM + cảm xúc + trích dẫn.
+        const clientMessage = await chatCore.enrichMessage(
+          conversationId,
+          result.message,
+          result.attachments
+        );
 
         // 1) Room phòng chat: cho những client đang mở đúng hội thoại.
         emitToConversation(conversationId, "chat:message", { conversationId, message: clientMessage });
@@ -186,6 +194,64 @@ module.exports = (httpServer, httpsServer) => {
       } catch (error) {
         console.error("[chat:send]", error);
         ack?.({ ok: false, code: "ERROR", message: "Không gửi được tin nhắn" });
+      }
+    });
+
+    client.on("chat:reaction", async (payload, ack) => {
+      try {
+        if (!client.data.authenticated) return ack?.({ ok: false, code: "UNAUTHENTICATED" });
+        const conversationId = Number(payload?.conversationId);
+        const messageId = Number(payload?.messageId);
+        if (!Number.isInteger(conversationId) || !Number.isInteger(messageId)) {
+          return ack?.({ ok: false, code: "BAD_REQUEST" });
+        }
+
+        const membership = await chatCore.getActiveMembership(conversationId, client.data.emplNo);
+        if (!membership) return ack?.({ ok: false, code: "FORBIDDEN" });
+
+        const rows = await repo.listMessagesByIds({
+          conversationId,
+          messageIds: [messageId],
+          emplNo: client.data.emplNo,
+        });
+        if (!rows || rows.length === 0) return ack?.({ ok: false, code: "NOT_FOUND" });
+
+        const normalized = String(payload?.reaction || "").trim().toUpperCase();
+        const removed = !normalized || normalized === "NONE";
+
+        if (removed) {
+          await repo.removeReaction({ messageId, emplNo: client.data.emplNo });
+        } else {
+          if (!chatCore.REACTION_TYPES.has(normalized)) {
+            return ack?.({ ok: false, code: "BAD_REACTION" });
+          }
+          await repo.setReaction({
+            ctrCd: client.data.ctrCd,
+            messageId,
+            emplNo: client.data.emplNo,
+            reaction: normalized,
+          });
+        }
+
+        const event = {
+          conversationId,
+          messageId,
+          emplNo: client.data.emplNo,
+          reaction: removed ? null : normalized,
+          removed,
+          // Gửi kèm bản tổng hợp mới nhất để client thay thế nguyên trạng (khỏi lệch số).
+          reactions: chatCore.buildReactions(
+            await repo.listReactionsForMessages({ messageIds: [messageId] })
+          ),
+        };
+        emitToConversation(conversationId, "chat:reaction", event);
+        const members = await repo.listActiveMemberNos({ conversationId });
+        emitToUsers(members.map((row) => row.EMPL_NO), "chat:reaction", event);
+
+        ack?.({ ok: true, ...event });
+      } catch (error) {
+        console.error("[chat:reaction]", error);
+        ack?.({ ok: false, code: "ERROR" });
       }
     });
 
@@ -233,8 +299,9 @@ module.exports = (httpServer, httpsServer) => {
       if (client.data.authenticated && client.data.emplNo) {
         markOffline(client.data.emplNo, client.id);
         if (!isUserOnline(client.data.emplNo)) {
-          client.broadcast.emit("chat:presence", { emplNo: client.data.emplNo, online: false });
+          emitToAll("chat:presence", { emplNo: client.data.emplNo, online: false });
         }
+        emitToAll("chat:presence-list", { emplNos: getOnlineEmplNos() });
       }
       ioInstance.sockets.emit("request_check_online2", { check: 'online' });
       ioInstance.sockets.emit("online_list", client_array);

@@ -37,6 +37,7 @@ exports.sendTargetedPushNotification = async ({
   actions,
   approval,
   tag,
+  icon,
 }) => {
   const targets = new Set(
     (Array.isArray(targetEmplNos) ? targetEmplNos : [targetEmplNos])
@@ -62,6 +63,7 @@ exports.sendTargetedPushNotification = async ({
     body,
     url,
     tag: tag || undefined,
+    icon: icon || undefined,
     actions: Array.isArray(actions) && actions.length > 0 ? actions : undefined,
     approval: approval || undefined,
     data: {
