@@ -54,12 +54,15 @@ function memberView(row) {
 function buildConversationView(conversation, members, myEmplNo) {
   const active = members.filter((m) => !m.LEFT_AT);
   const others = active.filter((m) => m.EMPL_NO !== myEmplNo);
+  const isSelf = conversation.CONV_TYPE === "SELF";
   const isDirect = conversation.CONV_TYPE === "DIRECT";
   const peer = isDirect ? others[0] : null;
 
-  const displayName = isDirect
-    ? (peer && (peer.FULL_NAME || peer.EMPL_NO)) || "Hội thoại"
-    : conversation.TITLE || active.map((m) => m.FULL_NAME || m.EMPL_NO).join(", ");
+  const displayName = isSelf
+    ? conversation.TITLE || "My Files"
+    : isDirect
+      ? (peer && (peer.FULL_NAME || peer.EMPL_NO)) || "Hội thoại"
+      : conversation.TITLE || active.map((m) => m.FULL_NAME || m.EMPL_NO).join(", ");
 
   return {
     CONVERSATION_ID: conversation.CONVERSATION_ID,
@@ -67,7 +70,8 @@ function buildConversationView(conversation, members, myEmplNo) {
     TITLE: conversation.TITLE || null,
     AVATAR: conversation.AVATAR || null,
     DISPLAY_NAME: displayName,
-    DISPLAY_AVATAR: isDirect && peer && peer.EMPL_IMAGE === "Y" ? `/Picture_NS/NS_${peer.EMPL_NO}.jpg` : null,
+    DISPLAY_AVATAR:
+      !isSelf && isDirect && peer && peer.EMPL_IMAGE === "Y" ? `/Picture_NS/NS_${peer.EMPL_NO}.jpg` : null,
     PEER_EMPL_NO: peer ? peer.EMPL_NO : null,
     PEER_ONLINE_KEY: peer ? peer.EMPL_NO : null,
     OWNER_EMPL_NO: conversation.OWNER_EMPL_NO || null,
@@ -153,6 +157,13 @@ exports.chatBootstrap = async (req, res, DATA) => {
     const { ctrCd, emplNo } = getCtx(req, DATA);
     if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
 
+    // Mỗi user luôn có sẵn phòng "My Files" (cloud cá nhân) — tạo nếu chưa có.
+    try {
+      await repo.ensureSelfConversation({ ctrCd, emplNo });
+    } catch (error) {
+      console.warn("[chatBootstrap] không tạo được My Files:", error?.message || error);
+    }
+
     const [rows, members, friendRows, requestRows] = await Promise.all([
       repo.listConversations({ ctrCd, emplNo }),
       repo.listMembersForConversations({ ctrCd, conversationIds: [] }),
@@ -215,6 +226,13 @@ exports.chatSync = async (req, res, DATA) => {
   try {
     const { ctrCd, emplNo } = getCtx(req, DATA);
     if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+
+    // Bảo đảm phòng "My Files" luôn tồn tại kể cả khi client chỉ gọi chatSync.
+    try {
+      await repo.ensureSelfConversation({ ctrCd, emplNo });
+    } catch (error) {
+      console.warn("[chatSync] không tạo được My Files:", error?.message || error);
+    }
 
     const rows = await repo.listConversations({ ctrCd, emplNo });
     const ids = rows.map((r) => r.CONVERSATION_ID);
@@ -1053,5 +1071,163 @@ exports.chatUpdateGroup = async (req, res, DATA) => {
   } catch (error) {
     console.error("[chatUpdateGroup]", error);
     fail(res, "Không cập nhật được nhóm");
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Tìm kiếm & media                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Gắn thêm thông tin phòng + tệp đính kèm cho kết quả tìm kiếm. */
+async function decorateSearchRows({ ctrCd, emplNo, rows }) {
+  if (rows.length === 0) return [];
+  const conversationIds = [...new Set(rows.map((r) => r.CONVERSATION_ID))];
+  const members = await repo.listMembersForConversations({ ctrCd, conversationIds });
+  const byConversation = new Map();
+  members.forEach((row) => {
+    const list = byConversation.get(row.CONVERSATION_ID) || [];
+    list.push(memberView(row));
+    byConversation.set(row.CONVERSATION_ID, list);
+  });
+
+  const attachmentsByMessage = new Map();
+  for (const conversationId of conversationIds) {
+    const ids = rows.filter((r) => r.CONVERSATION_ID === conversationId).map((r) => r.MESSAGE_ID);
+    const attachments = await repo.listAttachmentsByMessageIds({ conversationId, messageIds: ids });
+    attachments.forEach((a) => {
+      const list = attachmentsByMessage.get(a.MESSAGE_ID) || [];
+      list.push({
+        attachmentId: a.ATTACHMENT_ID,
+        originalName: a.ORIGINAL_NAME,
+        mimeType: a.MIME_TYPE,
+        fileSize: a.FILE_SIZE,
+      });
+      attachmentsByMessage.set(a.MESSAGE_ID, list);
+    });
+  }
+
+  return rows.map((row) => {
+    const conversation = buildConversationView(
+      {
+        CONVERSATION_ID: row.CONVERSATION_ID,
+        CONV_TYPE: row.CONV_TYPE,
+        TITLE: null,
+        UNREAD_COUNT: 0,
+      },
+      byConversation.get(row.CONVERSATION_ID) || [],
+      emplNo
+    );
+    return {
+      MESSAGE_ID: row.MESSAGE_ID,
+      CONVERSATION_ID: row.CONVERSATION_ID,
+      SENDER_EMPL_NO: row.SENDER_EMPL_NO,
+      MSG_TYPE: row.MSG_TYPE,
+      CONTENT: row.DELETED_AT ? null : row.CONTENT,
+      CREATED_AT: row.CREATED_AT,
+      DELETED_AT: row.DELETED_AT || null,
+      ATTACHMENTS: attachmentsByMessage.get(row.MESSAGE_ID) || [],
+      CONVERSATION_NAME: conversation.DISPLAY_NAME,
+      CONVERSATION_TYPE: conversation.CONV_TYPE,
+      CONVERSATION_PEER: conversation.PEER_EMPL_NO,
+    };
+  });
+}
+
+/** Tìm tin nhắn/tệp: trong 1 phòng (conversationId) hoặc toàn cục (bỏ trống). */
+exports.chatSearchMessages = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+
+    const conversationId = Number(DATA?.conversationId);
+    const scoped = Number.isInteger(conversationId) && conversationId > 0;
+    if (scoped) {
+      const membership = await core.getActiveMembership(conversationId, emplNo);
+      if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+    }
+
+    const rows = await repo.searchMessages({
+      ctrCd,
+      emplNo,
+      conversationId: scoped ? conversationId : undefined,
+      keyword: DATA?.keyword,
+      senderEmplNo: DATA?.senderEmplNo,
+      fromDate: DATA?.fromDate,
+      toDate: DATA?.toDate,
+      fileKind: DATA?.fileKind,
+      onlyWithFiles: Boolean(DATA?.onlyWithFiles),
+      beforeMessageId: DATA?.beforeMessageId,
+      limit: DATA?.limit,
+    });
+
+    const results = await decorateSearchRows({ ctrCd, emplNo, rows });
+    ok(res, { results, hasMore: rows.length >= Math.min(Math.max(Number(DATA?.limit) || 30, 1), 100) });
+  } catch (error) {
+    console.error("[chatSearchMessages]", error);
+    fail(res, "Không tìm kiếm được tin nhắn");
+  }
+};
+
+/** Danh sách media/tệp của 1 phòng cho cửa sổ "Xem media". */
+exports.chatListMedia = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+
+    const limit = Math.min(Math.max(Number(DATA?.limit) || 60, 1), 200);
+    const rows = await repo.listConversationMedia({
+      conversationId,
+      emplNo,
+      fileKind: DATA?.fileKind,
+      fromDate: DATA?.fromDate,
+      toDate: DATA?.toDate,
+      beforeAttachmentId: DATA?.beforeAttachmentId,
+      limit,
+    });
+
+    const storage = await repo.getConversationStorage({ conversationId });
+
+    ok(res, {
+      items: rows.map((row) => ({
+        attachmentId: row.ATTACHMENT_ID,
+        messageId: row.MESSAGE_ID,
+        originalName: row.ORIGINAL_NAME,
+        mimeType: row.MIME_TYPE,
+        fileSize: row.FILE_SIZE,
+        senderEmplNo: row.SENDER_EMPL_NO,
+        createdAt: row.CREATED_AT,
+      })),
+      hasMore: rows.length >= limit,
+      storage,
+    });
+  } catch (error) {
+    console.error("[chatListMedia]", error);
+    fail(res, "Không tải được danh sách media");
+  }
+};
+
+/** Dung lượng đã dùng của 1 phòng (dùng cho My Files). */
+exports.chatConversationStorage = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+
+    ok(res, await repo.getConversationStorage({ conversationId }));
+  } catch (error) {
+    console.error("[chatConversationStorage]", error);
+    fail(res, "Không lấy được dung lượng");
   }
 };

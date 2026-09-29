@@ -641,6 +641,306 @@ async function writeAudit({ ctrCd, conversationId, actor, action, target, detail
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* "My Files" — hội thoại cloud cá nhân (CONV_TYPE = SELF)            */
+/* ------------------------------------------------------------------ */
+
+const SELF_PREFIX = "SELF|";
+
+/** Khoá định danh của phòng My Files (đủ duy nhất cho từng nhân viên). */
+function buildSelfKey(emplNo) {
+  return `${SELF_PREFIX}${String(emplNo || "").trim().toUpperCase()}`;
+}
+
+/**
+ * Bảo đảm mỗi nhân viên luôn có 1 phòng "My Files" và trả về dòng hội thoại.
+ * Không tạo trùng: dùng DIRECT_KEY (đã có unique index) làm khoá duy nhất.
+ */
+async function ensureSelfConversation({ ctrCd, emplNo }) {
+  const key = buildSelfKey(emplNo);
+  const found = await queryOne(
+    `SELECT * FROM ZTB_CHAT_CONVERSATION WHERE CTR_CD = @CTR_CD AND DIRECT_KEY = @DIRECT_KEY`,
+    { CTR_CD: ctrCd, DIRECT_KEY: key }
+  );
+
+  if (found) {
+    // Từng bị đóng mềm ⇒ mở lại thay vì tạo dòng mới (tránh vi phạm unique index).
+    if (found.DELETED_AT) await reviveConversation({ conversationId: found.CONVERSATION_ID });
+    await ensureParticipant({
+      ctrCd,
+      conversationId: found.CONVERSATION_ID,
+      emplNo,
+      role: "OWNER",
+    });
+    return { ...found, DELETED_AT: null };
+  }
+
+  const created = await withTransaction(async ({ query }) => {
+    const inserted = await query(
+      `INSERT INTO ZTB_CHAT_CONVERSATION
+         (CTR_CD, CONV_TYPE, TITLE, DIRECT_KEY, OWNER_EMPL_NO, CREATED_BY)
+       OUTPUT INSERTED.*
+       VALUES (@CTR_CD, 'SELF', @TITLE, @DIRECT_KEY, @EMPL_NO, @EMPL_NO)`,
+      { CTR_CD: ctrCd, TITLE: "My Files", DIRECT_KEY: key, EMPL_NO: emplNo }
+    );
+    const conversation = inserted.recordset[0];
+    await query(
+      `INSERT INTO ZTB_CHAT_PARTICIPANT (CONVERSATION_ID, EMPL_NO, CTR_CD, ROLE)
+       VALUES (@CONVERSATION_ID, @EMPL_NO, @CTR_CD, 'OWNER')`,
+      { CONVERSATION_ID: conversation.CONVERSATION_ID, EMPL_NO: emplNo, CTR_CD: ctrCd }
+    );
+    return conversation;
+  });
+
+  return created;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tìm kiếm tin nhắn / tệp & danh sách media                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Phân tích mốc ngày theo GIỜ ĐỊA PHƯƠNG của server.
+ *
+ * `new Date("2026-09-30")` bị hiểu là 00:00 UTC ⇒ lệch múi giờ (VN +7) khiến tin nhắn
+ * tạo trong khoảng 00:00–07:00 giờ địa phương bị loại oan. Vì DB lưu GETDATE() (giờ máy),
+ * phải dựng mốc ngày bằng giờ địa phương.
+ */
+function parseDayStart(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (ymd) return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]), 0, 0, 0, 0);
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/** Mốc kết thúc (loại trừ) = 00:00 ngày kế tiếp để bao trọn ngày người dùng chọn. */
+function parseDayEnd(value) {
+  const start = parseDayStart(value);
+  if (!start) return null;
+  return new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
+}
+
+/** Đuôi tệp theo từng nhóm — dùng để lọc "loại file" khi tìm kiếm. */
+const FILE_KIND_EXTENSIONS = {
+  image: ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "heic"],
+  video: ["mp4", "mov", "avi", "mkv", "webm", "wmv", "m4v"],
+  audio: ["mp3", "wav", "m4a", "ogg", "aac", "flac"],
+  pdf: ["pdf"],
+  word: ["doc", "docx", "rtf", "odt"],
+  excel: ["xls", "xlsx", "xlsm", "ods"],
+  csv: ["csv"],
+  ppt: ["ppt", "pptx", "pps", "ppsx", "odp"],
+  zip: ["zip", "rar", "7z", "tar", "gz", "bz2"],
+};
+
+/**
+ * Sinh đoạn SQL kiểm tra "tệp thuộc nhóm kind".
+ * `other` = có tệp nhưng KHÔNG thuộc bất kỳ nhóm nào ở trên.
+ * Trả về { sql, params } để ghép vào câu truy vấn.
+ */
+function buildFileKindPredicate(alias, kind) {
+  const normalized = String(kind || "").trim().toLowerCase();
+  if (!normalized || normalized === "all") return null;
+
+  const likeClause = (exts) =>
+    exts.map((ext) => `${alias}.ORIGINAL_NAME LIKE '%.${ext}'`).join(" OR ");
+
+  if (normalized === "other") {
+    const known = Object.values(FILE_KIND_EXTENSIONS)
+      .flat()
+      .map((ext) => `${alias}.ORIGINAL_NAME NOT LIKE '%.${ext}'`)
+      .join(" AND ");
+    return { sql: `(${known})`, params: {} };
+  }
+
+  const exts = FILE_KIND_EXTENSIONS[normalized];
+  if (!exts) return null;
+  return { sql: `(${likeClause(exts)})`, params: {} };
+}
+
+/**
+ * Tìm kiếm tin nhắn theo từ khoá (nội dung hoặc tên tệp), người gửi, khoảng ngày,
+ * loại tệp; phạm vi 1 phòng hoặc toàn bộ phòng mà người dùng tham gia.
+ */
+async function searchMessages({
+  ctrCd,
+  emplNo,
+  conversationId,
+  keyword,
+  senderEmplNo,
+  fromDate,
+  toDate,
+  fileKind,
+  onlyWithFiles,
+  beforeMessageId,
+  limit = 30,
+}) {
+  const safeLimit = Math.min(Math.max(Number(limit) || 30, 1), 100);
+  const text = String(keyword || "").trim();
+  const viewer = String(emplNo || "").trim().toUpperCase();
+  const convId = Number(conversationId);
+  const kindPredicate = buildFileKindPredicate("fa", fileKind);
+
+  const conditions = [
+    "m.DELETED_AT IS NULL",
+    "c.DELETED_AT IS NULL",
+    "p.LEFT_AT IS NULL",
+    `NOT EXISTS (SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
+                   WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER)`,
+  ];
+  const params = { LIMIT: safeLimit, VIEWER: viewer, CTR_CD: ctrCd, EMPL_NO: viewer };
+
+  if (Number.isInteger(convId) && convId > 0) {
+    conditions.push("m.CONVERSATION_ID = @CONVERSATION_ID");
+    params.CONVERSATION_ID = convId;
+  }
+  const sender = String(senderEmplNo || "").trim().toUpperCase();
+  if (sender) {
+    conditions.push("m.SENDER_EMPL_NO = @SENDER");
+    params.SENDER = sender;
+  }
+  if (fromDate) {
+    const start = parseDayStart(fromDate);
+    if (start) {
+      conditions.push("m.CREATED_AT >= @FROM_DATE");
+      params.FROM_DATE = start;
+    }
+  }
+  if (toDate) {
+    const end = parseDayEnd(toDate);
+    if (end) {
+      conditions.push("m.CREATED_AT < @TO_DATE");
+      params.TO_DATE = end;
+    }
+  }
+  const cursor = Number(beforeMessageId);
+  if (Number.isInteger(cursor) && cursor > 0) {
+    conditions.push("m.MESSAGE_ID < @BEFORE_ID");
+    params.BEFORE_ID = cursor;
+  }
+
+  // Từ khoá: khớp nội dung tin nhắn HOẶC tên tệp đính kèm.
+  if (text) {
+    conditions.push(
+      `(m.CONTENT LIKE @LIKE
+        OR EXISTS (SELECT 1 FROM ZTB_CHAT_ATTACHMENT ka
+                    WHERE ka.MESSAGE_ID = m.MESSAGE_ID AND ka.DELETED_AT IS NULL
+                      AND ka.ORIGINAL_NAME LIKE @LIKE))`
+    );
+    params.LIKE = `%${text}%`;
+  }
+
+  // Có tệp đính kèm (tuỳ chọn) — nếu có lọc loại tệp thì bắt buộc phải có tệp đúng loại.
+  if (kindPredicate) {
+    conditions.push(
+      `EXISTS (SELECT 1 FROM ZTB_CHAT_ATTACHMENT fa
+                WHERE fa.MESSAGE_ID = m.MESSAGE_ID AND fa.DELETED_AT IS NULL
+                  AND ${kindPredicate.sql})`
+    );
+  } else if (onlyWithFiles) {
+    conditions.push(
+      `EXISTS (SELECT 1 FROM ZTB_CHAT_ATTACHMENT oa
+                WHERE oa.MESSAGE_ID = m.MESSAGE_ID AND oa.DELETED_AT IS NULL)`
+    );
+  }
+
+  return queryRows(
+    `SELECT TOP (@LIMIT) m.MESSAGE_ID, m.CONVERSATION_ID, m.SENDER_EMPL_NO, m.MSG_TYPE,
+            m.CONTENT, m.CREATED_AT, m.DELETED_AT, c.CONV_TYPE
+       FROM ZTB_CHAT_MESSAGE m
+       INNER JOIN ZTB_CHAT_CONVERSATION c ON c.CONVERSATION_ID = m.CONVERSATION_ID
+       INNER JOIN ZTB_CHAT_PARTICIPANT p
+               ON p.CONVERSATION_ID = m.CONVERSATION_ID
+              AND p.EMPL_NO = @EMPL_NO AND p.CTR_CD = @CTR_CD
+      WHERE ${conditions.join("\n        AND ")}
+      ORDER BY m.MESSAGE_ID DESC`,
+    params
+  );
+}
+
+/** Đếm nhanh số kết quả tìm kiếm (cùng bộ lọc) để hiển thị "x kết quả". */
+async function countSearchMessages(options) {
+  const safeLimit = 200;
+  const rows = await searchMessages({ ...options, limit: safeLimit });
+  return rows.length;
+}
+
+/**
+ * Danh sách media/tệp của 1 phòng (cho cửa sổ "Xem media"), mới nhất trước.
+ * Dùng ATTACHMENT_ID làm con trỏ phân trang.
+ */
+async function listConversationMedia({
+  conversationId,
+  emplNo,
+  fileKind,
+  fromDate,
+  toDate,
+  beforeAttachmentId,
+  limit = 60,
+}) {
+  const safeLimit = Math.min(Math.max(Number(limit) || 60, 1), 200);
+  const viewer = String(emplNo || "").trim().toUpperCase();
+  const kindPredicate = buildFileKindPredicate("a", fileKind);
+
+  const conditions = [
+    "a.CONVERSATION_ID = @CONVERSATION_ID",
+    "a.DELETED_AT IS NULL",
+    "a.MESSAGE_ID IS NOT NULL",
+    "m.DELETED_AT IS NULL",
+  ];
+  const params = { LIMIT: safeLimit, CONVERSATION_ID: Number(conversationId), VIEWER: viewer };
+
+  const cursor = Number(beforeAttachmentId);
+  if (Number.isInteger(cursor) && cursor > 0) {
+    conditions.push("a.ATTACHMENT_ID < @BEFORE_ID");
+    params.BEFORE_ID = cursor;
+  }
+  if (kindPredicate) conditions.push(kindPredicate.sql);
+  if (fromDate) {
+    const start = parseDayStart(fromDate);
+    if (start) {
+      conditions.push("m.CREATED_AT >= @FROM_DATE");
+      params.FROM_DATE = start;
+    }
+  }
+  if (toDate) {
+    const end = parseDayEnd(toDate);
+    if (end) {
+      conditions.push("m.CREATED_AT < @TO_DATE");
+      params.TO_DATE = end;
+    }
+  }
+
+  return queryRows(
+    `SELECT TOP (@LIMIT) a.ATTACHMENT_ID, a.MESSAGE_ID, a.ORIGINAL_NAME, a.MIME_TYPE,
+            a.FILE_SIZE, a.UPLOADED_BY, a.CREATED_AT,
+            m.SENDER_EMPL_NO, m.CREATED_AT AS MESSAGE_AT
+       FROM ZTB_CHAT_ATTACHMENT a
+       INNER JOIN ZTB_CHAT_MESSAGE m ON m.MESSAGE_ID = a.MESSAGE_ID
+      WHERE ${conditions.join("\n        AND ")}
+        AND NOT EXISTS (SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
+                         WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER)
+      ORDER BY a.ATTACHMENT_ID DESC`,
+    params
+  );
+}
+
+/** Tổng dung lượng (bytes) và số tệp đã lưu của 1 phòng. */
+async function getConversationStorage({ conversationId }) {
+  const row = await queryOne(
+    `SELECT COUNT(1) AS FILE_COUNT, ISNULL(SUM(FILE_SIZE), 0) AS TOTAL_BYTES
+       FROM ZTB_CHAT_ATTACHMENT
+      WHERE CONVERSATION_ID = @CONVERSATION_ID AND DELETED_AT IS NULL`,
+    { CONVERSATION_ID: Number(conversationId) }
+  );
+  return {
+    fileCount: Number(row?.FILE_COUNT) || 0,
+    totalBytes: Number(row?.TOTAL_BYTES) || 0,
+  };
+}
+
 module.exports = {
   MAX_MESSAGE_LENGTH,
   buildDirectKey,
@@ -678,4 +978,11 @@ module.exports = {
   insertFriendRequest,
   updateFriendStatus,
   writeAudit,
+  buildSelfKey,
+  ensureSelfConversation,
+  searchMessages,
+  countSearchMessages,
+  listConversationMedia,
+  getConversationStorage,
+  FILE_KIND_EXTENSIONS,
 };

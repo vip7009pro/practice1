@@ -4,7 +4,7 @@
  * Khác `/uploadfile` hiện có (phục vụ file ERP chung, auth mở), route này:
  *  - BẮT BUỘC xác thực JWT (cookie/Bearer/query token).
  *  - Chỉ cho upload khi user là thành viên đang hoạt động của phòng chat.
- *  - Giới hạn 25MB và allowlist MIME.
+ *  - Giới hạn 1GB/tệp (đổi bằng env CHAT_UPLOAD_MAX_BYTES) và allowlist MIME.
  *  - Tên file lưu ngẫu nhiên, KHÔNG phục vụ qua đường dẫn tĩnh đoán được.
  *  - Tải file phải qua endpoint kiểm tra quyền thành viên.
  */
@@ -18,8 +18,16 @@ const { checkLoginIndex } = require("../middleware/auth");
 const repo = require("../services/chat/chatRepository");
 const chatCore = require("../services/chat/chatMessageCore");
 
+/** Mặc định 1GB/tệp — "cloud cá nhân" cho phòng My Files. */
 const MAX_CHAT_FILE_BYTES =
-  parseInt(process.env.CHAT_UPLOAD_MAX_BYTES || "0", 10) || 25 * 1024 * 1024;
+  parseInt(process.env.CHAT_UPLOAD_MAX_BYTES || "0", 10) || 1024 * 1024 * 1024;
+
+/** Trả về giới hạn dạng chữ để hiển thị trong thông báo lỗi/giới thiệu UI. */
+function humanLimit(bytes) {
+  const gb = bytes / (1024 * 1024 * 1024);
+  if (gb >= 1) return `${Number(gb.toFixed(2))}GB`;
+  return `${Math.round(bytes / (1024 * 1024))}MB`;
+}
 
 const CHAT_UPLOAD_FOLDER =
   process.env.CHAT_UPLOAD_FOLDER || path.join(__dirname, "..", "outbinary", "chatfiles");
@@ -42,6 +50,23 @@ const ALLOWED_MIME = new Set([
   "application/zip",
   "application/x-zip-compressed",
   "application/octet-stream",
+  "application/vnd.rar",
+  "application/x-rar-compressed",
+  "application/x-7z-compressed",
+  "application/x-tar",
+  "application/gzip",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/x-msvideo",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/mp4",
+  "audio/ogg",
+  "application/vnd.oasis.opendocument.text",
+  "application/vnd.oasis.opendocument.spreadsheet",
+  "application/vnd.oasis.opendocument.presentation",
+  "application/rtf",
 ]);
 
 const EXT_ALLOWED = new Set([
@@ -51,17 +76,36 @@ const EXT_ALLOWED = new Set([
   ".gif",
   ".webp",
   ".bmp",
+  ".svg",
   ".pdf",
   ".doc",
   ".docx",
+  ".rtf",
+  ".odt",
   ".xls",
   ".xlsx",
+  ".xlsm",
+  ".ods",
   ".ppt",
   ".pptx",
+  ".pps",
+  ".ppsx",
+  ".odp",
   ".txt",
   ".csv",
   ".zip",
   ".rar",
+  ".7z",
+  ".tar",
+  ".gz",
+  ".mp4",
+  ".mov",
+  ".webm",
+  ".avi",
+  ".mp3",
+  ".wav",
+  ".m4a",
+  ".ogg",
 ]);
 
 const storage = multer.diskStorage({
@@ -87,7 +131,20 @@ const upload = multer({
 /** Upload 1 file rồi gắn vào phòng chat (chưa gắn message — gắn khi gửi tin). */
 router.post(
   "/",
-  upload.single("uploadedfile"),
+  // Bọc multer để trả JSON gọn gàng khi tệp vượt giới hạn (mặc định express sẽ trả HTML 500).
+  (req, res, next) => {
+    upload.single("uploadedfile")(req, res, (error) => {
+      if (!error) return next();
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).send({
+          tk_status: "NG",
+          message: `Tệp vượt quá giới hạn ${humanLimit(MAX_CHAT_FILE_BYTES)}`,
+        });
+      }
+      console.error("[chatfile upload] multer:", error?.message || error);
+      return res.status(400).send({ tk_status: "NG", message: error?.message || "Upload thất bại" });
+    });
+  },
   checkLoginIndex,
   async (req, res) => {
     const cleanup = () => {
