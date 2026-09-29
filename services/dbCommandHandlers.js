@@ -20,6 +20,8 @@ const commandHandlers = {
   ...require("./subscriptionService"),
   ...require("./columnCommentService"),
   ...require("./schemaAdminService"),
+  ...require("./chat/chatRoomService"),
+  ...require("./chat/chatFriendService"),
 };
 
 module.exports = commandHandlers;

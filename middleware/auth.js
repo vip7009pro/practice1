@@ -22,6 +22,17 @@ const isEncryptedPayload = (data) =>
     typeof data.iv === "string"
   );
 
+/**
+ * Xác thực JWT và trả về payload user (payload[0]).
+ * Dùng chung cho HTTP middleware và Socket.IO handshake để không lệch secret/logic.
+ * Ném lỗi nếu token không hợp lệ.
+ */
+const verifyAuthToken = (token) => {
+  const decoded = jwt.verify(token, "nguyenvanhung");
+  const payload = JSON.parse(decoded.payload);
+  return payload[0];
+};
+
 const checkLoginIndex = (req, res, next) => {
   // 1. Chỉ giải mã khi client thực sự gửi payload mã hóa (chứa encryptedData, encryptedKey, iv)
   if (req.body && req.body.DATA !== undefined && req.body.secureContext !== false && isEncryptedPayload(req.body.DATA)) {
@@ -64,10 +75,9 @@ const checkLoginIndex = (req, res, next) => {
       throw new Error("No token provided");
     }
     // Xác minh token
-    const decoded = jwt.verify(token, "nguyenvanhung");
-    const payload = JSON.parse(decoded.payload);
-    req.payload_data = payload[0]; // Lưu thông tin user vào req
-    req.coloiko = payload[0]?.WORK_STATUS_CODE === 0 ? "coloi" : "kocoloi";
+    const payload = verifyAuthToken(token);
+    req.payload_data = payload; // Lưu thông tin user vào req
+    req.coloiko = payload?.WORK_STATUS_CODE === 0 ? "coloi" : "kocoloi";
     next();
   } catch (err) {
     console.log(`Auth Error [${command}]:`, err.message);
@@ -135,4 +145,4 @@ const checkLoginUpdateIndex = (req, res, next) => {
   req.coloiko = "kocoloi";
   return next();
 };
-module.exports = { checkLoginIndex, checkLoginUpdateIndex, checkLoginVendorsIndex };
+module.exports = { checkLoginIndex, checkLoginUpdateIndex, checkLoginVendorsIndex, verifyAuthToken };

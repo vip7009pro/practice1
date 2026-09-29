@@ -15,6 +15,7 @@ const { sslConfig } = require("./config/ssl");
 const socketHandler = require("./socket/socketHandler");
 const authRoutes = require("./routes/auth");
 const fileUploadRoutes = require("./routes/fileUpload");
+const chatFileRoutes = require("./routes/chatFile");
 const apiRoutes = require("./routes/api");
 const aiRoutes = require("./routes/ai");
 const apiVendorsRoutes = require("./routes/apivendors");
@@ -74,6 +75,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 // Routes
 app.use("/login", authRoutes);
 app.use("/uploadfile", fileUploadRoutes);
+app.use("/chatfile", chatFileRoutes);
 app.use("/api", apiRoutes);
 app.use("/ai", aiRoutes);
 app.use("/apivendors", apiVendorsRoutes);
