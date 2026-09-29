@@ -7,7 +7,7 @@
  */
 const { openConnection, closePool } = require("../config/database");
 
-const TITLES = ["Nhóm kiểm thử tag tên", "Nhóm kiểm thử bộ lọc"];
+const TITLES = ["Nhóm kiểm thử tag tên", "Nhóm kiểm thử bộ lọc", "Nhóm có avatar"];
 const EMPL_KEYS = ["TKD1605"];
 
 async function main() {

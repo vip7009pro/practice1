@@ -16,6 +16,42 @@ const { getOnlineEmplNos } = require("../../socket/presence");
 
 const MAX_GROUP_MEMBERS = 200;
 
+/**
+ * Icon avatar phòng mặc định — PHẢI khớp danh sách ở FE (`chatAvatars.tsx`).
+ * Lưu dạng `icon:<id>` để phân biệt với ảnh upload (`/chatavatar/<file>`).
+ */
+const AVATAR_ICONS = new Set([
+  "users",
+  "rocket",
+  "briefcase",
+  "factory",
+  "chart",
+  "box",
+  "tools",
+  "shield",
+  "star",
+  "heart",
+  "flag",
+  "bolt",
+  "wrench",
+  "cart",
+  "clipboard",
+  "megaphone",
+]);
+
+/**
+ * Chuẩn hoá giá trị avatar phòng.
+ * Trả về: chuỗi rỗng (xoá), giá trị hợp lệ, hoặc null (không hợp lệ).
+ */
+function normalizeAvatar(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const icon = /^icon:([a-z0-9-]+)$/.exec(raw);
+  if (icon && AVATAR_ICONS.has(icon[1])) return raw;
+  if (/^\/chatavatar\/[A-Za-z0-9._-]+$/.test(raw)) return raw;
+  return null;
+}
+
 function getCtx(req, DATA) {
   const payload = req.payload_data || {};
   return {
@@ -82,8 +118,13 @@ function buildConversationView(conversation, members, myEmplNo) {
     TITLE: conversation.TITLE || null,
     AVATAR: conversation.AVATAR || null,
     DISPLAY_NAME: displayName,
-    DISPLAY_AVATAR:
-      !isSelf && isDirect && peer && peer.EMPL_IMAGE === "Y" ? `/Picture_NS/NS_${peer.EMPL_NO}.jpg` : null,
+    DISPLAY_AVATAR: isSelf
+      ? null
+      : isDirect
+        ? peer && peer.EMPL_IMAGE === "Y"
+          ? `/Picture_NS/NS_${peer.EMPL_NO}.jpg`
+          : null
+        : conversation.AVATAR || null,
     PEER_EMPL_NO: peer ? peer.EMPL_NO : null,
     PEER_ONLINE_KEY: peer ? peer.EMPL_NO : null,
     OWNER_EMPL_NO: conversation.OWNER_EMPL_NO || null,
@@ -396,10 +437,16 @@ exports.chatCreateGroup = async (req, res, DATA) => {
     if (memberEmplNos.length === 0) return fail(res, "Nhóm phải có ít nhất 1 thành viên khác");
     if (memberEmplNos.length + 1 > MAX_GROUP_MEMBERS) return fail(res, "Nhóm vượt quá số thành viên cho phép");
 
+    const avatar = normalizeAvatar(DATA?.avatar);
+    if (DATA?.avatar !== undefined && avatar === null) {
+      return fail(res, "Avatar nhóm không hợp lệ");
+    }
+
     const conversation = await createConversationWithMembers({
       ctrCd,
       convType: "GROUP",
       title,
+      avatar: avatar || null,
       ownerEmplNo: emplNo,
       memberEmplNos: [emplNo, ...memberEmplNos],
     });
@@ -1055,16 +1102,24 @@ exports.chatUpdateGroup = async (req, res, DATA) => {
     const title = DATA?.title !== undefined ? String(DATA.title).trim() : undefined;
     if (title !== undefined && !title) return fail(res, "Tên nhóm không được để trống");
 
+    // undefined = không đổi; "" = xoá avatar; ngược lại phải là icon mặc định hoặc ảnh upload.
+    const avatar = DATA?.avatar === undefined ? undefined : normalizeAvatar(DATA.avatar);
+    if (avatar === null) return fail(res, "Avatar nhóm không hợp lệ");
+
     await repo.withTransaction(async ({ query }) => {
       await query(
         `UPDATE ZTB_CHAT_CONVERSATION
          SET TITLE = CASE WHEN @TITLE IS NULL THEN TITLE ELSE @TITLE END,
-             AVATAR = CASE WHEN @AVATAR IS NULL THEN AVATAR ELSE @AVATAR END,
+             AVATAR = CASE
+                        WHEN @CLEAR_AVATAR = 1 THEN NULL
+                        WHEN @AVATAR IS NULL THEN AVATAR
+                        ELSE @AVATAR END,
              UPDATED_AT = GETDATE()
          WHERE CONVERSATION_ID = @CONVERSATION_ID`,
         {
           TITLE: title === undefined ? null : title,
-          AVATAR: DATA?.avatar === undefined ? null : String(DATA.avatar),
+          AVATAR: !avatar ? null : avatar,
+          CLEAR_AVATAR: avatar === "" ? 1 : 0,
           CONVERSATION_ID: conversationId,
         }
       );
