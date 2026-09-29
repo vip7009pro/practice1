@@ -57,6 +57,18 @@ async function main() {
     console.log(`[peer] đã vào phòng ${conversationId}`);
   }
 
+  if (mode === "send") {
+    const text = process.argv[5] || "Tin nhắn kiểm thử";
+    const ack = await new Promise((resolve) =>
+      socket.emit(
+        "chat:send",
+        { conversationId, content: text, clientMessageId: `peer-${Date.now()}` },
+        (result) => resolve(result)
+      )
+    );
+    console.log(`[peer] gửi "${text}":`, ack?.ok, ack?.message?.MESSAGE_ID);
+  }
+
   if (mode === "react") {
     const pool = await openConnection();
     const row = (
