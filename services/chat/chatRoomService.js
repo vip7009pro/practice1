@@ -10,6 +10,7 @@
  */
 const repo = require("./chatRepository");
 const core = require("./chatMessageCore");
+const { pushOfflineChat } = require("./chatPush");
 const { emitToConversation, emitToUsers } = require("../../socket/socketHandler");
 
 const MAX_GROUP_MEMBERS = 200;
@@ -456,6 +457,20 @@ exports.chatSendMessage = async (req, res, DATA) => {
     // Phát thêm tới room riêng từng thành viên: nếu client gửi qua HTTP (socket không
     // kết nối) thì người nhận vẫn nhận realtime thay vì phải F5.
     emitToUsers(result.memberNos, "chat:message", payload);
+
+    // Push cho thành viên offline — PHẢI có ở đây vì tin nhắn gửi qua HTTP (socket chưa
+    // kết nối) trước đây không hề phát push.
+    void pushOfflineChat({
+      ctrCd,
+      memberNos: result.memberNos,
+      senderEmplNo: emplNo,
+      senderName: getCtx(req, DATA).emplName || emplNo,
+      conversationTitle:
+        result.conversation?.CONV_TYPE === "GROUP" ? result.conversation?.TITLE : undefined,
+      content: payload.message.CONTENT,
+      conversationId: payload.conversationId,
+      msgType: payload.message.MSG_TYPE,
+    });
 
     ok(res, payload);
   } catch (error) {

@@ -84,6 +84,7 @@ async function sendMessage({
     ok: true,
     duplicated,
     message,
+    conversation,
     memberNos: members.map((row) => row.EMPL_NO),
   };
 }

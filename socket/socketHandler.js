@@ -2,35 +2,16 @@ const { Server } = require("socket.io");
 const { corsOptions } = require("../config/env");
 const repo = require("../services/chat/chatRepository");
 const chatCore = require("../services/chat/chatMessageCore");
+const { pushOfflineChat } = require("../services/chat/chatPush");
+const { markOnline, markOffline, isUserOnline, getOnlineEmplNos } = require("./presence");
 const { verifyAuthToken } = require("../middleware/auth");
-const { sendTargetedPushNotification } = require("../services/targetedPushService");
 
 // Các instance socket.io đã khởi tạo — để tầng service phát được sự kiện realtime
 // (ví dụ: phê duyệt từ thông báo đẩy xong thì chuông trong app phải cập nhật ngay).
 const ioInstances = [];
 
-// Presence tạm thời (in-memory, 1 process): EMPL_NO -> Set<socketId>
-const onlineUsers = new Map();
-
 const userRoom = (emplNo) => `user:${emplNo}`;
 const conversationRoom = (conversationId) => `conversation:${conversationId}`;
-
-const markOnline = (emplNo, socketId) => {
-  if (!onlineUsers.has(emplNo)) onlineUsers.set(emplNo, new Set());
-  onlineUsers.get(emplNo).add(socketId);
-};
-
-const markOffline = (emplNo, socketId) => {
-  const sockets = onlineUsers.get(emplNo);
-  if (!sockets) return;
-  sockets.delete(socketId);
-  if (sockets.size === 0) onlineUsers.delete(emplNo);
-};
-
-const isUserOnline = (emplNo) => onlineUsers.has(String(emplNo || "").trim().toUpperCase());
-
-/** Danh sách EMPL_NO đang online (dùng cho chấm trạng thái trong chat). */
-const getOnlineEmplNos = () => [...onlineUsers.keys()];
 
 module.exports = (httpServer, httpsServer) => {
   const io = new Server(httpServer, { cors: { origin: corsOptions.origin } });
@@ -75,44 +56,6 @@ module.exports = (httpServer, httpsServer) => {
 
   io.use(authenticate);
   ios.use(authenticate);
-
-  /** Đẩy push cho thành viên offline (bỏ qua người gửi) — theo yêu cầu nghiệp vụ. */
-  const pushOfflineMembers = async ({
-    ctrCd,
-    memberNos,
-    senderEmplNo,
-    senderName,
-    content,
-    conversationId,
-    msgType,
-  }) => {
-    try {
-      const targets = (memberNos || []).filter(
-        (emplNo) => emplNo !== senderEmplNo && !isUserOnline(emplNo)
-      );
-      if (targets.length === 0) return;
-
-      const preview =
-        msgType === "TEXT" || msgType === "SYSTEM"
-          ? String(content || "").slice(0, 140)
-          : "Đã gửi tệp đính kèm";
-
-      await sendTargetedPushNotification({
-        ctrCd,
-        targetEmplNos: targets,
-        title: senderName || senderEmplNo,
-        body: preview,
-        url: `/?chat=${conversationId}`,
-        data: {
-          type: "CHAT_MESSAGE",
-          conversationId: String(conversationId),
-          senderEmplNo,
-        },
-      });
-    } catch (error) {
-      console.warn("[chat] push offline lỗi:", error?.message || error);
-    }
-  };
 
   const handleConnection = (client, ioInstance) => {
     console.log("A client connected");
@@ -228,11 +171,14 @@ module.exports = (httpServer, httpsServer) => {
 
         ack?.({ ok: true, message: clientMessage, duplicated: result.duplicated });
 
-        void pushOfflineMembers({
+        // Chỉ push cho thành viên KHÔNG còn socket active (theo yêu cầu nghiệp vụ).
+        void pushOfflineChat({
           ctrCd: client.data.ctrCd,
           memberNos: result.memberNos,
           senderEmplNo: client.data.emplNo,
           senderName: client.data.emplName || client.data.emplNo,
+          conversationTitle:
+            result.conversation?.CONV_TYPE === "GROUP" ? result.conversation?.TITLE : undefined,
           content: clientMessage.CONTENT,
           conversationId,
           msgType: clientMessage.MSG_TYPE,
