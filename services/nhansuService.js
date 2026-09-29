@@ -3,6 +3,85 @@ const moment = require("moment");
 const { removeVietnameseTones } = require("../utils/sqlUtils");
 const { cosineSimilarity, normalizeVector } = require("../utils/faceUtils");
 const { Buffer } = require('buffer');
+const { sendTargetedPushNotification } = require('./targetedPushService');
+
+const getRows = (result) => (result?.tk_status === "OK" && Array.isArray(result.data) ? result.data : []);
+
+async function getDepartmentApprovers(ctrCd, subDeptName) {
+  if (!ctrCd || !subDeptName) return [];
+
+  const result = await queryDB_New(
+    `SELECT DISTINCT E.EMPL_NO
+     FROM ZTBEMPLINFO E
+     JOIN ZTBJOB J ON J.JOB_CODE = E.JOB_CODE AND J.CTR_CD = E.CTR_CD
+     JOIN ZTBWORKPOSITION WP ON WP.WORK_POSITION_CODE = E.WORK_POSITION_CODE AND WP.CTR_CD = E.CTR_CD
+     JOIN ZTBSUBDEPARTMENT SD ON SD.SUBDEPTCODE = WP.SUBDEPTCODE AND SD.CTR_CD = WP.CTR_CD
+     WHERE E.CTR_CD=@CTR_CD
+       AND SD.SUBDEPTNAME=@SUBDEPTNAME
+       AND E.WORK_STATUS_CODE=1
+       AND J.JOB_NAME IN ('Leader', 'Sub Leader', 'Dept Staff', 'ADMIN')`,
+    { CTR_CD: ctrCd, SUBDEPTNAME: subDeptName }
+  );
+
+  return getRows(result).map((row) => row.EMPL_NO).filter(Boolean);
+}
+
+async function notifyRegistrationSubmitted({ ctrCd, subDeptName, title, body, data }) {
+  try {
+    const approvers = await getDepartmentApprovers(ctrCd, subDeptName);
+    await sendTargetedPushNotification({
+      ctrCd,
+      targetEmplNos: approvers,
+      title,
+      body,
+      url: '/nhansu/pheduyetnghi',
+      data,
+    });
+  } catch (error) {
+    console.warn('HR registration push failed:', error?.message || error);
+  }
+}
+
+async function getLeaveRequestRecipient(ctrCd, offId) {
+  const result = await queryDB_New(
+    `SELECT TOP 1 O.EMPL_NO AS REQUESTER_EMPL_NO, SD.SUBDEPTNAME,
+            O.APPLY_DATE, O.CA_NGHI, R.REASON_NAME
+     FROM ZTBOFFREGISTRATIONTB O
+     JOIN ZTBEMPLINFO E ON E.EMPL_NO=O.EMPL_NO AND E.CTR_CD=O.CTR_CD
+     JOIN ZTBWORKPOSITION WP ON WP.WORK_POSITION_CODE=E.WORK_POSITION_CODE AND WP.CTR_CD=E.CTR_CD
+     JOIN ZTBSUBDEPARTMENT SD ON SD.SUBDEPTCODE=WP.SUBDEPTCODE AND SD.CTR_CD=WP.CTR_CD
+     LEFT JOIN ZTBREASON R ON R.REASON_CODE=O.REASON_CODE AND R.CTR_CD=O.CTR_CD
+     WHERE O.CTR_CD=@CTR_CD AND O.OFF_ID=@OFF_ID`,
+    { CTR_CD: ctrCd, OFF_ID: Number(offId) }
+  );
+  return getRows(result)[0] || null;
+}
+
+async function notifyApprovalChanged({ ctrCd, offId, approvalValue, approverEmpl }) {
+  if (![0, 1].includes(Number(approvalValue))) return;
+
+  try {
+    const request = await getLeaveRequestRecipient(ctrCd, offId);
+    if (!request?.REQUESTER_EMPL_NO) return;
+
+    const approved = Number(approvalValue) === 1;
+    await sendTargetedPushNotification({
+      ctrCd,
+      targetEmplNos: [request.REQUESTER_EMPL_NO],
+      title: approved ? 'Đơn nghỉ đã được duyệt' : 'Đơn nghỉ bị từ chối',
+      body: `Đơn nghỉ ${request.REASON_NAME || ''} ngày ${request.APPLY_DATE || ''} đã được ${approved ? 'duyệt' : 'từ chối'}.`,
+      url: '/nhansu/dangky',
+      data: {
+        type: 'leave-approval',
+        offId,
+        approvalValue: Number(approvalValue),
+        approverEmpl,
+      },
+    });
+  } catch (error) {
+    console.warn('HR approval push failed:', error?.message || error);
+  }
+}
 exports.diemdanhnhom = async (req, res, DATA) => {
   let kqua;
   let EMPL_NO = req.payload_data["EMPL_NO"];
@@ -156,12 +235,12 @@ exports.setdiemdanhnhom = async (req, res, DATA) => {
     let checkAttQuery = `SELECT ON_OFF FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
     let checkAttKQ = await queryDB(checkAttQuery);
     if (checkAttKQ.tk_status === "NG") {
-      let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${EMPL_NO}', '${today_format}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}')`;
+      let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA, INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}', '${EMPL_NO}', '${today_format}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}', GETDATE(), '${EMPL_NO}')`;
       console.log(insert_diemdanhQuery);
       let insert_dd = await queryDB(insert_diemdanhQuery);
       res.send(insert_dd);
     } else {
-      let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
+      let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
       console.log(update_diemdanhQuery);
       let update_dd = await queryDB(update_diemdanhQuery);
       res.send(update_dd);
@@ -191,11 +270,11 @@ exports.setdiemdanhnhom2 = async (req, res, DATA) => {
     let checkAttQuery = `SELECT ON_OFF FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}'`;
     let checkAttKQ = await queryDB(checkAttQuery);
     if (checkAttKQ.tk_status === "NG") {
-      let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${DATA.EMPL_NO}', '${DATA.APPLY_DATE}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}')`;
+      let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA, INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}', '${DATA.EMPL_NO}', '${DATA.APPLY_DATE}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}', GETDATE(), '${DATA.EMPL_NO}')`;
       let insert_dd = await queryDB(insert_diemdanhQuery);
       res.send(insert_dd);
     } else {
-      let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}'`;
+      let update_diemdanhQuery = `UPDATE ZTBATTENDANCETB SET ON_OFF = ${diemdanhvalue}, CURRENT_TEAM='${CURRENT_TEAM}', UPD_DATE=GETDATE(), UPD_EMPL='${DATA.EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${DATA.EMPL_NO}' AND APPLY_DATE='${DATA.APPLY_DATE}'`;
       let update_dd = await queryDB(update_diemdanhQuery);
       res.send(update_dd);
     }
@@ -272,19 +351,26 @@ exports.dangkynghi2 = async (req, res, DATA) => {
   if (CANGHI === 1) {
     for (var day = from; day <= to; day.setDate(day.getDate() + 1)) {
       let apply_date = moment(day).format("YYYY-MM-DD");
-      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI})`;
+      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI},GETDATE(),'${EMPL_NO}')`;
       kqua = await queryDB(query);
       if (kqua.tk_status != "OK") checkkq = "NG";
     }
   } else if (CANGHI === 2) {
     for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
       let apply_date = moment(day).format("YYYY-MM-DD");
-      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI})`;
+      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',2,${CANGHI},GETDATE(),'${EMPL_NO}')`;
       kqua = await queryDB(query);
       if (kqua.tk_status != "OK") checkkq = "NG";
     }
   }
   if (checkkq === "OK") {
+    void notifyRegistrationSubmitted({
+      ctrCd: DATA.CTR_CD,
+      subDeptName: req.payload_data.SUBDEPTNAME,
+      title: "Có đơn nghỉ cần phê duyệt",
+      body: `${EMPL_NO} đã đăng ký nghỉ từ ${START_DATE} đến ${END_DATE}.`,
+      data: { type: "leave-registration", emplNo: EMPL_NO, fromDate: START_DATE, toDate: END_DATE },
+    });
     res.send({ tk_status: "OK" });
   } else {
     res.send({
@@ -309,14 +395,14 @@ exports.dangkynghi2_AUTO = async (req, res, DATA) => {
   if (CANGHI === 1) {
     for (var day = from; day <= to; day.setDate(day.getDate() + 1)) {
       let apply_date = moment(day).format("YYYY-MM-DD");
-      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI})`;
+      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI},GETDATE(),'${EMPL_NO}')`;
       kqua = await queryDB(query);
       if (kqua.tk_status != "OK") checkkq = "NG";
     }
   } else if (CANGHI === 2) {
     for (var day = from; day < to; day.setDate(day.getDate() + 1)) {
       let apply_date = moment(day).format("YYYY-MM-DD");
-      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI})`;
+      let query = `INSERT INTO ZTBOFFREGISTRATIONTB (CTR_CD,EMPL_NO,REQUEST_DATE,APPLY_DATE,REASON_CODE,REMARK,APPROVAL_STATUS,CA_NGHI,INS_DATE,INS_EMPL) VALUES ('${DATA.CTR_CD}','${EMPL_NO}','${today_format}','${apply_date}',${REASON_CODE},N'${REMARK_CONTENT}',1,${CANGHI},GETDATE(),'${EMPL_NO}')`;
       kqua = await queryDB(query);
       if (kqua.tk_status != "OK") checkkq = "NG";
     }
@@ -343,9 +429,18 @@ exports.dangkytangcacanhan = async (req, res, DATA) => {
     console.log(checkAttQuery);
     let checkAttKQ = await queryDB(checkAttQuery);
     if (checkAttKQ.tk_status != "NG") {
-      let query = `UPDATE ZTBATTENDANCETB SET OVERTIME=1, OVERTIME_INFO='${OVERTIME_INFO}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND ON_OFF=1 AND APPLY_DATE='${today_format}'`;
+      let query = `UPDATE ZTBATTENDANCETB SET OVERTIME=1, OVERTIME_INFO='${OVERTIME_INFO}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND ON_OFF=1 AND APPLY_DATE='${today_format}'`;
       console.log(query);
       kqua = await queryDB(query);
+      if (kqua.tk_status === "OK") {
+        void notifyRegistrationSubmitted({
+          ctrCd: DATA.CTR_CD,
+          subDeptName: req.payload_data.SUBDEPTNAME,
+          title: "Có đăng ký tăng ca cần xử lý",
+          body: `${EMPL_NO} đã đăng ký tăng ca ${OVERTIME_INFO} ngày ${today_format}.`,
+          data: { type: "overtime-registration", emplNo: EMPL_NO, applyDate: today_format },
+        });
+      }
       res.send(kqua);
     } else {
       res.send({
@@ -461,7 +556,11 @@ exports.setpheduyetnhom = async (req, res, DATA) => {
   ) {
     var today = new Date();
     let checkkq = "OK";
-    let setpdQuery = `UPDATE ZTBOFFREGISTRATIONTB SET APPROVAL_STATUS=${$pheduyetvalue} WHERE OFF_ID=${$off_id} AND CTR_CD='${DATA.CTR_CD}'`;
+    const approvalValue = Number($pheduyetvalue);
+    let setpdQuery = `UPDATE ZTBOFFREGISTRATIONTB SET APPROVAL_STATUS=${$pheduyetvalue}, UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE OFF_ID=${$off_id} AND CTR_CD='${DATA.CTR_CD}'`;
+    if (approvalValue === 0 || approvalValue === 1) {
+      setpdQuery = `UPDATE ZTBOFFREGISTRATIONTB SET APPROVAL_STATUS=${$pheduyetvalue}, UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}', APPROVED_DATETIME=GETDATE(), APPROVE_EMPL='${EMPL_NO}' WHERE OFF_ID=${$off_id} AND CTR_CD='${DATA.CTR_CD}'`;
+    }
     if ($pheduyetvalue == "3")
       setpdQuery = `DELETE FROM ZTBOFFREGISTRATIONTB WHERE OFF_ID=${$off_id} AND CTR_CD='${DATA.CTR_CD}'`;
     checkkq = await queryDB(setpdQuery);
@@ -471,6 +570,14 @@ exports.setpheduyetnhom = async (req, res, DATA) => {
         message: "Có lỗi khi đăng ký, xem lại thông tin đã nhập đã đúng định dạng chưa",
       });
     } else {
+      if (approvalValue === 0 || approvalValue === 1) {
+        void notifyApprovalChanged({
+          ctrCd: DATA.CTR_CD,
+          offId: $off_id,
+          approvalValue,
+          approverEmpl: EMPL_NO,
+        });
+      }
       res.send(checkkq);
     }
   } else {
@@ -480,9 +587,18 @@ exports.setpheduyetnhom = async (req, res, DATA) => {
 exports.xacnhanchamcongnhom = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let kqua;
-  let query = `UPDATE ZTBATTENDANCETB SET XACNHAN='${DATA.confirm_worktime}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${DATA.confirm_date}' AND XACNHAN is null`;
+  let query = `UPDATE ZTBATTENDANCETB SET XACNHAN='${DATA.confirm_worktime}', UPD_DATE=GETDATE(), UPD_EMPL='${EMPL_NO}' WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${DATA.confirm_date}' AND XACNHAN is null`;
   //console.log(query);
   kqua = await queryDB(query);
+  if (kqua.tk_status === "OK") {
+    void notifyRegistrationSubmitted({
+      ctrCd: DATA.CTR_CD,
+      subDeptName: req.payload_data.SUBDEPTNAME,
+      title: "Có xác nhận chấm công cần xử lý",
+      body: `${EMPL_NO} đã gửi xác nhận chấm công ngày ${DATA.confirm_date}.`,
+      data: { type: "attendance-confirmation", emplNo: EMPL_NO, applyDate: DATA.confirm_date },
+    });
+  }
   res.send(kqua);
 };
 exports.mydiemdanhnhom = async (req, res, DATA) => {
