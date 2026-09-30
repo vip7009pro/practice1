@@ -10,6 +10,7 @@
  */
 const repo = require("./chatRepository");
 const core = require("./chatMessageCore");
+const { fetchLinkPreview } = require("./linkPreview");
 const { pushOfflineChat } = require("./chatPush");
 const { emitToConversation, emitToUsers } = require("../../socket/socketHandler");
 const { getOnlineEmplNos } = require("../../socket/presence");
@@ -1197,6 +1198,25 @@ exports.chatPinConversation = async (req, res, DATA) => {
   } catch (error) {
     console.error("[chatPinConversation]", error);
     fail(res, "Không ghim được cuộc trò chuyện");
+  }
+};
+
+/**
+ * Lấy metadata (Open Graph) của một liên kết để FE hiển thị "link preview" trong chat.
+ * Phải chạy ở SERVER vì trình duyệt bị chặn CORS khi đọc HTML của trang khác.
+ * Xem `linkPreview.js` để biết các chốt chặn SSRF.
+ */
+exports.chatLinkPreview = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    const url = String(DATA?.url || "").trim();
+    if (!url) return fail(res, "Thiếu liên kết");
+    const preview = await fetchLinkPreview(url);
+    ok(res, preview);
+  } catch (error) {
+    console.warn("[chatLinkPreview]", error?.message || error);
+    fail(res, "Không lấy được thông tin liên kết");
   }
 };
 
