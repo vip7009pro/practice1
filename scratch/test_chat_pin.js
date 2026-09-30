@@ -56,9 +56,10 @@ async function pickAccount(pool) {
   const result = await pool.query(
     `SELECT TOP 1 p.EMPL_NO, p.CTR_CD, COUNT(*) AS TOTAL
        FROM ZTB_CHAT_PARTICIPANT p
-      WHERE p.LEFT_AT IS NULL
+       INNER JOIN ZTB_CHAT_CONVERSATION c ON c.CONVERSATION_ID = p.CONVERSATION_ID
+      WHERE p.LEFT_AT IS NULL AND c.DELETED_AT IS NULL
       GROUP BY p.EMPL_NO, p.CTR_CD
-      HAVING COUNT(*) >= 2
+      HAVING COUNT(*) >= 3
       ORDER BY COUNT(*) DESC`
   );
   return result.recordset[0] || null;
@@ -92,7 +93,13 @@ async function main() {
   // 1. chatSync trả về đủ trường mới.
   const before = await syncConversations(token, ctrCd);
   console.log("1) chatSync trả PINNED_AT/CREATED_AT");
-  check("Có >= 2 phòng", before.length >= 2, `${before.length} phòng`);
+  check("Có >= 3 phòng", before.length >= 3, `${before.length} phòng`);
+  if (before.length < 3) {
+    console.log("  SKIP  cần ít nhất 3 phòng để kiểm tra thứ tự ghim");
+    await closePool();
+    console.log(`\n[chat-pin] KẾT QUẢ: ${passed} PASS / ${failed} FAIL`);
+    process.exit(failed === 0 ? 0 : 1);
+  }
   check(
     "Mọi phòng có khoá PINNED_AT",
     before.every((c) => "PINNED_AT" in c),

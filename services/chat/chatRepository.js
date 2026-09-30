@@ -7,8 +7,10 @@
 const { openConnection, openDedicatedConnection } = require("../../config/database");
 
 const MAX_MESSAGE_LENGTH = 4000;
+/** Tin RICHTEXT lưu HTML nên cần trần ký tự rộng hơn tin thường. */
+const MAX_RICH_MESSAGE_LENGTH = 20000;
 /** Loại tin hợp lệ — khai báo tại đây để repository không phụ thuộc vào tầng core. */
-const MSG_TYPES = new Set(["TEXT", "IMAGE", "FILE", "SYSTEM"]);
+const MSG_TYPES = new Set(["TEXT", "IMAGE", "FILE", "SYSTEM", "RICH"]);
 
 async function queryRows(sql, params = {}) {
   const pool = await openConnection();
@@ -373,7 +375,9 @@ async function insertMessage({
         CTR_CD: ctrCd,
         SENDER_EMPL_NO: senderEmplNo,
         MSG_TYPE: type,
-        CONTENT: content ? String(content).slice(0, MAX_MESSAGE_LENGTH) : null,
+        CONTENT: content
+          ? String(content).slice(0, type === "RICH" ? MAX_RICH_MESSAGE_LENGTH : MAX_MESSAGE_LENGTH)
+          : null,
         MENTIONS: mentions ? JSON.stringify(mentions).slice(0, 1000) : null,
         REPLY_TO_MESSAGE_ID: Number.isInteger(Number(replyToMessageId)) && Number(replyToMessageId) > 0
           ? Number(replyToMessageId)
@@ -988,6 +992,7 @@ async function getConversationStorage({ conversationId }) {
 
 module.exports = {
   MAX_MESSAGE_LENGTH,
+  MAX_RICH_MESSAGE_LENGTH,
   buildDirectKey,
   withTransaction,
   queryRows,

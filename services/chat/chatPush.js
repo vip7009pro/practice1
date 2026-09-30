@@ -9,12 +9,15 @@
 const { isUserOnline, getOnlineEmplNos } = require("../../socket/presence");
 const { sendTargetedPushNotification } = require("../targetedPushService");
 const repo = require("./chatRepository");
+const { richToPlainText } = require("./richText");
 
 const PREVIEW_LENGTH = 140;
 
 function buildPreview(msgType, content) {
-  if (msgType === "TEXT" || msgType === "SYSTEM") {
-    const text = String(content || "").trim();
+  if (msgType === "TEXT" || msgType === "SYSTEM" || msgType === "RICH") {
+    // Tin RICHTEXT lưu HTML ⇒ thông báo phải hiển thị chữ thuần.
+    const raw = String(content || "").trim();
+    const text = msgType === "RICH" ? richToPlainText(raw) : raw;
     if (!text) return "Bạn có tin nhắn mới";
     return text.length > PREVIEW_LENGTH ? `${text.slice(0, PREVIEW_LENGTH)}…` : text;
   }

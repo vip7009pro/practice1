@@ -6,8 +6,9 @@
  * Module này KHÔNG emit socket (tránh require vòng) — người gọi tự phát sự kiện.
  */
 const repo = require("./chatRepository");
+const { sanitizeRichContent, richToPlainText } = require("./richText");
 
-const MSG_TYPES = new Set(["TEXT", "IMAGE", "FILE", "SYSTEM"]);
+const MSG_TYPES = new Set(["TEXT", "IMAGE", "FILE", "SYSTEM", "RICH"]);
 const REACTION_TYPES = new Set(["LIKE", "LOVE", "HAHA", "WOW", "SAD", "ANGRY"]);
 const ROLE_RANK = { MEMBER: 1, MODERATOR: 2, ADMIN: 3, OWNER: 4 };
 const REPLY_SNIPPET_LENGTH = 120;
@@ -51,17 +52,24 @@ async function sendMessage({
   }
 
   const type = MSG_TYPES.has(msgType) ? msgType : "TEXT";
-  const text = typeof content === "string" ? content.trim() : "";
+  // Tin RICHTEXT: nội dung là HTML đã được lọc; độ dài cho phép rộng hơn vì còn thẻ markup.
+  const isRich = type === "RICH";
+  const text = isRich
+    ? sanitizeRichContent(content)
+    : typeof content === "string"
+    ? content.trim()
+    : "";
   const hasAttachments = Array.isArray(attachmentIds) && attachmentIds.length > 0;
 
   if (!text && !hasAttachments) {
     return { ok: false, code: "EMPTY", message: "Tin nhắn trống" };
   }
-  if (type === "TEXT" && text.length > repo.MAX_MESSAGE_LENGTH) {
+  const maxLength = isRich ? repo.MAX_RICH_MESSAGE_LENGTH : repo.MAX_MESSAGE_LENGTH;
+  if (text.length > maxLength) {
     return {
       ok: false,
       code: "TOO_LONG",
-      message: `Tin nhắn tối đa ${repo.MAX_MESSAGE_LENGTH} ký tự`,
+      message: `Tin nhắn tối đa ${maxLength} ký tự`,
     };
   }
 
@@ -96,7 +104,9 @@ async function sendMessage({
 
 function replySnippet(row) {
   if (!row) return null;
-  const content = String(row.CONTENT || "").trim();
+  const raw = String(row.CONTENT || "").trim();
+  // Tin RICHTEXT lưu HTML ⇒ trích dẫn phải là text thuần mới đọc được.
+  const content = row.MSG_TYPE === "RICH" ? richToPlainText(raw) : raw;
   const preview = row.DELETED_AT
     ? "Tin nhắn đã được thu hồi"
     : row.MSG_TYPE === "IMAGE"
