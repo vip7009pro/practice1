@@ -43,8 +43,16 @@ async function pushOfflineChat({
     if (!ctrCd || !conversationId) return;
 
     const sender = String(senderEmplNo || "").trim().toUpperCase();
+    // Người đang "tắt thông báo" cho RIÊNG phòng này thì không nhận push
+    // (vẫn thấy tin nhắn + số chưa đọc khi mở app).
+    let muted = new Set();
+    try {
+      muted = new Set(await repo.listMutedMemberNos({ conversationId }));
+    } catch (error) {
+      console.warn("[chat] không đọc được danh sách tắt thông báo:", error?.message || error);
+    }
     const targets = [...new Set((memberNos || []).map((v) => String(v || "").trim().toUpperCase()))]
-      .filter((emplNo) => emplNo && emplNo !== sender && !isUserOnline(emplNo));
+      .filter((emplNo) => emplNo && emplNo !== sender && !muted.has(emplNo) && !isUserOnline(emplNo));
 
     if (targets.length === 0) return;
 

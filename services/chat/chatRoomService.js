@@ -35,6 +35,17 @@ const ALL_EMPLOYEES_LIMIT =
   parseInt(process.env.CHAT_ALL_EMPLOYEES_LIMIT || "0", 10) || 5000;
 
 /**
+ * Độ lệch múi giờ của MÁY CHỦ so với UTC, tính bằng ms (VN = +7h).
+ * Cần vì SQL Server dùng `GETDATE()` (giờ máy chủ) cho các cột DATETIME, nhưng driver mssql
+ * cấu hình `useUTC: true` nên khi GHI sẽ lấy thành phần UTC của đối tượng Date.
+ * Đổi máy chủ sang múi giờ khác: đặt env `CHAT_SERVER_TZ_OFFSET_HOURS`.
+ */
+const SERVER_TZ_OFFSET_MS =
+  (Number.isFinite(Number(process.env.CHAT_SERVER_TZ_OFFSET_HOURS))
+    ? Number(process.env.CHAT_SERVER_TZ_OFFSET_HOURS)
+    : 7) * 3600 * 1000;
+
+/**
  * Icon avatar phòng mặc định — PHẢI khớp danh sách ở FE (`chatAvatars.tsx`).
  * Lưu dạng `icon:<id>` để phân biệt với ảnh upload (`/chatavatar/<file>`).
  */
@@ -106,7 +117,48 @@ function memberView(row) {
     JOB_NAME: row.JOB_NAME || null,
     ROLE: row.ROLE,
     LEFT_AT: row.LEFT_AT || null,
+    // Mốc tin nhắn cuối cùng người này đã đọc — FE dùng để đếm/liệt kê "ai đã xem".
+    LAST_READ_MESSAGE_ID: Number(row.LAST_READ_MESSAGE_ID) || 0,
   };
+}
+
+/** Mốc "không hết hạn" cho lựa chọn tắt thông báo "cho tới khi mở lại phòng". */
+const MUTE_UNTIL_OPEN = new Date(Date.UTC(9999, 11, 31));
+/** Số giây coi như "vô hạn" (≥ 1 năm) — FE hiểu là chế độ "cho tới khi mở lại". */
+const MUTE_UNTIL_OPEN_SECONDS = 365 * 24 * 3600;
+
+/**
+ * Mốc thời gian N giây tới, theo GIỜ MÁY CHỦ (giống `GETDATE()`).
+ * Driver mssql bật `useUTC` nên khi GHI sẽ lấy thành phần UTC của Date ⇒ phải cộng
+ * thêm độ lệch múi giờ VN, nếu không mốc lưu vào DB sẽ bị lùi 7 giờ (hết hạn ngay).
+ */
+function serverNowPlus(ms) {
+  return new Date(Date.now() + SERVER_TZ_OFFSET_MS + ms);
+}
+
+/** Chuyển mốc ghim thô thành payload hiển thị ở thanh ghim. */
+function pinnedView(row) {
+  return {
+    MESSAGE_ID: row.MESSAGE_ID,
+    SENDER_EMPL_NO: row.SENDER_EMPL_NO,
+    MSG_TYPE: row.MSG_TYPE,
+    CONTENT: row.DELETED_AT ? null : row.CONTENT,
+    CREATED_AT: row.CREATED_AT,
+    PINNED_AT: row.PINNED_AT,
+    PINNED_BY: row.PINNED_BY,
+  };
+}
+
+/** Tin nhắn đang ghim của nhiều phòng: Map<conversationId, pinned[]> (ghim mới nhất trước). */
+async function loadPinnedByConversation({ conversationIds }) {
+  const rows = await repo.listPinnedMessagesForConversations({ conversationIds });
+  const map = new Map();
+  rows.forEach((row) => {
+    const list = map.get(row.CONVERSATION_ID) || [];
+    list.push(pinnedView(row));
+    map.set(row.CONVERSATION_ID, list);
+  });
+  return map;
 }
 
 /**
@@ -116,13 +168,15 @@ function memberView(row) {
  * `memberView` đúng MỘT lần. Trước đây caller đã map sẵn rồi truyền vào và ở đây map lại
  * ⇒ mất `MIDLAST_NAME`/`FIRST_NAME` nên `FULL_NAME` rơi về mã nhân viên (tag tên không ra tên).
  */
-function buildConversationView(conversation, members, myEmplNo) {
+function buildConversationView(conversation, members, myEmplNo, pinned = []) {
   const all = (members || []).map(memberView);
   const active = all.filter((m) => !m.LEFT_AT);
   const others = active.filter((m) => m.EMPL_NO !== myEmplNo);
   const isSelf = conversation.CONV_TYPE === "SELF";
   const isDirect = conversation.CONV_TYPE === "DIRECT";
   const peer = isDirect ? others[0] : null;
+  const mutedSecondsLeft = Number(conversation.MUTED_SECONDS_LEFT);
+  const muted = Number.isFinite(mutedSecondsLeft) && mutedSecondsLeft > 0;
 
   const displayName = isSelf
     ? conversation.TITLE || "My Files"
@@ -147,9 +201,14 @@ function buildConversationView(conversation, members, myEmplNo) {
     PEER_ONLINE_KEY: peer ? peer.EMPL_NO : null,
     OWNER_EMPL_NO: conversation.OWNER_EMPL_NO || null,
     MY_ROLE: (all.find((m) => m.EMPL_NO === myEmplNo) || {}).ROLE || "MEMBER",
-    MUTED: Boolean(conversation.MUTED),
+    MUTED: muted,
+    // Số giây còn tắt thông báo (null = đang nhận). ≥ 1 năm ⇒ chế độ "cho tới khi mở lại".
+    MUTED_SECONDS_LEFT: muted ? Math.round(mutedSecondsLeft) : null,
+    MUTED_UNTIL_OPEN: muted && mutedSecondsLeft >= MUTE_UNTIL_OPEN_SECONDS,
     // Ghim là thuộc tính RIÊNG của từng người (lưu ở participant).
     PINNED_AT: conversation.PINNED_AT || null,
+    // Tin nhắn đang ghim của phòng (ghim mới nhất trước) — hiển thị ở thanh dưới header.
+    PINNED: pinned || [],
     // Mốc thời gian tạo — FE dùng làm khoá sắp xếp khi phòng chưa có tin nhắn.
     CREATED_AT: conversation.CREATED_AT || null,
     UNREAD_COUNT: Number(conversation.UNREAD_COUNT) || 0,
@@ -175,7 +234,22 @@ async function loadConversationView({ ctrCd, conversationId, myEmplNo }) {
     ctrCd,
     conversationIds: [conversationId],
   });
-  return buildConversationView({ ...conversation, UNREAD_COUNT: 0 }, members, myEmplNo);
+  const [participant, pinnedMap] = await Promise.all([
+    repo.getParticipant({ conversationId, emplNo: myEmplNo }),
+    loadPinnedByConversation({ conversationIds: [conversationId] }),
+  ]);
+  const mutedUntil = participant?.MUTED_UNTIL ? new Date(participant.MUTED_UNTIL) : null;
+  // Giới hạn 1 năm cho chế độ "cho tới khi mở lại" (xem MUTE_UNTIL_OPEN_SECONDS).
+  const mutedSecondsLeft =
+    mutedUntil && mutedUntil.getTime() > Date.now()
+      ? Math.min((mutedUntil.getTime() - Date.now()) / 1000, MUTE_UNTIL_OPEN_SECONDS)
+      : 0;
+  return buildConversationView(
+    { ...conversation, UNREAD_COUNT: 0, MUTED_SECONDS_LEFT: mutedSecondsLeft },
+    members,
+    myEmplNo,
+    pinnedMap.get(conversationId) || []
+  );
 }
 
 async function createConversationWithMembers({
@@ -248,7 +322,10 @@ exports.chatBootstrap = async (req, res, DATA) => {
     ]);
 
     const conversationIds = rows.map((r) => r.CONVERSATION_ID);
-    const allMembers = await repo.listMembersForConversations({ ctrCd, conversationIds });
+    const [allMembers, pinnedMap] = await Promise.all([
+      repo.listMembersForConversations({ ctrCd, conversationIds }),
+      loadPinnedByConversation({ conversationIds }),
+    ]);
     const membersByConversation = new Map();
     allMembers.forEach((row) => {
       const list = membersByConversation.get(row.CONVERSATION_ID) || [];
@@ -269,7 +346,8 @@ exports.chatBootstrap = async (req, res, DATA) => {
           LAST_DELETED_AT: row.LAST_DELETED_AT,
         },
         membersByConversation.get(row.CONVERSATION_ID) || [],
-        emplNo
+        emplNo,
+        pinnedMap.get(row.CONVERSATION_ID) || []
       )
     );
 
@@ -312,7 +390,10 @@ exports.chatSync = async (req, res, DATA) => {
 
     const rows = await repo.listConversations({ ctrCd, emplNo });
     const ids = rows.map((r) => r.CONVERSATION_ID);
-    const members = await repo.listMembersForConversations({ ctrCd, conversationIds: ids });
+    const [members, pinnedMap] = await Promise.all([
+      repo.listMembersForConversations({ ctrCd, conversationIds: ids }),
+      loadPinnedByConversation({ conversationIds: ids }),
+    ]);
     const byConversation = new Map();
     members.forEach((row) => {
       const list = byConversation.get(row.CONVERSATION_ID) || [];
@@ -321,7 +402,12 @@ exports.chatSync = async (req, res, DATA) => {
     });
 
     const conversations = rows.map((row) =>
-      buildConversationView(row, byConversation.get(row.CONVERSATION_ID) || [], emplNo)
+      buildConversationView(
+        row,
+        byConversation.get(row.CONVERSATION_ID) || [],
+        emplNo,
+        pinnedMap.get(row.CONVERSATION_ID) || []
+      )
     );
     ok(res, {
       conversations,
@@ -1198,6 +1284,103 @@ exports.chatPinConversation = async (req, res, DATA) => {
   } catch (error) {
     console.error("[chatPinConversation]", error);
     fail(res, "Không ghim được cuộc trò chuyện");
+  }
+};
+
+/**
+ * Ghim / bỏ ghim 1 TIN NHẮN trong phòng (ghim chung — mọi thành viên đều thấy).
+ * Phát `chat:pinned` để các client khác cập nhật thanh ghim ngay.
+ */
+exports.chatPinMessage = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    const messageId = Number(DATA?.messageId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+    if (!Number.isInteger(messageId) || messageId <= 0) {
+      return fail(res, "Tin nhắn không hợp lệ");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không thuộc phòng chat này");
+
+    // Mặc định ghim; client gửi pinned=false để bỏ ghim.
+    const pinned = DATA?.pinned === undefined ? true : Boolean(DATA.pinned);
+    const row = await repo.setMessagePinned({ conversationId, messageId, emplNo, pinned });
+    if (!row) return fail(res, "Không ghim được tin nhắn (tin đã bị thu hồi?)");
+
+    const event = {
+      conversationId,
+      messageId,
+      pinned,
+      pinnedBy: emplNo,
+      pinnedAt: row.PINNED_AT || null,
+    };
+    emitToConversation(conversationId, "chat:pinned", event);
+    // Client có thể chưa join room phòng ⇒ phát thêm vào room riêng từng thành viên.
+    const members = await repo.listActiveMemberNos(conversationId);
+    emitToUsers(
+      members.map((m) => m.EMPL_NO),
+      "chat:pinned",
+      event
+    );
+
+    ok(res, event);
+  } catch (error) {
+    console.error("[chatPinMessage]", error);
+    fail(res, "Không ghim được tin nhắn");
+  }
+};
+
+/**
+ * Tắt/bật thông báo cho RIÊNG người dùng hiện tại ở 1 phòng.
+ * `mode`: "off" (bật lại) | "minutes" (kèm `minutes`) | "untilOpen" (tới khi mở lại phòng).
+ * Đây là tuỳ chọn cá nhân ⇒ KHÔNG phát socket cho người khác.
+ */
+exports.chatSetConversationMute = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không thuộc phòng chat này");
+
+    const mode = String(DATA?.mode || "").trim();
+    let mutedUntil = null;
+    let muteSecondsLeft = null;
+    if (mode === "untilOpen") {
+      mutedUntil = MUTE_UNTIL_OPEN;
+      muteSecondsLeft = MUTE_UNTIL_OPEN_SECONDS;
+    } else if (mode === "minutes") {
+      const minutes = Number(DATA?.minutes);
+      if (!Number.isFinite(minutes) || minutes <= 0) return fail(res, "Thời gian không hợp lệ");
+      // Trần 30 ngày cho 1 lần chọn.
+      const capped = Math.min(minutes, 60 * 24 * 30);
+      mutedUntil = serverNowPlus(capped * 60_000);
+      muteSecondsLeft = Math.round(capped * 60);
+    } else if (mode !== "off") {
+      return fail(res, "Chế độ tắt thông báo không hợp lệ");
+    }
+
+    const row = await repo.setConversationMute({ ctrCd, conversationId, emplNo, mutedUntil });
+    if (!row) return fail(res, "Không cập nhật được trạng thái thông báo");
+
+    ok(res, {
+      conversationId,
+      muted: Boolean(mutedUntil),
+      mutedUntilOpen: mode === "untilOpen",
+      mutedSecondsLeft: muteSecondsLeft,
+    });
+  } catch (error) {
+    console.error("[chatSetConversationMute]", error);
+    fail(res, "Không cập nhật được trạng thái thông báo");
   }
 };
 

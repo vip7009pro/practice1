@@ -178,7 +178,16 @@ async function listConversations({ ctrCd, emplNo }) {
   return queryRows(
     `SELECT c.CONVERSATION_ID, c.CONV_TYPE, c.TITLE, c.AVATAR, c.OWNER_EMPL_NO,
             c.LAST_MESSAGE_ID, c.LAST_MESSAGE_AT, c.CREATED_AT,
-            p.ROLE, p.MUTED, p.PINNED_AT, p.LAST_READ_MESSAGE_ID,
+            p.ROLE, p.MUTED, p.MUTED_UNTIL, p.PINNED_AT, p.LAST_READ_MESSAGE_ID,
+            -- Số giây còn tắt thông báo (NULL = đang nhận). Tính bằng giờ máy chủ để FE
+            -- không phải xử lý lệch múi giờ.
+            -- ⚠️ Mốc "cho tới khi mở lại" là 9999-12-31 ⇒ DATEDIFF(SECOND...) sẽ TRÀN INT
+            -- (> 68 năm) và làm hỏng cả câu query, nên phải chặn trần 1 năm trước.
+            CASE WHEN p.MUTED_UNTIL IS NOT NULL AND p.MUTED_UNTIL > GETDATE()
+                 THEN CASE WHEN p.MUTED_UNTIL >= '9000-01-01'
+                           THEN 31536000
+                           ELSE DATEDIFF(SECOND, GETDATE(), p.MUTED_UNTIL) END
+            END AS MUTED_SECONDS_LEFT,
             m.SENDER_EMPL_NO AS LAST_SENDER, m.MSG_TYPE AS LAST_TYPE,
             m.CONTENT AS LAST_CONTENT, m.CREATED_AT AS LAST_CREATED_AT,
             m.DELETED_AT AS LAST_DELETED_AT,
@@ -220,12 +229,44 @@ async function setConversationPinned({ ctrCd, conversationId, emplNo, pinned }) 
   );
 }
 
+/**
+ * Tắt/bật thông báo cho RIÊNG người dùng ở 1 phòng.
+ * `mutedUntil` = null ⇒ bật lại; Date trong tương lai ⇒ tắt tới mốc đó.
+ * (FE gửi mốc `9999-12-31` cho lựa chọn "cho tới khi mở lại phòng".)
+ */
+async function setConversationMute({ ctrCd, conversationId, emplNo, mutedUntil }) {
+  return queryOne(
+    `UPDATE ZTB_CHAT_PARTICIPANT
+     SET MUTED_UNTIL = @MUTED_UNTIL
+     OUTPUT INSERTED.MUTED_UNTIL
+     WHERE CONVERSATION_ID = @CONVERSATION_ID AND CTR_CD = @CTR_CD AND EMPL_NO = @EMPL_NO`,
+    {
+      CONVERSATION_ID: conversationId,
+      CTR_CD: ctrCd,
+      EMPL_NO: emplNo,
+      MUTED_UNTIL: mutedUntil || null,
+    }
+  );
+}
+
+/** Những thành viên đang TẮT thông báo ở 1 phòng (để bỏ qua khi push offline). */
+async function listMutedMemberNos({ conversationId }) {
+  const rows = await queryRows(
+    `SELECT LTRIM(RTRIM(EMPL_NO)) AS EMPL_NO FROM ZTB_CHAT_PARTICIPANT
+     WHERE CONVERSATION_ID = @CONVERSATION_ID AND LEFT_AT IS NULL
+       AND MUTED_UNTIL IS NOT NULL AND MUTED_UNTIL > GETDATE()`,
+    { CONVERSATION_ID: Number(conversationId) }
+  );
+  return rows.map((row) => String(row.EMPL_NO || "").trim().toUpperCase()).filter(Boolean);
+}
+
 /** Thành viên của nhiều phòng (để FE hiển thị tên/avatar) — không phân trang. */
 async function listMembersForConversations({ ctrCd, conversationIds }) {
   const ids = (conversationIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
   if (ids.length === 0) return [];
   return queryRows(
     `SELECT p.CONVERSATION_ID, LTRIM(RTRIM(p.EMPL_NO)) AS EMPL_NO, p.ROLE, p.LEFT_AT,
+            p.LAST_READ_MESSAGE_ID,
             e.CMS_ID, e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE, j.JOB_NAME
      FROM ZTB_CHAT_PARTICIPANT p
      -- Cột ZTBEMPLINFO.EMPL_NO có thể chứa khoảng trắng ở đầu ⇒ so khớp sau khi trim,
@@ -497,6 +538,49 @@ async function insertAttachment(record) {
 /* ------------------------------------------------------------------ */
 /* Cảm xúc (reaction) & ẩn tin theo từng user                          */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Ghim / bỏ ghim 1 tin nhắn (ghim chung cho cả phòng — mọi thành viên đều thấy).
+ * Trả về mốc ghim mới (null nếu vừa bỏ ghim).
+ */
+async function setMessagePinned({ conversationId, messageId, emplNo, pinned }) {
+  return queryOne(
+    `UPDATE ZTB_CHAT_MESSAGE
+     SET PINNED_AT = CASE WHEN @PINNED = 1 THEN GETDATE() ELSE NULL END,
+         PINNED_BY = CASE WHEN @PINNED = 1 THEN @EMPL_NO ELSE NULL END
+     OUTPUT INSERTED.PINNED_AT, INSERTED.PINNED_BY
+     WHERE MESSAGE_ID = @MESSAGE_ID AND CONVERSATION_ID = @CONVERSATION_ID
+       AND DELETED_AT IS NULL`,
+    {
+      MESSAGE_ID: Number(messageId),
+      CONVERSATION_ID: Number(conversationId),
+      EMPL_NO: emplNo,
+      PINNED: pinned ? 1 : 0,
+    }
+  );
+}
+
+/** Danh sách tin nhắn đang ghim của NHIỀU phòng (ghim mới nhất trước). */
+async function listPinnedMessagesForConversations({ conversationIds, limitPerConversation = 20 }) {
+  const ids = (conversationIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  if (ids.length === 0) return [];
+  return queryRows(
+    `SELECT CONVERSATION_ID, MESSAGE_ID, SENDER_EMPL_NO, MSG_TYPE, CONTENT,
+            CREATED_AT, DELETED_AT, PINNED_AT, PINNED_BY
+     FROM (
+       SELECT m.CONVERSATION_ID, m.MESSAGE_ID, LTRIM(RTRIM(m.SENDER_EMPL_NO)) AS SENDER_EMPL_NO,
+              m.MSG_TYPE, m.CONTENT, m.CREATED_AT, m.DELETED_AT, m.PINNED_AT,
+              LTRIM(RTRIM(m.PINNED_BY)) AS PINNED_BY,
+              ROW_NUMBER() OVER (PARTITION BY m.CONVERSATION_ID ORDER BY m.PINNED_AT DESC) AS RN
+       FROM ZTB_CHAT_MESSAGE m
+       WHERE m.CONVERSATION_ID IN (${ids.join(",")})
+         AND m.PINNED_AT IS NOT NULL AND m.DELETED_AT IS NULL
+     ) pinned
+     WHERE RN <= ${Math.max(1, Math.min(Number(limitPerConversation) || 20, 50))}
+     ORDER BY CONVERSATION_ID, PINNED_AT DESC`,
+    {}
+  );
+}
 
 async function listReactionsForMessages({ messageIds }) {
   const ids = (messageIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
@@ -1005,6 +1089,8 @@ module.exports = {
   ensureParticipant,
   listConversations,
   setConversationPinned,
+  setConversationMute,
+  listMutedMemberNos,
   listMembersForConversations,
   getParticipant,
   listActiveMemberNos,
@@ -1018,6 +1104,8 @@ module.exports = {
   getAttachmentById,
   insertAttachment,
   cloneAttachments,
+  setMessagePinned,
+  listPinnedMessagesForConversations,
   listReactionsForMessages,
   getReaction,
   setReaction,
