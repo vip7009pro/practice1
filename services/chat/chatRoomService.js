@@ -630,6 +630,41 @@ exports.chatLoadMessages = async (req, res, DATA) => {
   }
 };
 
+/**
+ * Đồng bộ tin nhắn bị LỠ trong lúc mất kết nối (reconnect).
+ *
+ * Client gửi `afterMessageId` = MESSAGE_ID lớn nhất nó đã nhận được; server trả về
+ * đúng các tin MỚI HƠN theo thứ tự tăng dần. Nhờ vậy khi socket nối lại không phải
+ * tải lại cả phòng mà vẫn không mất tin.
+ */
+exports.chatSyncMessages = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    const afterMessageId = Number(DATA?.afterMessageId) || 0;
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không có quyền xem phòng chat này");
+
+    const limit = Math.min(Math.max(Number(DATA?.limit) || 200, 1), 500);
+    const rows = await repo.listMessages({ conversationId, afterMessageId, limit, emplNo });
+    const messages = await core.enrichMessages(conversationId, rows);
+    ok(res, {
+      conversationId,
+      afterMessageId,
+      messages,
+      hasMore: rows.length >= limit,
+    });
+  } catch (error) {
+    console.error("[chatSyncMessages]", error);
+    fail(res, "Không đồng bộ được tin nhắn");
+  }
+};
+
 exports.chatSendMessage = async (req, res, DATA) => {
   try {
     const { ctrCd, emplNo } = getCtx(req, DATA);

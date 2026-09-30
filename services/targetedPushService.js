@@ -8,11 +8,14 @@ function normalizeSubscriptionRow(row) {
       return {
         subscription: parsed.subscription,
         emplNo: String(parsed.emplNo || "").trim().toUpperCase(),
+        // deviceId (nếu client đã cập nhật) ⇒ cho phép lọc push theo TỪNG thiết bị.
+        deviceId: String(parsed.deviceId || "").trim(),
       };
     }
     return {
       subscription: parsed,
       emplNo: "",
+      deviceId: "",
     };
   } catch (error) {
     console.warn("Bỏ qua subscription JSON không hợp lệ:", error?.message || error);
@@ -38,6 +41,7 @@ exports.sendTargetedPushNotification = async ({
   approval,
   tag,
   icon,
+  excludeDeviceIds,
 }) => {
   const targets = new Set(
     (Array.isArray(targetEmplNos) ? targetEmplNos : [targetEmplNos])
@@ -46,6 +50,20 @@ exports.sendTargetedPushNotification = async ({
   );
 
   if (!ctrCd || targets.size === 0) return;
+
+  // Thiết bị đang ACTIVE của từng người (do presence tính) ⇒ KHÔNG push cho chính thiết bị đó.
+  // Ví dụ: PC đang mở ERP thì PC không nhận push, nhưng iPhone để nền vẫn nhận.
+  const excludedByEmpl = new Map();
+  if (excludeDeviceIds && typeof excludeDeviceIds === "object") {
+    Object.entries(excludeDeviceIds).forEach(([emplNo, ids]) => {
+      const list = (Array.isArray(ids) ? ids : [ids])
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (list.length > 0) {
+        excludedByEmpl.set(String(emplNo).trim().toUpperCase(), new Set(list));
+      }
+    });
+  }
 
   const result = await queryDB_New(
     "SELECT SUBSCRIPTION FROM ZTB_SUBSCRIPTION_TB WHERE CTR_CD=@CTR_CD AND SUB_STATUS='1'",
@@ -74,7 +92,14 @@ exports.sendTargetedPushNotification = async ({
 
   const deliveries = result.data
     .map(normalizeSubscriptionRow)
-    .filter((entry) => entry && targets.has(entry.emplNo))
+    .filter((entry) => {
+      if (!entry || !targets.has(entry.emplNo)) return false;
+      // Bỏ qua đúng thiết bị đang ACTIVE (chỉ lọc được khi subscription có deviceId;
+      // các bản ghi legacy không có deviceId vẫn gửi như cũ để không mất thông báo).
+      const excluded = excludedByEmpl.get(entry.emplNo);
+      if (excluded && entry.deviceId && excluded.has(entry.deviceId)) return false;
+      return true;
+    })
     .map(async (entry) => {
       try {
         await sendNotification(entry.subscription, payload);

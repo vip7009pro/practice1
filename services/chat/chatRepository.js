@@ -302,28 +302,48 @@ async function listActiveMemberNos({ conversationId }) {
 /* Tin nhắn                                                           */
 /* ------------------------------------------------------------------ */
 
-async function listMessages({ conversationId, beforeMessageId, limit = 40, emplNo }) {
-  const safeLimit = Math.min(Math.max(Number(limit) || 40, 1), 100);
-  const before = Number(beforeMessageId);
-  const hasCursor = Number.isInteger(before) && before > 0;
+/**
+ * Lấy tin nhắn theo khoá (keyset), KHÔNG dùng OFFSET:
+ *  - Trang lịch sử (cuộn lên): truyền `beforeMessageId` ⇒ lấy các tin CŨ HƠN, trả về tăng dần.
+ *  - Đồng bộ sau khi mất mạng: truyền `afterMessageId` ⇒ lấy các tin MỚI HƠN, trả về tăng dần.
+ *
+ * Dùng `TOP + MESSAGE_ID` (identity) nên độ phức tạp KHÔNG phụ thuộc tổng số tin trong phòng
+ * (index IDX_CHAT_MESSAGE_CONV (CONVERSATION_ID, MESSAGE_ID DESC) phục vụ cả 2 chiều).
+ */
+async function listMessages({ conversationId, beforeMessageId, afterMessageId, limit = 40, emplNo }) {
+  const safeLimit = Math.min(Math.max(Number(limit) || 40, 1), 500);
   const viewer = String(emplNo || "").trim().toUpperCase();
+
+  const before = Number(beforeMessageId);
+  const hasBefore = Number.isInteger(before) && before > 0;
+  const after = Number(afterMessageId);
+  const hasAfter = Number.isInteger(after) && after > 0;
+
+  // Hai con trỏ loại trừ nhau: before = duyệt ngược (lịch sử), after = duyệt xuôi (đồng bộ).
+  const cursorClause = hasAfter
+    ? "AND m.MESSAGE_ID > @AFTER_ID"
+    : hasBefore
+      ? "AND m.MESSAGE_ID < @BEFORE_ID"
+      : "";
+
   const rows = await queryRows(
     `SELECT TOP (@LIMIT) m.* FROM ZTB_CHAT_MESSAGE m
      WHERE m.CONVERSATION_ID = @CONVERSATION_ID
-       ${hasCursor ? "AND m.MESSAGE_ID < @BEFORE_ID" : ""}
+       ${cursorClause}
        AND NOT EXISTS (
          SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
          WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER
        )
-     ORDER BY m.MESSAGE_ID DESC`,
+     ORDER BY m.MESSAGE_ID ${hasAfter ? "ASC" : "DESC"}`,
     {
       LIMIT: safeLimit,
       CONVERSATION_ID: Number(conversationId),
       VIEWER: viewer,
-      ...(hasCursor ? { BEFORE_ID: before } : {}),
+      ...(hasAfter ? { AFTER_ID: after } : hasBefore ? { BEFORE_ID: before } : {}),
     }
   );
-  return rows.reverse();
+  // Duyệt ngược ⇒ đảo lại cho FE luôn nhận thứ tự tăng dần theo MESSAGE_ID.
+  return hasAfter ? rows : rows.reverse();
 }
 
 /** Lấy 1 số tin nhắn theo id (dùng để dựng nội dung được trích dẫn khi reply). */

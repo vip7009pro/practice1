@@ -3,7 +3,13 @@ const { corsOptions } = require("../config/env");
 const repo = require("../services/chat/chatRepository");
 const chatCore = require("../services/chat/chatMessageCore");
 const { pushOfflineChat } = require("../services/chat/chatPush");
-const { markOnline, markOffline, isUserOnline, getOnlineEmplNos } = require("./presence");
+const {
+  markOnline,
+  markOffline,
+  touchActive,
+  isUserOnline,
+  getOnlineEmplNos,
+} = require("./presence");
 const { verifyAuthToken } = require("../middleware/auth");
 
 // Các instance socket.io đã khởi tạo — để tầng service phát được sự kiện realtime
@@ -46,7 +52,16 @@ module.exports = (httpServer, httpsServer) => {
         .filter(Boolean)
         .join(" ")
         .trim();
-      console.log(`[socket-auth] OK id=${socket.id} empl=${socket.data.emplNo}`);
+      // deviceId do client sinh (localStorage) — dùng để quyết định push theo THIẾT BỊ.
+      // Không bắt buộc: thiếu thì chỉ mất khả năng lọc push theo thiết bị.
+      socket.data.deviceId = String(
+        socket.handshake.auth?.deviceId || socket.handshake.query?.device_id || ""
+      )
+        .trim()
+        .slice(0, 120);
+      console.log(
+        `[socket-auth] OK id=${socket.id} empl=${socket.data.emplNo} device=${socket.data.deviceId || "-"}`
+      );
     } catch (error) {
       socket.data.authenticated = false;
       console.log(`[socket-auth] token lỗi id=${socket.id}: ${error?.message || error}`);
@@ -64,7 +79,7 @@ module.exports = (httpServer, httpsServer) => {
     // Room riêng của user: nhận tin nhắn/mời kết bạn bất kể đang ở phòng nào.
     if (client.data.authenticated && client.data.emplNo) {
       client.join(userRoom(client.data.emplNo));
-      markOnline(client.data.emplNo, client.id);
+      markOnline(client.data.emplNo, client.id, client.data.deviceId);
       // Phát cho MỌI instance (io + ios) và gửi kèm danh sách online đầy đủ,
       // nếu không client mới mở trang sẽ thấy tất cả là "không hoạt động".
       emitToAll("chat:presence", { emplNo: client.data.emplNo, online: true });
@@ -136,6 +151,16 @@ module.exports = (httpServer, httpsServer) => {
       if (Number.isInteger(conversationId) && conversationId > 0) {
         client.leave(conversationRoom(conversationId));
       }
+    });
+
+    /**
+     * Nhịp "thiết bị này đang thực sự được dùng" (tab đang hiển thị/focus).
+     * Dùng để phân biệt CONNECTED (socket mở) với ACTIVE (người dùng đang nhìn màn hình)
+     * ⇒ quyết định push theo từng thiết bị. Không ghi DB, chỉ cập nhật bộ nhớ.
+     */
+    client.on("chat:active", () => {
+      if (!client.data.authenticated || !client.data.emplNo) return;
+      touchActive(client.data.emplNo, client.id);
     });
 
     client.on("chat:send", async (payload, ack) => {
