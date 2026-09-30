@@ -48,9 +48,20 @@ function buildDirectKey(a, b) {
 /* Nhân sự                                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Giới hạn tối đa cho 1 lần tìm nhân sự.
+ * Nút "Chọn tất cả" (tạo phòng toàn công ty) cần lấy hết ~300 nhân sự trong 1 lần gọi.
+ */
+const MAX_EMPLOYEE_SEARCH_LIMIT = 5000;
+
+// ⚠️ `ZTBEMPLINFO.EMPL_NO` là varchar nhưng dữ liệu có thể chứa KHOẢNG TRẮNG Ở ĐẦU
+// (ví dụ ' TKD1605') ⇒ luôn LTRIM/RTRIM khi trả về FE, nếu không filter "trừ chính mình"
+// và việc so khớp mã nhân sự ở FE sẽ sai.
 const EMPLOYEE_SELECT = `
   SELECT TOP (@LIMIT)
-         e.EMPL_NO, e.CMS_ID, e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE,
+         LTRIM(RTRIM(e.EMPL_NO)) AS EMPL_NO,
+         LTRIM(RTRIM(e.CMS_ID)) AS CMS_ID,
+         e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE,
          j.JOB_NAME, wp.SUBDEPTCODE, sd.SUBDEPTNAME, md.MAINDEPTNAME
   FROM ZTBEMPLINFO e
   LEFT JOIN ZTBJOB j
@@ -75,7 +86,7 @@ async function searchEmployees({ ctrCd, keyword, limit = 30 }) {
     EMPLOYEE_SELECT,
     {
       CTR_CD: ctrCd,
-      LIMIT: Math.min(Math.max(Number(limit) || 30, 1), 100),
+      LIMIT: Math.min(Math.max(Number(limit) || 30, 1), MAX_EMPLOYEE_SEARCH_LIMIT),
       KEYWORD: `%${trimmed}%`,
       KEYWORD_EMPTY: trimmed.length === 0 ? 1 : 0,
     }
@@ -91,7 +102,8 @@ async function getEmployeesByNos({ ctrCd, emplNos }) {
     params[`E${index}`] = value;
   });
   return queryRows(
-    `SELECT e.EMPL_NO, e.CMS_ID, e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE, j.JOB_NAME,
+    `SELECT LTRIM(RTRIM(e.EMPL_NO)) AS EMPL_NO, LTRIM(RTRIM(e.CMS_ID)) AS CMS_ID,
+            e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE, j.JOB_NAME,
             sd.SUBDEPTNAME, md.MAINDEPTNAME
      FROM ZTBEMPLINFO e
      LEFT JOIN ZTBJOB j
@@ -102,7 +114,7 @@ async function getEmployeesByNos({ ctrCd, emplNos }) {
             ON sd.SUBDEPTCODE = wp.SUBDEPTCODE AND sd.CTR_CD = wp.CTR_CD
      LEFT JOIN ZTBMAINDEPARMENT md
             ON md.MAINDEPTCODE = sd.MAINDEPTCODE AND md.CTR_CD = sd.CTR_CD
-     WHERE e.CTR_CD = @CTR_CD AND e.EMPL_NO IN (${placeholders})`,
+     WHERE e.CTR_CD = @CTR_CD AND LTRIM(RTRIM(e.EMPL_NO)) IN (${placeholders})`,
     params
   );
 }
@@ -211,13 +223,16 @@ async function listMembersForConversations({ ctrCd, conversationIds }) {
   const ids = (conversationIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
   if (ids.length === 0) return [];
   return queryRows(
-    `SELECT p.CONVERSATION_ID, p.EMPL_NO, p.ROLE, p.LEFT_AT,
+    `SELECT p.CONVERSATION_ID, LTRIM(RTRIM(p.EMPL_NO)) AS EMPL_NO, p.ROLE, p.LEFT_AT,
             e.CMS_ID, e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE, j.JOB_NAME
      FROM ZTB_CHAT_PARTICIPANT p
-     LEFT JOIN ZTBEMPLINFO e ON e.CTR_CD = p.CTR_CD AND e.EMPL_NO = p.EMPL_NO
+     -- Cột ZTBEMPLINFO.EMPL_NO có thể chứa khoảng trắng ở đầu ⇒ so khớp sau khi trim,
+     -- nếu không thì tên/ảnh của nhân sự đó không resolve (hiện ra mã nhân viên).
+     LEFT JOIN ZTBEMPLINFO e
+            ON e.CTR_CD = p.CTR_CD AND LTRIM(RTRIM(e.EMPL_NO)) = LTRIM(RTRIM(p.EMPL_NO))
      LEFT JOIN ZTBJOB j ON j.JOB_CODE = e.JOB_CODE AND j.CTR_CD = e.CTR_CD
      WHERE p.CTR_CD = @CTR_CD AND p.CONVERSATION_ID IN (${ids.join(",")})
-     ORDER BY p.CONVERSATION_ID, p.EMPL_NO`,
+     ORDER BY p.CONVERSATION_ID, EMPL_NO`,
     { CTR_CD: ctrCd }
   );
 }

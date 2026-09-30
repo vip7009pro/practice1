@@ -14,7 +14,24 @@ const { pushOfflineChat } = require("./chatPush");
 const { emitToConversation, emitToUsers } = require("../../socket/socketHandler");
 const { getOnlineEmplNos } = require("../../socket/presence");
 
-const MAX_GROUP_MEMBERS = 200;
+const MAX_GROUP_MEMBERS =
+  parseInt(process.env.CHAT_MAX_GROUP_MEMBERS || "0", 10) || 1000;
+
+/**
+ * Tài khoản được phép "Chọn tất cả" để tạo phòng TOÀN CÔNG TY
+ * (lấy hết danh sách nhân sự đang làm việc trong 1 lần gọi).
+ * Đổi bằng env `CHAT_SUPER_ADMINS="NHU1903,ABC123"`.
+ */
+const SUPER_ADMIN_EMPL_NOS = new Set(
+  String(process.env.CHAT_SUPER_ADMINS || "NHU1903")
+    .split(",")
+    .map((value) => value.trim().toUpperCase())
+    .filter(Boolean)
+);
+
+/** Trần số nhân sự lấy về cho chế độ "chọn tất cả" (tránh payload vô hạn). */
+const ALL_EMPLOYEES_LIMIT =
+  parseInt(process.env.CHAT_ALL_EMPLOYEES_LIMIT || "0", 10) || 5000;
 
 /**
  * Icon avatar phòng mặc định — PHẢI khớp danh sách ở FE (`chatAvatars.tsx`).
@@ -320,10 +337,19 @@ exports.chatSearchEmployees = async (req, res, DATA) => {
   try {
     const { ctrCd, emplNo } = getCtx(req, DATA);
     if (!ctrCd) return fail(res, "Thiếu thông tin công ty");
+
+    // `all: true` = lấy TOÀN BỘ nhân sự đang làm việc (nút "Chọn tất cả" khi tạo
+    // phòng toàn công ty). Chỉ tài khoản chat quản trị mới được dùng.
+    const wantAll =
+      DATA?.all === true || String(DATA?.all ?? "").toLowerCase() === "true";
+    if (wantAll && !SUPER_ADMIN_EMPL_NOS.has(emplNo)) {
+      return fail(res, "Bạn không có quyền chọn tất cả nhân sự");
+    }
+
     const rows = await repo.searchEmployees({
       ctrCd,
-      keyword: DATA?.keyword || "",
-      limit: DATA?.limit || 30,
+      keyword: wantAll ? "" : DATA?.keyword || "",
+      limit: wantAll ? ALL_EMPLOYEES_LIMIT : DATA?.limit || 30,
     });
     ok(
       res,
