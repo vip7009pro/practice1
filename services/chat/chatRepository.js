@@ -164,7 +164,7 @@ async function listConversations({ ctrCd, emplNo }) {
   return queryRows(
     `SELECT c.CONVERSATION_ID, c.CONV_TYPE, c.TITLE, c.AVATAR, c.OWNER_EMPL_NO,
             c.LAST_MESSAGE_ID, c.LAST_MESSAGE_AT, c.CREATED_AT,
-            p.ROLE, p.MUTED, p.LAST_READ_MESSAGE_ID,
+            p.ROLE, p.MUTED, p.PINNED_AT, p.LAST_READ_MESSAGE_ID,
             m.SENDER_EMPL_NO AS LAST_SENDER, m.MSG_TYPE AS LAST_TYPE,
             m.CONTENT AS LAST_CONTENT, m.CREATED_AT AS LAST_CREATED_AT,
             m.DELETED_AT AS LAST_DELETED_AT,
@@ -179,8 +179,30 @@ async function listConversations({ ctrCd, emplNo }) {
      LEFT JOIN ZTB_CHAT_MESSAGE m ON m.MESSAGE_ID = c.LAST_MESSAGE_ID
      WHERE p.EMPL_NO = @EMPL_NO AND p.CTR_CD = @CTR_CD
        AND p.LEFT_AT IS NULL AND c.DELETED_AT IS NULL
-     ORDER BY ISNULL(c.LAST_MESSAGE_AT, c.CREATED_AT) DESC`,
+     -- Ghim trước (ghim MỚI hơn lên trên), rồi tới phòng có hoạt động mới nhất.
+     ORDER BY CASE WHEN p.PINNED_AT IS NULL THEN 1 ELSE 0 END,
+              p.PINNED_AT DESC,
+              ISNULL(c.LAST_MESSAGE_AT, c.CREATED_AT) DESC`,
     { CTR_CD: ctrCd, EMPL_NO: emplNo }
+  );
+}
+
+/**
+ * Ghim / bỏ ghim 1 phòng cho RIÊNG người dùng hiện tại.
+ * Ghim lại lần nữa ⇒ cập nhật lại mốc thời gian để được đẩy lên đầu danh sách.
+ */
+async function setConversationPinned({ ctrCd, conversationId, emplNo, pinned }) {
+  return queryOne(
+    `UPDATE ZTB_CHAT_PARTICIPANT
+     SET PINNED_AT = CASE WHEN @PINNED = 1 THEN GETDATE() ELSE NULL END
+     OUTPUT INSERTED.PINNED_AT
+     WHERE CONVERSATION_ID = @CONVERSATION_ID AND CTR_CD = @CTR_CD AND EMPL_NO = @EMPL_NO`,
+    {
+      CONVERSATION_ID: conversationId,
+      CTR_CD: ctrCd,
+      EMPL_NO: emplNo,
+      PINNED: pinned ? 1 : 0,
+    }
   );
 }
 
@@ -962,6 +984,7 @@ module.exports = {
   reviveConversation,
   ensureParticipant,
   listConversations,
+  setConversationPinned,
   listMembersForConversations,
   getParticipant,
   listActiveMemberNos,

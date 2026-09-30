@@ -130,6 +130,10 @@ function buildConversationView(conversation, members, myEmplNo) {
     OWNER_EMPL_NO: conversation.OWNER_EMPL_NO || null,
     MY_ROLE: (all.find((m) => m.EMPL_NO === myEmplNo) || {}).ROLE || "MEMBER",
     MUTED: Boolean(conversation.MUTED),
+    // Ghim là thuộc tính RIÊNG của từng người (lưu ở participant).
+    PINNED_AT: conversation.PINNED_AT || null,
+    // Mốc thời gian tạo — FE dùng làm khoá sắp xếp khi phòng chưa có tin nhắn.
+    CREATED_AT: conversation.CREATED_AT || null,
     UNREAD_COUNT: Number(conversation.UNREAD_COUNT) || 0,
     LAST_MESSAGE: conversation.LAST_MESSAGE_ID
       ? {
@@ -1139,6 +1143,34 @@ exports.chatUpdateGroup = async (req, res, DATA) => {
   } catch (error) {
     console.error("[chatUpdateGroup]", error);
     fail(res, "Không cập nhật được nhóm");
+  }
+};
+
+/**
+ * Ghim / bỏ ghim cuộc trò chuyện cho RIÊNG người dùng hiện tại.
+ * Ghim là tuỳ chọn cá nhân (không ảnh hưởng người khác trong phòng) nên KHÔNG phát socket.
+ */
+exports.chatPinConversation = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không thuộc phòng chat này");
+
+    // Mặc định ghim; client gửi pinned=false để bỏ ghim.
+    const pinned = DATA?.pinned === undefined ? true : Boolean(DATA.pinned);
+    const row = await repo.setConversationPinned({ ctrCd, conversationId, emplNo, pinned });
+    if (!row) return fail(res, "Không ghim được cuộc trò chuyện");
+
+    ok(res, { conversationId, pinned, pinnedAt: row.PINNED_AT || null });
+  } catch (error) {
+    console.error("[chatPinConversation]", error);
+    fail(res, "Không ghim được cuộc trò chuyện");
   }
 };
 

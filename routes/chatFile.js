@@ -4,7 +4,8 @@
  * Khác `/uploadfile` hiện có (phục vụ file ERP chung, auth mở), route này:
  *  - BẮT BUỘC xác thực JWT (cookie/Bearer/query token).
  *  - Chỉ cho upload khi user là thành viên đang hoạt động của phòng chat.
- *  - Giới hạn 1GB/tệp (đổi bằng env CHAT_UPLOAD_MAX_BYTES) và allowlist MIME.
+ *  - Giới hạn 1GB/tệp (đổi bằng env CHAT_UPLOAD_MAX_BYTES); MẶC ĐỊNH CHO PHÉP MỌI ĐỊNH DẠNG
+ *    (trước đây dùng allowlist nên các đuôi lạ như .dwg/.psd/.json bị trả 400).
  *  - Tên file lưu ngẫu nhiên, KHÔNG phục vụ qua đường dẫn tĩnh đoán được.
  *  - Tải file phải qua endpoint kiểm tra quyền thành viên.
  */
@@ -108,6 +109,25 @@ const EXT_ALLOWED = new Set([
   ".ogg",
 ]);
 
+/**
+ * Chính sách định dạng tệp.
+ *
+ * Mặc định: CHO PHÉP MỌI ĐỊNH DẠNG (kể cả tệp không có đuôi) — yêu cầu nghiệp vụ
+ * "gửi được tất cả các loại file". Hai biến môi trường để siết lại khi cần:
+ *  - `CHAT_UPLOAD_STRICT_TYPES=true` ⇒ quay về allowlist ALLOWED_MIME/EXT_ALLOWED.
+ *  - `CHAT_BLOCKED_EXTS=.exe,.bat,.cmd` ⇒ chặn thêm một số đuôi cụ thể (mặc định: không chặn gì).
+ */
+const STRICT_TYPES =
+  String(process.env.CHAT_UPLOAD_STRICT_TYPES || "").toLowerCase() === "true";
+
+const BLOCKED_EXT = new Set(
+  String(process.env.CHAT_BLOCKED_EXTS || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+    .map((value) => (value.startsWith(".") ? value : `.${value}`))
+);
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     try {
@@ -163,7 +183,13 @@ router.post(
       }
 
       const ext = path.extname(req.file.originalname || "").toLowerCase();
-      if (!ALLOWED_MIME.has(req.file.mimetype) || !EXT_ALLOWED.has(ext)) {
+      // Mặc định cho phép mọi loại tệp; chỉ chặn khi cấu hình explicitly
+      // hoặc khi bật lại chế độ allowlist cũ bằng CHAT_UPLOAD_STRICT_TYPES=true.
+      if (BLOCKED_EXT.has(ext)) {
+        cleanup();
+        return res.status(400).send({ tk_status: "NG", message: "Định dạng file này bị chặn" });
+      }
+      if (STRICT_TYPES && (!ALLOWED_MIME.has(req.file.mimetype) || !EXT_ALLOWED.has(ext))) {
         cleanup();
         return res.status(400).send({ tk_status: "NG", message: "Định dạng file không được phép" });
       }
