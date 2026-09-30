@@ -108,6 +108,17 @@ function fullName(row) {
     .trim();
 }
 
+/**
+ * Hậu tố phòng ban hiển thị kèm tên: ` [Phòng ban chính]-[Bộ phận]`.
+ * Trả về chuỗi rỗng khi nhân sự chưa gán phòng ban (không hiện "[]-[]").
+ */
+function deptSuffix(row) {
+  const main = String(row?.MAINDEPTNAME || "").trim();
+  const sub = String(row?.SUBDEPTNAME || "").trim();
+  if (!main && !sub) return "";
+  return ` [${main}]-[${sub}]`;
+}
+
 function memberView(row) {
   return {
     EMPL_NO: row.EMPL_NO,
@@ -115,6 +126,8 @@ function memberView(row) {
     FULL_NAME: fullName(row) || row.EMPL_NO,
     EMPL_IMAGE: row.EMPL_IMAGE || "N",
     JOB_NAME: row.JOB_NAME || null,
+    MAINDEPTNAME: row.MAINDEPTNAME || null,
+    SUBDEPTNAME: row.SUBDEPTNAME || null,
     ROLE: row.ROLE,
     LEFT_AT: row.LEFT_AT || null,
     // Mốc tin nhắn cuối cùng người này đã đọc — FE dùng để đếm/liệt kê "ai đã xem".
@@ -181,7 +194,8 @@ function buildConversationView(conversation, members, myEmplNo, pinned = []) {
   const displayName = isSelf
     ? conversation.TITLE || "My Files"
     : isDirect
-      ? (peer && (peer.FULL_NAME || peer.EMPL_NO)) || "Hội thoại"
+      ? // Chat 1-1: hiện TÊN + phòng ban để biết đồng nghiệp thuộc bộ phận nào.
+        (peer && `${peer.FULL_NAME || peer.EMPL_NO}${deptSuffix(peer)}`) || "Hội thoại"
       : conversation.TITLE || active.map((m) => m.FULL_NAME || m.EMPL_NO).join(", ");
 
   return {

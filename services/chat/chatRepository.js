@@ -267,13 +267,22 @@ async function listMembersForConversations({ ctrCd, conversationIds }) {
   return queryRows(
     `SELECT p.CONVERSATION_ID, LTRIM(RTRIM(p.EMPL_NO)) AS EMPL_NO, p.ROLE, p.LEFT_AT,
             p.LAST_READ_MESSAGE_ID,
-            e.CMS_ID, e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE, j.JOB_NAME
+            e.CMS_ID, e.FIRST_NAME, e.MIDLAST_NAME, e.EMPL_IMAGE, j.JOB_NAME,
+            wp.SUBDEPTCODE, sd.SUBDEPTNAME, md.MAINDEPTNAME
      FROM ZTB_CHAT_PARTICIPANT p
      -- Cột ZTBEMPLINFO.EMPL_NO có thể chứa khoảng trắng ở đầu ⇒ so khớp sau khi trim,
      -- nếu không thì tên/ảnh của nhân sự đó không resolve (hiện ra mã nhân viên).
      LEFT JOIN ZTBEMPLINFO e
             ON e.CTR_CD = p.CTR_CD AND LTRIM(RTRIM(e.EMPL_NO)) = LTRIM(RTRIM(p.EMPL_NO))
      LEFT JOIN ZTBJOB j ON j.JOB_CODE = e.JOB_CODE AND j.CTR_CD = e.CTR_CD
+     -- Phòng ban: ZTBEMPLINFO KHÔNG có cột phòng ban ⇒ phải đi qua chức vụ (chuỗi join đã
+     -- kiểm chứng, xem ghi chú trong bộ nhớ repo). Tên bảng là ZTBMAINDEPARMENT (1 chữ R).
+     LEFT JOIN ZTBWORKPOSITION wp
+            ON wp.WORK_POSITION_CODE = e.WORK_POSITION_CODE AND wp.CTR_CD = e.CTR_CD
+     LEFT JOIN ZTBSUBDEPARTMENT sd
+            ON sd.SUBDEPTCODE = wp.SUBDEPTCODE AND sd.CTR_CD = wp.CTR_CD
+     LEFT JOIN ZTBMAINDEPARMENT md
+            ON md.MAINDEPTCODE = sd.MAINDEPTCODE AND md.CTR_CD = sd.CTR_CD
      WHERE p.CTR_CD = @CTR_CD AND p.CONVERSATION_ID IN (${ids.join(",")})
      ORDER BY p.CONVERSATION_ID, EMPL_NO`,
     { CTR_CD: ctrCd }
