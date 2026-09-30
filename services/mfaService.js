@@ -372,7 +372,14 @@ exports.verifyMfaLogin = async (req, res, DATA) => {
       { expiresIn: "24h" }
     );
 
-    res.cookie("token", token);
+    // PHẢI có maxAge khớp expiresIn của JWT (24h), nếu không cookie là session cookie:
+    // đóng hẳn trình duyệt là mất token dù JWT vẫn còn hạn.
+    res.cookie("token", token, {
+      path: "/",
+      httpOnly: false,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     return res.send({
       tk_status: "OK",
       token_content: token,

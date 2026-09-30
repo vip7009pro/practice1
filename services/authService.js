@@ -171,7 +171,14 @@ exports.login = async (req, res, DATA) => {
         "nguyenvanhung",
         { expiresIn: "24h" }
       );
-      res.cookie("token", token);
+      // PHẢI có maxAge khớp expiresIn của JWT, nếu không cookie là session cookie:
+      // đóng hẳn trình duyệt là mất token dù JWT vẫn còn 24h → báo "hết phiên" ngoài ý muốn.
+      res.cookie("token", token, {
+        path: "/",
+        httpOnly: false,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
       res.send({
         tk_status: "ok",
         token_content: token,
