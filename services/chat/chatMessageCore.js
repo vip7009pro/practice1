@@ -90,6 +90,13 @@ async function sendMessage({
     forwardedFromMessageId,
   });
 
+  // Có tin nhắn đầu tiên ⇒ MỞ phòng cho mọi thành viên (bỏ ẩn phòng DIRECT vừa tạo nhưng chưa gõ).
+  try {
+    await repo.startConversation({ conversationId });
+  } catch (error) {
+    console.warn("[chat] không mở được phòng cho thành viên:", error?.message || error);
+  }
+
   const members = await repo.listActiveMemberNos({ conversationId });
 
   return {
@@ -101,7 +108,6 @@ async function sendMessage({
     memberNos: members.map((row) => row.EMPL_NO),
   };
 }
-
 function replySnippet(row) {
   if (!row) return null;
   const raw = String(row.CONTENT || "").trim();

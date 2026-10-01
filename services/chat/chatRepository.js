@@ -157,21 +157,80 @@ async function reviveConversation({ conversationId }) {
 }
 
 /** Đảm bảo 1 người có mặt và đang hoạt động trong phòng (thêm lại nếu đã rời). */
-async function ensureParticipant({ ctrCd, conversationId, emplNo, role = "MEMBER" }) {
+async function ensureParticipant({ ctrCd, conversationId, emplNo, role = "MEMBER", visible }) {
   const pool = await openConnection();
+  // `visible` bỏ trống ⇒ KHÔNG đụng tới HIDDEN (giữ nguyên trạng thái ẩn/hiện hiện có).
+  const hidden = visible === undefined ? null : visible ? 0 : 1;
   await pool.query(
     `IF EXISTS (SELECT 1 FROM ZTB_CHAT_PARTICIPANT WHERE CONVERSATION_ID=@CONVERSATION_ID AND EMPL_NO=@EMPL_NO)
-       UPDATE ZTB_CHAT_PARTICIPANT SET LEFT_AT = NULL WHERE CONVERSATION_ID=@CONVERSATION_ID AND EMPL_NO=@EMPL_NO
+       UPDATE ZTB_CHAT_PARTICIPANT
+          SET LEFT_AT = NULL${hidden === null ? "" : ", HIDDEN = @HIDDEN"}
+        WHERE CONVERSATION_ID=@CONVERSATION_ID AND EMPL_NO=@EMPL_NO
      ELSE
-       INSERT INTO ZTB_CHAT_PARTICIPANT (CONVERSATION_ID, EMPL_NO, CTR_CD, ROLE)
-       VALUES (@CONVERSATION_ID, @EMPL_NO, @CTR_CD, @ROLE)`,
+       INSERT INTO ZTB_CHAT_PARTICIPANT (CONVERSATION_ID, EMPL_NO, CTR_CD, ROLE, HIDDEN)
+       VALUES (@CONVERSATION_ID, @EMPL_NO, @CTR_CD, @ROLE, ${hidden === null ? "0" : "@HIDDEN"})`,
     {
       CONVERSATION_ID: Number(conversationId),
       EMPL_NO: String(emplNo).trim().toUpperCase(),
       CTR_CD: ctrCd,
       ROLE: role,
+      ...(hidden === null ? {} : { HIDDEN: hidden }),
     }
   );
+}
+
+/** Ẩn/hiện phòng chat với RIÊNG 1 người (dùng cho phòng DIRECT chưa gõ tin). */
+async function setParticipantVisibility({ conversationId, emplNo, visible }) {
+  const pool = await openConnection();
+  await pool.query(
+    `UPDATE ZTB_CHAT_PARTICIPANT SET HIDDEN = @HIDDEN
+      WHERE CONVERSATION_ID = @CONVERSATION_ID AND EMPL_NO = @EMPL_NO`,
+    {
+      CONVERSATION_ID: Number(conversationId),
+      EMPL_NO: String(emplNo).trim().toUpperCase(),
+      HIDDEN: visible ? 0 : 1,
+    }
+  );
+}
+
+/** Có tin nhắn đầu tiên ⇒ mở phòng cho TẤT CẢ thành viên (bỏ ẩn HIDDEN). */
+async function startConversation({ conversationId }) {
+  const pool = await openConnection();
+  await pool.query(
+    `UPDATE ZTB_CHAT_PARTICIPANT SET HIDDEN = 0
+      WHERE CONVERSATION_ID = @CONVERSATION_ID AND HIDDEN <> 0`,
+    { CONVERSATION_ID: Number(conversationId) }
+  );
+}
+
+/**
+ * "Xoá phòng chat" theo RIÊNG 1 người: ẩn toàn bộ lịch sử hiện có (không xoá vật lý),
+ * đánh dấu đã đọc tới mốc đó. Tin nhắn MỚI hơn vẫn hiện và làm phòng xuất hiện lại.
+ */
+async function clearConversationForUser({ ctrCd, conversationId, emplNo }) {
+  const row = await queryOne(
+    `SELECT ISNULL(MAX(MESSAGE_ID), 0) AS LAST_ID FROM ZTB_CHAT_MESSAGE
+      WHERE CONVERSATION_ID = @CONVERSATION_ID`,
+    { CONVERSATION_ID: Number(conversationId) }
+  );
+  const lastId = Number(row?.LAST_ID) || 0;
+  const pool = await openConnection();
+  await pool.query(
+    `UPDATE ZTB_CHAT_PARTICIPANT
+        SET CLEARED_BEFORE_MESSAGE_ID = @LAST_ID,
+            LAST_READ_MESSAGE_ID = CASE
+              WHEN LAST_READ_MESSAGE_ID IS NULL OR LAST_READ_MESSAGE_ID < @LAST_ID THEN @LAST_ID
+              ELSE LAST_READ_MESSAGE_ID END,
+            PINNED_AT = NULL
+      WHERE CONVERSATION_ID = @CONVERSATION_ID AND CTR_CD = @CTR_CD AND EMPL_NO = @EMPL_NO`,
+    {
+      CONVERSATION_ID: Number(conversationId),
+      CTR_CD: ctrCd,
+      EMPL_NO: String(emplNo).trim().toUpperCase(),
+      LAST_ID: lastId,
+    }
+  );
+  return lastId;
 }
 
 async function listConversations({ ctrCd, emplNo }) {
@@ -179,6 +238,7 @@ async function listConversations({ ctrCd, emplNo }) {
     `SELECT c.CONVERSATION_ID, c.CONV_TYPE, c.TITLE, c.AVATAR, c.OWNER_EMPL_NO,
             c.LAST_MESSAGE_ID, c.LAST_MESSAGE_AT, c.CREATED_AT,
             p.ROLE, p.MUTED, p.MUTED_UNTIL, p.PINNED_AT, p.LAST_READ_MESSAGE_ID,
+            p.HIDDEN, p.CLEARED_BEFORE_MESSAGE_ID,
             -- Số giây còn tắt thông báo (NULL = đang nhận). Tính bằng giờ máy chủ để FE
             -- không phải xử lý lệch múi giờ.
             -- ⚠️ Mốc "cho tới khi mở lại" là 9999-12-31 ⇒ DATEDIFF(SECOND...) sẽ TRÀN INT
@@ -195,6 +255,7 @@ async function listConversations({ ctrCd, emplNo }) {
               WHERE um.CONVERSATION_ID = c.CONVERSATION_ID
                 AND um.DELETED_AT IS NULL
                 AND um.SENDER_EMPL_NO <> @EMPL_NO
+                AND um.MESSAGE_ID > p.CLEARED_BEFORE_MESSAGE_ID
                 AND (p.LAST_READ_MESSAGE_ID IS NULL OR um.MESSAGE_ID > p.LAST_READ_MESSAGE_ID)
             ) AS UNREAD_COUNT
      FROM ZTB_CHAT_PARTICIPANT p
@@ -202,6 +263,13 @@ async function listConversations({ ctrCd, emplNo }) {
      LEFT JOIN ZTB_CHAT_MESSAGE m ON m.MESSAGE_ID = c.LAST_MESSAGE_ID
      WHERE p.EMPL_NO = @EMPL_NO AND p.CTR_CD = @CTR_CD
        AND p.LEFT_AT IS NULL AND c.DELETED_AT IS NULL
+       -- Phòng DIRECT vừa tạo mà CHƯA gõ tin nào ⇒ chỉ người tạo thấy (đợt: ẩn phòng rỗng).
+       AND p.HIDDEN = 0
+       -- "Xoá phòng chat" = ẩn lịch sử cũ; phòng biến mất cho tới khi có tin MỚI hơn mốc xoá.
+       AND (
+         p.CLEARED_BEFORE_MESSAGE_ID = 0
+         OR (c.LAST_MESSAGE_ID IS NOT NULL AND c.LAST_MESSAGE_ID > p.CLEARED_BEFORE_MESSAGE_ID)
+       )
      -- Ghim trước (ghim MỚI hơn lên trên), rồi tới phòng có hoạt động mới nhất.
      ORDER BY CASE WHEN p.PINNED_AT IS NULL THEN 1 ELSE 0 END,
               p.PINNED_AT DESC,
@@ -339,6 +407,10 @@ async function listMessages({ conversationId, beforeMessageId, afterMessageId, l
     `SELECT TOP (@LIMIT) m.* FROM ZTB_CHAT_MESSAGE m
      WHERE m.CONVERSATION_ID = @CONVERSATION_ID
        ${cursorClause}
+       -- "Xoá phòng chat" theo từng người: bỏ qua các tin cũ hơn mốc xoá của người xem.
+       AND m.MESSAGE_ID > ISNULL((
+         SELECT CLEARED_BEFORE_MESSAGE_ID FROM ZTB_CHAT_PARTICIPANT
+         WHERE CONVERSATION_ID = @CONVERSATION_ID AND EMPL_NO = @VIEWER), 0)
        AND NOT EXISTS (
          SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
          WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER
@@ -936,6 +1008,7 @@ async function searchMessages({
   toDate,
   fileKind,
   onlyWithFiles,
+  hasLink,
   beforeMessageId,
   limit = 30,
 }) {
@@ -949,6 +1022,9 @@ async function searchMessages({
     "m.DELETED_AT IS NULL",
     "c.DELETED_AT IS NULL",
     "p.LEFT_AT IS NULL",
+    // Tôn trọng "xoá phòng chat" của người xem: bỏ qua tin cũ hơn mốc đã xoá.
+    `m.MESSAGE_ID > ISNULL((SELECT cp.CLEARED_BEFORE_MESSAGE_ID FROM ZTB_CHAT_PARTICIPANT cp
+                              WHERE cp.CONVERSATION_ID = m.CONVERSATION_ID AND cp.EMPL_NO = @VIEWER), 0)`,
     `NOT EXISTS (SELECT 1 FROM ZTB_CHAT_MESSAGE_HIDDEN h
                    WHERE h.MESSAGE_ID = m.MESSAGE_ID AND h.EMPL_NO = @VIEWER)`,
   ];
@@ -1008,6 +1084,13 @@ async function searchMessages({
     );
   }
 
+  // Lọc "tin có chứa liên kết" (Link) — nhận diện http/https hoặc www. trong nội dung.
+  if (hasLink) {
+    conditions.push(
+      "(m.CONTENT LIKE '%http://%' OR m.CONTENT LIKE '%https://%' OR m.CONTENT LIKE '%www.%')"
+    );
+  }
+
   return queryRows(
     `SELECT TOP (@LIMIT) m.MESSAGE_ID, m.CONVERSATION_ID, m.SENDER_EMPL_NO, m.MSG_TYPE,
             m.CONTENT, m.CREATED_AT, m.DELETED_AT, c.CONV_TYPE
@@ -1037,6 +1120,8 @@ async function listConversationMedia({
   conversationId,
   emplNo,
   fileKind,
+  keyword,
+  senderEmplNo,
   fromDate,
   toDate,
   beforeAttachmentId,
@@ -1045,14 +1130,28 @@ async function listConversationMedia({
   const safeLimit = Math.min(Math.max(Number(limit) || 60, 1), 200);
   const viewer = String(emplNo || "").trim().toUpperCase();
   const kindPredicate = buildFileKindPredicate("a", fileKind);
+  const text = String(keyword || "").trim();
+  const sender = String(senderEmplNo || "").trim().toUpperCase();
 
   const conditions = [
     "a.CONVERSATION_ID = @CONVERSATION_ID",
     "a.DELETED_AT IS NULL",
     "a.MESSAGE_ID IS NOT NULL",
     "m.DELETED_AT IS NULL",
+    // Tôn trọng "xoá phòng chat" của người xem.
+    `m.MESSAGE_ID > ISNULL((SELECT cp.CLEARED_BEFORE_MESSAGE_ID FROM ZTB_CHAT_PARTICIPANT cp
+                              WHERE cp.CONVERSATION_ID = a.CONVERSATION_ID AND cp.EMPL_NO = @VIEWER), 0)`,
   ];
   const params = { LIMIT: safeLimit, CONVERSATION_ID: Number(conversationId), VIEWER: viewer };
+
+  if (text) {
+    conditions.push("(a.ORIGINAL_NAME LIKE @LIKE OR m.CONTENT LIKE @LIKE)");
+    params.LIKE = `%${text}%`;
+  }
+  if (sender) {
+    conditions.push("m.SENDER_EMPL_NO = @SENDER");
+    params.SENDER = sender;
+  }
 
   const cursor = Number(beforeAttachmentId);
   if (Number.isInteger(cursor) && cursor > 0) {
@@ -1116,6 +1215,9 @@ module.exports = {
   findDirectConversation,
   reviveConversation,
   ensureParticipant,
+  setParticipantVisibility,
+  startConversation,
+  clearConversationForUser,
   listConversations,
   setConversationPinned,
   setConversationMute,

@@ -109,14 +109,13 @@ function fullName(row) {
 }
 
 /**
- * Hậu tố phòng ban hiển thị kèm tên: ` [Phòng ban chính]-[Bộ phận]`.
- * Trả về chuỗi rỗng khi nhân sự chưa gán phòng ban (không hiện "[]-[]").
+ * Hậu tố bộ phận hiển thị kèm tên: ` [Bộ phận]`.
+ * Trước đây hiện cả `[Phòng ban chính]-[Bộ phận]`, nay chỉ giữ BỘ PHẬN cho gọn.
+ * Trả về chuỗi rỗng khi nhân sự chưa gán bộ phận (không hiện "[]").
  */
 function deptSuffix(row) {
-  const main = String(row?.MAINDEPTNAME || "").trim();
   const sub = String(row?.SUBDEPTNAME || "").trim();
-  if (!main && !sub) return "";
-  return ` [${main}]-[${sub}]`;
+  return sub ? ` [${sub}]` : "";
 }
 
 function memberView(row) {
@@ -184,10 +183,11 @@ async function loadPinnedByConversation({ conversationIds }) {
 function buildConversationView(conversation, members, myEmplNo, pinned = []) {
   const all = (members || []).map(memberView);
   const active = all.filter((m) => !m.LEFT_AT);
-  const others = active.filter((m) => m.EMPL_NO !== myEmplNo);
   const isSelf = conversation.CONV_TYPE === "SELF";
   const isDirect = conversation.CONV_TYPE === "DIRECT";
-  const peer = isDirect ? others[0] : null;
+  // DIRECT: lấy người còn lại từ TẤT CẢ thành viên (kể cả đang rời) để vẫn hiện đúng
+  // tên/avatar khi phòng vừa tạo — phòng rỗng ẩn với đối phương nhưng người tạo vẫn thấy tên.
+  const peer = isDirect ? all.find((m) => m.EMPL_NO !== myEmplNo) || null : null;
   const mutedSecondsLeft = Number(conversation.MUTED_SECONDS_LEFT);
   const muted = Number.isFinite(mutedSecondsLeft) && mutedSecondsLeft > 0;
 
@@ -296,14 +296,18 @@ async function createConversationWithMembers({
     const unique = [...new Set(memberEmplNos.map((v) => String(v).trim().toUpperCase()).filter(Boolean))];
 
     for (const emplNo of unique) {
+      // DIRECT vừa tạo chưa có tin ⇒ ẩn phòng với ĐỐI PHƯƠNG (chỉ người tạo thấy),
+      // cho tới khi ai đó gửi tin đầu tiên (repo.startConversation mở lại cho mọi người).
+      const hidden = convType === "DIRECT" && emplNo !== ownerEmplNo ? 1 : 0;
       await query(
-        `INSERT INTO ZTB_CHAT_PARTICIPANT (CONVERSATION_ID, EMPL_NO, CTR_CD, ROLE)
-         VALUES (@CONVERSATION_ID, @EMPL_NO, @CTR_CD, @ROLE)`,
+        `INSERT INTO ZTB_CHAT_PARTICIPANT (CONVERSATION_ID, EMPL_NO, CTR_CD, ROLE, HIDDEN)
+         VALUES (@CONVERSATION_ID, @EMPL_NO, @CTR_CD, @ROLE, @HIDDEN)`,
         {
           CONVERSATION_ID: conversation.CONVERSATION_ID,
           EMPL_NO: emplNo,
           CTR_CD: ctrCd,
           ROLE: emplNo === ownerEmplNo ? "OWNER" : "MEMBER",
+          HIDDEN: hidden,
         }
       );
     }
@@ -524,17 +528,29 @@ exports.chatGetOrCreateDirect = async (req, res, DATA) => {
 
     // Bảo đảm cả 2 phía đang hoạt động (trường hợp trước đó đã rời/đóng).
     const ownerEmplNo = conversation.OWNER_EMPL_NO;
+    const hasMessages = Boolean(conversation.LAST_MESSAGE_ID);
+    const creator = String(ownerEmplNo || "").trim().toUpperCase();
+
+    // Người gọi luôn HIỆN phòng (họ chủ động mở hội thoại này).
     await repo.ensureParticipant({
       ctrCd,
       conversationId: conversation.CONVERSATION_ID,
       emplNo,
       role: ownerEmplNo === emplNo ? "OWNER" : "MEMBER",
+      visible: true,
     });
+
+    // Đối phương:
+    //  - Phòng đã có tin, HOẶC chính họ là người tạo ⇒ hiện bình thường.
+    //  - Ngược lại (DIRECT mới toanh, chưa gõ gì) ⇒ giữ ẩn, KHÔNG đụng tới để tránh
+    //    vô tình ẩn mất phòng với người đã từng mở nó trước đó.
+    const showOther = hasMessages || creator === String(other).toUpperCase();
     await repo.ensureParticipant({
       ctrCd,
       conversationId: conversation.CONVERSATION_ID,
       emplNo: other,
       role: ownerEmplNo === other ? "OWNER" : "MEMBER",
+      ...(showOther ? { visible: true } : {}),
     });
 
     const view = await loadConversationView({
@@ -544,8 +560,9 @@ exports.chatGetOrCreateDirect = async (req, res, DATA) => {
     });
 
     if (changed) {
-      // Cả 2 phía cần biết phòng mới/được mở lại để hiển thị ngay.
-      emitToUsers([emplNo, other], "chat:conversation-updated", {
+      // Người tạo thấy ngay. Chỉ báo cho đối phương khi phòng đã thực sự "bắt đầu"
+      // (đã có tin) — nếu không họ sẽ thấy phòng rỗng nhấp nháy rồi biến mất.
+      emitToUsers(hasMessages ? [emplNo, other] : [emplNo], "chat:conversation-updated", {
         conversationId: conversation.CONVERSATION_ID,
         created: true,
       });
@@ -792,6 +809,114 @@ exports.chatDeleteMessage = async (req, res, DATA) => {
     ok(res, { conversationId, messageId });
   } catch (error) {
     console.error("[chatDeleteMessage]", error);
+    fail(res, "Không xoá được tin nhắn");
+  }
+};
+
+/**
+ * "Xoá phòng chat" theo RIÊNG người dùng hiện tại (KHÁC "rời nhóm").
+ * Ẩn toàn bộ lịch sử hiện có; phòng biến mất khỏi danh sách cho tới khi có tin MỚI hơn mốc xoá.
+ * Không xoá dữ liệu vật lý, các thành viên khác vẫn thấy bình thường.
+ */
+exports.chatDeleteConversation = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+
+    const clearedBefore = await repo.clearConversationForUser({ ctrCd, conversationId, emplNo });
+    await repo.writeAudit({
+      ctrCd,
+      conversationId,
+      actor: emplNo,
+      action: "CONVERSATION_CLEARED",
+      target: String(conversationId),
+      detail: String(clearedBefore),
+    });
+
+    // Chỉ ảnh hưởng người xoá ⇒ phát riêng cho họ (các tab khác của họ cũng xoá).
+    emitToUsers([emplNo], "chat:conversation-cleared", { conversationId, clearedBefore });
+    ok(res, { conversationId, clearedBefore });
+  } catch (error) {
+    console.error("[chatDeleteConversation]", error);
+    fail(res, "Không xoá được phòng chat");
+  }
+};
+
+/**
+ * Xoá NHIỀU tin nhắn một lượt (từ chế độ chọn nhiều).
+ *  - mode "hide"   ⇒ "xoá ở phía tôi": ẩn với riêng người dùng.
+ *  - mode "recall" ⇒ thu hồi với cả hai phía (chỉ tin của mình / khi có quyền kiểm duyệt).
+ */
+exports.chatDeleteMessages = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    const messageIds = Array.isArray(DATA?.messageIds)
+      ? [
+          ...new Set(
+            DATA.messageIds
+              .map((v) => Number(v))
+              .filter((v) => Number.isInteger(v) && v > 0)
+          ),
+        ]
+      : [];
+    const mode = String(DATA?.mode || "hide").toLowerCase();
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0 || messageIds.length === 0) {
+      return fail(res, "Tin nhắn không hợp lệ");
+    }
+    if (messageIds.length > 200) return fail(res, "Chọn tối đa 200 tin nhắn mỗi lượt");
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
+
+    const allowAny = core.hasRole(membership, "MODERATOR");
+    const hidden = [];
+    const recalled = [];
+
+    if (mode === "recall") {
+      for (const messageId of messageIds) {
+        const affected = await repo.softDeleteMessage({
+          conversationId,
+          messageId,
+          actorEmplNo: emplNo,
+          allowAny,
+        });
+        if (affected > 0) recalled.push(messageId);
+      }
+      if (recalled.length > 0) {
+        await repo.writeAudit({
+          ctrCd,
+          conversationId,
+          actor: emplNo,
+          action: "MESSAGES_DELETED",
+          detail: recalled.join(","),
+        });
+        const payload = { conversationId, messageIds: recalled };
+        emitToConversation(conversationId, "chat:messages-deleted", payload);
+        const members = await repo.listActiveMemberNos({ conversationId });
+        emitToUsers(members.map((row) => row.EMPL_NO), "chat:messages-deleted", payload);
+      }
+    } else {
+      for (const messageId of messageIds) {
+        await repo.hideMessageForUser({ messageId, emplNo });
+        hidden.push(messageId);
+      }
+      if (hidden.length > 0) {
+        emitToUsers([emplNo], "chat:messages-hidden", { conversationId, messageIds: hidden });
+      }
+    }
+
+    ok(res, { conversationId, mode, hidden, recalled });
+  } catch (error) {
+    console.error("[chatDeleteMessages]", error);
     fail(res, "Không xoá được tin nhắn");
   }
 };
@@ -1534,6 +1659,7 @@ exports.chatSearchMessages = async (req, res, DATA) => {
       toDate: DATA?.toDate,
       fileKind: DATA?.fileKind,
       onlyWithFiles: Boolean(DATA?.onlyWithFiles),
+      hasLink: Boolean(DATA?.hasLink),
       beforeMessageId: DATA?.beforeMessageId,
       limit: DATA?.limit,
     });
@@ -1564,6 +1690,8 @@ exports.chatListMedia = async (req, res, DATA) => {
       conversationId,
       emplNo,
       fileKind: DATA?.fileKind,
+      keyword: DATA?.keyword,
+      senderEmplNo: DATA?.senderEmplNo,
       fromDate: DATA?.fromDate,
       toDate: DATA?.toDate,
       beforeAttachmentId: DATA?.beforeAttachmentId,
