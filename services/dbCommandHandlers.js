@@ -22,6 +22,8 @@ const commandHandlers = {
   ...require("./schemaAdminService"),
   ...require("./chat/chatRoomService"),
   ...require("./chat/chatFriendService"),
+  ...require("./mail/mailAccountService"),
+  ...require("./mail/mailService"),
 };
 
 module.exports = commandHandlers;

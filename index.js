@@ -17,6 +17,7 @@ const authRoutes = require("./routes/auth");
 const fileUploadRoutes = require("./routes/fileUpload");
 const chatFileRoutes = require("./routes/chatFile");
 const chatAvatarRoutes = require("./routes/chatAvatar");
+const mailFileRoutes = require("./routes/mailFile");
 const apiRoutes = require("./routes/api");
 const aiRoutes = require("./routes/ai");
 const apiVendorsRoutes = require("./routes/apivendors");
@@ -24,6 +25,7 @@ const csharpRoutes = require("./routes/csharp");
 const { corsOptions } = require("./config/env");  
 const pushUtil = require("./utils/pushUtils");
 const { startSchemaScheduler } = require("./services/schemaScheduler");
+const { startMailWorker } = require("./services/mail/mailWorker");
 const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
@@ -78,6 +80,7 @@ app.use("/login", authRoutes);
 app.use("/uploadfile", fileUploadRoutes);
 app.use("/chatfile", chatFileRoutes);
 app.use("/chatavatar", chatAvatarRoutes);
+app.use("/mailfile", mailFileRoutes);
 app.use("/api", apiRoutes);
 app.use("/ai", aiRoutes);
 app.use("/apivendors", apiVendorsRoutes);
@@ -88,6 +91,8 @@ socketHandler(httpServer, httpsServer);
 startSchemaScheduler().catch((e) => {
   console.log('[SchemaScheduler] failed to start', e?.message || e);
 });
+// Mail Worker: đồng bộ mailbox POP3 (chạy nền, không chặn HTTP).
+const mailWorker = startMailWorker();
 const API_PORT = parseInt(process.env.API_PORT);
 const SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
 httpServer.listen(API_PORT, () => console.log(`Server listening on ${API_PORT}`));
@@ -101,6 +106,7 @@ process.on("unhandledRejection", (error) => {
 });
 // Đóng pool khi server dừng
 process.on("SIGINT", async () => {
+  await mailWorker.stop().catch(() => undefined);
   await closePool();
   httpServer.close(() => console.log("HTTP server closed"));
   httpsServer.close(() => console.log("HTTPS server closed"));
