@@ -598,6 +598,31 @@ async function softDeleteMessage({ conversationId, messageId, actorEmplNo, allow
   return result.rowsAffected?.[0] || 0;
 }
 
+/**
+ * Thông tin phục vụ kiểm tra điều kiện THU HỒI tin nhắn:
+ *  - người gửi, đã thu hồi chưa, và số phút đã trôi qua (theo GIỜ MÁY CHỦ).
+ * `GETDATE()` cùng múi giờ với `CREATED_AT` (đều là giờ VN) nên DATEDIFF chuẩn.
+ */
+async function getMessageRecallInfo({ conversationId, messageId }) {
+  return queryOne(
+    `SELECT MESSAGE_ID, LTRIM(RTRIM(SENDER_EMPL_NO)) AS SENDER_EMPL_NO, DELETED_AT,
+            DATEDIFF(MINUTE, CREATED_AT, GETDATE()) AS AGE_MINUTES
+       FROM ZTB_CHAT_MESSAGE
+      WHERE MESSAGE_ID = @MESSAGE_ID AND CONVERSATION_ID = @CONVERSATION_ID`,
+    { MESSAGE_ID: Number(messageId), CONVERSATION_ID: Number(conversationId) }
+  );
+}
+
+/** Mốc đọc cuối của các thành viên CÒN hoạt động (để biết đã có ai xem tin chưa). */
+async function listMemberReadState({ conversationId }) {
+  return queryRows(
+    `SELECT LTRIM(RTRIM(EMPL_NO)) AS EMPL_NO, ISNULL(LAST_READ_MESSAGE_ID, 0) AS LAST_READ_MESSAGE_ID
+       FROM ZTB_CHAT_PARTICIPANT
+      WHERE CONVERSATION_ID = @CONVERSATION_ID AND LEFT_AT IS NULL`,
+    { CONVERSATION_ID: Number(conversationId) }
+  );
+}
+
 async function listAttachmentsByMessageIds({ conversationId, messageIds }) {
   const ids = (messageIds || []).map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
   if (ids.length === 0) return [];
@@ -1231,6 +1256,8 @@ module.exports = {
   insertMessage,
   markRead,
   softDeleteMessage,
+  getMessageRecallInfo,
+  listMemberReadState,
   listAttachmentsByMessageIds,
   getAttachmentById,
   insertAttachment,

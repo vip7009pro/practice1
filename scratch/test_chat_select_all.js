@@ -89,15 +89,17 @@ async function main() {
     tkd ? `FULL_NAME=${tkd.FULL_NAME}` : "không có trong danh sách"
   );
 
-  // 2. Chặn tài khoản thường
-  console.log("\n2) Tài khoản thường KHÔNG được chọn tất cả");
-  const denied = await callApi(otherToken, "chatSearchEmployees", { all: true });
+  // 2. Tài khoản thường NAY cũng được "chọn tất cả" (đã mở cho mọi người).
+  console.log("\n2) Tài khoản thường CŨNG chọn được tất cả");
+  const allowed = await callApi(otherToken, "chatSearchEmployees", { all: true });
+  const allowedList = Array.isArray(allowed.data) ? allowed.data : [];
   check(
-    "Trả NG kèm thông báo chặn",
-    String(denied.tk_status).toUpperCase() === "NG",
-    denied.message || ""
+    "Trả OK cho tài khoản thường",
+    String(allowed.tk_status).toUpperCase() === "OK",
+    allowed.message || ""
   );
-  check("Không lộ danh sách", !Array.isArray(denied.data) || denied.data.length === 0);
+  check("Lấy được danh sách nhân sự", allowedList.length > 200, `${allowedList.length} người`);
+  check("Không chứa chính tài khoản gọi", !allowedList.some((e) => e.EMPL_NO === other));
 
   // 3. Tìm kiếm thường vẫn giữ nguyên hành vi
   console.log("\n3) Tìm kiếm thường không đổi");

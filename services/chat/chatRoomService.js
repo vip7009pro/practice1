@@ -19,18 +19,8 @@ const MAX_GROUP_MEMBERS =
   parseInt(process.env.CHAT_MAX_GROUP_MEMBERS || "0", 10) || 1000;
 
 /**
- * Tài khoản được phép "Chọn tất cả" để tạo phòng TOÀN CÔNG TY
- * (lấy hết danh sách nhân sự đang làm việc trong 1 lần gọi).
- * Đổi bằng env `CHAT_SUPER_ADMINS="NHU1903,ABC123"`.
+ * Trần số nhân sự lấy về cho chế độ "chọn tất cả" (tránh payload vô hạn).
  */
-const SUPER_ADMIN_EMPL_NOS = new Set(
-  String(process.env.CHAT_SUPER_ADMINS || "NHU1903")
-    .split(",")
-    .map((value) => value.trim().toUpperCase())
-    .filter(Boolean)
-);
-
-/** Trần số nhân sự lấy về cho chế độ "chọn tất cả" (tránh payload vô hạn). */
 const ALL_EMPLOYEES_LIMIT =
   parseInt(process.env.CHAT_ALL_EMPLOYEES_LIMIT || "0", 10) || 5000;
 
@@ -443,13 +433,10 @@ exports.chatSearchEmployees = async (req, res, DATA) => {
     const { ctrCd, emplNo } = getCtx(req, DATA);
     if (!ctrCd) return fail(res, "Thiếu thông tin công ty");
 
-    // `all: true` = lấy TOÀN BỘ nhân sự đang làm việc (nút "Chọn tất cả" khi tạo
-    // phòng toàn công ty). Chỉ tài khoản chat quản trị mới được dùng.
+    // `all: true` = lấy TOÀN BỘ nhân sự đang làm việc (nút "Chọn tất cả" / tạo nhóm theo
+    // phòng ban). Nay MỞ cho mọi tài khoản chat (trước đây chỉ whitelist NHU1903).
     const wantAll =
       DATA?.all === true || String(DATA?.all ?? "").toLowerCase() === "true";
-    if (wantAll && !SUPER_ADMIN_EMPL_NOS.has(emplNo)) {
-      return fail(res, "Bạn không có quyền chọn tất cả nhân sự");
-    }
 
     const rows = await repo.searchEmployees({
       ctrCd,
@@ -774,6 +761,44 @@ exports.chatMarkRead = async (req, res, DATA) => {
   }
 };
 
+/** Số phút tối đa để THU HỒI tin đã bị đối phương xem (env CHAT_RECALL_WINDOW_MINUTES). */
+const RECALL_WINDOW_MINUTES =
+  Number(process.env.CHAT_RECALL_WINDOW_MINUTES) > 0
+    ? Number(process.env.CHAT_RECALL_WINDOW_MINUTES)
+    : 10;
+
+/**
+ * Điều kiện THU HỒI tin nhắn (xoá với CẢ HAI phía):
+ *  - CHỈ thu hồi được tin nhắn CỦA CHÍNH MÌNH (kể cả chủ nhóm cũng không thu hồi tin người khác).
+ *  - Được phép khi: đối phương CHƯA XEM, HOẶC trong vòng `RECALL_WINDOW_MINUTES` phút.
+ */
+async function checkRecallAllowed({ conversationId, messageId, emplNo }) {
+  const info = await repo.getMessageRecallInfo({ conversationId, messageId });
+  if (!info) return { ok: false, code: "NOT_FOUND", message: "Tin nhắn không tồn tại" };
+  if (info.DELETED_AT) return { ok: false, code: "DELETED", message: "Tin nhắn đã được thu hồi" };
+
+  const sender = String(info.SENDER_EMPL_NO || "").trim().toUpperCase();
+  if (sender !== emplNo) {
+    return { ok: false, code: "NOT_OWNER", message: "Chỉ có thể thu hồi tin nhắn của chính mình" };
+  }
+
+  const reads = await repo.listMemberReadState({ conversationId });
+  const unseen = reads.some(
+    (row) =>
+      String(row.EMPL_NO).trim().toUpperCase() !== emplNo &&
+      Number(row.LAST_READ_MESSAGE_ID) < Number(messageId)
+  );
+  const withinWindow = Number(info.AGE_MINUTES) <= RECALL_WINDOW_MINUTES;
+  if (!unseen && !withinWindow) {
+    return {
+      ok: false,
+      code: "RECALL_EXPIRED",
+      message: `Đã quá ${RECALL_WINDOW_MINUTES} phút và người nhận đã xem — không thể thu hồi`,
+    };
+  }
+  return { ok: true, unseen, withinWindow };
+}
+
 exports.chatDeleteMessage = async (req, res, DATA) => {
   try {
     const { ctrCd, emplNo } = getCtx(req, DATA);
@@ -787,12 +812,14 @@ exports.chatDeleteMessage = async (req, res, DATA) => {
     const membership = await core.getActiveMembership(conversationId, emplNo);
     if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
 
-    const allowAny = core.hasRole(membership, "MODERATOR");
+    const allowed = await checkRecallAllowed({ conversationId, messageId, emplNo });
+    if (!allowed.ok) return fail(res, allowed.message, allowed.code);
+
     const affected = await repo.softDeleteMessage({
       conversationId,
       messageId,
       actorEmplNo: emplNo,
-      allowAny,
+      allowAny: false,
     });
 
     if (affected === 0) return fail(res, "Không thể xoá tin nhắn này");
@@ -877,19 +904,32 @@ exports.chatDeleteMessages = async (req, res, DATA) => {
     const membership = await core.getActiveMembership(conversationId, emplNo);
     if (!membership) return fail(res, "Bạn không có quyền truy cập phòng chat này");
 
-    const allowAny = core.hasRole(membership, "MODERATOR");
     const hidden = [];
     const recalled = [];
+    let skipped = 0;
 
     if (mode === "recall") {
       for (const messageId of messageIds) {
+        // Mỗi tin vẫn phải thoả điều kiện thu hồi (tin của mình + chưa xem hoặc trong 10 phút).
+        const allowed = await checkRecallAllowed({ conversationId, messageId, emplNo });
+        if (!allowed.ok) {
+          skipped += 1;
+          continue;
+        }
         const affected = await repo.softDeleteMessage({
           conversationId,
           messageId,
           actorEmplNo: emplNo,
-          allowAny,
+          allowAny: false,
         });
         if (affected > 0) recalled.push(messageId);
+        else skipped += 1;
+      }
+      if (recalled.length === 0) {
+        return fail(
+          res,
+          `Không tin nhắn nào đủ điều kiện thu hồi (chỉ tin của mình; trong ${RECALL_WINDOW_MINUTES} phút hoặc chưa được xem)`
+        );
       }
       if (recalled.length > 0) {
         await repo.writeAudit({
@@ -914,7 +954,7 @@ exports.chatDeleteMessages = async (req, res, DATA) => {
       }
     }
 
-    ok(res, { conversationId, mode, hidden, recalled });
+    ok(res, { conversationId, mode, hidden, recalled, skipped });
   } catch (error) {
     console.error("[chatDeleteMessages]", error);
     fail(res, "Không xoá được tin nhắn");
