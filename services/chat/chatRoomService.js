@@ -1331,13 +1331,25 @@ exports.chatLeaveGroup = async (req, res, DATA) => {
       }
     }
 
+    // Thông báo hệ thống phải tạo TRƯỚC khi đánh dấu rời — sau đó người gửi không còn
+    // là thành viên nên `core.sendMessage` sẽ từ chối (FORBIDDEN) và tin báo không hiện.
+    const systemMsg = await core.sendMessage({
+      ctrCd,
+      conversationId,
+      senderEmplNo: emplNo,
+      msgType: "SYSTEM",
+      content: `${getCtx(req, DATA).emplName || emplNo} ${
+        conversation.CONV_TYPE === "GROUP" ? "đã rời nhóm" : "đã rời hội thoại"
+      }`,
+    });
+
     await repo.withTransaction(async ({ query }) => {
       await query(
         `UPDATE ZTB_CHAT_PARTICIPANT SET LEFT_AT = GETDATE(), ROLE = 'MEMBER'
          WHERE CONVERSATION_ID = @CONVERSATION_ID AND EMPL_NO = @EMPL_NO`,
         { CONVERSATION_ID: conversationId, EMPL_NO: emplNo }
       );
-      // Nhóm rỗng ⇒ đóng mềm, KHÔNG xoá vật lý.
+      // Nhóm rỗng ⇒ đóng mềm, KHÔNG xoá vật lý (DIRECT vẫn giữ cho bên còn lại).
       if (active.length <= 1 && conversation.CONV_TYPE === "GROUP") {
         await query(
           `UPDATE ZTB_CHAT_CONVERSATION SET DELETED_AT = GETDATE() WHERE CONVERSATION_ID = @CONVERSATION_ID`,
@@ -1353,22 +1365,14 @@ exports.chatLeaveGroup = async (req, res, DATA) => {
       action: "MEMBER_LEFT",
     });
 
-    emitToUsers([emplNo], "chat:conversation-removed", { conversationId });
-    emitToConversation(conversationId, "chat:members-changed", { conversationId });
-
-    const systemMsg = await core.sendMessage({
-      ctrCd,
-      conversationId,
-      senderEmplNo: emplNo,
-      msgType: "SYSTEM",
-      content: `${getCtx(req, DATA).emplName || emplNo} đã rời nhóm`,
-    });
     if (systemMsg.ok) {
       emitToConversation(conversationId, "chat:message", {
         conversationId,
         message: core.toClientMessage(systemMsg.message),
       });
     }
+    emitToUsers([emplNo], "chat:conversation-removed", { conversationId });
+    emitToConversation(conversationId, "chat:members-changed", { conversationId });
 
     ok(res, { conversationId });
   } catch (error) {
