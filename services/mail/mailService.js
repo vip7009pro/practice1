@@ -104,6 +104,8 @@ exports.emailBootstrap = async (req, res) => {
       hasOwnAccount: !!own,
       ownAccountId: own?.ID || null,
       mutedAccountIds,
+      // Admin có thể tắt tự-cấu-hình (`MAIL_ALLOW_SELF_SERVICE=false`) ⇒ FE ẩn mục "Cấu hình Email của tôi".
+      selfServiceEnabled: String(process.env.MAIL_ALLOW_SELF_SERVICE || "true") !== "false",
     });
   } catch (error) {
     fail(res, error?.message || String(error));
@@ -419,6 +421,48 @@ exports.emailStar = async (req, res, DATA = {}) => {
     await msgRepo.upsertUserState({ messageId: id, emplNo, isStarred });
     emitToUser(emplNo, "email:state", { messageId: id, isStarred, emplNo });
     ok(res, { id, isStarred });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Xoá mềm theo từng người (Phase 8 — retention)                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Xoá email KHỎI HỘP THƯ CỦA NGƯỜI DÙNG (soft-delete theo `ZTB_MAIL_USERSTATE`).
+ * KHÔNG xoá dữ liệu trên POP3 server và KHÔNG xoá file/ metadata dùng chung.
+ */
+exports.emailDelete = async (req, res, DATA = {}) => {
+  try {
+    const { ctrCd, emplNo } = ctx(req);
+    const id = Number(DATA.ID);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, "Thiếu ID email", "INVALID");
+    const message = await loadOwnedMessage(id, ctrCd, emplNo);
+    if (!message) return fail(res, "Không có quyền", "FORBIDDEN");
+
+    const deleted = DATA.RESTORE !== true;
+    await msgRepo.upsertUserState({ messageId: id, emplNo, deleted });
+    emitToUser(emplNo, "email:state", { messageId: id, deleted, emplNo });
+    ok(res, { id, deleted });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/** Khôi phục email đã xoá mềm cho người dùng hiện tại. */
+exports.emailRestore = async (req, res, DATA = {}) => {
+  try {
+    const { ctrCd, emplNo } = ctx(req);
+    const id = Number(DATA.ID);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, "Thiếu ID email", "INVALID");
+    const message = await loadOwnedMessage(id, ctrCd, emplNo);
+    if (!message) return fail(res, "Không có quyền", "FORBIDDEN");
+
+    await msgRepo.upsertUserState({ messageId: id, emplNo, deleted: false });
+    emitToUser(emplNo, "email:state", { messageId: id, deleted: false, emplNo });
+    ok(res, { id, deleted: false });
   } catch (error) {
     fail(res, error?.message || String(error));
   }

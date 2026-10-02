@@ -54,6 +54,18 @@ function requireAdmin(req, res) {
   return true;
 }
 
+/** Tự-cấu-hình có được bật không (admin có thể tắt bằng env `MAIL_ALLOW_SELF_SERVICE`). */
+function isSelfServiceEnabled() {
+  return String(process.env.MAIL_ALLOW_SELF_SERVICE || "true") !== "false";
+}
+
+/** Chặn các thao tác tự-cấu-hình khi admin đã tắt. */
+function requireSelfService(res) {
+  if (isSelfServiceEnabled()) return true;
+  fail(res, "Quản trị viên đã tắt tự cấu hình email. Vui lòng liên hệ bộ phận IT.", "SELF_SERVICE_DISABLED");
+  return false;
+}
+
 /* ------------------------------------------------------------------ */
 /* CRUD mailbox                                                        */
 /* ------------------------------------------------------------------ */
@@ -259,6 +271,7 @@ exports.emailMyAccount = async (req, res) => {
 
 /** Tạo/cập nhật mailbox của chính người dùng (upsert theo EMPL_NO). */
 exports.emailSaveMyAccount = async (req, res, DATA = {}) => {
+  if (!requireSelfService(res)) return;
   try {
     const { ctrCd, emplNo } = ctx(req);
     if (!emplNo) return fail(res, "Không xác định được nhân sự", "UNAUTHORIZED");
@@ -314,6 +327,7 @@ exports.emailSaveMyAccount = async (req, res, DATA = {}) => {
 
 /** Test kết nối POP3 + SMTP cho mailbox của chính người dùng (tham số form hoặc cấu hình đã lưu). */
 exports.emailTestMyAccount = async (req, res, DATA = {}) => {
+  if (!requireSelfService(res)) return;
   try {
     const { ctrCd, emplNo } = ctx(req);
     if (!emplNo) return fail(res, "Không xác định được nhân sự", "UNAUTHORIZED");
@@ -373,6 +387,7 @@ exports.emailTestMyAccount = async (req, res, DATA = {}) => {
 
 /** Xoá cấu hình mailbox của chính người dùng (chỉ khi CHƯA có email nào để tránh mất dữ liệu). */
 exports.emailDeleteMyAccount = async (req, res) => {
+  if (!requireSelfService(res)) return;
   try {
     const { ctrCd, emplNo } = ctx(req);
     if (!emplNo) return fail(res, "Không xác định được nhân sự", "UNAUTHORIZED");
