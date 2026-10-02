@@ -80,6 +80,7 @@ erDiagram
   ZTB_MAIL_ACCOUNT ||--o{ ZTB_MAIL_SYNC_LOG : "MAIL_ACCOUNT_ID"
   ZTB_MAIL_ACCOUNT ||--o{ ZTB_MAIL_SYNC_CHECKPOINT : "MAIL_ACCOUNT_ID"
   ZTB_MAIL_ACCOUNT ||--o{ ZTB_MAIL_MUTE : "MAIL_ACCOUNT_ID"
+  ZTB_MAIL_CONTACT_GROUP ||--o{ ZTB_MAIL_CONTACT_GROUP_MEMBER : "GROUP_ID"
   ZTB_MAIL_MESSAGE ||--o{ ZTB_MAIL_RECIPIENT : "MESSAGE_ID"
   ZTB_MAIL_MESSAGE ||--o{ ZTB_MAIL_ATTACHMENT : "MESSAGE_ID"
   ZTB_MAIL_MESSAGE ||--o{ ZTB_MAIL_USERSTATE : "MESSAGE_ID"
@@ -88,7 +89,7 @@ erDiagram
   ZTB_MAIL_OUTBOX }o--|| ZTB_MAIL_ACCOUNT : "MAIL_ACCOUNT_ID"
 ```
 
-### 3.2 Danh sách bảng (13)
+### 3.2 Danh sách bảng (15)
 
 | # | Bảng | Vai trò |
 |---|---|---|
@@ -105,8 +106,10 @@ erDiagram
 | 11 | `ZTB_MAIL_SYNC_LOG` | Nhật ký mỗi lần đồng bộ (`STARTED_AT`, `FINISHED_AT`, `STATUS`, số lượng, lỗi) |
 | 12 | `ZTB_MAIL_SYNC_CHECKPOINT` | Con trỏ UIDL cuối + lock chống chạy trùng (`LOCKED_UNTIL`) |
 | 13 | `ZTB_MAIL_MUTE` | Người dùng tắt thông báo theo mailbox |
+| 14 | `ZTB_MAIL_CONTACT_GROUP` | Nhóm danh bạ email (gửi nhanh / CC nhanh) — chủ sở hữu `EMPL_NO`, có cờ `IS_SHARED` dùng chung công ty, cache `MEMBER_COUNT` |
+| 15 | `ZTB_MAIL_CONTACT_GROUP_MEMBER` | Thành viên nhóm danh bạ (`ADDRESS` + `DISPLAY_NAME` + `SORT_ORDER`), unique theo (GROUP_ID, ADDRESS) |
 
-### 3.3 Index quan trọng (20)
+### 3.3 Index quan trọng (24)
 
 - `UX_MAIL_ACCOUNT_EMAIL (CTR_CD, EMAIL_ADDRESS)` — chống trùng mailbox; `IX_MAIL_ACCOUNT_SYNC (IS_ACTIVE, LAST_SYNC_AT)`; `IX_MAIL_ACCOUNT_EMPL (CTR_CD, EMPL_NO, IS_ACTIVE)`.
 - `UX_MAIL_MESSAGE_ID (MAIL_ACCOUNT_ID, MESSAGE_ID)` + `UX_MAIL_MESSAGE_UIDL (MAIL_ACCOUNT_ID, UIDL)` (đều **filtered** để bỏ NULL) — chống trùng ingest.
@@ -114,6 +117,7 @@ erDiagram
 - `IX_MAIL_ATTACHMENT_MSG`, `IX_MAIL_ATTACHMENT_PFILE`, `IX_MAIL_ATTACHMENT_STATUS`.
 - `UX_MAIL_PHYSICAL_FILE_HASH` — dedup kho vật lý; `IX_MAIL_USERSTATE_EMPL`; `UX_MAIL_MUTE (EMPL_NO, MAIL_ACCOUNT_ID)`.
 - `IX_MAIL_DRAFT_EMPL`, `IX_MAIL_OUTBOX_EMPL`, `IX_MAIL_SYNC_LOG_ACC`, `IX_MAIL_RECIPIENT_MSG`, `IX_MAIL_THREAD_LAST`, `UX_MAIL_FOLDER_KEY`.
+- **Danh bạ:** `UX_MAIL_CONTACT_GROUP_NAME (CTR_CD, EMPL_NO, GROUP_NAME)` — chống trùng tên nhóm; `IX_MAIL_CONTACT_GROUP_EMPL (CTR_CD, EMPL_NO, IS_SHARED)` — lọc nhóm của tôi + nhóm dùng chung; `IX_MAIL_CONTACT_GROUP_MEMBER (GROUP_ID, SORT_ORDER)` và `UX_MAIL_CONTACT_GROUP_MEMBER (GROUP_ID, ADDRESS)` — chống trùng địa chỉ trong cùng nhóm.
 
 ### 3.4 Migration
 
@@ -152,6 +156,8 @@ Tất cả đi qua `POST /api { command, DATA }` → `services/dbCommandHandlers
 
 **Quản trị (`mailAdminService.js`):** `emailAdminOverview`, `emailStorageDashboard`, `emailStorageByEmployee`, `emailReconcileNow`, `emailAccountImport`, `emailSyncAll`, `emailSyncAllStatus`.
 
+**Danh bạ (`mailContactService.js`):** `emailContactGroupList`, `emailContactGroupSave`, `emailContactGroupDelete`, `emailContactGroupFromMessage` — nhóm gửi nhanh / CC nhanh; mỗi người chỉ thấy nhóm của mình + nhóm dùng chung, chỉ sửa được nhóm của mình.
+
 **File:** `routes/mailFile.js` — `/mailfile/attachment/:id` (+`/inline`), `POST/DELETE /mailfile/outbox` (giới hạn `MAIL_OUTBOX_MAX_BYTES`).
 
 **Module nội bộ:** `mailWorker` (polling), `mailIngest`, `mailPop3Client`, `mailParserService`, `mailMessageRepository`, `mailRepository`, `mailOutboxRepository`, `mailStorage`, `mailNasMount`, `mailCrypto` (AES-256-GCM), `mailHtmlSanitize`, `mailPush`, `mailReconcile`.
@@ -187,7 +193,10 @@ Tất cả đi qua `POST /api { command, DATA }` → `services/dbCommandHandlers
 | `MailSyncStatus.tsx` | Trạng thái đồng bộ (Tổng/Đã tải/Còn), nút Đồng bộ ngay, poll 4s khi đang chạy |
 | `MailAccountDialog.tsx` | Form cấu hình mailbox + Test POP3/SMTP |
 | `mailClipboardTable.ts` | Phát hiện bảng từ Excel, inline CSS trong `<style>`, kết xuất PNG bằng SVG `foreignObject` |
-| `mailUtils.tsx` | `isMailAdminUser`, `parseMailQuery`, `isDangerousAttachment` |
+| `mailUtils.tsx` | `isMailAdminUser`, `parseMailQuery`, `isDangerousAttachment`, `parseAddressText`, `mergeAddressText`, `addressesOfGroup` |
+| `MailContactBook.tsx` | Quản lý **danh bạ**: danh sách nhóm + tạo/sửa/xoá, nhập nhiều địa chỉ một lần, bật chia sẻ công ty |
+| `MailGroupPicker.tsx` | **Tag nhanh** nhóm danh bạ vào Đến / Cc / Bcc khi soạn thư (chọn nhiều nhóm, khử trùng lặp) |
+| `MailGroupSaveDialog.tsx` | **Lưu thành nhóm danh bạ** từ To/Cc/Bcc đang gõ, hoặc từ người nhận của 1 email đã nhận (To/Cc/Bcc) |
 | `mail.types.ts`, `mail.scss` | Kiểu dữ liệu, style (`.erp-mail__*`) |
 
 `src/pages/setting/PrecisionEmail/` (admin):
@@ -213,10 +222,12 @@ Redux: `mailSlice` (mutedAccountIds, trạng thái dock…). Route mở quản t
 | 5 | IDOR đọc email/xoá | Mọi truy vấn lọc theo `MAIL_ACCOUNT_ID` thuộc quyền + `EMPL_NO`; `emailGet` với ID không thuộc quyền ⇒ `NG` | `test_mail_api.js` [7] |
 | 6 | Tệp đính kèm nguy hiểm | Chỉ `image/*` (trừ SVG) + `application/pdf` được `inline`; đuôi nguy hiểm (exe/bat/cmd/ps1/vbs/js/jar/msi/scr/lnk…) ép `application/octet-stream` + `attachment` + header `X-Mail-Dangerous`; FE hiện badge cảnh báo | `test_mail_files.js` |
 | 7 | Path traversal khi tải/ghi tệp | `assertInsideRoot()` + `safeSegment()`; case tên tệp chứa `..\..\` được kiểm thử | case [6] `test_mail_pilot.js` |
-| 8 | Duyệt quyền admin | Quyền QUẢN TRỊ Email **chỉ dành cho `MAIL_ADMIN_EMPL_NOS`** (mặc định: **chỉ `NHU1903`**) — KHÔNG dùng chức danh/`JOB_NAME` (Leader/Admin bị từ chối). FE ẩn menu + chặn route `/setting/email` theo cùng danh sách (`mailUtils.MAIL_ADMIN_EMPL_NOS`) — chỉ là UX, BE mới là chốt | `test_mail_admin.js` [6] (gồm case `JOB_NAME=Leader` bị chặn), `test_mail_bulk.js` |
+| 8 | Duyệt quyền admin | Quyền QUẢN TRỊ Email **chỉ dành cho `MAIL_ADMIN_EMPL_NOS`** (mặc định: **chỉ `NHU1903`**) — KHÔNG dùng chức danh/`JOB_NAME` (Leader/Admin bị từ chối); nguồn duy nhất ở BE là `services/mail/mailAdminRule.js`, FE dùng `mailUtils.MAIL_ADMIN_EMPL_NOS` + guard route `/setting/email` | `test_mail_admin.js` [6] (gồm case `JOB_NAME=Leader` bị chặn), `test_mail_bulk.js` |
 | 9 | Lạm dụng tài nguyên | Giới hạn: `MAIL_MAX_EMAIL_BYTES` 50MB, `MAIL_ATTACHMENT_MAX_BYTES` 100MB, `MAIL_SEND_MAX_ATTACH_BYTES` 50MB, `MAIL_OUTBOX_MAX_BYTES` 25MB, `MAIL_MAX_DATA_IMAGE_BYTES` 5MB, import ≤ 2000 dòng/lần, batch ≤ 500 email/lần | các test tương ứng |
 | 10 | SQL injection | Toàn bộ truy vấn tham số hoá; ký tự đại diện LIKE (`%`, `_`, `[`) được escape (`likeEscape`) | `test_mail_search.js` [7] |
 | 11 | Tắt self-service | `MAIL_ALLOW_SELF_SERVICE=false` ⇒ ẩn mục cấu hình cá nhân + BE chặn `emailSaveMyAccount/emailTestMyAccount/emailDeleteMyAccount` với mã `SELF_SERVICE_DISABLED` | `test_mail_bulk.js` |
+| 12 | Cách ly nhóm danh bạ | Nhóm riêng chỉ chủ sở hữu thấy/sửa; nhóm `IS_SHARED=1` cả công ty thấy nhưng **chỉ chủ sở hữu (hoặc admin Email) sửa/xoá** — sửa/xoá nhóm người khác trả `FORBIDDEN`; tạo nhóm từ email kiểm quyền qua `loadOwnedMessage` (IDOR) | `test_mail_contacts.js` [7][9] |
+| 13 | Dữ liệu nhập vào nhóm danh bạ | Chỉ nhận `Tên <email>` hợp lệ theo regex; khử trùng lặp không phân biệt hoa/thường; tối đa 500 địa chỉ/nhóm và 200 nhóm/người; địa chỉ sai bị bỏ và báo lại cho người dùng | `test_mail_contacts.js` [6] |
 
 ### 7.1 Sự cố đã xảy ra trong quá trình kiểm thử (bài học)
 
@@ -289,7 +300,7 @@ Script: `scratch/bench_mail_queries.js` — tạo 5.000 email tổng hợp vào 
 
 ## 11. Kết quả kiểm thử & tiêu chí nghiệm thu
 
-### 11.1 Regression tổng — **322 PASS / 0 FAIL** (12 suite, chạy trên hệ thống thật + mailbox thật)
+### 11.1 Regression tổng — **385 PASS / 0 FAIL** (13 suite, chạy trên hệ thống thật + mailbox thật)
 
 | Suite | Kết quả | Phạm vi |
 |---|---|---|
@@ -302,7 +313,8 @@ Script: `scratch/bench_mail_queries.js` — tạo 5.000 email tổng hợp vào 
 | `test_mail_search.js` | 28/28 | Từ khoá/lọc/sắp xếp/phân trang keyset/escape LIKE/cách ly công ty |
 | `test_mail_realtime.js` | 20/20 | `emailSync`, khử trùng, badge, `email:state`/`email:new` đúng room |
 | `test_mail_push.js` | 19/19 | Push, tag, deep-link, mute, loại thiết bị đang online |
-| `test_mail_admin.js` | 33/33 | Overview, dashboard dung lượng, reconcile, nhật ký, phân quyền admin |
+| `test_mail_admin.js` | 34/34 | Overview, dashboard dung lượng, reconcile, nhật ký, phân quyền admin (gồm `JOB_NAME=Leader` bị chặn) |
+| `test_mail_contacts.js` | 37/37 | Nhóm danh bạ: tạo từ chuỗi To/Cc, trùng tên ⇒ cập nhật, REPLACE=false ⇒ thêm, kiểm tra địa chỉ sai, cách ly người dùng + nhóm dùng chung, tìm kiếm, tạo nhóm từ 1 email |
 | `test_mail_bulk.js` | 36/36 | Import Excel (alias header, dry-run, SSL theo cổng, giới hạn dòng), Đồng bộ tất cả, cờ self-service |
 | `test_mail_pilot.js` | 45/45 | 10 kịch bản pilot (xem bảng dưới) |
 | `bench_mail_queries.js` | 6/6 | Benchmark + audit execution plan |

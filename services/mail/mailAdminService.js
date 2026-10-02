@@ -11,25 +11,13 @@
 const mailRepo = require("./mailRepository");
 const { reconcile } = require("./mailReconcile");
 const { syncMailbox } = require("./mailIngest");
-
-const ADMIN_EMPL_NOS = new Set(
-  String(process.env.MAIL_ADMIN_EMPL_NOS || "NHU1903")
-    .split(",")
-    .map((v) => v.trim().toUpperCase())
-    .filter(Boolean)
-);
+const { isMailAdmin } = require("./mailAdminRule");
 
 function ok(res, data) {
   res.send({ tk_status: "OK", data });
 }
 function fail(res, message, code) {
   res.send({ tk_status: "NG", code, message });
-}
-
-function isMailAdmin(req) {
-  const p = req.payload_data || {};
-  const empl = String(p.EMPL_NO || "").trim().toUpperCase();
-  return ADMIN_EMPL_NOS.has(empl);
 }
 
 function requireAdmin(req, res) {

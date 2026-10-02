@@ -119,6 +119,11 @@ Lệnh kiểm tra nhanh khi có sự cố:
 - **Soạn thư:** Đến/Cc/Bcc (gợi ý từ danh bạ), chèn ảnh bằng Ctrl+V, dán bảng từ Excel ⇒ hiện hộp thoại chọn **Dán dạng bảng** (sửa được từng ô) hoặc **Dán dạng ảnh** (nguyên bản như Excel). Nháp tự lưu sau ~1,5 giây.
 - **Đính kèm:** bấm để tải, nút **Xem trước** cho ảnh/PDF; tệp nguy hiểm có badge cảnh báo (ERP luôn ép tải xuống, không mở trực tiếp).
 - **Thông báo:** chuông cạnh mỗi mailbox để tắt/bật thông báo cho mailbox đó. Tắt = không nhận Web Push cho mailbox ấy.
+- **Danh bạ (nhóm gửi nhanh / CC nhanh):** mục **Danh bạ** trong sidebar hộp thư.
+  - Tạo nhóm: nhập tên nhóm + dán danh sách email (ngăn cách bằng dấu phẩy, dấu chấm phẩy hoặc xuống dòng; hỗ trợ dạng `Kế toán <ketoan@congty.com>`). Bật **Chia sẻ cho toàn công ty** nếu muốn đồng nghiệp cùng dùng (chỉ bạn sửa được).
+  - **Tạo nhóm từ người nhận của 1 email:** mở email → biểu tượng **playlist_add** trên thanh tiêu đề → chọn lấy từ **Đến / Cc / Bcc** → lưu.
+  - **Tag nhanh khi soạn thư:** hàng chip nhóm danh bạ nằm ngay dưới ô Tiêu đề — bấm tên nhóm để thêm vào **Đến**, hoặc bấm mũi tên ▾ để chọn **Đến / Cc / Bcc**. Nút **Nhóm danh bạ** mở hộp chọn nhiều nhóm cùng lúc; địa chỉ trùng sẽ tự bỏ qua.
+  - Nút **Lưu To/Cc thành nhóm** trong hộp soạn thư để lưu nhanh danh sách đang gõ thành 1 nhóm mới.
 - **Xoá:** xoá mềm cho riêng bạn; có thể khôi phục. Email trên máy chủ công ty không bị xoá.
 - **Cấu hình Email của tôi:** chỉ hiển thị khi công ty cho phép tự cấu hình (`MAIL_ALLOW_SELF_SERVICE`). Nhập thông tin POP3/SMTP rồi bấm **Kiểm tra kết nối**; nút **Dò cổng SMTP** tự tìm cổng đúng.
 

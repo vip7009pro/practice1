@@ -26,6 +26,7 @@ const commandHandlers = {
   ...require("./mail/mailService"),
   ...require("./mail/mailAdminService"),
   ...require("./mail/mailSendService"),
+  ...require("./mail/mailContactService"),
 };
 
 module.exports = commandHandlers;

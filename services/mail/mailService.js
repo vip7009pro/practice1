@@ -531,3 +531,10 @@ function mapAttachment(a) {
     available: !!(a.STORAGE_PATH && mailStorage.exists(a.STORAGE_PATH)),
   };
 }
+
+/**
+ * Dùng chung cho các service khác (ví dụ `mailContactService`) — tránh viết lại
+ * quy tắc truy cập email: cùng công ty + (mailbox dùng chung HOẶC chính chủ).
+ */
+module.exports.loadOwnedMessage = loadOwnedMessage;
+
