@@ -520,6 +520,34 @@ async function updateAttachmentStatus(id, { status, physicalFileId, fileHash, fi
   await queryRows(`UPDATE ZTB_MAIL_ATTACHMENT SET ${sets.join(", ")} WHERE ID = @ID`, params);
 }
 
+/** Đổi cờ ẢNH TRONG NỘI DUNG (`IS_INLINE`) của 1 đính kèm — dùng cho sửa dữ liệu/hậu kiểm. */
+async function setAttachmentInline(id, isInline) {
+  await queryRows(`UPDATE ZTB_MAIL_ATTACHMENT SET IS_INLINE = @INLINE WHERE ID = @ID`, {
+    ID: id,
+    INLINE: isInline ? 1 : 0,
+  });
+}
+
+/**
+ * Tính lại `HAS_ATTACHMENT` / `ATTACHMENT_COUNT` cho MỌI email có đính kèm,
+ * chỉ đếm TỆP ĐÍNH KÈM THẬT (`IS_INLINE = 0`). Dùng sau khi sửa cờ inline.
+ */
+async function recalcAllAttachmentMeta() {
+  const rows = await queryRows(
+    `UPDATE m
+       SET m.HAS_ATTACHMENT = CASE WHEN x.CNT > 0 THEN 1 ELSE 0 END,
+           m.ATTACHMENT_COUNT = ISNULL(x.CNT, 0)
+     OUTPUT INSERTED.ID, INSERTED.HAS_ATTACHMENT, INSERTED.ATTACHMENT_COUNT
+     FROM ZTB_MAIL_MESSAGE m
+     CROSS APPLY (
+       SELECT COUNT(*) AS CNT FROM ZTB_MAIL_ATTACHMENT a
+       WHERE a.MESSAGE_ID = m.ID AND a.IS_INLINE = 0
+     ) x
+     WHERE EXISTS (SELECT 1 FROM ZTB_MAIL_ATTACHMENT a2 WHERE a2.MESSAGE_ID = m.ID)`
+  );
+  return rows.length;
+}
+
 async function listAttachmentsByMessage(messageId) {
   return queryRows(
     `SELECT a.ID, a.MESSAGE_ID, a.FILE_NAME, a.CONTENT_TYPE, a.FILE_SIZE, a.CONTENT_ID,
@@ -598,6 +626,8 @@ module.exports = {
   decrementPhysicalRef,
   insertAttachment,
   updateAttachmentStatus,
+  setAttachmentInline,
+  recalcAllAttachmentMeta,
   listAttachmentsByMessage,
   getAttachmentById,
   listFailedAttachments,

@@ -126,6 +126,10 @@ async function persistParsedEmail(account, parsed, uidl, rawHash) {
     preparedAttachments.push({ att, phys });
   }
 
+  // `HAS_ATTACHMENT`/`ATTACHMENT_COUNT` chỉ tính TỆP ĐÍNH KÈM thật (ảnh trong nội dung
+  // đã hiển thị trong body nên không tính là đính kèm — tránh hiện icon kẹp giấy sai).
+  const fileAttachments = preparedAttachments.filter((p) => !p.att.isInline);
+
   const recipients = flattenRecipients(parsed);
 
   let insertedId = null;
@@ -146,8 +150,8 @@ async function persistParsedEmail(account, parsed, uidl, rawHash) {
       sentAt: parsed.date || null,
       receivedAt,
       folder: "INBOX",
-      hasAttachment: preparedAttachments.length > 0,
-      attachmentCount: preparedAttachments.length,
+      hasAttachment: fileAttachments.length > 0,
+      attachmentCount: fileAttachments.length,
       bodyStoragePath: body.bodyStoragePath,
       bodyInline: body.bodyInline,
       previewText: parsed.previewText,
@@ -216,7 +220,7 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
   }
 
   const logId = await mailRepo.startSyncLog(accountId);
-  const summary = { ok: true, connected: false, newCount: 0, imported: 0, attachCount: 0, serverTotal: 0, budgetExhausted: false, errorCode: null, message: null };
+  const summary = { ok: true, connected: false, newCount: 0, imported: 0, attachCount: 0, inlineCount: 0, serverTotal: 0, budgetExhausted: false, errorCode: null, message: null };
   let client = null;
 
   try {
@@ -285,7 +289,9 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
         }
         if (imported) {
           summary.imported += 1;
-          summary.attachCount += parsed.attachments.length;
+          // `attachCount` = TỆP ĐÍNH KÈM thật; ảnh dán trong nội dung đếm riêng.
+          summary.attachCount += parsed.attachmentCount || 0;
+          summary.inlineCount += parsed.inlineCount || 0;
           // Email xử lý theo thứ tự cũ → mới ⇒ unshift để phần tử đầu là MỚI NHẤT.
           recent.unshift({
             ID: Number(imported),

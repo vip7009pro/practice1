@@ -126,6 +126,12 @@ erDiagram
 - Không có bảng nào của hệ thống cũ bị sửa/xoá ⇒ rollback = bỏ `MAIL_WORKER_ENABLED=true` và (nếu cần) drop các bảng `ZTB_MAIL_*`.
 - Import dữ liệu ban đầu: `scripts/bulk_import_mail_accounts.js` (CSV/Excel qua giao diện admin).
 
+### 3.5 Script sửa dữ liệu (khi logic ingest đổi)
+
+| Script | Việc |
+|---|---|
+| `scripts/repair_mail_inline_flags.js` | Sửa cờ `IS_INLINE` của các đính kèm đã nhập SAI (bug "Content-ID = inline"): B1 hạ cờ cho đính kèm không phải ảnh (không cần tải lại mail); B2 tải lại raw + parse lại cho ảnh có tên "lạ"; B3 tính lại `HAS_ATTACHMENT`/`ATTACHMENT_COUNT`. Có `--dry-run` và `--skip-reparse` |
+
 ---
 
 ## 4. Lưu trữ NAS
@@ -228,6 +234,7 @@ Redux: `mailSlice` (mutedAccountIds, trạng thái dock…). Route mở quản t
 | 11 | Tắt self-service | `MAIL_ALLOW_SELF_SERVICE=false` ⇒ ẩn mục cấu hình cá nhân + BE chặn `emailSaveMyAccount/emailTestMyAccount/emailDeleteMyAccount` với mã `SELF_SERVICE_DISABLED` | `test_mail_bulk.js` |
 | 12 | Cách ly nhóm danh bạ | Nhóm riêng chỉ chủ sở hữu thấy/sửa; nhóm `IS_SHARED=1` cả công ty thấy nhưng **chỉ chủ sở hữu (hoặc admin Email) sửa/xoá** — sửa/xoá nhóm người khác trả `FORBIDDEN`; tạo nhóm từ email kiểm quyền qua `loadOwnedMessage` (IDOR) | `test_mail_contacts.js` [7][9] |
 | 13 | Dữ liệu nhập vào nhóm danh bạ | Chỉ nhận `Tên <email>` hợp lệ theo regex; khử trùng lặp không phân biệt hoa/thường; tối đa 500 địa chỉ/nhóm và 200 nhóm/người; địa chỉ sai bị bỏ và báo lại cho người dùng | `test_mail_contacts.js` [6] |
+| 14 | **Phân loại TỆP ĐÍNH KÈM vs ẢNH TRONG NỘI DUNG** | `mailParserService.parseEmail` phân loại theo **`Content-Disposition`** (`attachment` ⇒ tệp đính kèm; `inline` + Content-ID ⇒ ảnh nội dung; không có disposition ⇒ chỉ ảnh + có Content-ID mới coi là inline). **KHÔNG** suy ra từ Content-ID — Gmail gắn Content-ID cho cả tệp đính kèm thật (`f_…`) | `test_mail_attach_classify.js` (21 case, gồm E2E qua POP3 giả) |
 
 ### 7.1 Sự cố đã xảy ra trong quá trình kiểm thử (bài học)
 
@@ -300,7 +307,7 @@ Script: `scratch/bench_mail_queries.js` — tạo 5.000 email tổng hợp vào 
 
 ## 11. Kết quả kiểm thử & tiêu chí nghiệm thu
 
-### 11.1 Regression tổng — **385 PASS / 0 FAIL** (13 suite, chạy trên hệ thống thật + mailbox thật)
+### 11.1 Regression tổng — **14 suite, 368 PASS / 0 FAIL** (chạy trên hệ thống thật + mailbox thật)
 
 | Suite | Kết quả | Phạm vi |
 |---|---|---|
@@ -309,12 +316,13 @@ Script: `scratch/bench_mail_queries.js` — tạo 5.000 email tổng hợp vào 
 | `test_mail_selfservice.js` | 16/16 | Tự cấu hình mailbox (dùng EMPL giả), không lộ credential, chặn trùng email |
 | `test_mail_dedup.js` | 11/11 | Chống trùng, lock, `SERVER_TOTAL` |
 | `test_mail_send.js` | 31/31 | Gửi/trả lời/chuyển tiếp, ảnh inline `cid:`, nháp, SMTP |
-| `test_mail_files.js` | 30/30 | Range, inline/attachment, tệp nguy hiểm, dedup vật lý, xem trước |
+| `test_mail_files.js` | 17–55 (tuỳ dữ liệu) | Range, inline/attachment, tệp nguy hiểm, dedup vật lý, xem trước |
 | `test_mail_search.js` | 28/28 | Từ khoá/lọc/sắp xếp/phân trang keyset/escape LIKE/cách ly công ty |
 | `test_mail_realtime.js` | 20/20 | `emailSync`, khử trùng, badge, `email:state`/`email:new` đúng room |
 | `test_mail_push.js` | 19/19 | Push, tag, deep-link, mute, loại thiết bị đang online |
 | `test_mail_admin.js` | 34/34 | Overview, dashboard dung lượng, reconcile, nhật ký, phân quyền admin (gồm `JOB_NAME=Leader` bị chặn) |
 | `test_mail_contacts.js` | 37/37 | Nhóm danh bạ: tạo từ chuỗi To/Cc, trùng tên ⇒ cập nhật, REPLACE=false ⇒ thêm, kiểm tra địa chỉ sai, cách ly người dùng + nhóm dùng chung, tìm kiếm, tạo nhóm từ 1 email |
+| `test_mail_attach_classify.js` | 21/21 | Phân loại đính kèm vs ảnh nội dung (unit 5 quy tắc + 2 mẫu Gmail + E2E POP3 giả ⇒ kiểm tra `IS_INLINE` trong DB) |
 | `test_mail_bulk.js` | 36/36 | Import Excel (alias header, dry-run, SSL theo cổng, giới hạn dòng), Đồng bộ tất cả, cờ self-service |
 | `test_mail_pilot.js` | 45/45 | 10 kịch bản pilot (xem bảng dưới) |
 | `bench_mail_queries.js` | 6/6 | Benchmark + audit execution plan |
