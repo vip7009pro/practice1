@@ -4,9 +4,9 @@
  * Đăng ký tự động qua `services/dbCommandHandlers.js` (spread module này).
  * Envelope thống nhất: { tk_status:"OK", data } | { tk_status:"NG", code, message }.
  *
- * Phân quyền: KHÔNG có role model trong ERP ⇒ dùng chức danh (`JOB_NAME`) +
- * whitelist EMPL_NO (như `permissionService` phía FE). Cấu hình qua env
- * `MAIL_ADMIN_JOBNAMES` (mặc định "Admin,ADMIN,Leader") và `MAIL_ADMIN_EMPL_NOS`.
+ * Phân quyền: module Email KHÔNG dùng chức danh (`JOB_NAME`) — quyền QUẢN TRỊ Email
+ * chỉ dành cho các EMPL_NO trong `MAIL_ADMIN_EMPL_NOS` (mặc định: **chỉ NHU1903**).
+ * Mọi nhân viên khác chỉ dùng được hộp thư của mình.
  */
 const mailRepo = require("./mailRepository");
 const mailCrypto = require("./mailCrypto");
@@ -14,15 +14,9 @@ const { syncMailbox, testConnection } = require("./mailIngest");
 const mailSendTest = require("./mailSendService");
 
 const ADMIN_EMPL_NOS = new Set(
-  String(process.env.MAIL_ADMIN_EMPL_NOS || "NHU1903,NVH1011")
+  String(process.env.MAIL_ADMIN_EMPL_NOS || "NHU1903")
     .split(",")
     .map((v) => v.trim().toUpperCase())
-    .filter(Boolean)
-);
-const ADMIN_JOBNAMES = new Set(
-  String(process.env.MAIL_ADMIN_JOBNAMES || "Admin,ADMIN,Leader")
-    .split(",")
-    .map((v) => v.trim())
     .filter(Boolean)
 );
 
@@ -36,9 +30,7 @@ function fail(res, message, code) {
 function isMailAdmin(req) {
   const p = req.payload_data || {};
   const empl = String(p.EMPL_NO || "").trim().toUpperCase();
-  if (ADMIN_EMPL_NOS.has(empl)) return true;
-  const job = String(p.JOB_NAME || "").trim();
-  return ADMIN_JOBNAMES.has(job) || ADMIN_JOBNAMES.has(job.toUpperCase());
+  return ADMIN_EMPL_NOS.has(empl);
 }
 
 function ctx(req) {

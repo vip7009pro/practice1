@@ -52,6 +52,23 @@ const search = async (DATA) => {
   return JSON.parse(res.body);
 };
 
+/** Lấy chi tiết email (để kiểm tra từ khoá xuất hiện ở subject/to/cc/body). */
+async function getMessage(ID) {
+  const res = await request("POST", "/api", {
+    command: "emailGet",
+    DATA: { ID, token_string: token, secureContext: false },
+  });
+  return (JSON.parse(res.body).data || {}).message || {};
+}
+
+/** Bỏ thẻ HTML để so khớp từ khoá trong nội dung. */
+function plainText(html) {
+  return String(html || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .toLowerCase();
+}
+
 async function main() {
   console.log("\n=== PHASE 5 TEST: tìm kiếm email ===\n");
 
@@ -66,10 +83,34 @@ async function main() {
   if (anySubjectWord) {
     const byWord = await search({ TERMS: [anySubjectWord], FOLDER: "ALL", LIMIT: 10 });
     check(`tìm theo từ khoá "${anySubjectWord}" ⇒ có kết quả`, (byWord.data?.messages || []).length > 0);
-    const subjects = (byWord.data?.messages || []).map((m) => String(m.subject || "").toLowerCase());
+    const word = anySubjectWord.toLowerCase();
+    // TERMS tìm trên subject/preview/body/from/to/cc ⇒ kiểm tra chi tiết 3 kết quả đầu,
+    // từ khoá phải xuất hiện ở subject, người gửi/nhận hoặc nội dung.
+    const sample = (byWord.data?.messages || []).slice(0, 3);
+    let allMatch = sample.length > 0;
+    for (const row of sample) {
+      const detail = await getMessage(row.id);
+      const haystack = [
+        detail.subject,
+        detail.from?.address,
+        detail.from?.name,
+        JSON.stringify(detail.to || []),
+        JSON.stringify(detail.cc || []),
+        plainText(detail.bodyHtml),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(word)) allMatch = false;
+    }
+    check("mọi kết quả khớp từ khoá ở subject/người gửi-nhận/nội dung", allMatch, `(từ khoá "${word}")`);
+
+    const bySubject = await search({ SUBJECT: anySubjectWord, FOLDER: "ALL", LIMIT: 10 });
+    const subjList = bySubject.data?.messages || [];
+    check("tìm theo trường SUBJECT có kết quả", subjList.length > 0);
     check(
-      "mọi kết quả chứa từ khoá",
-      subjects.every((s) => s.includes(anySubjectWord.toLowerCase()))
+      "mọi kết quả SUBJECT chứa từ khoá",
+      subjList.every((m) => String(m.subject || "").toLowerCase().includes(word))
     );
   }
 

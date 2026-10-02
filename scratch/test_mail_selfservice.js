@@ -1,6 +1,10 @@
 /**
  * Test SELF-SERVICE mailbox: mỗi nhân viên tự cấu hình mail của mình.
  * Chạy: node scratch/test_mail_selfservice.js
+ *
+ * ⚠️ AN TOÀN DỮ LIỆU: dùng nhân viên GIẢ (`EMPL`) — KHÔNG dùng mã thật.
+ * Bộ test này upsert theo EMPL_NO nên nếu chạy bằng mã thật sẽ GHI ĐÈ cấu hình + mật khẩu
+ * mailbox thật của người đó (đã từng xảy ra với NHU1903 ngày 2026-10-02).
  */
 const http = require("http");
 const jwt = require("jsonwebtoken");
@@ -8,7 +12,7 @@ const jwt = require("jsonwebtoken");
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.API_PORT || 3007);
 const CTR = "002";
-const EMPL = "NHU1903";
+const EMPL = "ZTEST-SELF"; // nhân viên giả, không tồn tại trong ERP.
 
 let pass = 0, fail = 0;
 const check = (n, c, e = "") => { if (c) { pass++; console.log(`  ✔ ${n}`); } else { fail++; console.log(`  ✘ ${n} ${e}`); } };
@@ -70,7 +74,12 @@ async function main() {
 
   console.log("[5] emailTestMyAccount (server không tồn tại ⇒ thất bại có thông báo)");
   const test = await api("emailTestMyAccount", { POP3_HOST: "127.0.0.1", POP3_PORT: 1, POP3_SECURE: false, POP3_USERNAME: "u", POP3_PASSWORD: "x" }, token);
-  check("trả NG có message", test.tk_status === "NG" && !!test.message, JSON.stringify(test).slice(0, 160));
+  // Từ Phase 3: handler trả OK kèm kết quả TỪNG giao thức (POP3 + SMTP) để form hiển thị chi tiết.
+  check(
+    "trả kết quả theo từng giao thức (POP3 thất bại có thông báo)",
+    test.tk_status === "OK" && test.data?.pop3?.ok === false && !!test.data?.pop3?.message,
+    JSON.stringify(test).slice(0, 200)
+  );
 
   console.log("[6] Email trùng ở mailbox khác ⇒ chặn");
   const dup = await api("emailSaveMyAccount", {

@@ -52,7 +52,8 @@ async function main() {
   const b = bootBody.data || {};
   check("có folders", Array.isArray(b.folders) && b.folders.length >= 7, `(${b.folders?.length})`);
   check("có accounts (shared)", Array.isArray(b.accounts) && b.accounts.length >= 1, `(${b.accounts?.length})`);
-  check("unreadTotal >= 3", Number(b.unreadTotal) >= 3, `(=${b.unreadTotal})`);
+  // Lưu ý: unreadTotal phụ thuộc trạng thái hộp thư thật ⇒ chỉ kiểm tra kiểu dữ liệu hợp lệ.
+  check("unreadTotal là số nguyên >= 0", Number.isInteger(Number(b.unreadTotal)) && Number(b.unreadTotal) >= 0, `(=${b.unreadTotal})`);
 
   console.log("[2] emailInbox");
   const inbox = await api("emailInbox", { folder: "INBOX", limit: 10 }, token);
@@ -91,11 +92,15 @@ async function main() {
   }
 
   console.log("[5] emailMarkRead");
+  // Đặt lại trạng thái chưa đọc trước để phép đo không phụ thuộc lần chạy trước.
+  await api("emailMarkRead", { ID: target.id, IS_READ: false }, token);
+  const bootBefore = JSON.parse((await api("emailBootstrap", {}, token)).body);
+  const beforeUnread = Number(bootBefore.data?.unreadTotal);
   const mark = await api("emailMarkRead", { ID: target.id, IS_READ: true }, token);
   const markBody = JSON.parse(mark.body);
   check("tk_status OK", markBody.tk_status === "OK", mark.body.slice(0, 160));
   const boot2 = JSON.parse((await api("emailBootstrap", {}, token)).body);
-  check("unreadTotal giảm sau khi đọc", Number(boot2.data?.unreadTotal) < Number(b.unreadTotal), `(${b.unreadTotal} → ${boot2.data?.unreadTotal})`);
+  check("unreadTotal giảm sau khi đọc", Number(boot2.data?.unreadTotal) < beforeUnread, `(${beforeUnread} → ${boot2.data?.unreadTotal})`);
 
   console.log("[6] emailStar");
   const star = await api("emailStar", { ID: target.id, IS_STARRED: true }, token);

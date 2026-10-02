@@ -57,6 +57,12 @@ const staffToken = jwt.sign(
   "nguyenvanhung",
   { expiresIn: "1h" }
 );
+// Chức danh Leader/Admin KHÔNG còn được quyền quản trị Email (chỉ EMPL_NO trong MAIL_ADMIN_EMPL_NOS).
+const leaderToken = jwt.sign(
+  { payload: JSON.stringify([{ EMPL_NO: "ZTEST02", CTR_CD: "002", CMS_ID: "CMS9998", JOB_NAME: "Leader" }]) },
+  "nguyenvanhung",
+  { expiresIn: "1h" }
+);
 
 const api = async (command, DATA = {}, token = adminToken) =>
   JSON.parse((await request("/api", { command, DATA: { ...DATA, token_string: token, secureContext: false } })).body);
@@ -135,6 +141,12 @@ async function main() {
     const denied = await api(cmd, {}, staffToken);
     check(`${cmd} chặn người thường`, denied.tk_status === "NG" && denied.code === "FORBIDDEN", JSON.stringify(denied).slice(0, 120));
   }
+  const leaderDenied = await api("emailAdminOverview", {}, leaderToken);
+  check(
+    "JOB_NAME=Leader KHÔNG được quyền quản trị Email",
+    leaderDenied.tk_status === "NG" && leaderDenied.code === "FORBIDDEN",
+    JSON.stringify(leaderDenied).slice(0, 140)
+  );
 
   console.log("[7] Xoá mềm theo từng người + khôi phục");
   const inbox = await api("emailInbox", { folder: "INBOX", limit: 3 });

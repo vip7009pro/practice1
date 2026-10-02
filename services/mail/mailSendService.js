@@ -431,8 +431,15 @@ exports.emailSend = async (req, res, DATA = {}) => {
     const bcc = parseRecipients(DATA.BCC);
     const subject = String(DATA.SUBJECT || "").slice(0, 500);
     const html0 = typeof DATA.BODY_HTML === "string" ? DATA.BODY_HTML : "";
+    // Lọc lần cuối ở SERVER (client có thể bị sửa/thay thế) trước khi nhúng ảnh data:.
+    const sanitized = require("./mailHtmlSanitize").sanitizeOutboundHtml(html0);
+    if (sanitized.removed.blocks || sanitized.removed.events || sanitized.removed.urls) {
+      console.warn(
+        `[mail] đã lọc mã nguy hiểm trong thư gửi: blocks=${sanitized.removed.blocks} events=${sanitized.removed.events} urls=${sanitized.removed.urls}`
+      );
+    }
     // Ảnh dán từ clipboard dạng data: ⇒ chuyển thành đính kèm cid để bên nhận hiển thị được.
-    const embedded = embedDataImages(html0);
+    const embedded = embedDataImages(sanitized.html);
     const html = embedded.html;
     const text = typeof DATA.BODY_TEXT === "string" ? DATA.BODY_TEXT : html.replace(/<[^>]+>/g, " ");
     const attachments = [
@@ -500,7 +507,7 @@ async function replyOrForward(req, res, DATA, mode) {
     includeNonInline: mode === "forward" && DATA.INCLUDE_ATTACHMENTS !== false,
   });
   // Ảnh `data:` trong phần trích dẫn (Gmail CHẶN) ⇒ chuyển thành ảnh nhúng `cid:`.
-  const embedded = embedDataImages(bodyHtml);
+  const embedded = embedDataImages(require("./mailHtmlSanitize").sanitizeOutboundHtml(bodyHtml).html);
   const cidRefs = String(embedded.html).toLowerCase();
   // Chỉ kèm ảnh inline của thư gốc khi phần trích dẫn THỰC SỰ tham chiếu tới nó (tránh đính kèm thừa).
   const fromOriginal = originalAttachments.filter(
@@ -562,8 +569,8 @@ exports.emailDraftGet = async (req, res, DATA = {}) => {
   try {
     const { emplNo } = ctx(req);
     const id = Number(DATA.ID);
-    const draft = await mailRepo.getDraft(id);
-    if (!draft || String(draft.EMPL_NO).trim().toUpperCase() !== emplNo) return fail(res, "Không tìm thấy bản nháp", "NOT_FOUND");
+    const draft = await mailRepo.getDraft(id, { emplNo });
+    if (!draft) return fail(res, "Không tìm thấy bản nháp", "NOT_FOUND");
     let to = []; let cc = []; let bcc = []; let attachmentIds = [];
     try { to = JSON.parse(draft.TO_JSON || "[]"); } catch { /* bỏ qua */ }
     try { cc = JSON.parse(draft.CC_JSON || "[]"); } catch { /* bỏ qua */ }
@@ -588,8 +595,8 @@ exports.emailDeleteDraft = async (req, res, DATA = {}) => {
     const { emplNo } = ctx(req);
     const id = Number(DATA.ID);
     if (Number.isInteger(id) && id > 0) {
-      const draft = await mailRepo.getDraft(id);
-      if (draft && String(draft.EMPL_NO).trim().toUpperCase() === emplNo) {
+      const draft = await mailRepo.getDraft(id, { emplNo });
+      if (draft) {
         try {
           const ids = JSON.parse(draft.ATTACH_JSON || "[]");
           await outboxRepo.deleteOutbox({ ids, emplNo }).catch(() => undefined);

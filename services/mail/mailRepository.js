@@ -385,7 +385,12 @@ async function listDrafts({ emplNo, limit = 50 }) {
   );
 }
 
-async function getDraft(id) {
+async function getDraft(id, { emplNo } = {}) {
+  const empl = String(emplNo || "").trim().toUpperCase();
+  // Luôn lọc theo chủ sở hữu khi có `emplNo` ⇒ không thể đọc nháp của người khác bằng ID.
+  if (empl) {
+    return queryOne(`SELECT * FROM ZTB_MAIL_DRAFT WHERE ID = @ID AND EMPL_NO = @EMPL`, { ID: id, EMPL: empl });
+  }
   return queryOne(`SELECT * FROM ZTB_MAIL_DRAFT WHERE ID = @ID`, { ID: id });
 }
 

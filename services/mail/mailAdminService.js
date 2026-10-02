@@ -5,23 +5,17 @@
  *  - `emailStorageByEmployee`— chi tiết dung lượng theo từng nhân viên
  *  - `emailReconcileNow`     — chạy đối soát DB ↔ file trên NAS ngay (kiểm tra toàn vẹn)
  *
- * Phân quyền: dùng chung quy tắc `isMailAdmin` (JOB_NAME + whitelist EMPL_NO) như các
- * command admin khác của module — KHÔNG tạo role model mới.
+ * Phân quyền: quyền QUẢN TRỊ Email chỉ dành cho EMPL_NO trong `MAIL_ADMIN_EMPL_NOS`
+ * (mặc định: **chỉ NHU1903**) — KHÔNG dùng `JOB_NAME`/role model khác.
  */
 const mailRepo = require("./mailRepository");
 const { reconcile } = require("./mailReconcile");
 const { syncMailbox } = require("./mailIngest");
 
 const ADMIN_EMPL_NOS = new Set(
-  String(process.env.MAIL_ADMIN_EMPL_NOS || "NHU1903,NVH1011")
+  String(process.env.MAIL_ADMIN_EMPL_NOS || "NHU1903")
     .split(",")
     .map((v) => v.trim().toUpperCase())
-    .filter(Boolean)
-);
-const ADMIN_JOBNAMES = new Set(
-  String(process.env.MAIL_ADMIN_JOBNAMES || "Admin,ADMIN,Leader")
-    .split(",")
-    .map((v) => v.trim())
     .filter(Boolean)
 );
 
@@ -35,9 +29,7 @@ function fail(res, message, code) {
 function isMailAdmin(req) {
   const p = req.payload_data || {};
   const empl = String(p.EMPL_NO || "").trim().toUpperCase();
-  if (ADMIN_EMPL_NOS.has(empl)) return true;
-  const job = String(p.JOB_NAME || "").trim();
-  return ADMIN_JOBNAMES.has(job) || ADMIN_JOBNAMES.has(job.toUpperCase());
+  return ADMIN_EMPL_NOS.has(empl);
 }
 
 function requireAdmin(req, res) {
