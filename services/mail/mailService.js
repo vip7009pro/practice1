@@ -74,6 +74,8 @@ exports.emailBootstrap = async (req, res) => {
     const accountIds = accounts.map((a) => a.ID);
     const unreadTotal = await msgRepo.countUnread({ accountIds, emplNo });
     const own = await mailRepo.getAccountByEmpl({ ctrCd, emplNo });
+    // Mailbox người dùng đã TẮT thông báo đẩy (Phase 7).
+    const mutedAccountIds = await mailRepo.listMutedAccountIds(emplNo).catch(() => []);
 
     // Đếm nhanh cho từng thư mục hệ thống (INBOX/STARRED quan trọng nhất).
     const counts = {};
@@ -93,7 +95,50 @@ exports.emailBootstrap = async (req, res) => {
       }
     }
 
-    ok(res, { folders, accounts, unreadTotal, counts, myEmplNo: emplNo, hasOwnAccount: !!own, ownAccountId: own?.ID || null });
+    ok(res, {
+      folders,
+      accounts,
+      unreadTotal,
+      counts,
+      myEmplNo: emplNo,
+      hasOwnAccount: !!own,
+      ownAccountId: own?.ID || null,
+      mutedAccountIds,
+    });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Tắt/bật thông báo đẩy (Phase 7)                                     */
+/* ------------------------------------------------------------------ */
+
+/** Danh sách mailbox người dùng đã tắt thông báo đẩy. */
+exports.emailMuteList = async (req, res) => {
+  try {
+    const { emplNo } = ctx(req);
+    const mutedAccountIds = await mailRepo.listMutedAccountIds(emplNo);
+    ok(res, { mutedAccountIds });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/** Bật/tắt thông báo đẩy cho 1 mailbox (chỉ với mailbox người dùng có quyền). */
+exports.emailMuteAccount = async (req, res, DATA = {}) => {
+  try {
+    const { ctrCd, emplNo } = ctx(req);
+    const accountId = Number(DATA.ACCOUNT_ID);
+    if (!Number.isInteger(accountId) || accountId <= 0) return fail(res, "Thiếu ACCOUNT_ID", "INVALID");
+
+    const accounts = await accessibleAccounts(ctrCd, emplNo);
+    if (!accounts.some((a) => Number(a.ID) === accountId)) return fail(res, "Không có quyền với mailbox này", "FORBIDDEN");
+
+    const muted = DATA.MUTED === true || DATA.MUTED === 1 || DATA.MUTED === "1";
+    await mailRepo.setMailMute({ ctrCd, emplNo, accountId, muted });
+    const mutedAccountIds = await mailRepo.listMutedAccountIds(emplNo);
+    ok(res, { accountId, muted, mutedAccountIds });
   } catch (error) {
     fail(res, error?.message || String(error));
   }

@@ -13,6 +13,8 @@
  *  - ZTB_MAIL_DRAFT             — bản nháp soạn thảo
  *  - ZTB_MAIL_SYNC_LOG          — nhật ký mỗi lần đồng bộ mailbox
  *  - ZTB_MAIL_SYNC_CHECKPOINT   — con trỏ UIDL + khoá chống chạy chồng
+ *  - ZTB_MAIL_OUTBOX            — tệp đính kèm đang soạn (chưa gửi)
+ *  - ZTB_MAIL_MUTE              — tắt/bật thông báo đẩy theo từng người + từng mailbox
  *
  * Idempotent — chạy lại nhiều lần không lỗi, không ghi đè dữ liệu.
  * Chạy: node scripts/migrate_mail_tables.js

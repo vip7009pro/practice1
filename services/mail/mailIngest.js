@@ -128,6 +128,7 @@ async function persistParsedEmail(account, parsed, uidl, rawHash) {
 
   const recipients = flattenRecipients(parsed);
 
+  let insertedId = null;
   await mailRepo.withTransaction(async (tx) => {
     const messageId = await msgRepo.insertMessage(tx, {
       mailAccountId: account.ID,
@@ -176,9 +177,10 @@ async function persistParsedEmail(account, parsed, uidl, rawHash) {
     }
 
     await msgRepo.touchThread(threadId, receivedAt);
+    insertedId = messageId;
   });
 
-  return true;
+  return insertedId;
 }
 
 /** Bắn thông báo realtime (không chặn luồng sync nếu socket chưa sẵn sàng). */
@@ -248,6 +250,8 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     let processed = 0;
     let lastUidl = null;
     const runStarted = Date.now();
+    // Vài email mới nhất của lượt này (dùng cho thông báo đẩy + deep-link).
+    const recent = [];
     for (const no of pending) {
       if (processed >= MAX_BATCH_PER_RUN) {
         summary.budgetExhausted = true;
@@ -282,6 +286,15 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
         if (imported) {
           summary.imported += 1;
           summary.attachCount += parsed.attachments.length;
+          // Email xử lý theo thứ tự cũ → mới ⇒ unshift để phần tử đầu là MỚI NHẤT.
+          recent.unshift({
+            ID: Number(imported),
+            SUBJECT: parsed.subject,
+            FROM_NAME: parsed.from?.name,
+            FROM_ADDRESS: parsed.from?.address,
+            PREVIEW_TEXT: parsed.previewText,
+          });
+          if (recent.length > 10) recent.pop();
           if (summary.imported % 10 === 0) {
             log(`[mail] acc=${account.ID} đã tải ${summary.imported}/${pending.length}...`);
           }
@@ -295,7 +308,13 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     await mailRepo.releaseLock(accountId, { lastUidl, importedDelta: summary.imported, serverTotal });
     log(`[mail] acc=${account.ID} hoàn tất lượt: imported=${summary.imported}, tổng server=${serverTotal}`);
     await mailRepo.updateAccountSyncState(accountId, { status: "SUCCESS", error: null });
-    if (summary.imported > 0) emitNewEmail(account, summary);
+    if (summary.imported > 0) {
+      emitNewEmail(account, summary);
+      // Thông báo đẩy cho thiết bị KHÔNG đang mở ERP (tôn trọng tắt thông báo theo mailbox).
+      await require("./mailPush")
+        .pushNewEmail({ account, messages: recent, imported: summary.imported })
+        .catch((error) => log(`[mail] push lỗi: ${error?.message || error}`));
+    }
 
     await mailRepo.finishSyncLog(logId, {
       status: "SUCCESS",
