@@ -39,6 +39,32 @@ function isSelfServiceEnabled() {
   return String(process.env.MAIL_ALLOW_SELF_SERVICE || "true") !== "false";
 }
 
+/**
+ * Chuẩn hoá mốc ngày cấu hình đồng bộ:
+ *   undefined ⇒ KHÔNG đổi; null / "" ⇒ xoá giới hạn; "YYYY-MM-DD" ⇒ mốc 00:00 UTC (đọc lại đúng ngày).
+ */
+function parseSyncDate(value) {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  }
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** Đọc 2 trường khoảng đồng bộ từ DATA (undefined = giữ nguyên). */
+function readSyncRange(DATA) {
+  return {
+    touched: DATA.SYNC_FROM_DATE !== undefined || DATA.SYNC_TO_DATE !== undefined,
+    syncFromDate: parseSyncDate(DATA.SYNC_FROM_DATE),
+    syncToDate: parseSyncDate(DATA.SYNC_TO_DATE),
+  };
+}
+
 /** Chặn các thao tác tự-cấu-hình khi admin đã tắt. */
 function requireSelfService(res) {
   if (isSelfServiceEnabled()) return true;
@@ -91,6 +117,8 @@ exports.emailAccountCreate = async (req, res, DATA = {}) => {
       smtpUsername: DATA.SMTP_USERNAME || DATA.POP3_USERNAME || email,
       isActive: DATA.IS_ACTIVE !== false,
       isShared: !!DATA.IS_SHARED,
+      syncFromDate: parseSyncDate(DATA.SYNC_FROM_DATE),
+      syncToDate: parseSyncDate(DATA.SYNC_TO_DATE),
     });
     await mailRepo.ensureCheckpoint(id);
     ok(res, { id });
@@ -104,6 +132,7 @@ exports.emailAccountUpdate = async (req, res, DATA = {}) => {
   try {
     const id = Number(DATA.ID);
     if (!Number.isInteger(id) || id <= 0) return fail(res, "Thiếu ID mailbox", "INVALID");
+    const range = readSyncRange(DATA);
     const fields = {
       emplNo: DATA.EMPL_NO !== undefined ? (DATA.EMPL_NO ? String(DATA.EMPL_NO).trim().toUpperCase() : null) : undefined,
       displayName: DATA.DISPLAY_NAME,
@@ -117,12 +146,18 @@ exports.emailAccountUpdate = async (req, res, DATA = {}) => {
       smtpUsername: DATA.SMTP_USERNAME,
       isActive: DATA.IS_ACTIVE,
       isShared: DATA.IS_SHARED,
+      syncFromDate: range.syncFromDate,
+      syncToDate: range.syncToDate,
     };
     // Chỉ cập nhật credential khi có mật khẩu mới.
     if (DATA.POP3_PASSWORD) fields.pop3CredEnc = mailCrypto.encryptSecret(DATA.POP3_PASSWORD);
     if (DATA.SMTP_PASSWORD) fields.smtpCredEnc = mailCrypto.encryptSecret(DATA.SMTP_PASSWORD);
 
     await mailRepo.updateAccount(id, fields);
+    // Đổi khoảng cấu hình ⇒ xoá danh sách "bỏ qua" để đánh giá lại toàn bộ email.
+    if (range.touched) {
+      await mailRepo.clearSkippedUidls(id).catch(() => undefined);
+    }
     ok(res, { id });
   } catch (error) {
     fail(res, error?.message || String(error));
@@ -227,6 +262,8 @@ function mapAccountSafe(row) {
     smtpSecure: row.SMTP_SECURE === true || row.SMTP_SECURE === 1,
     smtpUsername: row.SMTP_USERNAME,
     isActive: row.IS_ACTIVE === true || row.IS_ACTIVE === 1,
+    syncFromDate: row.SYNC_FROM_DATE || null,
+    syncToDate: row.SYNC_TO_DATE || null,
     lastSyncAt: row.LAST_SYNC_AT,
     lastSyncStatus: row.LAST_SYNC_STATUS,
     lastError: row.LAST_ERROR,
@@ -284,15 +321,19 @@ exports.emailSaveMyAccount = async (req, res, DATA = {}) => {
       smtpSecure: DATA.SMTP_SECURE !== false,
       smtpUsername: String(DATA.SMTP_USERNAME || DATA.POP3_USERNAME || email).trim(),
       isActive: DATA.IS_ACTIVE !== false,
+      syncFromDate: parseSyncDate(DATA.SYNC_FROM_DATE),
+      syncToDate: parseSyncDate(DATA.SYNC_TO_DATE),
     };
     // Chỉ cập nhật mật khẩu khi người dùng nhập mới (ô trống = giữ nguyên).
     if (DATA.POP3_PASSWORD) fields.pop3CredEnc = mailCrypto.encryptSecret(DATA.POP3_PASSWORD);
     if (DATA.SMTP_PASSWORD) fields.smtpCredEnc = mailCrypto.encryptSecret(DATA.SMTP_PASSWORD);
 
+    const range = readSyncRange(DATA);
     let id;
     if (existing) {
       await mailRepo.updateAccount(existing.ID, fields);
       id = existing.ID;
+      if (range.touched) await mailRepo.clearSkippedUidls(id).catch(() => undefined);
     } else {
       if (!DATA.POP3_PASSWORD) return fail(res, "Cần nhập mật khẩu POP3 cho lần cấu hình đầu tiên", "INVALID");
       fields.emailAddress = email;

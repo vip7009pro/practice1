@@ -27,6 +27,48 @@ const TLS_REJECT_UNAUTHORIZED = String(process.env.MAIL_TLS_REJECT_UNAUTHORIZED 
 // (tránh 1 mailbox lớn giữ khoá quá lâu khiến UI hiển thị "Đang đồng bộ" vô tận).
 const MAX_RUN_MS = Number(process.env.MAIL_SYNC_MAX_MS || 180000) || 180000;
 
+/**
+ * Độ lệch múi giờ máy chủ so với UTC (ms). Dùng để quy đổi mốc ngày cấu hình (lưu kiểu
+ * "ngày lịch" theo giờ VN) sang mốc so sánh với `Date` trong header thư.
+ * Đổi máy chủ sang múi giờ khác: đặt env `MAIL_SERVER_TZ_OFFSET_HOURS`.
+ */
+const SERVER_TZ_OFFSET_MS =
+  (Number.isFinite(Number(process.env.MAIL_SERVER_TZ_OFFSET_HOURS))
+    ? Number(process.env.MAIL_SERVER_TZ_OFFSET_HOURS)
+    : 7) * 3600 * 1000;
+
+/** Đọc 1 mốc ngày cấu hình (Date từ DB, hoặc chuỗi) ⇒ { y, m, d } theo "ngày lịch" giờ VN. */
+function rangeDateParts(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  // Cột DATETIME2 đọc về có các thành phần UTC = giờ VN (driver useUTC) ⇒ lấy thẳng.
+  return { y: date.getUTCFullYear(), m: date.getUTCMonth(), d: date.getUTCDate() };
+}
+
+/** Số ngày (epoch-day) của 1 `Date` thực khi quy về LỊCH GIỜ VN. */
+function vnDayNumber(date) {
+  const shifted = new Date(date.getTime() + SERVER_TZ_OFFSET_MS);
+  return Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate());
+}
+
+/** Số ngày (epoch-day) của mốc cấu hình. */
+function boundaryDayNumber(parts) {
+  return Date.UTC(parts.y, parts.m, parts.d);
+}
+
+/** Trích ngày gửi từ header thư (buffer chỉ có header). Trả Date hoặc null. */
+function extractHeaderDate(raw) {
+  if (!raw || raw.length === 0) return null;
+  const text = raw.toString("utf8", 0, Math.min(raw.length, 64 * 1024));
+  // Header có thể bị "fold" (xuống dòng + khoảng trắng đầu dòng tiếp theo).
+  const match = text.match(/(?:^|\r?\n)Date:[ \t]*([^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*)/i);
+  if (!match) return null;
+  const value = match[1].replace(/\r?\n[ \t]+/g, " ").trim();
+  const ts = Date.parse(value);
+  return Number.isNaN(ts) ? null : new Date(ts);
+}
+
 const defLog = (msg) => console.log(msg);
 
 /** Lấy + giải mã credential POP3 của account. */
@@ -220,7 +262,7 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
   }
 
   const logId = await mailRepo.startSyncLog(accountId);
-  const summary = { ok: true, connected: false, newCount: 0, imported: 0, attachCount: 0, inlineCount: 0, serverTotal: 0, budgetExhausted: false, errorCode: null, message: null };
+  const summary = { ok: true, connected: false, newCount: 0, imported: 0, attachCount: 0, inlineCount: 0, skippedOutOfRange: 0, serverTotal: 0, budgetExhausted: false, errorCode: null, message: null };
   let client = null;
 
   try {
@@ -238,6 +280,22 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     const uidlMap = await client.uidl();
     log(`[mail] acc=${account.ID} UIDL xong: ${uidlMap.size} mục`);
     const existing = await msgRepo.listExistingUidls(accountId);
+
+    // Khoảng thời gian đồng bộ (nếu cấu hình) — chỉ tải email trong khoảng.
+    const fromParts = rangeDateParts(account.SYNC_FROM_DATE);
+    const toParts = rangeDateParts(account.SYNC_TO_DATE);
+    const fromDay = fromParts ? boundaryDayNumber(fromParts) : null;
+    const toDay = toParts ? boundaryDayNumber(toParts) : null;
+    const hasRange = fromDay !== null || toDay !== null;
+    const skippedUidls = hasRange ? await mailRepo.listSkippedUidls(accountId) : new Set();
+    if (hasRange) {
+      log(
+        `[mail] acc=${account.ID} giới hạn ngày: ${account.SYNC_FROM_DATE ? new Date(account.SYNC_FROM_DATE).toISOString().slice(0, 10) : "…"} → ${
+          account.SYNC_TO_DATE ? new Date(account.SYNC_TO_DATE).toISOString().slice(0, 10) : "…"
+        } (đã bỏ qua trước đó: ${skippedUidls.size})`
+      );
+    }
+
     const sizeMap = await client.list().catch(() => new Map());
     // Tổng email phía server (để FE hiển thị tiến độ đã tải / còn lại).
     const serverTotal = await client.stat().then((s) => s.count).catch(() => 0);
@@ -245,9 +303,12 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     // Lưu NGAY để UI hiển thị "Tổng thư / Còn lại" trong lúc sync (không đợi hết lượt).
     await mailRepo.setServerTotal(accountId, serverTotal).catch(() => undefined);
 
-    // Email mới = UIDL chưa có trong DB. Xử lý theo thứ tự tăng dần (cũ → mới).
+    // Email mới = UIDL chưa có trong DB và chưa bị đánh dấu bỏ qua (ngoài khoảng cấu hình).
     const numbers = [...uidlMap.keys()].sort((a, b) => a - b);
-    const pending = numbers.filter((no) => !existing.has(uidlMap.get(no)));
+    const pending = numbers.filter((no) => {
+      const uidl = uidlMap.get(no);
+      return !existing.has(uidl) && !skippedUidls.has(uidl);
+    });
     summary.newCount = pending.length;
     log(`[mail] acc=${account.ID} total=${serverTotal}, đã có=${existing.size}, cần tải=${pending.length}`);
 
@@ -256,6 +317,8 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     const runStarted = Date.now();
     // Vài email mới nhất của lượt này (dùng cho thông báo đẩy + deep-link).
     const recent = [];
+    // UIDL ngoài khoảng cần ghi nhớ (ghi theo lô để tránh quá nhiều round-trip).
+    const skippedBatch = [];
     for (const no of pending) {
       if (processed >= MAX_BATCH_PER_RUN) {
         summary.budgetExhausted = true;
@@ -270,6 +333,31 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
       const size = sizeMap.get(no) || 0;
       processed += 1;
       lastUidl = uidl;
+
+      // Lọc theo khoảng thời gian: chỉ tải HEADER (TOP 0) để biết ngày gửi, KHÔNG tải cả thư.
+      if (hasRange) {
+        let headerDate = null;
+        try {
+          const headerRaw = await client.top(no, 0);
+          headerDate = extractHeaderDate(headerRaw);
+        } catch (error) {
+          log(`[mail] acc=${account.ID} không đọc được header ${no}: ${error?.message || error}`);
+        }
+        if (headerDate) {
+          const day = vnDayNumber(headerDate);
+          const before = fromDay !== null && day < fromDay;
+          const after = toDay !== null && day > toDay;
+          if (before || after) {
+            skippedBatch.push({ uidl, reason: before ? "BEFORE_RANGE" : "AFTER_RANGE" });
+            summary.skippedOutOfRange += 1;
+            if (skippedBatch.length >= 100) {
+              await mailRepo.markUidlsSkipped(accountId, skippedBatch.splice(0));
+            }
+            continue;
+          }
+        }
+        // Không đọc được ngày gửi ⇒ vẫn tải về (tránh bỏ sót thư).
+      }
 
       if (size > MAX_EMAIL_BYTES) {
         log(`[mail] bỏ qua msg ${no} (${size} byte > giới hạn)`);
@@ -311,8 +399,15 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
       }
     }
 
+    // Ghi nhớ các UIDL bị bỏ qua (ngoài khoảng) để lượt sau không phải đọc header lại.
+    if (skippedBatch.length > 0) {
+      await mailRepo.markUidlsSkipped(accountId, skippedBatch.splice(0)).catch((error) => {
+        log(`[mail] acc=${account.ID} lưu danh sách bỏ qua lỗi: ${error?.message || error}`);
+      });
+    }
+
     await mailRepo.releaseLock(accountId, { lastUidl, importedDelta: summary.imported, serverTotal });
-    log(`[mail] acc=${account.ID} hoàn tất lượt: imported=${summary.imported}, tổng server=${serverTotal}`);
+    log(`[mail] acc=${account.ID} hoàn tất lượt: imported=${summary.imported}, bỏ qua ngoài khoảng=${summary.skippedOutOfRange}, tổng server=${serverTotal}`);
     await mailRepo.updateAccountSyncState(accountId, { status: "SUCCESS", error: null });
     if (summary.imported > 0) {
       emitNewEmail(account, summary);
@@ -378,4 +473,9 @@ module.exports = {
   emitNewEmail,
   SYNC_INTERVAL_SECONDS,
   MAX_BATCH_PER_RUN,
+  // Xuất để test đơn vị logic lọc khoảng ngày.
+  rangeDateParts,
+  vnDayNumber,
+  boundaryDayNumber,
+  extractHeaderDate,
 };

@@ -533,6 +533,43 @@ BEGIN
   PRINT 'Created UX_MAIL_CONTACT_GROUP_MEMBER';
 END`,
   },
+  {
+    name: "ZTB_MAIL_ACCOUNT.SYNC_FROM_DATE",
+    sql: `IF NOT EXISTS (
+       SELECT * FROM sys.columns
+       WHERE object_id = OBJECT_ID('ZTB_MAIL_ACCOUNT') AND name = 'SYNC_FROM_DATE')
+BEGIN
+  -- Chỉ tải email có ngày >= mốc này (NULL = không giới hạn).
+  ALTER TABLE ZTB_MAIL_ACCOUNT ADD SYNC_FROM_DATE DATETIME2 NULL;
+  PRINT 'Added SYNC_FROM_DATE';
+END`,
+  },
+  {
+    name: "ZTB_MAIL_ACCOUNT.SYNC_TO_DATE",
+    sql: `IF NOT EXISTS (
+       SELECT * FROM sys.columns
+       WHERE object_id = OBJECT_ID('ZTB_MAIL_ACCOUNT') AND name = 'SYNC_TO_DATE')
+BEGIN
+  -- Chỉ tải email có ngày <= mốc này (NULL = không giới hạn).
+  ALTER TABLE ZTB_MAIL_ACCOUNT ADD SYNC_TO_DATE DATETIME2 NULL;
+  PRINT 'Added SYNC_TO_DATE';
+END`,
+  },
+  {
+    name: "ZTB_MAIL_SYNC_SKIP",
+    sql: `IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ZTB_MAIL_SYNC_SKIP')
+BEGIN
+  -- Ghi nhớ UIDL bị BỎ QUA vì ngoài khoảng thời gian cấu hình (tránh tải lại header mỗi lượt).
+  CREATE TABLE ZTB_MAIL_SYNC_SKIP (
+    MAIL_ACCOUNT_ID INT           NOT NULL,
+    UIDL            NVARCHAR(400) NOT NULL,
+    SKIP_REASON     NVARCHAR(30)  NOT NULL,
+    SKIPPED_AT      DATETIME2     NOT NULL CONSTRAINT DF_MAIL_SKIP_AT DEFAULT GETDATE(),
+    CONSTRAINT PK_MAIL_SYNC_SKIP PRIMARY KEY (MAIL_ACCOUNT_ID, UIDL)
+  );
+  PRINT 'Created ZTB_MAIL_SYNC_SKIP';
+END`,
+  },
 ];
 
 async function main() {

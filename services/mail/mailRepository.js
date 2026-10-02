@@ -48,7 +48,8 @@ async function withTransaction(work) {
 const ACCOUNT_COLUMNS = `ID, CTR_CD, EMPL_NO, EMAIL_ADDRESS, DISPLAY_NAME,
   POP3_HOST, POP3_PORT, POP3_SECURE, POP3_USERNAME,
   SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USERNAME,
-  IS_ACTIVE, IS_SHARED, LAST_SYNC_AT, LAST_SYNC_STATUS, LAST_ERROR,
+  IS_ACTIVE, IS_SHARED, SYNC_FROM_DATE, SYNC_TO_DATE,
+  LAST_SYNC_AT, LAST_SYNC_STATUS, LAST_ERROR,
   CREATED_AT, UPDATED_AT`;
 
 async function listAccounts({ ctrCd, activeOnly = false, emplNo = null } = {}) {
@@ -103,12 +104,12 @@ async function insertAccount(fields) {
       (CTR_CD, EMPL_NO, EMAIL_ADDRESS, DISPLAY_NAME,
        POP3_HOST, POP3_PORT, POP3_SECURE, POP3_USERNAME, POP3_CRED_ENC,
        SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USERNAME,
-       IS_ACTIVE, IS_SHARED)
+       IS_ACTIVE, IS_SHARED, SYNC_FROM_DATE, SYNC_TO_DATE)
      OUTPUT INSERTED.ID
      VALUES (@CTR_CD, @EMPL_NO, @EMAIL, @DISPLAY_NAME,
        @POP3_HOST, @POP3_PORT, @POP3_SECURE, @POP3_USERNAME, @POP3_CRED_ENC,
        @SMTP_HOST, @SMTP_PORT, @SMTP_SECURE, @SMTP_USERNAME,
-       @IS_ACTIVE, @IS_SHARED)`,
+       @IS_ACTIVE, @IS_SHARED, @SYNC_FROM_DATE, @SYNC_TO_DATE)`,
     {
       CTR_CD: fields.ctrCd,
       EMPL_NO: fields.emplNo ?? null,
@@ -125,6 +126,8 @@ async function insertAccount(fields) {
       SMTP_USERNAME: fields.smtpUsername ?? null,
       IS_ACTIVE: fields.isActive === false ? 0 : 1,
       IS_SHARED: fields.isShared ? 1 : 0,
+      SYNC_FROM_DATE: fields.syncFromDate ?? null,
+      SYNC_TO_DATE: fields.syncToDate ?? null,
     }
   );
   return rows[0]?.ID ?? null;
@@ -147,6 +150,8 @@ async function updateAccount(id, fields) {
     SMTP_CRED_ENC: fields.smtpCredEnc,
     IS_ACTIVE: fields.isActive === undefined ? undefined : fields.isActive ? 1 : 0,
     IS_SHARED: fields.isShared === undefined ? undefined : fields.isShared ? 1 : 0,
+    SYNC_FROM_DATE: fields.syncFromDate,
+    SYNC_TO_DATE: fields.syncToDate,
   };
   const sets = [];
   const params = { ID: id };
@@ -279,6 +284,69 @@ async function resetCheckpoint(accountId) {  await ensureCheckpoint(accountId);
       WHERE MAIL_ACCOUNT_ID = @ID`,
     { ID: accountId }
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Khoảng thời gian đồng bộ — UIDL bị bỏ qua (ZTB_MAIL_SYNC_SKIP)       */
+/* ------------------------------------------------------------------ */
+
+/** Tập UIDL đã đánh dấu BỎ QUA (ngoài khoảng cấu hình) của 1 mailbox. */
+async function listSkippedUidls(accountId) {
+  const rows = await queryRows(
+    `SELECT UIDL FROM ZTB_MAIL_SYNC_SKIP WHERE MAIL_ACCOUNT_ID = @ID`,
+    { ID: accountId }
+  );
+  return new Set(rows.map((r) => String(r.UIDL)));
+}
+
+/**
+ * Ghi nhớ nhiều UIDL bị bỏ qua (idempotent: trùng thì cập nhật lý do).
+ * Chia lô 200 dòng để không vượt giới hạn tham số của SQL Server.
+ */
+async function markUidlsSkipped(accountId, items) {
+  // Khử trùng theo UIDL (SQL Server MERGE không nhận nguồn có khoá trùng).
+  const dedup = new Map();
+  (items || []).forEach((it) => {
+    if (it && it.uidl) dedup.set(String(it.uidl), String(it.reason || "OUT_OF_RANGE"));
+  });
+  const list = [...dedup.entries()].map(([uidl, reason]) => ({ uidl, reason }));
+  if (list.length === 0) return 0;
+  let inserted = 0;
+  for (let i = 0; i < list.length; i += 200) {
+    const chunk = list.slice(i, i + 200);
+    const values = [];
+    const params = { ID: accountId };
+    chunk.forEach((it, idx) => {
+      values.push(`(@ID, @U${idx}, @R${idx})`);
+      params[`U${idx}`] = String(it.uidl).slice(0, 400);
+      params[`R${idx}`] = String(it.reason || "OUT_OF_RANGE").slice(0, 30);
+    });
+    await queryRows(
+      `MERGE ZTB_MAIL_SYNC_SKIP AS t
+         USING (VALUES ${values.join(", ")}) AS s (MAIL_ACCOUNT_ID, UIDL, SKIP_REASON)
+            ON t.MAIL_ACCOUNT_ID = s.MAIL_ACCOUNT_ID AND t.UIDL = s.UIDL
+         WHEN MATCHED THEN UPDATE SET SKIP_REASON = s.SKIP_REASON, SKIPPED_AT = GETDATE()
+         WHEN NOT MATCHED THEN INSERT (MAIL_ACCOUNT_ID, UIDL, SKIP_REASON)
+              VALUES (s.MAIL_ACCOUNT_ID, s.UIDL, s.SKIP_REASON);`,
+      params
+    );
+    inserted += chunk.length;
+  }
+  return inserted;
+}
+
+/** Xoá danh sách bỏ qua (gọi khi ĐỔI khoảng cấu hình để đánh giá lại toàn bộ). */
+async function clearSkippedUidls(accountId) {
+  await queryRows(`DELETE FROM ZTB_MAIL_SYNC_SKIP WHERE MAIL_ACCOUNT_ID = @ID`, { ID: accountId });
+}
+
+/** Số UIDL đang bị bỏ qua (hiển thị cho FE biết có bao nhiêu email ngoài khoảng). */
+async function countSkippedUidls(accountId) {
+  const row = await queryOne(
+    `SELECT COUNT(*) AS CNT FROM ZTB_MAIL_SYNC_SKIP WHERE MAIL_ACCOUNT_ID = @ID`,
+    { ID: accountId }
+  );
+  return Number(row?.CNT || 0);
 }
 
 /** Danh sách account tới hạn đồng bộ (active, không đang chạy). */
@@ -527,6 +595,11 @@ module.exports = {
   clearAllLocks,
   listSyncableAccounts,
   listSyncStatus,
+  // sync date-range skips
+  listSkippedUidls,
+  markUidlsSkipped,
+  clearSkippedUidls,
+  countSkippedUidls,
   // sync log
   startSyncLog,
   finishSyncLog,

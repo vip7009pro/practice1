@@ -43,14 +43,15 @@ async function loadMailboxStats({ ctrCd, limit = 500 }) {
     `SELECT TOP (@LIMIT)
         a.ID, a.EMPL_NO, a.EMAIL_ADDRESS, a.DISPLAY_NAME,
         a.POP3_HOST, a.POP3_PORT, a.POP3_SECURE, a.SMTP_HOST, a.SMTP_PORT, a.SMTP_SECURE,
-        a.IS_ACTIVE, a.IS_SHARED, a.LAST_SYNC_AT, a.LAST_SYNC_STATUS, a.LAST_ERROR,
+        a.IS_ACTIVE, a.IS_SHARED, a.SYNC_FROM_DATE, a.SYNC_TO_DATE, a.LAST_SYNC_AT, a.LAST_SYNC_STATUS, a.LAST_ERROR,
         LTRIM(RTRIM(ISNULL(emp.LAST_NAME, '') + ' ' + ISNULL(emp.FIRST_NAME, ''))) AS EMPL_NAME,
         ck.LAST_UIDL, ck.IN_PROGRESS, ck.LOCKED_AT, ck.SERVER_TOTAL,
         ISNULL(msg.CNT, 0) AS MESSAGE_COUNT,
         ISNULL(msg.BYTES, 0) AS MESSAGE_BYTES,
         ISNULL(att.CNT, 0) AS ATTACHMENT_COUNT,
         ISNULL(att.BYTES, 0) AS ATTACHMENT_BYTES,
-        ISNULL(unread.CNT, 0) AS UNREAD_COUNT
+        ISNULL(unread.CNT, 0) AS UNREAD_COUNT,
+        ISNULL(sk.CNT, 0) AS SKIPPED_COUNT
      FROM ZTB_MAIL_ACCOUNT a
      OUTER APPLY (
         SELECT TOP 1 MIDLAST_NAME AS LAST_NAME, FIRST_NAME
@@ -72,6 +73,9 @@ async function loadMailboxStats({ ctrCd, limit = 500 }) {
         SELECT COUNT(*) AS CNT FROM ZTB_MAIL_MESSAGE m3
         WHERE m3.MAIL_ACCOUNT_ID = a.ID AND ISNULL(m3.IS_READ, 0) = 0
      ) unread
+     OUTER APPLY (
+        SELECT COUNT(*) AS CNT FROM ZTB_MAIL_SYNC_SKIP s WHERE s.MAIL_ACCOUNT_ID = a.ID
+     ) sk
      WHERE a.CTR_CD = @CTR
      ORDER BY a.IS_ACTIVE DESC, a.EMPL_NO, a.EMAIL_ADDRESS`,
     { CTR: ctrCd, LIMIT: Math.min(Math.max(Number(limit) || 500, 1), 2000) }
@@ -98,6 +102,9 @@ function mapMailboxStat(row) {
     smtpSecure: row.SMTP_SECURE === true || row.SMTP_SECURE === 1,
     isActive: row.IS_ACTIVE === true || row.IS_ACTIVE === 1,
     isShared: row.IS_SHARED === true || row.IS_SHARED === 1,
+    syncFromDate: row.SYNC_FROM_DATE || null,
+    syncToDate: row.SYNC_TO_DATE || null,
+    skippedCount: Number(row.SKIPPED_COUNT || 0),
     lastSyncAt: row.LAST_SYNC_AT,
     lastSyncStatus: row.LAST_SYNC_STATUS,
     lastError: row.LAST_ERROR,
