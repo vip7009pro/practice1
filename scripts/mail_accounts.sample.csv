@@ -1,0 +1,4 @@
+EMPL_NO,EMAIL_ADDRESS,DISPLAY_NAME,POP3_HOST,POP3_PORT,POP3_SECURE,POP3_USERNAME,POP3_PASSWORD,SMTP_HOST,SMTP_PORT,SMTP_SECURE,IS_ACTIVE,CTR_CD
+NHU1903,ketoan@cmsvina.com,Phòng Kế toán,mail.cmsvina.com,995,true,ketoan@cmsvina.com,matkhauPOP3,mail.cmsvina.com,465,true,true,
+VHA0987,kho@cmsvina.com,Bộ phận Kho,mail.cmsvina.com,995,true,kho@cmsvina.com,matkhauPOP3,mail.cmsvina.com,465,true,true,
+TKD1605,sanxuat@cmsvina.com,Phòng Sản xuất,,,,,,mail.cmsvina.com,465,true,true,

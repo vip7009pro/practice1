@@ -12,6 +12,7 @@ const mailRepo = require("./mailRepository");
 const mailCrypto = require("./mailCrypto");
 const { syncMailbox } = require("./mailIngest");
 const { reconcile } = require("./mailReconcile");
+const { ensureNasMount } = require("./mailNasMount");
 
 const INTERVAL_SECONDS = Number(process.env.MAIL_SYNC_INTERVAL_SECONDS || 45) || 45;
 const MAX_CONCURRENCY = Number(process.env.MAIL_MAX_CONCURRENCY || 3) || 3;
@@ -28,16 +29,18 @@ let tickCount = 0;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Chạy tác vụ song song có giới hạn. */
+/** Chạy tác vụ song song có giới hạn; trả về mảng kết quả. */
 async function runPool(items, limit, worker) {
   const queue = [...items];
+  const results = [];
   const runners = Array.from({ length: Math.max(1, Math.min(limit, queue.length)) }, async () => {
     while (queue.length > 0 && !stopping) {
       const item = queue.shift();
-      await worker(item);
+      results.push(await worker(item));
     }
   });
   await Promise.all(runners);
+  return results;
 }
 
 /** Sync 1 mailbox kèm retry + backoff. */
@@ -58,14 +61,21 @@ async function syncWithRetry(accountId) {
   return last;
 }
 
-async function tick() {
+async function tick({ immediate = false } = {}) {
   if (ticking || stopping) return;
   ticking = true;
   try {
-    const accounts = await mailRepo.listSyncableAccounts({ intervalSeconds: INTERVAL_SECONDS });
+    const accounts = await mailRepo.listSyncableAccounts({ intervalSeconds: immediate ? 0 : INTERVAL_SECONDS });
     if (accounts.length === 0) return;
     console.log(`[mailworker] đồng bộ ${accounts.length} mailbox (concurrency=${MAX_CONCURRENCY})`);
-    await runPool(accounts.map((a) => a.ID), MAX_CONCURRENCY, syncWithRetry);
+    const results = await runPool(accounts.map((a) => a.ID), MAX_CONCURRENCY, syncWithRetry);
+
+    // Nếu còn việc dở (hết ngân sách/lô) ⇒ chạy TIẾP ngay, không đợi hết chu kỳ (import lần đầu nhanh hơn).
+    if (!stopping && results.some((r) => r?.budgetExhausted)) {
+      setTimeout(() => {
+        tick({ immediate: true }).catch((e) => console.error(`[mailworker] tick tiếp lỗi: ${e?.message || e}`));
+      }, 2000);
+    }
 
     tickCount += 1;
     if (RECONCILE_EVERY_TICKS > 0 && tickCount % RECONCILE_EVERY_TICKS === 0) {
@@ -89,7 +99,19 @@ function startMailWorker() {
   }
 
   // Chạy ngay lần đầu, không chặn khởi động server.
-  tick().catch((e) => console.error(`[mailworker] tick đầu lỗi: ${e?.message || e}`));
+  (async () => {
+    // Process cũ đã chết ⇒ giải phóng khoá đồng bộ còn sót (tránh mailbox "treo" Đang đồng bộ).
+    try {
+      const cleared = await mailRepo.clearAllLocks();
+      if (cleared > 0) console.log(`[mailworker] đã giải phóng ${cleared} khoá đồng bộ còn sót`);
+    } catch (e) {
+      console.warn(`[mailworker] clearAllLocks lỗi: ${e?.message || e}`);
+    }
+    // Kết nối NAS có credential TRƯỚC khi ghi file (Node không tự truyền credential SMB).
+    const nas = await ensureNasMount().catch((e) => ({ attempted: true, ok: false, message: e?.message || String(e) }));
+    if (nas.attempted) console.log(`[mailworker] NAS: ${nas.message}`);
+    await tick();
+  })().catch((e) => console.error(`[mailworker] tick đầu lỗi: ${e?.message || e}`));
 
   if (timer) clearInterval(timer);
   timer = setInterval(() => {

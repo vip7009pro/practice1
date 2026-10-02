@@ -394,6 +394,76 @@ BEGIN
   PRINT 'Created ZTB_MAIL_SYNC_CHECKPOINT';
 END`,
   },
+  {
+    name: "IX_MAIL_ACCOUNT_EMPL",
+    sql: `IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_MAIL_ACCOUNT_EMPL')
+BEGIN
+  -- Tăng tốc tra mailbox RIÊNG theo nhân sự (self-service) + liệt kê theo công ty.
+  CREATE INDEX IX_MAIL_ACCOUNT_EMPL ON ZTB_MAIL_ACCOUNT (CTR_CD, EMPL_NO, IS_ACTIVE);
+  PRINT 'Created IX_MAIL_ACCOUNT_EMPL';
+END`,
+  },
+  {
+    name: "ZTB_MAIL_SYNC_CHECKPOINT.SERVER_TOTAL",
+    sql: `IF NOT EXISTS (
+       SELECT * FROM sys.columns
+       WHERE object_id = OBJECT_ID('ZTB_MAIL_SYNC_CHECKPOINT') AND name = 'SERVER_TOTAL')
+BEGIN
+  -- Tổng số email báo bởi POP3 STAT ở lần đồng bộ gần nhất (để hiển thị tiến độ).
+  ALTER TABLE ZTB_MAIL_SYNC_CHECKPOINT ADD SERVER_TOTAL INT NULL;
+  PRINT 'Added SERVER_TOTAL';
+END`,
+  },
+  {
+    name: "ZTB_MAIL_OUTBOX",
+    sql: `IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ZTB_MAIL_OUTBOX')
+BEGIN
+  -- Tệp đính kèm SOẠN THẢO: upload trước khi gửi (chưa gắn vào email nào).
+  CREATE TABLE ZTB_MAIL_OUTBOX (
+    ID            INT IDENTITY(1,1) PRIMARY KEY,
+    CTR_CD        NVARCHAR(20)  NOT NULL,
+    EMPL_NO       NVARCHAR(20)  NOT NULL,
+    FILE_NAME     NVARCHAR(300) NULL,
+    CONTENT_TYPE  NVARCHAR(150) NULL,
+    FILE_SIZE     BIGINT        NULL,
+    STORAGE_PATH  NVARCHAR(500) NOT NULL,
+    CREATED_AT    DATETIME2     NOT NULL CONSTRAINT DF_MAIL_OUTBOX_CREATED DEFAULT GETDATE()
+  );
+  PRINT 'Created ZTB_MAIL_OUTBOX';
+END`,
+  },
+  {
+    name: "IX_MAIL_OUTBOX_EMPL",
+    sql: `IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_MAIL_OUTBOX_EMPL')
+BEGIN
+  CREATE INDEX IX_MAIL_OUTBOX_EMPL ON ZTB_MAIL_OUTBOX (EMPL_NO, CREATED_AT DESC);
+  PRINT 'Created IX_MAIL_OUTBOX_EMPL';
+END`,
+  },
+  {
+    // Phase 7 — tắt/bật thông báo đẩy THEO TỪNG NGƯỜI cho từng mailbox (mailbox dùng chung vẫn tách riêng được).
+    name: "ZTB_MAIL_MUTE",
+    sql: `IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ZTB_MAIL_MUTE')
+BEGIN
+  CREATE TABLE ZTB_MAIL_MUTE (
+    ID              INT IDENTITY(1,1) PRIMARY KEY,
+    CTR_CD          NVARCHAR(20) NOT NULL,
+    EMPL_NO         NVARCHAR(20) NOT NULL,
+    MAIL_ACCOUNT_ID INT          NOT NULL,
+    CREATED_AT      DATETIME2    NOT NULL CONSTRAINT DF_MAIL_MUTE_CREATED DEFAULT GETDATE(),
+    CONSTRAINT FK_MAIL_MUTE_ACCOUNT FOREIGN KEY (MAIL_ACCOUNT_ID) REFERENCES ZTB_MAIL_ACCOUNT (ID)
+  );
+  PRINT 'Created ZTB_MAIL_MUTE';
+END`,
+  },
+  {
+    name: "UX_MAIL_MUTE",
+    sql: `IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'UX_MAIL_MUTE')
+BEGIN
+  CREATE UNIQUE INDEX UX_MAIL_MUTE ON ZTB_MAIL_MUTE (EMPL_NO, MAIL_ACCOUNT_ID);
+  PRINT 'Created UX_MAIL_MUTE';
+END`,
+  },
 ];
 
 async function main() {

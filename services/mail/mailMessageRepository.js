@@ -22,15 +22,18 @@ function accountInClause(accountIds) {
 /* Dedup + insert                                                      */
 /* ------------------------------------------------------------------ */
 
-/** Tìm email đã tồn tại theo Message-ID / UIDL / hash (thứ tự ưu tiên). */
+/** Tìm email đã tồn tại theo Message-ID / UIDL / hash (theo thứ tự ưu tiên). */
 async function findMessageByDedup({ accountId, messageId, uidl, contentHash }) {
+  // Message-ID là khoá ĐÁNG TIN NHẤT: nếu có và chưa từng thấy ⇒ email MỚI
+  // (không dùng hash để tránh loại nhầm 2 email hợp lệ có nội dung giống nhau).
   if (messageId) {
     const row = await queryOne(
       `SELECT ID FROM ZTB_MAIL_MESSAGE WHERE MAIL_ACCOUNT_ID = @ACC AND MESSAGE_ID = @MID`,
       { ACC: accountId, MID: messageId }
     );
-    if (row) return row;
+    return row || null;
   }
+  // Không có Message-ID ⇒ dùng UIDL (định danh duy nhất theo mailbox server).
   if (uidl) {
     const row = await queryOne(
       `SELECT ID FROM ZTB_MAIL_MESSAGE WHERE MAIL_ACCOUNT_ID = @ACC AND UIDL = @UIDL`,
@@ -38,6 +41,7 @@ async function findMessageByDedup({ accountId, messageId, uidl, contentHash }) {
     );
     if (row) return row;
   }
+  // Fallback cuối: hash nội dung THÔ (chỉ khi email không có Message-ID).
   if (contentHash) {
     return queryOne(
       `SELECT ID FROM ZTB_MAIL_MESSAGE WHERE MAIL_ACCOUNT_ID = @ACC AND CONTENT_HASH = @HASH`,
@@ -118,6 +122,200 @@ async function listExistingUidls(accountId) {
     { ACC: accountId }
   );
   return new Set(rows.map((r) => r.UIDL));
+}
+
+/* ------------------------------------------------------------------ */
+/* Tìm kiếm (Phase 5)                                                  */
+/* ------------------------------------------------------------------ */
+
+/** Escape ký tự đại diện của LIKE để tìm đúng chuỗi người dùng nhập. */
+function likeEscape(value) {
+  return String(value ?? "").replace(/[\\%_\[]/g, (ch) => `\\${ch}`);
+}
+
+function likeArg(value) {
+  return `%${likeEscape(value)}%`;
+}
+
+/**
+ * Dựng mệnh đề WHERE + tham số cho tìm kiếm (dùng chung cho list & count).
+ */
+function buildSearchWhere(accountIds, emplNo, filters = {}) {
+  const inc = accountInClause(accountIds);
+  if (!inc.ok) return null;
+  const empl = String(emplNo || "").trim().toUpperCase();
+  const conditions = [`m.MAIL_ACCOUNT_ID IN ${inc.sql}`, `m.DELETED_AT IS NULL`, `us.DELETED_AT IS NULL`];
+  const params = { EMPL: empl };
+
+  const folder = String(filters.folder || "").toUpperCase();
+  if (folder && folder !== "ALL") {
+    if (folder === "STARRED") conditions.push(`ISNULL(us.IS_STARRED, m.IS_STARRED) = 1`);
+    else {
+      conditions.push(`ISNULL(us.FOLDER_OVERRIDE, m.FOLDER) = @FOLDER`);
+      params.FOLDER = folder;
+    }
+  }
+
+  if (filters.accountId) {
+    conditions.push(`m.MAIL_ACCOUNT_ID = @ACC`);
+    params.ACC = Number(filters.accountId);
+  }
+  if (filters.from) {
+    conditions.push(`(m.FROM_ADDRESS LIKE @FROM ESCAPE '\\' OR m.FROM_NAME LIKE @FROM ESCAPE '\\')`);
+    params.FROM = likeArg(filters.from);
+  }
+  if (filters.to) {
+    conditions.push(`(m.TO_JSON LIKE @TO ESCAPE '\\' OR m.CC_JSON LIKE @TO ESCAPE '\\')`);
+    params.TO = likeArg(filters.to);
+  }
+  if (filters.subject) {
+    conditions.push(`m.SUBJECT LIKE @SUBJ ESCAPE '\\'`);
+    params.SUBJ = likeArg(filters.subject);
+  }
+  if (filters.body) {
+    conditions.push(`(m.BODY_INLINE LIKE @BODY ESCAPE '\\' OR m.PREVIEW_TEXT LIKE @BODY ESCAPE '\\')`);
+    params.BODY = likeArg(filters.body);
+  }
+  if (filters.filename) {
+    conditions.push(
+      `EXISTS (SELECT 1 FROM ZTB_MAIL_ATTACHMENT a WHERE a.MESSAGE_ID = m.ID AND a.FILE_NAME LIKE @FN ESCAPE '\\')`
+    );
+    params.FN = likeArg(filters.filename);
+  }
+  if (filters.hasAttachment === true) conditions.push(`ISNULL(m.HAS_ATTACHMENT, 0) = 1`);
+  if (filters.hasAttachment === false) conditions.push(`ISNULL(m.HAS_ATTACHMENT, 0) = 0`);
+  if (filters.isUnread === true) conditions.push(`ISNULL(us.IS_READ, m.IS_READ) = 0`);
+  if (filters.isRead === true) conditions.push(`ISNULL(us.IS_READ, m.IS_READ) = 1`);
+  if (filters.isStarred === true) conditions.push(`ISNULL(us.IS_STARRED, m.IS_STARRED) = 1`);
+  if (filters.after) {
+    conditions.push(`m.RECEIVED_AT >= @AFTER`);
+    params.AFTER = filters.after;
+  }
+  if (filters.before) {
+    conditions.push(`m.RECEIVED_AT < @BEFORE`);
+    params.BEFORE = filters.before;
+  }
+
+  // Từ khoá tự do + từ khoá rời: mọi từ phải xuất hiện trong các trường văn bản.
+  const textMatch = (key) =>
+    `(m.SUBJECT LIKE @${key} ESCAPE '\\' OR m.PREVIEW_TEXT LIKE @${key} ESCAPE '\\' OR m.BODY_INLINE LIKE @${key} ESCAPE '\\'
+      OR m.FROM_ADDRESS LIKE @${key} ESCAPE '\\' OR m.FROM_NAME LIKE @${key} ESCAPE '\\'
+      OR m.TO_JSON LIKE @${key} ESCAPE '\\' OR m.CC_JSON LIKE @${key} ESCAPE '\\')`;
+  const terms = Array.isArray(filters.terms) ? filters.terms.map((t) => String(t).trim()).filter(Boolean).slice(0, 8) : [];
+  terms.forEach((term, index) => {
+    const key = `TERM${index}`;
+    conditions.push(textMatch(key));
+    params[key] = likeArg(term);
+  });
+  if (filters.keyword && terms.length === 0) {
+    conditions.push(textMatch("Q"));
+    params.Q = likeArg(filters.keyword);
+  }
+
+  return { conditions, params };
+}
+
+/**
+ * Tìm kiếm email (server-side).
+ *
+ * Lọc: `q`/`terms` (từ khoá), `from`, `to`, `subject`, `body`, `filename`,
+ * `folder`, `accountId`, `hasAttachment`, `isUnread`, `isRead`, `isStarred`,
+ * `after`/`before` (Date), `sort` = newest|oldest|sender|subject.
+ *
+ * Phân trang: keyset (`cursor`) cho newest/oldest; `offset` cho các kiểu sắp xếp khác
+ * (giới hạn 5000 để không OFFSET quá sâu).
+ *
+ * Lưu ý: chỉ tìm được trong `BODY_INLINE` + `PREVIEW_TEXT` (body lưu trên NAS không
+ * tham gia tìm kiếm — cần nhánh Full-Text riêng nếu muốn mở rộng).
+ */
+async function searchMessages({ accountIds, emplNo, filters = {}, limit = 30, cursor = null, offset = 0 }) {
+  const built = buildSearchWhere(accountIds, emplNo, filters);
+  if (!built) return { rows: [], hasMore: false };
+  const { conditions, params } = built;
+  const size = Math.min(Math.max(Number(limit) || 30, 1), 100);
+
+  const sort = String(filters.sort || "newest").toLowerCase();
+  const orderBy =
+    sort === "oldest"
+      ? "m.RECEIVED_AT ASC, m.ID ASC"
+      : sort === "sender"
+      ? "m.FROM_NAME ASC, m.FROM_ADDRESS ASC, m.RECEIVED_AT DESC"
+      : sort === "subject"
+      ? "m.SUBJECT ASC, m.RECEIVED_AT DESC"
+      : "m.RECEIVED_AT DESC, m.ID DESC";
+
+  const useKeyset = (sort === "newest" || sort === "oldest") && !!(cursor && cursor.receivedAt && cursor.id);
+  if (useKeyset) {
+    const op = sort === "oldest" ? ">" : "<";
+    conditions.push(`(m.RECEIVED_AT ${op} @CUR_AT OR (m.RECEIVED_AT = @CUR_AT AND m.ID ${op} @CUR_ID))`);
+    params.CUR_AT = cursor.receivedAt;
+    params.CUR_ID = cursor.id;
+  }
+
+  const rows = await queryRows(
+    `SELECT ${MESSAGE_LIST_COLUMNS}
+     FROM ZTB_MAIL_MESSAGE m
+     LEFT JOIN ZTB_MAIL_USERSTATE us ON us.MESSAGE_ID = m.ID AND us.EMPL_NO = @EMPL
+     WHERE ${conditions.join(" AND ")}
+     ORDER BY ${orderBy}
+     OFFSET @OFFSET ROWS FETCH NEXT @FETCH ROWS ONLY`,
+    {
+      ...params,
+      // Keyset giữ OFFSET = 0 (đã lọc bằng con trỏ); kiểu sắp xếp khác đi theo offset.
+      OFFSET: useKeyset ? 0 : Math.min(Math.max(Number(offset) || 0, 0), 5000),
+      FETCH: size,
+    }
+  );
+  return { rows, hasMore: rows.length >= size };
+}
+
+/** Đếm tổng số kết quả khớp bộ lọc (để hiển thị "N kết quả"). */
+async function countSearchResults({ accountIds, emplNo, filters = {} }) {
+  const built = buildSearchWhere(accountIds, emplNo, filters);
+  if (!built) return 0;
+  const row = await queryOne(
+    `SELECT COUNT(*) AS CNT
+     FROM ZTB_MAIL_MESSAGE m
+     LEFT JOIN ZTB_MAIL_USERSTATE us ON us.MESSAGE_ID = m.ID AND us.EMPL_NO = @EMPL
+     WHERE ${built.conditions.join(" AND ")}`,
+    built.params
+  );
+  return Number(row?.CNT || 0);
+}
+
+/**
+ * Lấy các email MỚI HƠN mốc `since` = { receivedAt, id } (Phase 6 — sau sự kiện `email:new`
+ * hoặc sau khi socket kết nối lại). Không có `since` ⇒ lấy mới nhất tối đa `limit`.
+ */
+async function listMessagesSince({ accountIds, emplNo, folder = "INBOX", since = null, limit = 50 }) {
+  const inc = accountInClause(accountIds);
+  if (!inc.ok) return [];
+  const empl = String(emplNo || "").trim().toUpperCase();
+  const conditions = [`m.MAIL_ACCOUNT_ID IN ${inc.sql}`, `m.DELETED_AT IS NULL`, `us.DELETED_AT IS NULL`];
+  const params = { EMPL: empl };
+
+  const key = String(folder || "").toUpperCase();
+  if (key === "STARRED") {
+    conditions.push(`ISNULL(us.IS_STARRED, m.IS_STARRED) = 1`);
+  } else if (key && key !== "ALL") {
+    conditions.push(`ISNULL(us.FOLDER_OVERRIDE, m.FOLDER) = @FOLDER`);
+    params.FOLDER = key;
+  }
+  if (since?.receivedAt && since?.id) {
+    conditions.push(`(m.RECEIVED_AT > @SINCE_AT OR (m.RECEIVED_AT = @SINCE_AT AND m.ID > @SINCE_ID))`);
+    params.SINCE_AT = since.receivedAt;
+    params.SINCE_ID = since.id;
+  }
+
+  return queryRows(
+    `SELECT ${MESSAGE_LIST_COLUMNS}
+     FROM ZTB_MAIL_MESSAGE m
+     LEFT JOIN ZTB_MAIL_USERSTATE us ON us.MESSAGE_ID = m.ID AND us.EMPL_NO = @EMPL
+     WHERE ${conditions.join(" AND ")}
+     ORDER BY m.RECEIVED_AT DESC, m.ID DESC
+     OFFSET 0 ROWS FETCH NEXT @FETCH ROWS ONLY`,
+    { ...params, FETCH: Math.min(Math.max(Number(limit) || 50, 1), 200) }
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -384,7 +582,10 @@ module.exports = {
   listExistingUidls,
   getMessageWithAccount,
   listInbox,
+  listMessagesSince,
   countUnread,
+  searchMessages,
+  countSearchResults,
   upsertUserState,
   findThreadByHeaderRef,
   createThread,

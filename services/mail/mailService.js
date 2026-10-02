@@ -73,6 +73,7 @@ exports.emailBootstrap = async (req, res) => {
     ]);
     const accountIds = accounts.map((a) => a.ID);
     const unreadTotal = await msgRepo.countUnread({ accountIds, emplNo });
+    const own = await mailRepo.getAccountByEmpl({ ctrCd, emplNo });
 
     // Đếm nhanh cho từng thư mục hệ thống (INBOX/STARRED quan trọng nhất).
     const counts = {};
@@ -92,7 +93,48 @@ exports.emailBootstrap = async (req, res) => {
       }
     }
 
-    ok(res, { folders, accounts, unreadTotal, counts, myEmplNo: emplNo });
+    ok(res, { folders, accounts, unreadTotal, counts, myEmplNo: emplNo, hasOwnAccount: !!own, ownAccountId: own?.ID || null });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Trạng thái đồng bộ                                                  */
+/* ------------------------------------------------------------------ */
+
+exports.emailSyncStatus = async (req, res, DATA = {}) => {
+  try {
+    const { ctrCd, emplNo } = ctx(req);
+    const rows = await mailRepo.listSyncStatus({ ctrCd, emplNo: DATA.all ? null : emplNo });
+    const accounts = rows.map((r) => {
+      const imported = Number(r.IMPORTED || 0);
+      const serverTotal = Number(r.SERVER_TOTAL || 0);
+      return {
+        accountId: r.ACCOUNT_ID,
+        emailAddress: r.EMAIL_ADDRESS,
+        displayName: r.DISPLAY_NAME,
+        isActive: r.IS_ACTIVE === true || r.IS_ACTIVE === 1,
+        lastSyncAt: r.LAST_SYNC_AT,
+        lastSyncStatus: r.LAST_SYNC_STATUS,
+        lastError: r.LAST_ERROR,
+        inProgress: r.IN_PROGRESS === true || r.IN_PROGRESS === 1,
+        serverTotal,
+        imported,
+        // serverTotal có thể = 0 nếu server không trả STAT ⇒ pending = 0 (không báo sai).
+        pending: Math.max(0, serverTotal - imported),
+      };
+    });
+    const totals = accounts.reduce(
+      (acc, a) => ({
+        serverTotal: acc.serverTotal + a.serverTotal,
+        imported: acc.imported + a.imported,
+        pending: acc.pending + a.pending,
+        syncing: acc.syncing + (a.inProgress ? 1 : 0),
+      }),
+      { serverTotal: 0, imported: 0, pending: 0, syncing: 0 }
+    );
+    ok(res, { accounts, totals });
   } catch (error) {
     fail(res, error?.message || String(error));
   }
@@ -124,6 +166,96 @@ exports.emailInbox = async (req, res, DATA = {}) => {
       messages: page.map(mapListItem),
       hasMore,
       nextCursor: hasMore && last ? { receivedAt: last.RECEIVED_AT, id: last.ID } : null,
+    });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Tìm kiếm (Phase 5)                                                  */
+/* ------------------------------------------------------------------ */
+
+/** Chuẩn hoá mốc thời gian cho bộ lọc `after`/`before` (nhận ISO, `YYYY-MM-DD`, số ms). */
+function parseSearchDate(value, { endOfDay = false } = {}) {
+  if (value === undefined || value === null || value === "") return null;
+  if (value instanceof Date) return value;
+  const text = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    // Ngày thuần VN (GMT+7): after = 00:00, before = 00:00 ngày kế tiếp.
+    const base = new Date(`${text}T00:00:00+07:00`);
+    if (Number.isNaN(base.getTime())) return null;
+    return endOfDay ? new Date(base.getTime() + 24 * 60 * 60 * 1000) : base;
+  }
+  const numeric = Number(text);
+  const parsed = Number.isFinite(numeric) && text.length > 8 ? new Date(numeric) : new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * `emailSearch` — tìm kiếm server-side (không kéo toàn bộ hộp thư về browser).
+ *
+ * DATA:
+ *  - `Q`/`TERMS`: từ khoá (mọi từ phải khớp), tìm trong subject/preview/body-inline/from/to.
+ *  - `FROM`, `TO`, `SUBJECT`, `BODY`, `FILENAME`: lọc theo trường.
+ *  - `FOLDER` (mặc định ALL), `ACCOUNT_ID`.
+ *  - `HAS_ATTACHMENT`, `IS_UNREAD`, `IS_READ`, `IS_STARRED` (bool).
+ *  - `AFTER`, `BEFORE` (ISO hoặc YYYY-MM-DD, hiểu theo giờ VN).
+ *  - `SORT`: newest | oldest | sender | subject. `LIMIT`, `CURSOR`, `OFFSET`, `INCLUDE_COUNT`.
+ */
+exports.emailSearch = async (req, res, DATA = {}) => {
+  const started = Date.now();
+  try {
+    const { ctrCd, emplNo } = ctx(req);
+    const accounts = await accessibleAccounts(ctrCd, emplNo);
+    const accountIds = accounts.map((a) => a.ID);
+    const limit = Math.min(Math.max(Number(DATA.limit ?? DATA.LIMIT) || 30, 1), 100);
+
+    const bool = (value) => (value === true || value === 1 || value === "1" || value === "true" ? true : undefined);
+    const filters = {
+      terms: Array.isArray(DATA.TERMS) ? DATA.TERMS.slice(0, 8) : [],
+      keyword: typeof DATA.Q === "string" ? DATA.Q.trim() : "",
+      from: DATA.FROM ? String(DATA.FROM).trim() : "",
+      to: DATA.TO ? String(DATA.TO).trim() : "",
+      subject: DATA.SUBJECT ? String(DATA.SUBJECT).trim() : "",
+      body: DATA.BODY ? String(DATA.BODY).trim() : "",
+      filename: DATA.FILENAME ? String(DATA.FILENAME).trim() : "",
+      folder: String(DATA.FOLDER || "ALL").toUpperCase(),
+      accountId: DATA.ACCOUNT_ID || DATA.accountId || null,
+      hasAttachment:
+        DATA.HAS_ATTACHMENT === true || DATA.HAS_ATTACHMENT === "1"
+          ? true
+          : DATA.HAS_ATTACHMENT === false || DATA.HAS_ATTACHMENT === "0"
+          ? false
+          : undefined,
+      isUnread: bool(DATA.IS_UNREAD),
+      isRead: bool(DATA.IS_READ),
+      isStarred: bool(DATA.IS_STARRED),
+      after: parseSearchDate(DATA.AFTER),
+      before: parseSearchDate(DATA.BEFORE, { endOfDay: true }),
+      sort: DATA.SORT || "newest",
+    };
+
+    const { rows } = await msgRepo.searchMessages({
+      accountIds,
+      emplNo,
+      filters,
+      limit: limit + 1,
+      cursor: DATA.CURSOR || null,
+      offset: Number(DATA.OFFSET) || 0,
+    });
+
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const last = page[page.length - 1];
+    const total = DATA.INCLUDE_COUNT ? await msgRepo.countSearchResults({ accountIds, emplNo, filters }) : undefined;
+
+    ok(res, {
+      messages: page.map(mapListItem),
+      hasMore,
+      nextCursor: hasMore && last ? { receivedAt: last.RECEIVED_AT, id: last.ID } : null,
+      total,
+      tookMs: Date.now() - started,
     });
   } catch (error) {
     fail(res, error?.message || String(error));
@@ -199,6 +331,17 @@ exports.emailListAttachments = async (req, res, DATA = {}) => {
   }
 };
 
+/** Gửi sự kiện realtime cho CHÍNH người dùng (mọi tab/thiết bị) — không chặn luồng chính. */
+function emitToUser(emplNo, event, payload) {
+  try {
+    const { emitToUsers } = require("../../socket/socketHandler");
+    if (typeof emitToUsers !== "function" || !emplNo) return;
+    emitToUsers([emplNo], event, payload);
+  } catch (error) {
+    console.warn(`[mail] emit ${event} bỏ qua: ${error?.message || error}`);
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Trạng thái đọc / sao                                                */
 /* ------------------------------------------------------------------ */
@@ -212,6 +355,8 @@ exports.emailMarkRead = async (req, res, DATA = {}) => {
     if (!message) return fail(res, "Không có quyền", "FORBIDDEN");
     const isRead = DATA.IS_READ !== false;
     await msgRepo.upsertUserState({ messageId: id, emplNo, isRead });
+    // Đồng bộ trạng thái đọc sang các tab/thiết bị khác của cùng người dùng.
+    emitToUser(emplNo, "email:state", { messageId: id, isRead, emplNo });
     ok(res, { id, isRead });
   } catch (error) {
     fail(res, error?.message || String(error));
@@ -227,7 +372,44 @@ exports.emailStar = async (req, res, DATA = {}) => {
     if (!message) return fail(res, "Không có quyền", "FORBIDDEN");
     const isStarred = DATA.IS_STARRED === true || DATA.IS_STARRED === 1;
     await msgRepo.upsertUserState({ messageId: id, emplNo, isStarred });
+    emitToUser(emplNo, "email:state", { messageId: id, isStarred, emplNo });
     ok(res, { id, isStarred });
+  } catch (error) {
+    fail(res, error?.message || String(error));
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Realtime (Phase 6)                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `emailSync` — lấy các email MỚI HƠN mốc đã biết (dùng khi có sự kiện `email:new`
+ * hoặc sau khi socket kết nối lại). Trả kèm `unreadTotal` để cập nhật badge chính xác.
+ *
+ * DATA: `FOLDER` (mặc định INBOX), `SINCE` = `{ receivedAt, id }`, `LIMIT`.
+ */
+exports.emailSync = async (req, res, DATA = {}) => {
+  try {
+    const { ctrCd, emplNo } = ctx(req);
+    const accounts = await accessibleAccounts(ctrCd, emplNo);
+    const accountIds = accounts.map((a) => a.ID);
+    const folder = String(DATA.FOLDER || "INBOX").toUpperCase();
+    const limit = Math.min(Math.max(Number(DATA.LIMIT) || 50, 1), 100);
+    const since = DATA.SINCE?.receivedAt && DATA.SINCE?.id ? DATA.SINCE : null;
+
+    const rows = await msgRepo.listMessagesSince({ accountIds, emplNo, folder, since, limit: limit + 1 });
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const unreadTotal = await msgRepo.countUnread({ accountIds, emplNo });
+
+    ok(res, {
+      messages: page.map(mapListItem),
+      hasMore,
+      // Danh sách sắp mới nhất trước ⇒ phần tử đầu là mốc mới nhất để lần sau so tiếp.
+      latest: page[0] ? { receivedAt: page[0].RECEIVED_AT, id: page[0].ID } : null,
+      unreadTotal,
+    });
   } catch (error) {
     fail(res, error?.message || String(error));
   }

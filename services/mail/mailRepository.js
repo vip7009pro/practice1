@@ -87,6 +87,16 @@ async function findAccountByEmail({ ctrCd, emailAddress }) {
   );
 }
 
+/** Mailbox RIÊNG của 1 nhân sự (dùng cho self-service). */
+async function getAccountByEmpl({ ctrCd, emplNo }) {
+  return queryOne(
+    `SELECT TOP 1 ${ACCOUNT_COLUMNS} FROM ZTB_MAIL_ACCOUNT
+     WHERE CTR_CD = @CTR AND EMPL_NO = @EMPL
+     ORDER BY CASE WHEN IS_ACTIVE = 1 THEN 0 ELSE 1 END, ID`,
+    { CTR: ctrCd, EMPL: String(emplNo || "").trim().toUpperCase() }
+  );
+}
+
 async function insertAccount(fields) {
   const rows = await queryRows(
     `INSERT INTO ZTB_MAIL_ACCOUNT
@@ -205,20 +215,64 @@ async function tryAcquireLock(accountId, lockBy, staleMs = 10 * 60 * 1000) {
   return rows.length > 0;
 }
 
-async function releaseLock(accountId, { lastUidl, importedDelta = 0 } = {}) {
+async function releaseLock(accountId, { lastUidl, importedDelta = 0, serverTotal } = {}) {
   await queryRows(
     `UPDATE ZTB_MAIL_SYNC_CHECKPOINT
         SET IN_PROGRESS = 0, LOCKED_AT = NULL, LOCKED_BY = NULL,
             LAST_SYNC_AT = GETDATE(),
             LAST_UIDL = COALESCE(@UIDL, LAST_UIDL),
-            TOTAL_IMPORTED = TOTAL_IMPORTED + @DELTA
+            TOTAL_IMPORTED = TOTAL_IMPORTED + @DELTA,
+            SERVER_TOTAL = COALESCE(@TOTAL, SERVER_TOTAL)
       WHERE MAIL_ACCOUNT_ID = @ID`,
-    { ID: accountId, UIDL: lastUidl ?? null, DELTA: importedDelta }
+    { ID: accountId, UIDL: lastUidl ?? null, DELTA: importedDelta, TOTAL: serverTotal ?? null }
   );
 }
 
-async function resetCheckpoint(accountId) {
-  await ensureCheckpoint(accountId);
+/**
+ * Trạng thái đồng bộ của các mailbox thuộc quyền người dùng.
+ * `pending` = số email còn trên server chưa tải (theo SERVER_TOTAL gần nhất).
+ */
+async function listSyncStatus({ ctrCd, emplNo }) {
+  return queryRows(
+    `SELECT a.ID AS ACCOUNT_ID, a.EMAIL_ADDRESS, a.DISPLAY_NAME, a.IS_ACTIVE,
+            a.LAST_SYNC_AT, a.LAST_SYNC_STATUS, a.LAST_ERROR,
+            ISNULL(c.SERVER_TOTAL, 0) AS SERVER_TOTAL,
+            ISNULL(c.TOTAL_IMPORTED, 0) AS TOTAL_IMPORTED,
+            ISNULL(c.IN_PROGRESS, 0) AS IN_PROGRESS,
+            (SELECT COUNT(*) FROM ZTB_MAIL_MESSAGE m
+              WHERE m.MAIL_ACCOUNT_ID = a.ID AND m.DELETED_AT IS NULL) AS IMPORTED
+     FROM ZTB_MAIL_ACCOUNT a
+     LEFT JOIN ZTB_MAIL_SYNC_CHECKPOINT c ON c.MAIL_ACCOUNT_ID = a.ID
+     WHERE a.CTR_CD = @CTR AND (@EMPL IS NULL OR a.EMPL_NO = @EMPL OR a.IS_SHARED = 1)
+     ORDER BY a.EMAIL_ADDRESS`,
+    { CTR: ctrCd, EMPL: emplNo || null }
+  );
+}
+
+/** Lưu tổng email phía server biết được từ POP3 STAT (hiển thị tiến độ ngay khi đang sync). */
+async function setServerTotal(accountId, serverTotal) {
+  await queryRows(
+    `UPDATE ZTB_MAIL_SYNC_CHECKPOINT SET SERVER_TOTAL = @TOTAL WHERE MAIL_ACCOUNT_ID = @ID`,
+    { ID: accountId, TOTAL: Number(serverTotal) || 0 }
+  );
+}
+
+/**
+ * Giải phóng MỌI khoá đồng bộ (IN_PROGRESS=1).
+ * ⚠️ Chỉ an toàn khi gọi lúc KHỞI ĐỘNG worker (vì PM2 chạy 1 process ⇒ không có sync nào đang chạy thật).
+ * Tránh tình trạng mailbox "treo" mãi ở trạng thái Đang đồng bộ sau khi restart giữa lúc sync.
+ */
+async function clearAllLocks() {
+  const rows = await queryRows(
+    `UPDATE ZTB_MAIL_SYNC_CHECKPOINT
+        SET IN_PROGRESS = 0, LOCKED_AT = NULL, LOCKED_BY = NULL
+        OUTPUT INSERTED.MAIL_ACCOUNT_ID
+      WHERE IN_PROGRESS = 1`
+  );
+  return rows.length;
+}
+
+async function resetCheckpoint(accountId) {  await ensureCheckpoint(accountId);
   await queryRows(
     `UPDATE ZTB_MAIL_SYNC_CHECKPOINT
         SET LAST_UIDL = NULL, IN_PROGRESS = 0, LOCKED_AT = NULL, LOCKED_BY = NULL
@@ -410,15 +464,50 @@ async function getStorageDashboard({ ctrCd }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Tắt/bật thông báo đẩy (ZTB_MAIL_MUTE) — Phase 7                     */
+/* ------------------------------------------------------------------ */
+
+/** Danh sách MAIL_ACCOUNT_ID mà người dùng đã TẮT thông báo đẩy. */
+async function listMutedAccountIds(emplNo) {
+  const empl = String(emplNo || "").trim().toUpperCase();
+  if (!empl) return [];
+  const rows = await queryRows(`SELECT MAIL_ACCOUNT_ID FROM ZTB_MAIL_MUTE WHERE EMPL_NO = @EMPL`, { EMPL: empl });
+  return rows.map((row) => Number(row.MAIL_ACCOUNT_ID)).filter((id) => Number.isInteger(id) && id > 0);
+}
+
+/** Tắt/bật thông báo đẩy cho 1 mailbox của người dùng (idempotent). */
+async function setMailMute({ ctrCd, emplNo, accountId, muted }) {
+  const empl = String(emplNo || "").trim().toUpperCase();
+  const acc = Number(accountId);
+  if (!empl || !Number.isInteger(acc) || acc <= 0) return false;
+  if (muted) {
+    await queryRows(
+      `IF NOT EXISTS (SELECT 1 FROM ZTB_MAIL_MUTE WHERE EMPL_NO = @EMPL AND MAIL_ACCOUNT_ID = @ACC)
+       INSERT INTO ZTB_MAIL_MUTE (CTR_CD, EMPL_NO, MAIL_ACCOUNT_ID) VALUES (@CTR, @EMPL, @ACC)`,
+      { CTR: ctrCd, EMPL: empl, ACC: acc }
+    );
+  } else {
+    await queryRows(`DELETE FROM ZTB_MAIL_MUTE WHERE EMPL_NO = @EMPL AND MAIL_ACCOUNT_ID = @ACC`, {
+      EMPL: empl,
+      ACC: acc,
+    });
+  }
+  return true;
+}
+
 module.exports = {
   queryRows,
   queryOne,
   withTransaction,
+  listMutedAccountIds,
+  setMailMute,
   // accounts
   listAccounts,
   getAccountById,
   getAccountWithCredentials,
   findAccountByEmail,
+  getAccountByEmpl,
   insertAccount,
   updateAccount,
   setAccountActive,
@@ -429,7 +518,10 @@ module.exports = {
   tryAcquireLock,
   releaseLock,
   resetCheckpoint,
+  setServerTotal,
+  clearAllLocks,
   listSyncableAccounts,
+  listSyncStatus,
   // sync log
   startSyncLog,
   finishSyncLog,

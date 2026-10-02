@@ -121,15 +121,26 @@ function writePhysicalFile(buffer, ext = "") {
   return { hash, storagePath: target, size: buffer.length, existed };
 }
 
-/** Mở read stream cho file trong kho (đã kiểm tra nằm trong root + tồn tại). */
-function openReadStream(absPath) {
+/**
+ * Mở read stream cho file trong kho (đã kiểm tra nằm trong root + tồn tại).
+ * @param {string} absPath
+ * @param {{start?:number,end?:number}} [range] đọc 1 phần (HTTP Range) để không kéo cả file lớn vào RAM.
+ */
+function openReadStream(absPath, range) {
   const target = assertInsideRoot(absPath);
   if (!fs.existsSync(target)) {
     const err = new Error("File không tồn tại trong kho lưu trữ");
     err.code = "ENOENT";
     throw err;
   }
-  return { stream: fs.createReadStream(target), size: fs.statSync(target).size, path: target };
+  const size = fs.statSync(target).size;
+  const start = Number(range?.start);
+  const end = Number(range?.end);
+  const useRange = Number.isInteger(start) && start >= 0 && Number.isInteger(end) && end >= start;
+  const stream = useRange
+    ? fs.createReadStream(target, { start, end: Math.min(end, Math.max(size - 1, 0)) })
+    : fs.createReadStream(target);
+  return { stream, size, path: target, range: useRange ? { start, end: Math.min(end, Math.max(size - 1, 0)) } : null };
 }
 
 function exists(absPath) {

@@ -24,6 +24,7 @@ const commandHandlers = {
   ...require("./chat/chatFriendService"),
   ...require("./mail/mailAccountService"),
   ...require("./mail/mailService"),
+  ...require("./mail/mailSendService"),
 };
 
 module.exports = commandHandlers;
