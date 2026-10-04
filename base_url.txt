@@ -1,1 +1,1 @@
-http://14.160.33.94:3000/api
+http://ruougaohoatuoi.ddns.net:40000/api
