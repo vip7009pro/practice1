@@ -1,5 +1,15 @@
 # Current Context - practice1
 
+- Loại bỏ hardcode dòng máy sản xuất bằng CTE động (`services/sanxuatService.js`) (2026-10-03):
+  * Sử dụng CTE: `WITH MACHINE_TB AS (SELECT DISTINCT SUBSTRING(EQ_NAME,1,2) AS EQ_SERIES FROM ZTB_SX_EQ_STATUS)`.
+  * Đã comment lại toàn bộ truy vấn cũ để bảo lưu đối chiếu và viết truy vấn mới phía dưới.
+  * Đã cập nhật 4 command liên quan:
+    1. `ycsxbalanceleadtimedata`: Thay hardcode `IN ('FR','SR','DC','ED')` bằng `IN (SELECT EQ_SERIES FROM MACHINE_TB)`.
+    2. `ycsxbalancecapa`: Thêm CTE `MACHINE_TB`, thay hardcode `EQ1/EQ2 IN ('FR','SR','DC','ED')` bằng CTE động.
+    3. `loadLeadtimeData`: Thêm CTE `MACHINE_TB`, thay 4 khối `UNION ALL` cố định từng dòng máy bằng `CROSS JOIN MACHINE_TB`.
+    4. `sxachivementdata`: Thêm CTE `MACHINE_TB`, thay điều kiện kiểm tra `M100.EQ2 NOT IN ('FR','SR','DC','ED')` bằng `NOT IN (SELECT EQ_SERIES FROM MACHINE_TB)`.
+  * Cú pháp Node.js đã được kiểm tra (`node -c`) đảm bảo 100% hợp lệ.
+
 - MFA / Multi-Factor Authentication (Google Authenticator) (2026-09-25):
   * **Database Migration (`ZTBEMPLINFO`)**: Chạy script `scripts/migrate_mfa_columns.js` bổ sung thành công 4 cột: `MFA_ENABLED` (BIT NOT NULL DEFAULT 0), `MFA_SECRET` (VARCHAR(100) NULL), `MFA_BACKUP_CODES` (NVARCHAR(1000) NULL), `MFA_SETUP_DATE` (DATETIME NULL). Mặc định toàn bộ user là tắt MFA.
   * **TOTP Engine RFC 6238 (`utils/totpUtils.js`)**: Triển khai thuật toán TOTP chuẩn bằng built-in `crypto` của Node.js (Base32, HMAC-SHA1, step 30s, 6 digits, window ±30s, backup codes generator, otpauth URI) không phụ thuộc external runtime, tương thích 100% với `pkg` (`updatebe.exe`).
