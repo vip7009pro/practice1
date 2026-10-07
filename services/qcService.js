@@ -5672,10 +5672,11 @@ exports.qc_get_equipment_list = async (req, res, DATA) => {
       H.CAL_PERIOD,
       H.CAL_DATE AS LAST_CAL_DATE,
       H.NEXT_CAL_DATE,
-      H.STAMP_IMAGE_URL
+      H.STAMP_IMAGE_URL,
+      H.RESULT_FILE_URL AS LAST_RESULT_FILE_URL
     FROM QC_EQUIPMENT_LIST E
     OUTER APPLY (
-        SELECT TOP 1 CAL_PERIOD, CAL_DATE, NEXT_CAL_DATE, STAMP_IMAGE_URL
+        SELECT TOP 1 CAL_PERIOD, CAL_DATE, NEXT_CAL_DATE, STAMP_IMAGE_URL, RESULT_FILE_URL
         FROM QC_CALIBRATION_HISTORY
         WHERE EQ_ID = E.EQ_ID AND CTR_CD = E.CTR_CD
         ORDER BY CAL_DATE DESC
@@ -5736,8 +5737,8 @@ exports.qc_get_calibration_history = async (req, res, DATA) => {
 
 exports.qc_insert_calibration = async (req, res, DATA) => {
   let setpdQuery = `
-    INSERT INTO QC_CALIBRATION_HISTORY (CTR_CD, EQ_ID, CAL_DATE, NEXT_CAL_DATE, CAL_PERIOD, STAMP_IMAGE_URL, CAL_PERSON, REMARK, INS_DATE, INS_EMPL)
-    VALUES ('${DATA.CTR_CD}', ${DATA.EQ_ID}, '${DATA.CAL_DATE}', '${DATA.NEXT_CAL_DATE}', ${DATA.CAL_PERIOD || 0}, N'${DATA.STAMP_IMAGE_URL || ''}', N'${DATA.CAL_PERSON || ''}', N'${DATA.REMARK || ''}', GETDATE(), '${DATA.USER || ''}')
+    INSERT INTO QC_CALIBRATION_HISTORY (CTR_CD, EQ_ID, CAL_DATE, NEXT_CAL_DATE, CAL_PERIOD, STAMP_IMAGE_URL, CAL_PERSON, REMARK, RESULT_FILE_URL, INS_DATE, INS_EMPL)
+    VALUES ('${DATA.CTR_CD}', ${DATA.EQ_ID}, '${DATA.CAL_DATE}', '${DATA.NEXT_CAL_DATE}', ${DATA.CAL_PERIOD || 0}, N'${DATA.STAMP_IMAGE_URL || ''}', N'${DATA.CAL_PERSON || ''}', N'${DATA.REMARK || ''}', N'${DATA.RESULT_FILE_URL || ''}', GETDATE(), '${DATA.USER || ''}')
   `;
   let checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
@@ -5752,6 +5753,7 @@ exports.qc_update_calibration = async (req, res, DATA) => {
         STAMP_IMAGE_URL = N'${DATA.STAMP_IMAGE_URL || ''}',
         CAL_PERSON = N'${DATA.CAL_PERSON || ''}',
         REMARK = N'${DATA.REMARK || ''}',
+        RESULT_FILE_URL = N'${DATA.RESULT_FILE_URL || ''}',
         UPD_DATE = GETDATE(),
         UPD_EMPL = '${DATA.USER || ''}'
     WHERE CAL_ID = ${DATA.CAL_ID} AND CTR_CD = '${DATA.CTR_CD}'
