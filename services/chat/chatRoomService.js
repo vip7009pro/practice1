@@ -1781,3 +1781,115 @@ exports.chatConversationStorage = async (req, res, DATA) => {
     fail(res, "Không lấy được dung lượng");
   }
 };
+
+/** Lấy thông tin phòng chat phục vụ chia sẻ link mời tham gia. */
+exports.chatGetInviteInfo = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const conversation = await repo.getConversationById({ ctrCd, conversationId });
+    if (!conversation || conversation.DELETED_AT) {
+      return fail(res, "Phòng chat không tồn tại hoặc đã bị giải tán");
+    }
+    if (conversation.CONV_TYPE !== "GROUP") {
+      return fail(res, "Chỉ phòng nhóm mới hỗ trợ tham gia qua liên kết");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    const active = await repo.listActiveMemberNos({ conversationId });
+
+    ok(res, {
+      conversationId,
+      title: conversation.TITLE || "Nhóm trò chuyện",
+      avatar: conversation.AVATAR || null,
+      memberCount: active.length,
+      isMember: Boolean(membership),
+    });
+  } catch (error) {
+    console.error("[chatGetInviteInfo]", error);
+    fail(res, "Không lấy được thông tin phòng chat");
+  }
+};
+
+/** Gia nhập phòng chat qua share link. */
+exports.chatJoinViaLink = async (req, res, DATA) => {
+  try {
+    const { ctrCd, emplNo, emplName } = getCtx(req, DATA);
+    const conversationId = Number(DATA?.conversationId);
+    if (!ctrCd || !emplNo) return fail(res, "Thiếu thông tin tài khoản");
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return fail(res, "Phòng chat không hợp lệ");
+    }
+
+    const conversation = await repo.getConversationById({ ctrCd, conversationId });
+    if (!conversation || conversation.DELETED_AT) {
+      return fail(res, "Phòng chat không tồn tại hoặc đã bị giải tán");
+    }
+    if (conversation.CONV_TYPE !== "GROUP") {
+      return fail(res, "Chỉ phòng nhóm mới hỗ trợ tham gia qua liên kết");
+    }
+
+    const membership = await core.getActiveMembership(conversationId, emplNo);
+    const active = await repo.listActiveMemberNos({ conversationId });
+
+    // Nếu đã là thành viên thì chỉ cần trả về view phòng
+    if (membership) {
+      const view = await loadConversationView({ ctrCd, conversationId, myEmplNo: emplNo });
+      return ok(res, view);
+    }
+
+    if (active.length >= MAX_GROUP_MEMBERS) {
+      return fail(res, "Phòng nhóm đã đạt số lượng thành viên tối đa");
+    }
+
+    await repo.withTransaction(async ({ query }) => {
+      await query(
+        `IF EXISTS (SELECT 1 FROM ZTB_CHAT_PARTICIPANT WHERE CONVERSATION_ID=@CONVERSATION_ID AND EMPL_NO=@EMPL_NO)
+           UPDATE ZTB_CHAT_PARTICIPANT SET LEFT_AT = NULL, JOINED_AT = GETDATE()
+           WHERE CONVERSATION_ID=@CONVERSATION_ID AND EMPL_NO=@EMPL_NO
+         ELSE
+           INSERT INTO ZTB_CHAT_PARTICIPANT (CONVERSATION_ID, EMPL_NO, CTR_CD, ROLE)
+           VALUES (@CONVERSATION_ID, @EMPL_NO, @CTR_CD, 'MEMBER')`,
+        { CONVERSATION_ID: conversationId, EMPL_NO: emplNo, CTR_CD: ctrCd }
+      );
+    });
+
+    const displayName = emplName || emplNo;
+    const systemMsg = await core.sendMessage({
+      ctrCd,
+      conversationId,
+      senderEmplNo: emplNo,
+      msgType: "SYSTEM",
+      content: `${displayName} đã tham gia nhóm qua liên kết`,
+    });
+
+    await repo.writeAudit({
+      ctrCd,
+      conversationId,
+      actor: emplNo,
+      action: "MEMBER_JOINED_LINK",
+      detail: `${displayName} gia nhập qua liên kết`,
+    });
+
+    if (systemMsg.ok) {
+      emitToConversation(conversationId, "chat:message", {
+        conversationId,
+        message: core.toClientMessage(systemMsg.message),
+      });
+    }
+
+    emitToUsers([emplNo], "chat:conversation-updated", { conversationId, added: true });
+    emitToConversation(conversationId, "chat:members-changed", { conversationId });
+
+    const view = await loadConversationView({ ctrCd, conversationId, myEmplNo: emplNo });
+    ok(res, view);
+  } catch (error) {
+    console.error("[chatJoinViaLink]", error);
+    fail(res, "Không thể gia nhập phòng chat");
+  }
+};
