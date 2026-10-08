@@ -153,6 +153,14 @@ exports.traYCSXDataFull = async (req, res, DATA) => {
   (
   SELECT CTR_CD,PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS LOT_TOTAL_OUTPUT_QTY_EA FROM ZTBINSPECTOUTPUTTB WHERE SORTING='N' GROUP BY CTR_CD,PROD_REQUEST_NO
   ),
+  TONKIEM_NEW AS
+  (
+  SELECT CTR_CD, PROD_REQUEST_NO, SUM(INPUT_QTY_EA) AS INSPECT_BALANCE_QTY FROM ZTBINSPECTINPUTTB WHERE INSPECT_YN='Y' AND P400_YN='Y' GROUP BY CTR_CD, PROD_REQUEST_NO
+  ),
+  CNK AS 
+  (
+  SELECT CTR_CD,PROD_REQUEST_NO, SUM(OUTPUT_QTY_EA) AS WAIT_INPUT_WH FROM ZTBINSPECTOUTPUTTB WHERE STATUS='PENDING' AND OUTPUT_QTY_EA>0 AND OUTPUT_DATETIME > '2025-01-01' AND CTR_CD = '002' GROUP BY CTR_CD, PROD_REQUEST_NO
+  ),
   
   WH_INPUT_TABLE AS 
   (
@@ -223,7 +231,15 @@ exports.traYCSXDataFull = async (req, res, DATA) => {
         M110.CUST_CD,
         P400.PROD_REQUEST_NO,
         P400.PROD_REQUEST_DATE,
-        P400.PROD_REQUEST_QTY,        
+        P400.PROD_REQUEST_QTY,     
+        P400.CD1,   
+        P400.CD2,   
+        P400.CD3,   
+        P400.CD4,   
+        (P400.PROD_REQUEST_QTY - P400.CD1) AS TON_CD1,
+        (P400.PROD_REQUEST_QTY - P400.CD2) AS TON_CD2,
+        (P400.PROD_REQUEST_QTY - P400.CD3) AS TON_CD3,
+        (P400.PROD_REQUEST_QTY - P400.CD4) AS TON_CD4,
         P400.USE_YN, 
         P400.MATERIAL_YN,
         P400.IS_TAM_THOI,
@@ -238,7 +254,9 @@ exports.traYCSXDataFull = async (req, res, DATA) => {
         isnull(WH_OUTPUT_TABLE.OUTPUT_QTY,0) AS OUTPUT_QTY,
         isnull(WH_INPUT_TABLE.STOCK,0) AS STOCK,
         isnull(WH_INPUT_TABLE.BLOCK_QTY,0) AS BLOCK_QTY,    
-        isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) - isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS INSPECT_BALANCE,
+        --isnull(INSPECT_INPUT_TB.LOT_TOTAL_INPUT_QTY_EA, 0) - isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) AS INSPECT_BALANCE,
+        isnull(TONKIEM_NEW.INSPECT_BALANCE_QTY, 0) AS INSPECT_BALANCE,
+        isnull(CNK.WAIT_INPUT_WH, 0) AS CHO_NHAP_KHO,
         (CASE WHEN P400.YCSX_PENDING = 1 THEN (isnull(P400.PROD_REQUEST_QTY, 0) - isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0)) WHEN P400.YCSX_PENDING = 0 THEN 0 END ) AS SHORTAGE_YCSX,
         CASE WHEN (P400.YCSX_PENDING =0 OR isnull(INSPECT_OUTPUT_TB.LOT_TOTAL_OUTPUT_QTY_EA, 0) >= P400.PROD_REQUEST_QTY OR M100.USE_YN='N') THEN 0 ELSE 1 END AS YCSX_PENDING,
         P400.CODE_55 AS PHAN_LOAI,
@@ -283,6 +301,8 @@ exports.traYCSXDataFull = async (req, res, DATA) => {
   LEFT JOIN PLANTABLE ON (PLANTABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND PLANTABLE.CTR_CD = P400.CTR_CD)
   LEFT JOIN INSPECT_INPUT_TB ON (INSPECT_INPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND INSPECT_INPUT_TB.CTR_CD = P400.CTR_CD)
   LEFT JOIN INSPECT_OUTPUT_TB ON (INSPECT_OUTPUT_TB.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND INSPECT_OUTPUT_TB.CTR_CD = P400.CTR_CD)
+  LEFT JOIN TONKIEM_NEW ON (TONKIEM_NEW.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND TONKIEM_NEW.CTR_CD = P400.CTR_CD)
+  LEFT JOIN CNK ON (CNK.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND CNK.CTR_CD = P400.CTR_CD)
   LEFT JOIN WH_INPUT_TABLE ON (WH_INPUT_TABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND WH_INPUT_TABLE.CTR_CD = P400.CTR_CD)
   LEFT JOIN WH_OUTPUT_TABLE ON (WH_OUTPUT_TABLE.PROD_REQUEST_NO = P400.PROD_REQUEST_NO AND WH_OUTPUT_TABLE.CTR_CD = P400.CTR_CD)
   LEFT JOIN M100 ON (P400.G_CODE = M100.G_CODE AND P400.CTR_CD = M100.CTR_CD)
@@ -406,7 +426,7 @@ LEFT JOIN BOM_MAIN_M ON (M100.G_CODE = BOM_MAIN_M.G_CODE AND M100.CTR_CD = BOM_M
   LEFT JOIN M110 ON (P400.CUST_CD = M110.CUST_CD AND P400.CTR_CD = M110.CTR_CD)
   LEFT JOIN ZTB_DM_HISTORY ON (P400.PROD_REQUEST_NO= ZTB_DM_HISTORY.PROD_REQUEST_NO AND P400.CTR_CD= ZTB_DM_HISTORY.CTR_CD)
    ${generate_condition_get_ycsx(DATA.alltime, DATA.start_date, DATA.end_date, DATA.cust_name, DATA.codeCMS, DATA.codeKD, DATA.prod_type, DATA.empl_name, DATA.phanloai, DATA.ycsx_pending, DATA.prod_request_no, DATA.material, DATA.inspect_inputcheck, DATA.phanloaihang, DATA.CTR_CD, DATA.material_yes)} ORDER BY P400.PROD_REQUEST_NO DESC`; */
-  //console.log(setpdQuery);
+  console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
   res.send(checkkq);
@@ -3736,6 +3756,114 @@ exports.POBalanceByCustomer = async (req, res, DATA) => {
 exports.insert_po = async (req, res, DATA) => {
   let checkkq = 'OK';
   let setpdQuery = `INSERT INTO ZTBPOTable (CTR_CD, CUST_CD, EMPL_NO,G_CODE, PO_NO, PO_QTY, PO_DATE, RD_DATE, PROD_PRICE,BEP,REMARK) VALUES ('${DATA.CTR_CD}','${DATA.CUST_CD}', '${DATA.EMPL_NO}','${DATA.G_CODE}', '${DATA.PO_NO}', '${DATA.PO_QTY}', '${DATA.PO_DATE}', '${DATA.RD_DATE}', '${DATA.PROD_PRICE}','${DATA.BEP}',N'${DATA.REMARK ?? ''}')`;
+  //console.log(setpdQuery);
+  checkkq = await queryDB(setpdQuery);
+  ////console.log(checkkq);
+  res.send(checkkq);
+};
+exports.updateCDP400 = async (req, res, DATA) => {
+  let checkkq = 'OK';
+  let setpdQuery = `
+  DECLARE @SetClause NVARCHAR(MAX);
+DECLARE @sql NVARCHAR(MAX);
+
+-- =====================================================
+-- 1. Tạo danh sách UPDATE:
+--
+-- CD_0  = ISNULL([0], 0)
+-- CD_1  = ISNULL([1], 0)
+-- CD_2  = ISNULL([2], 0)
+-- ...
+-- =====================================================
+
+SELECT @SetClause = STRING_AGG(
+    'P400.' + QUOTENAME('CD' + CAST(PROCESS_NUMBER AS VARCHAR(50)))
+    + ' = ISNULL(P.' + QUOTENAME(PROCESS_NUMBER) + ', 0)',
+    ', '
+) WITHIN GROUP (
+    ORDER BY TRY_CONVERT(INT, PROCESS_NUMBER)
+)
+FROM
+(
+    SELECT DISTINCT PROCESS_NUMBER
+    FROM ZTB_QLSXPLAN
+    WHERE PROCESS_NUMBER IS NOT NULL
+) A;
+
+
+-- =====================================================
+-- 2. Dynamic UPDATE
+-- =====================================================
+
+SET @sql = N'
+;WITH RESULT_YCSX AS
+(
+    SELECT
+        P.CTR_CD,
+        P.PROD_REQUEST_NO,
+        P.PROCESS_NUMBER,
+        R.SX_RESULT
+    FROM ZTB_SX_RESULT R
+    INNER JOIN ZTB_QLSXPLAN P
+        ON R.CTR_CD = P.CTR_CD
+        AND R.PLAN_ID = P.PLAN_ID
+),
+PIVOT_DATA AS
+(
+    SELECT
+        CTR_CD,
+        PROD_REQUEST_NO,
+        ' + (
+            SELECT STRING_AGG(
+                QUOTENAME(PROCESS_NUMBER),
+                ','
+            ) WITHIN GROUP (
+                ORDER BY TRY_CONVERT(INT, PROCESS_NUMBER)
+            )
+            FROM
+            (
+                SELECT DISTINCT PROCESS_NUMBER
+                FROM ZTB_QLSXPLAN
+                WHERE PROCESS_NUMBER IS NOT NULL
+            ) X
+        ) + '
+    FROM RESULT_YCSX
+    PIVOT
+    (
+        MAX(SX_RESULT)
+        FOR PROCESS_NUMBER IN
+        (
+            ' + (
+                SELECT STRING_AGG(
+                    QUOTENAME(PROCESS_NUMBER),
+                    ','
+                ) WITHIN GROUP (
+                    ORDER BY TRY_CONVERT(INT, PROCESS_NUMBER)
+                )
+                FROM
+                (
+                    SELECT DISTINCT PROCESS_NUMBER
+                    FROM ZTB_QLSXPLAN
+                    WHERE PROCESS_NUMBER IS NOT NULL
+                ) X
+            ) + '
+        )
+    ) PV
+)
+UPDATE P400
+SET
+    ' + @SetClause + '
+FROM P400
+INNER JOIN PIVOT_DATA P
+    ON P400.CTR_CD = P.CTR_CD
+    AND P400.PROD_REQUEST_NO = P.PROD_REQUEST_NO;
+';
+
+-- Kiểm tra SQL trước khi chạy nếu cần
+--PRINT @sql;
+
+EXEC sp_executesql @sql;
+  `;
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
