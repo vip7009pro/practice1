@@ -559,14 +559,30 @@ exports.checkfcst_tdycsx = async (req, res, DATA) => {
 };
 exports.checktrungAMZ_Full = async (req, res, DATA) => {
   let checkkq = 'OK';
-  let setpdQuery = `SELECT VALUE, COUNT(*) as COUNT
+  let setpdQuery = `SELECT VALUE, COUNT(*) AS COUNT
+FROM (
+    SELECT DATA_1 AS VALUE
+    FROM AMAZONE_DATA
+    WHERE CTR_CD = '${DATA.CTR_CD}'
+      AND INS_DATE >= DATEADD(DAY, -365, GETDATE())
+
+    UNION ALL
+
+    SELECT DATA_2 AS VALUE
+    FROM AMAZONE_DATA
+    WHERE CTR_CD = '${DATA.CTR_CD}'
+      AND INS_DATE >= DATEADD(DAY, -365, GETDATE())
+) combinedData
+GROUP BY VALUE
+HAVING COUNT(*) > 1;`;
+  /* let setpdQuery = `SELECT VALUE, COUNT(*) as COUNT
   FROM (
       SELECT DATA_1 as VALUE FROM AMAZONE_DATA WHERE CTR_CD='${DATA.CTR_CD}'
       UNION ALL
       SELECT DATA_2 FROM AMAZONE_DATA WHERE CTR_CD='${DATA.CTR_CD}'
   ) combinedData
   GROUP BY value
-  HAVING COUNT(*) > 1;`;
+  HAVING COUNT(*) > 1;`; */
   //${moment().format('YYYY-MM-DD')}
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
