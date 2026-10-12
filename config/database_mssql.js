@@ -2,8 +2,8 @@ const sql = require("mssql");
 require("dotenv").config();
 
 const DEFAULT_POOL_SIZE = parseInt(process.env.DB_POOL_MAX || "40", 10) || 40;
-const DB_REQUEST_TIMEOUT = parseInt(process.env.DB_REQUEST_TIMEOUT || "60000", 10) || 60000;
-const DB_CONNECTION_TIMEOUT = parseInt(process.env.DB_CONNECTION_TIMEOUT || "60000", 10) || 60000;
+const DB_REQUEST_TIMEOUT = parseInt(process.env.DB_REQUEST_TIMEOUT || "300000", 10) || 300000;
+const DB_CONNECTION_TIMEOUT = parseInt(process.env.DB_CONNECTION_TIMEOUT || "300000", 10) || 300000;
 
 const normalizeEnvString = (value) => {
   if (typeof value !== "string") {
