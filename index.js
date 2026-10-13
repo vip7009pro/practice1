@@ -26,6 +26,7 @@ const { corsOptions } = require("./config/env");
 const pushUtil = require("./utils/pushUtils");
 const { startSchemaScheduler } = require("./services/schemaScheduler");
 const { startMailWorker } = require("./services/mail/mailWorker");
+const { startReportSyncScheduler } = require("./services/reportSyncService");
 const app = express();
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(sslConfig, app);
@@ -93,6 +94,8 @@ startSchemaScheduler().catch((e) => {
 });
 // Mail Worker: đồng bộ mailbox POP3 (chạy nền, không chặn HTTP).
 const mailWorker = startMailWorker();
+// Report Sync Worker: định kỳ đồng bộ các báo cáo ERP (10 phút, kiểm tra 60s)
+const reportSyncWorker = startReportSyncScheduler(10);
 const API_PORT = parseInt(process.env.API_PORT);
 const SOCKET_PORT = parseInt(process.env.SOCKET_PORT);
 httpServer.listen(API_PORT, () => console.log(`Server listening on ${API_PORT}`));
@@ -106,6 +109,7 @@ process.on("unhandledRejection", (error) => {
 });
 // Đóng pool khi server dừng
 process.on("SIGINT", async () => {
+  if (reportSyncWorker?.stop) reportSyncWorker.stop();
   await mailWorker.stop().catch(() => undefined);
   await closePool();
   httpServer.close(() => console.log("HTTP server closed"));

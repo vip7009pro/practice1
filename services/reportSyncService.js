@@ -298,35 +298,159 @@ const getReportSyncInfo = async (reportCode = "KINH_DOANH") => {
   }
 };
 
+/**
+ * Danh sách đăng ký các module báo cáo của toàn hệ thống ERP
+ * Sau này khi có báo cáo của các bộ phận khác (Sản Xuất, Kho, Mua Hàng, QC...),
+ * chỉ cần thêm vào mảng REPORT_REGISTRY này hoặc gọi registerReportSync().
+ */
+const REPORT_REGISTRY = [
+  {
+    code: "KINH_DOANH",
+    name: "Báo Cáo Doanh Thu & Chỉ Số Kinh Doanh",
+    department: "Kinh Doanh",
+    minIntervalMinutes: 10, // 10 phút
+    syncFn: async (ctrCd = "002") => {
+      return await syncRPKinhDoanh(60, ctrCd);
+    },
+  },
+];
+
+/**
+ * Đăng ký thêm báo cáo mới vào hệ thống đồng bộ định kỳ
+ */
+const registerReportSync = (reportConfig) => {
+  if (!reportConfig?.code || !reportConfig?.syncFn) {
+    throw new Error("Cấu hình báo cáo phải có ít nhất 'code' và 'syncFn'");
+  }
+  const existingIdx = REPORT_REGISTRY.findIndex((r) => r.code === reportConfig.code);
+  if (existingIdx >= 0) {
+    REPORT_REGISTRY[existingIdx] = { ...REPORT_REGISTRY[existingIdx], ...reportConfig };
+  } else {
+    REPORT_REGISTRY.push({
+      minIntervalMinutes: 10,
+      department: "Chung",
+      ...reportConfig,
+    });
+  }
+  console.log(`[ReportSyncRegistry] Đã đăng ký đồng bộ báo cáo: ${reportConfig.code} (${reportConfig.name || ""})`);
+};
+
+/**
+ * Kiểm tra xem báo cáo đã đủ 10 phút từ lần đồng bộ trước chưa
+ * (Kể cả khi restart backend, nếu chưa đủ 10 phút thì vẫn không chạy)
+ */
+const shouldSyncReport = async (reportCode, minIntervalMinutes = 10) => {
+  try {
+    const minSeconds = minIntervalMinutes * 60;
+    const res = await queryDB(`
+      SELECT 
+        REPORT_CODE, 
+        LAST_SYNC_AT, 
+        DATEDIFF(second, LAST_SYNC_AT, GETDATE()) AS ELAPSED_SECONDS
+      FROM RP_SYNC_LOG 
+      WHERE REPORT_CODE = '${reportCode}';
+    `);
+    if (!res?.data || res.data.length === 0) {
+      // Chưa từng sync bao giờ -> Cần sync ngay
+      return { shouldSync: true, elapsedSeconds: null, lastSyncAt: null };
+    }
+    const elapsed = res.data[0].ELAPSED_SECONDS;
+    const lastSyncAt = res.data[0].LAST_SYNC_AT;
+    return {
+      shouldSync: elapsed === null || elapsed >= minSeconds,
+      elapsedSeconds: elapsed,
+      lastSyncAt: lastSyncAt,
+    };
+  } catch (err) {
+    console.error(`[ReportSyncScheduler] Lỗi kiểm tra thời gian sync của ${reportCode}:`, err);
+    return { shouldSync: true, elapsedSeconds: null, lastSyncAt: null };
+  }
+};
+
+/**
+ * Đồng bộ một báo cáo cụ thể theo mã code
+ * @param {string} reportCode - Mã báo cáo (VD: 'KINH_DOANH')
+ * @param {object} options - { force: boolean, ctrCd: string }
+ */
+const syncReportByCode = async (reportCode, options = { force: false, ctrCd: "002" }) => {
+  const config = REPORT_REGISTRY.find((r) => r.code === reportCode);
+  if (!config) {
+    return { status: "NG", message: `Không tìm thấy cấu hình báo cáo với mã '${reportCode}'` };
+  }
+  const minMinutes = config.minIntervalMinutes || 10;
+  if (!options.force) {
+    const check = await shouldSyncReport(reportCode, minMinutes);
+    if (!check.shouldSync) {
+      const elapsedMin = (check.elapsedSeconds / 60).toFixed(1);
+      console.log(`[ReportSyncScheduler] Báo cáo ${reportCode} vừa cập nhật cách đây ${elapsedMin} phút (< ${minMinutes} phút). Bỏ qua.`);
+      return {
+        status: "SKIPPED",
+        message: `Chưa đủ ${minMinutes} phút từ lần cập nhật trước (mới được ${elapsedMin} phút)`,
+        elapsedSeconds: check.elapsedSeconds,
+      };
+    }
+  }
+
+  console.log(`[ReportSyncScheduler] Bắt đầu đồng bộ báo cáo ${reportCode} (force=${!!options.force})...`);
+  return await config.syncFn(options.ctrCd || "002");
+};
+
+/**
+ * Đồng bộ tất cả các báo cáo trong registry
+ * @param {object} options - { force: boolean, ctrCd: string }
+ */
+const syncAllReports = async (options = { force: false, ctrCd: "002" }) => {
+  const results = [];
+  for (const item of REPORT_REGISTRY) {
+    try {
+      const r = await syncReportByCode(item.code, options);
+      results.push({ code: item.code, ...r });
+    } catch (e) {
+      console.error(`[ReportSyncScheduler] Lỗi khi đồng bộ ${item.code}:`, e);
+      results.push({ code: item.code, status: "NG", message: e.message });
+    }
+  }
+  return results;
+};
+
 let syncTimer = null;
 
 /**
  * Khởi động background scheduler tự động đồng bộ định kỳ
- * @param {number} intervalMinutes - Chu kỳ lặp lại tính bằng phút (mặc định 60 phút)
+ * - Chu kỳ kiểm tra: mỗi 60 giây (1 phút).
+ * - Kiểm tra trong DB nếu báo cáo nào đã đủ 10 phút từ lần sync trước mới chạy.
+ * - Kể cả khi restart backend: Chạy kiểm tra sau 15 giây, nếu DB báo chưa đủ 10 phút thì BỎ QUA.
  */
-const startReportSyncScheduler = (intervalMinutes = 60) => {
-  const intervalMs = Math.max(5, intervalMinutes) * 60 * 1000;
+const startReportSyncScheduler = (defaultIntervalMinutes = 10) => {
+  const checkIntervalMs = 60 * 1000; // Kiểm tra mỗi 1 phút
 
-  const run = async () => {
+  const runCheck = async () => {
     try {
-      await syncRPKinhDoanh(60, "002");
+      await syncAllReports({ force: false, ctrCd: "002" });
     } catch (e) {
       console.error("[ReportSyncScheduler] Lỗi định kỳ:", e?.message || e);
     }
   };
 
-  // Chạy ngay 1 lần sau khi server khởi động (delay 10 giây để DB pool sẵn sàng)
-  setTimeout(run, 10000);
+  // Kiểm tra lần đầu sau khi server khởi động 15 giây (chờ DB pool sẵn sàng)
+  setTimeout(runCheck, 15000);
 
   if (syncTimer) clearInterval(syncTimer);
-  syncTimer = setInterval(run, intervalMs);
+  syncTimer = setInterval(runCheck, checkIntervalMs);
 
-  console.log(`[ReportSyncScheduler] Đã kích hoạt chạy ngầm định kỳ mỗi ${intervalMinutes} phút.`);
+  console.log(`[ReportSyncScheduler] Đã kích hoạt bộ lập lịch đồng bộ báo cáo ERP (chu kỳ kiểm tra: 60s, định mức refresh: ${defaultIntervalMinutes} phút).`);
 
   return {
     stop: () => {
       if (syncTimer) clearInterval(syncTimer);
       syncTimer = null;
+      console.log("[ReportSyncScheduler] Đã dừng scheduler.");
+    },
+    syncNow: async (reportCode, ctrCd = "002") => {
+      if (reportCode) {
+        return await syncReportByCode(reportCode, { force: true, ctrCd });
+      }
+      return await syncAllReports({ force: true, ctrCd });
     }
   };
 };
@@ -335,4 +459,9 @@ module.exports = {
   syncRPKinhDoanh,
   getReportSyncInfo,
   startReportSyncScheduler,
+  syncReportByCode,
+  syncAllReports,
+  registerReportSync,
+  shouldSyncReport,
+  REPORT_REGISTRY,
 };

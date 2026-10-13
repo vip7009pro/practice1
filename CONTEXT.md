@@ -27,6 +27,12 @@
     - **Fix lọc HAVING thay cho WHERE**: Chuyển điều kiện lọc `PO_BALANCE > 0` từ `WHERE` sang `HAVING SUM(PO_BALANCE) > 0` trong `pobalanceByYear`, `pobalanceYearByWeekDetail` và `poBalanceByYearWeekCustomerByYear`, giúp bảo toàn 100% giá trị các cột `PO_QTY` và `DELIVERY_QTY` của các tuần (khớp tuyệt đối 41/41 tuần năm 2026 so với bản cũ).
   * **Fix Lệch Trục Tung Biểu Đồ PO By Week, Monthly Closing, Yearly Closing (2026-10-13)**:
     - **Backend**: Cột `DELIVERY_QTY` (trong `RP_KD_DELIVERY_DAILY`) và `PO_QTY` (trong `RP_KD_PO_WEEKLY`) có kiểu BIGINT khiến tedious trả về kiểu String. Vì JS so sánh chuỗi theo từ điển ('641M' > '1.72B') làm Recharts cụt domain trục Y ở 800M và vẽ đường vọt ra ngoài đỉnh biểu đồ. Đã thêm `CAST(... AS FLOAT)` cho `kd_annuallyclosing`, `kd_monthlyclosing`, `kd_weeklyclosing`, `kd_dailyclosing` và `kd_pooverweek` (kèm fallback ngày & CTR_CD).
+  * **Bộ Lập Lịch Refresh Báo Cáo Chung 10 Phút & Central Registry ([reportSyncService.js](file:///g:/NODEJS/practice1/services/reportSyncService.js), [index.js](file:///g:/NODEJS/practice1/index.js)) (2026-10-13)**:
+    - **Central Registry (`REPORT_REGISTRY`)**: Cấu trúc trung tâm đăng ký báo cáo toàn hệ thống ERP (`code`, `name`, `department`, `minIntervalMinutes: 10`, `syncFn`). Hỗ trợ hàm `registerReportSync` cho phép các phân hệ khác (Sản Xuất, Kho, Mua Hàng, QC...) đăng ký chạy chung luồng.
+    - **Reload Guard chống spam**: Hàm `shouldSyncReport(reportCode, 10)` kiểm tra khoảng cách thời gian `DATEDIFF(second, LAST_SYNC_AT, GETDATE())` trong bảng `RP_SYNC_LOG`. Kể cả khi khởi động lại backend, nếu chưa đủ 10 phút (600 giây) thì hệ thống trả về `SKIPPED` và tuyệt đối KHÔNG chạy lại backdata.
+    - **Scheduler kiểm tra mỗi 60s**: Hàm `startReportSyncScheduler(10)` kiểm tra định kỳ mỗi 60s (quét DB cực nhẹ 1-2ms), khi tới mốc >= 10 phút mới sync. Khởi động kiểm tra sau 15 giây khi server start.
+    - **Phân tách 2 chế độ**: Tự động background (`force: false` - tuân thủ guard 10 phút) và Thao tác chủ động trên UI (`force: true` - chạy tức thì).
+    - Tích hợp dừng scheduler an toàn khi nhận tín hiệu `SIGINT` trong `index.js`.
 
 
 - Loại bỏ hardcode dòng máy sản xuất bằng CTE động (`services/sanxuatService.js`) (2026-10-03):

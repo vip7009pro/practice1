@@ -4772,15 +4772,15 @@ exports.getReportSyncInfo = async (req, res, DATA) => {
 };
 
 /**
- * Kích hoạt đồng bộ thủ công dữ liệu báo cáo mới nhất từ backdata
+ * Kích hoạt đồng bộ thủ công dữ liệu báo cáo mới nhất từ backdata (force: true)
  */
 exports.triggerReportSync = async (req, res, DATA) => {
-  const { syncRPKinhDoanh, getReportSyncInfo } = require('./reportSyncService');
-  const days = DATA.DAYS || 60;
+  const { syncReportByCode, getReportSyncInfo } = require('./reportSyncService');
+  const reportCode = DATA.REPORT_CODE || 'KINH_DOANH';
   const ctrCd = DATA.CTR_CD || '002';
-  const syncResult = await syncRPKinhDoanh(days, ctrCd);
+  const syncResult = await syncReportByCode(reportCode, { force: true, ctrCd });
   if (syncResult.status === 'OK') {
-    const info = await getReportSyncInfo(DATA.REPORT_CODE || 'KINH_DOANH');
+    const info = await getReportSyncInfo(reportCode);
     res.send({ 
       tk_status: 'OK', 
       message: syncResult.message, 
