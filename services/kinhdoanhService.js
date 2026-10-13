@@ -3859,6 +3859,7 @@ SET @sql = N'
     INNER JOIN ZTB_QLSXPLAN P
         ON R.CTR_CD = P.CTR_CD
         AND R.PLAN_ID = P.PLAN_ID
+        AND P.STEP  = 0
 ),
 PIVOT_DATA AS
 (
