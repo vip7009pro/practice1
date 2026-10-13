@@ -1,5 +1,34 @@
 # Current Context - practice1
 
+- REPORT / KINH DOANH REPORT: Bảng Summary RP_* & Refactor Backend kinhdoanhService.js (2026-10-13):
+  * **Khởi tạo 6 bảng Summary `RP_*` trên SQL Server**:
+    1. `RP_KD_DELIVERY_DAILY`: Doanh thu và giao hàng theo ngày/khách/PIC/In Nhanh.
+    2. `RP_KD_OVERDUE_DAILY`: Trạng thái và số lượng quá hạn theo ngày kèm D_PLUS.
+    3. `RP_KD_PO_WEEKLY`: Số lượng & doanh số PO phát sinh theo tuần/In Nhanh.
+    4. `RP_KD_PO_BALANCE_TOTAL`: Tổng hợp tồn đơn toàn bộ hệ thống theo CTR_CD.
+    5. `RP_KD_PO_BALANCE_WEEKLY`: Chi tiết tồn đơn theo tuần, năm, khách hàng.
+    6. `RP_KD_CUSTOMER_PO_WEEKLY`: PO mới của từng khách theo tuần (nguồn trước Dynamic Pivot).
+  * **Scripts & Services**:
+    - `scripts/migrate_rp_kinhdoanh.js`: Khởi tạo bảng và nạp toàn bộ backdata lịch sử.
+    - `services/reportSyncService.js`: Dịch vụ tự động đồng bộ (rolling 60 ngày) cho các bảng summary.
+  * **Sửa lỗi Closing & Biểu đồ PO Balance (2026-10-13)**:
+    - **Fix 3 bảng Closing bị trắng**: Sửa lỗi 4 dấu nháy `''''${DATA.CTR_CD}''''` và `''''TOTAL''''` thành 2 dấu nháy `''${DATA.CTR_CD}''` và `''TOTAL''` trong dynamic SQL string `@query`. Bỏ comment chứa nháy trong chuỗi `@query` của `getWeeklyClosingKD`. Cả 4 hàm closing (`getDailyClosingKD`, `getWeeklyClosingKD`, `loadMonthlyRevenueByCustomer`, `baocaodanhthutheokhachtheonguoimonthly`) đã trả về đầy đủ 40-41 dòng.
+    - **Fix biểu đồ PO Balance (By Year, By Week, Customer)**: Cột Bigint trong SQL Server qua mssql driver trả về String làm hỏng tính tổng và scale trục biểu đồ; đã thêm `CAST(... AS FLOAT)` cho các trường `PO_BALANCE`, `PO_QTY`, `DELIVERY_QTY`. Chuẩn hóa điều kiện `PO_WEEK` hỗ trợ cả number (2) và string ('02') bằng `padStart(2, '0')`.
+  * **Refactor Backend ([kinhdoanhService.js](file:///g:/NODEJS/practice1/services/kinhdoanhService.js))**:
+    - Đã backup 100% các câu query cũ bằng comment block `/* === BACKUP TRUY VẤN CŨ === */`.
+    - Đã chuyển sang query từ 6 bảng `RP_*` cho toàn bộ 22 command: `kd_dailyclosing`, `kd_weeklyclosing`, `kd_monthlyclosing`, `kd_annuallyclosing`, `customerRevenue`, `PICRevenue`, `dailyoverduedata`, `weeklyoverduedata`, `monthlyoverduedata`, `yearlyoverduedata`, `kd_pooverweek`, `kd_runningpobalance`, `traPOSummaryTotal`, `pobalanceByYear`, `pobalanceYearByWeekDetail`, `poBalanceByYearWeekCustomer`, `poBalanceByYearWeekCustomerByYear`, `loadCustomerWeeklyPOQty`, `getDailyClosingKD`, `getWeeklyClosingKD`, `loadMonthlyRevenueByCustomer`, `baocaodanhthutheokhachtheonguoimonthly`.
+    - Thời gian phản hồi giảm từ 3s - 30s xuống 4ms - 74ms (Dynamic Pivot ~240ms).
+  * **Đồng Bộ Dữ Liệu & Nhật Ký RP_SYNC_LOG (2026-10-13)**:
+    - Tạo bảng `RP_SYNC_LOG` trên SQL Server: `REPORT_CODE`, `REPORT_NAME`, `LAST_SYNC_AT`, `STATUS`, `MESSAGE`, `DURATION_MS`, `UPDATED_BY`.
+    - `services/reportSyncService.js`: Tự động cập nhật `MERGE RP_SYNC_LOG` sau mỗi lần đồng bộ `syncRPKinhDoanh`; export hàm `getReportSyncInfo`.
+    - `services/kinhdoanhService.js`: Bổ sung 2 commands: `getReportSyncInfo` (lấy thời điểm cập nhật gần nhất) và `triggerReportSync` (cho phép frontend kích hoạt đồng bộ rolling tức thì).
+  * **Fix Triệt Để PO Balance By Year & By Week 2026 (2026-10-13)**:
+    - **Full Sync cho PO Balance**: Chuyển sync `RP_KD_PO_BALANCE_WEEKLY` sang Full Sync toàn bộ các năm (chạy ~5s) thay vì rolling 60 ngày để bảo tồn các PO tồn từ năm cũ và các tuần đầu năm khi có biến động giao hàng/hủy PO gần đây.
+    - **Fix lọc HAVING thay cho WHERE**: Chuyển điều kiện lọc `PO_BALANCE > 0` từ `WHERE` sang `HAVING SUM(PO_BALANCE) > 0` trong `pobalanceByYear`, `pobalanceYearByWeekDetail` và `poBalanceByYearWeekCustomerByYear`, giúp bảo toàn 100% giá trị các cột `PO_QTY` và `DELIVERY_QTY` của các tuần (khớp tuyệt đối 41/41 tuần năm 2026 so với bản cũ).
+  * **Fix Lệch Trục Tung Biểu Đồ PO By Week, Monthly Closing, Yearly Closing (2026-10-13)**:
+    - **Backend**: Cột `DELIVERY_QTY` (trong `RP_KD_DELIVERY_DAILY`) và `PO_QTY` (trong `RP_KD_PO_WEEKLY`) có kiểu BIGINT khiến tedious trả về kiểu String. Vì JS so sánh chuỗi theo từ điển ('641M' > '1.72B') làm Recharts cụt domain trục Y ở 800M và vẽ đường vọt ra ngoài đỉnh biểu đồ. Đã thêm `CAST(... AS FLOAT)` cho `kd_annuallyclosing`, `kd_monthlyclosing`, `kd_weeklyclosing`, `kd_dailyclosing` và `kd_pooverweek` (kèm fallback ngày & CTR_CD).
+
+
 - Loại bỏ hardcode dòng máy sản xuất bằng CTE động (`services/sanxuatService.js`) (2026-10-03):
   * Sử dụng CTE: `WITH MACHINE_TB AS (SELECT DISTINCT SUBSTRING(EQ_NAME,1,2) AS EQ_SERIES FROM ZTB_SX_EQ_STATUS)`.
   * Đã comment lại toàn bộ truy vấn cũ để bảo lưu đối chiếu và viết truy vấn mới phía dưới.
