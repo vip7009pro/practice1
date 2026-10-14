@@ -244,7 +244,22 @@ exports.tratonlieu = async (req, res, DATA) => {
   if (DATA.JUSTBALANCE === true) {
     condition += ` AND ((isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0))  <>0 OR (isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0)) <>0)`;
   }
-  let setpdQuery = `SELECT TDS, M_CODE, M_NAME, WIDTH_CD, isnull(STOCK_CFM_NM1,0) AS TON_NM1, isnull(STOCK_CFM_NM2,0) AS TON_NM2, isnull(HOLDING_CFM_NM1,0) AS HOLDING_NM1, isnull(HOLDING_CFM_NM2,0) AS HOLDING_NM2, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0)) AS TOTAL_OK, (isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0)) AS TOTAL_HOLDING FROM M090  ${condition}`;
+  let setpdQuery = `WITH HDTB AS
+(SELECT
+    M_CODE,
+    STRING_AGG(CAST(REASON AS NVARCHAR(MAX)), N', ') AS REASON
+FROM (
+    SELECT DISTINCT
+        M_CODE,
+        REASON
+    FROM HOLDING_TB
+    WHERE USE_YN = 'B'
+      AND REASON IS NOT NULL
+) AS T
+GROUP BY M_CODE
+)
+SELECT TDS, M090.M_CODE, M_NAME, WIDTH_CD, isnull(STOCK_CFM_NM1,0) AS TON_NM1, isnull(STOCK_CFM_NM2,0) AS TON_NM2, isnull(HOLDING_CFM_NM1,0) AS HOLDING_NM1, isnull(HOLDING_CFM_NM2,0) AS HOLDING_NM2, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0)) AS TOTAL_OK, (isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0)) AS TOTAL_HOLDING, HDTB.REASON FROM M090
+LEFT JOIN HDTB ON HDTB.M_CODE = M090.M_CODE  ${condition}`;
   ////console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   ////console.log(checkkq);
@@ -1027,10 +1042,10 @@ exports.loadMSTOCK_BY_POPULAR = async (req, res, DATA) => {
   let checkkq = "OK";
   const previousMonth = moment().subtract(1, 'month');
   // Lấy ngày đầu tiên của tháng trước
-const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+  const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
 
-// Lấy ngày cuối cùng của tháng trước
-const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  // Lấy ngày cuối cùng của tháng trước
+  const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
   let setpdQuery = `
 WITH OUTTB AS
 (
@@ -1086,10 +1101,10 @@ exports.loadMSTOCK_BY_POPULAR_DETAIL = async (req, res, DATA) => {
   let checkkq = "OK";
   const previousMonth = moment().subtract(1, 'month');
   // Lấy ngày đầu tiên của tháng trước
-const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+  const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
 
-// Lấy ngày cuối cùng của tháng trước
-const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  // Lấy ngày cuối cùng của tháng trước
+  const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
   let setpdQuery = `
     WITH OUTTB AS
 (
@@ -1114,22 +1129,22 @@ SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, (isnull(STOCK_CFM_NM1,0) + isnul
 LEFT JOIN OUTTB2 ON M090.M_CODE = OUTTB2.M_CODE
 ORDER BY STOCK_SQM DESC
   `;
- /*  let setpdQuery = `
-    WITH OUTTB AS
-    (
-    SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
-    LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
-    WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
-    GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
-    ),
-    OUTTB2 AS
-    (
-    SELECT OUTTB.*, CASE WHEN OUT_SQM > 5000 THEN 'A' WHEN OUT_SQM <=5000 AND OUT_SQM >500 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
-    )
-    SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0) + isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0))*M090.WIDTH_CD*1.0/1000 AS STOCK_SQM, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI FROM  M090
-    LEFT JOIN OUTTB2 ON M090.M_CODE = OUTTB2.M_CODE
-    ORDER BY STOCK_SQM DESC
-  `; */
+  /*  let setpdQuery = `
+     WITH OUTTB AS
+     (
+     SELECT O302.M_CODE, M090.M_NAME, M090.WIDTH_CD, SUM(OUT_CFM_QTY) AS OUT_CFM_QTY, SUM(OUT_CFM_QTY * M090.WIDTH_CD*1.0/1000) AS OUT_SQM   FROM O302 
+     LEFT JOIN M090 ON M090.CTR_CD = O302.CTR_CD AND M090.M_CODE = O302.M_CODE
+     WHERE O302.INS_DATE BETWEEN '${firstDayOfPreviousMonth}' AND '${lastDayOfPreviousMonth}'
+     GROUP BY O302.M_CODE, M090.M_NAME, M090.WIDTH_CD
+     ),
+     OUTTB2 AS
+     (
+     SELECT OUTTB.*, CASE WHEN OUT_SQM > 5000 THEN 'A' WHEN OUT_SQM <=5000 AND OUT_SQM >500 THEN 'B' ELSE 'C' END AS PHANLOAI FROM OUTTB 
+     )
+     SELECT M090.M_CODE, M090.M_NAME, M090.WIDTH_CD, (isnull(STOCK_CFM_NM1,0) + isnull(STOCK_CFM_NM2,0) + isnull(HOLDING_CFM_NM1,0)+ isnull(HOLDING_CFM_NM2,0))*M090.WIDTH_CD*1.0/1000 AS STOCK_SQM, isnull(OUTTB2.PHANLOAI,'C') AS PHANLOAI FROM  M090
+     LEFT JOIN OUTTB2 ON M090.M_CODE = OUTTB2.M_CODE
+     ORDER BY STOCK_SQM DESC
+   `; */
   //console.log(setpdQuery);
   checkkq = await queryDB(setpdQuery);
   //console.log(checkkq);
@@ -1139,10 +1154,10 @@ exports.load_M_INPUT_BY_POPULAR = async (req, res, DATA) => {
   let checkkq = "OK";
   const previousMonth = moment().subtract(1, 'month');
   // Lấy ngày đầu tiên của tháng trước
-const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+  const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
 
-// Lấy ngày cuối cùng của tháng trước
-const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  // Lấy ngày cuối cùng của tháng trước
+  const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
   let setpdQuery = `
   WITH OUTTB AS
 (
@@ -1181,10 +1196,10 @@ exports.load_M_INPUT_BY_POPULAR_DETAIL = async (req, res, DATA) => {
   let checkkq = "OK";
   const previousMonth = moment().subtract(1, 'month');
   // Lấy ngày đầu tiên của tháng trước
-const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+  const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
 
-// Lấy ngày cuối cùng của tháng trước
-const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  // Lấy ngày cuối cùng của tháng trước
+  const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
   let setpdQuery = `
   WITH OUTTB AS
 (
@@ -1223,10 +1238,10 @@ exports.load_M_OUTPUT_BY_POPULAR = async (req, res, DATA) => {
   let checkkq = "OK";
   const previousMonth = moment().subtract(1, 'month');
   // Lấy ngày đầu tiên của tháng trước
-const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+  const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
 
-// Lấy ngày cuối cùng của tháng trước
-const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  // Lấy ngày cuối cùng của tháng trước
+  const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
   let setpdQuery = `
 WITH OUTTB AS
 (
@@ -1268,10 +1283,10 @@ exports.load_M_OUTPUT_BY_POPULAR_DETAIL = async (req, res, DATA) => {
   let checkkq = "OK";
   const previousMonth = moment().subtract(1, 'month');
   // Lấy ngày đầu tiên của tháng trước
-const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
+  const firstDayOfPreviousMonth = previousMonth.startOf('month').format('YYYY-MM-DD');
 
-// Lấy ngày cuối cùng của tháng trước
-const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
+  // Lấy ngày cuối cùng của tháng trước
+  const lastDayOfPreviousMonth = previousMonth.endOf('month').format('YYYY-MM-DD');
   let setpdQuery = `
   WITH OUTTB AS
 (
