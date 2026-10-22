@@ -5785,3 +5785,201 @@ exports.updateMaterialTestItem = async (req, res, DATA) => {
   checkkq = await queryDB(setpdQuery);
   res.send(checkkq);
 };
+
+exports.traOQCShippingData = async (req, res, DATA) => {
+  try {
+    const fromDate = DATA.FROM_DATE || moment().subtract(7, "days").format("YYYY-MM-DD");
+    const toDate = DATA.TO_DATE || moment().format("YYYY-MM-DD");
+    const gName = (DATA.G_NAME || "").replace(/'/g, "''").trim();
+    const gCode = (DATA.G_CODE || "").replace(/'/g, "''").trim();
+    const custName = (DATA.CUST_NAME || DATA.CUST_NAME_KD || "").replace(/'/g, "''").trim();
+
+    const setpdQuery = `
+      DECLARE @DATE_FROM date = '${fromDate}';
+      DECLARE @DATE_TO   date = '${toDate}';
+      DECLARE @G_NAME    nvarchar(100) = N'%${gName}%';
+      DECLARE @G_CODE    nvarchar(100) = N'%${gCode}%';
+      DECLARE @CUST_NAME nvarchar(100) = N'%${custName}%';
+
+      ;WITH OUT_CHUAN_OK AS
+      (
+          SELECT
+              T.CUST_CD,
+              T.Customer_ShortName AS OUT_CUST_NAME,
+              T.IO_Month AS OUT_MONTH,
+              T.IO_Datebc AS OUT_DATE,
+              T.IO_Shift AS OUT_SHIFT,
+              T.Product_MaVach AS G_CODE,
+              T.PO_Type AS PO_TYPE,
+              T.IO_Status AS OUT_STATUS,
+              SUM(T.IO_Qty) AS OUT_QTY,
+              K.OUT_ID_KEY
+          FROM tbl_InputOutput AS T
+          CROSS APPLY
+          (
+              VALUES (TRY_CONVERT(datetime, T.IO_Time))
+          ) AS D(IO_Time_DT)
+          CROSS APPLY
+          (
+              VALUES
+              (
+                  CONVERT(char(6), D.IO_Time_DT, 12)
+                  + LEFT(CONVERT(char(8), D.IO_Time_DT, 108), 2)
+              )
+          ) AS K(OUT_ID_KEY)
+          LEFT JOIN P501
+              ON P501.PROCESS_LOT_NO = T.Progess_Lotno
+          WHERE T.IO_Type = 'OUT' 
+            AND T.IO_Date >= @DATE_FROM
+            AND T.IO_Date < DATEADD(day, 1, @DATE_TO)
+            AND T.IO_Datebc < DATEADD(day, 3, @DATE_TO)
+          GROUP BY
+              T.CUST_CD,
+              T.Customer_ShortName,
+              T.IO_Month,
+              T.IO_Datebc,
+              T.IO_Shift,
+              T.Product_MaVach,
+              T.PO_Type,
+              T.IO_Status,
+              K.OUT_ID_KEY
+      ),
+      PLAN_CANDIDATES AS
+      (
+          SELECT DISTINCT
+              O.CUST_CD,
+              O.OUT_CUST_NAME,
+              O.OUT_MONTH,
+              O.OUT_DATE,
+              O.OUT_SHIFT,
+              O.G_CODE,
+              O.PO_TYPE,
+              O.OUT_STATUS,
+              O.OUT_ID_KEY,
+              P501.PLAN_ID,
+              AQL.Sampling_qty_G1_0_1,
+              OQC_SCAN.SAMPLE_QTY_TT,
+              OQC_SCAN.SAMPLE_NG_QTY_TT     
+          FROM OUT_CHUAN_OK AS O
+          INNER JOIN tbl_InputOutput AS T
+              ON T.CUST_CD = O.CUST_CD
+             AND T.Customer_ShortName = O.OUT_CUST_NAME
+             AND T.IO_Month = O.OUT_MONTH
+             AND T.IO_Datebc = O.OUT_DATE
+             AND T.IO_Shift = O.OUT_SHIFT
+             AND T.Product_MaVach = O.G_CODE
+             AND T.PO_Type = O.PO_TYPE
+             AND T.IO_Status = O.OUT_STATUS
+             AND T.IO_Type = 'OUT' 
+          CROSS APPLY
+          (
+              VALUES (TRY_CONVERT(datetime, T.IO_Time))
+          ) AS D(IO_Time_DT)
+          CROSS APPLY
+          (
+              VALUES
+              (
+                  CONVERT(char(6), D.IO_Time_DT, 12)
+                  + LEFT(CONVERT(char(8), D.IO_Time_DT, 108), 2)
+              )
+          ) AS K(OUT_ID_KEY)
+          LEFT JOIN P501
+              ON P501.PROCESS_LOT_NO = T.Progess_Lotno
+          LEFT JOIN ZTB_OQC_OUTGOING_SCAN AS OQC_SCAN
+              ON OQC_SCAN.G_CODE = O.G_CODE
+             AND OQC_SCAN.PLAN_ID = P501.PLAN_ID
+          LEFT JOIN ZTB_OQC_SAMPLING_STANDARD_AQL AS AQL
+              ON AQL.CTR_CD = '002'
+             AND O.OUT_QTY BETWEEN AQL.MIN_QTY AND AQL.MAX_QTY
+          WHERE T.IO_Date >= @DATE_FROM
+            AND T.IO_Date < DATEADD(day, 1, @DATE_TO)
+            AND T.IO_Datebc < DATEADD(day, 3, @DATE_TO)
+            AND K.OUT_ID_KEY = O.OUT_ID_KEY
+      ),
+      PLAN_RANKED AS
+      (
+          SELECT
+              P.*,
+              ROW_NUMBER() OVER
+              (
+                  PARTITION BY
+                      P.CUST_CD,
+                      P.OUT_CUST_NAME,
+                      P.OUT_MONTH,
+                      P.OUT_DATE,
+                      P.OUT_SHIFT,
+                      P.G_CODE,
+                      P.PO_TYPE,
+                      P.OUT_STATUS,
+                      P.OUT_ID_KEY
+                  ORDER BY
+                      P.PLAN_ID DESC,
+                      P.OUT_SHIFT ASC
+              ) AS RN
+          FROM PLAN_CANDIDATES AS P
+      )
+      SELECT
+         O.OUT_ID_KEY,
+         DATEPART(ISO_WEEK, DATEADD(day, 2, O.OUT_DATE)) AS WEEK_,
+         O.OUT_SHIFT,
+         O.OUT_DATE,
+         O.PO_TYPE,
+         M110.CUST_NAME_KD,
+         O.G_CODE,
+         M100.G_NAME,
+         P.PLAN_ID,
+         O.OUT_QTY,
+         ISNULL(P.Sampling_qty_G1_0_1, 0) AS SAMPLING_QTY,
+         ISNULL(P.SAMPLE_NG_QTY_TT, 0) AS SAMPLE_NG_QTY_TT,
+         ISNULL(CAST(
+          (
+              1.0 - ISNULL(P.SAMPLE_NG_QTY_TT, 0)
+                    / NULLIF(CAST(P.Sampling_qty_G1_0_1 AS decimal(18, 4)), 0)
+          ) * 100
+          AS decimal(10, 2)
+         ), 0) AS RATE_OK,
+         CASE
+             WHEN ( ISNULL(CAST(
+             (
+                 1.0 - ISNULL(P.SAMPLE_NG_QTY_TT, 0)
+                       / NULLIF(CAST(P.Sampling_qty_G1_0_1 AS decimal(18, 4)), 0)
+             ) * 100
+             AS decimal(10, 2)
+         ), 0) ) = 100.00
+              AND P.OUT_STATUS = 'Closed'
+             THEN 'Pass'
+             ELSE P.OUT_STATUS
+         END AS OUT_STATUS_RESULT,
+         O.OUT_CUST_NAME
+      FROM OUT_CHUAN_OK AS O
+      LEFT JOIN M110 ON M110.CUST_CD = O.CUST_CD  
+      INNER JOIN M100
+          ON M100.G_CODE = O.G_CODE
+         AND M100.G_NAME LIKE @G_NAME
+         AND ( @G_CODE = N'%%' OR M100.G_CODE LIKE @G_CODE OR O.G_CODE LIKE @G_CODE )
+      LEFT JOIN PLAN_RANKED AS P
+          ON P.CUST_CD = O.CUST_CD
+         AND P.OUT_CUST_NAME = O.OUT_CUST_NAME
+         AND P.OUT_MONTH = O.OUT_MONTH
+         AND P.OUT_DATE = O.OUT_DATE
+         AND P.OUT_SHIFT = O.OUT_SHIFT
+         AND P.G_CODE = O.G_CODE
+         AND P.PO_TYPE = O.PO_TYPE
+         AND P.OUT_STATUS = O.OUT_STATUS
+         AND P.OUT_ID_KEY = O.OUT_ID_KEY
+         AND P.RN = 1
+      WHERE ( @CUST_NAME = N'%%' OR M110.CUST_NAME_KD LIKE @CUST_NAME OR O.OUT_CUST_NAME LIKE @CUST_NAME )
+      ORDER BY
+          O.OUT_DATE DESC,
+          O.OUT_SHIFT ASC;
+    `;
+
+    const checkkq = await queryDB(setpdQuery);
+    res.send(checkkq);
+  } catch (error) {
+    console.error("Lỗi traOQCShippingData:", error);
+    res.send({ tk_status: "NG", message: error.message || "Lỗi truy vấn xuất hàng OQC" });
+  }
+};
+
+exports.oqc_shipping_management = exports.traOQCShippingData;

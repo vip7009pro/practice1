@@ -337,7 +337,7 @@ exports.setdiemdanhnhom = async (req, res, DATA) => {
     let checkAttQuery = `SELECT ON_OFF FROM ZTBATTENDANCETB WHERE CTR_CD='${DATA.CTR_CD}' AND EMPL_NO='${EMPL_NO}' AND APPLY_DATE='${today_format}'`;
     let checkAttKQ = await queryDB(checkAttQuery);
     if (checkAttKQ.tk_status === "NG") {
-      let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA, INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}', '${EMPL_NO}', '${today_format}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA}', GETDATE(), '${EMPL_NO}')`;
+      let insert_diemdanhQuery = `INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA, INS_DATE, INS_EMPL) VALUES ('${DATA.CTR_CD}', '${EMPL_NO}', '${today_format}', ${diemdanhvalue}, '${CURRENT_TEAM}', '${CURRENT_CA ?? 0}', GETDATE(), '${EMPL_NO}')`;
       console.log(insert_diemdanhQuery);
       let insert_dd = await queryDB(insert_diemdanhQuery);
       res.send(insert_dd);
@@ -480,16 +480,16 @@ exports.dangkynghi2 = async (req, res, DATA) => {
       data: { type: "leave-registration", emplNo: EMPL_NO, fromDate: START_DATE, toDate: END_DATE },
       actions: canQuickApprove
         ? [
-            { action: "approve", title: "Phê duyệt" },
-            { action: "reject", title: "Từ chối" },
-          ]
+          { action: "approve", title: "Phê duyệt" },
+          { action: "reject", title: "Từ chối" },
+        ]
         : undefined,
       approval: canQuickApprove
         ? {
-            apiUrl: `${req.protocol}://${req.get("host")}/api`,
-            ctrCd: DATA.CTR_CD,
-            offIds: insertedOffIds,
-          }
+          apiUrl: `${req.protocol}://${req.get("host")}/api`,
+          ctrCd: DATA.CTR_CD,
+          offIds: insertedOffIds,
+        }
         : undefined,
     });
     res.send({ tk_status: "OK" });
@@ -582,10 +582,10 @@ exports.pheduyetnhom = async (req, res, DATA) => {
   let $vitrilamviec = req.payload_data["ATT_GROUP_CODE"];
   let $subdeptname = req.payload_data["SUBDEPTNAME"];
   let condition = "";
-  if(DATA.ONLY_PENDING){
+  if (DATA.ONLY_PENDING) {
     condition = "AND ZTBOFFREGISTRATIONTB.APPROVAL_STATUS = 2";
   }
-  
+
   if (
     JOB_NAME == "Leader" ||
     JOB_NAME == "Sub Leader" ||
@@ -616,7 +616,7 @@ exports.pheduyetnhomBP = async (req, res, DATA) => {
   let $vitrilamviec = req.payload_data["ATT_GROUP_CODE"];
   let $subdeptname = req.payload_data["SUBDEPTNAME"];
   let condition = "";
-  if(DATA.ONLY_PENDING){
+  if (DATA.ONLY_PENDING) {
     condition = "AND ZTBOFFREGISTRATIONTB.APPROVAL_STATUS = 2";
   }
   if (
@@ -643,7 +643,7 @@ exports.pheduyetnhomNS = async (req, res, DATA) => {
   let $vitrilamviec = req.payload_data["ATT_GROUP_CODE"];
   let $subdeptname = req.payload_data["SUBDEPTNAME"];
   let condition = "";
-  if(DATA.ONLY_PENDING){
+  if (DATA.ONLY_PENDING) {
     condition = "AND ZTBOFFREGISTRATIONTB.APPROVAL_STATUS = 2";
   }
   if (
@@ -781,12 +781,12 @@ exports.pheduyetnhanhnhom = async (req, res, DATA) => {
   // nên phải loại cả hai, nếu không sẽ lọt xuống câu UPDATE với giá trị rác.)
   const offIds = Array.isArray(DATA?.off_ids)
     ? [
-        ...new Set(
-          DATA.off_ids
-            .map((value) => Number(value))
-            .filter((value) => Number.isInteger(value) && value > 0)
-        ),
-      ]
+      ...new Set(
+        DATA.off_ids
+          .map((value) => Number(value))
+          .filter((value) => Number.isInteger(value) && value > 0)
+      ),
+    ]
     : [];
 
   if (!ctrCd) {
@@ -2412,7 +2412,7 @@ exports.fixTimehangloat = async (req, res, DATA) => {
   let TIME_DATA = DATA.TIME_DATA; //array
   let queries2 = [];
   let TIME_DATA_ATT = TIME_DATA.filter((item) => item.ON_OFF === null);
-  for (let i = 0; i < TIME_DATA_ATT.length; i++) {        
+  for (let i = 0; i < TIME_DATA_ATT.length; i++) {
     queries2.push(`INSERT INTO ZTBATTENDANCETB (CTR_CD, EMPL_NO, APPLY_DATE, ON_OFF, CURRENT_TEAM, CURRENT_CA) VALUES ('${DATA.CTR_CD}', '${TIME_DATA_ATT[i].EMPL_NO}', '${TIME_DATA_ATT[i].DATE_COLUMN}', ${TIME_DATA_ATT[i].IN_TIME.includes("Thiếu") && TIME_DATA_ATT[i].OUT_TIME.includes("Thiếu") ? 0 : 1}, ${TIME_DATA_ATT[i].WORK_SHIF_NAME === "Hành Chính" ? 0 : TIME_DATA_ATT[i].WORK_SHIF_NAME === "TEAM 1" ? 1 : 2}, ${TIME_DATA_ATT[i].CALV === 'Hành Chính' ? 0 : TIME_DATA_ATT[i].CALV === 'Ca Ngày' ? 1 : TIME_DATA_ATT[i].CALV === 'Ca Đêm' ? 2 : 0})`);
   }
   let query2 = queries2.join(";");
@@ -2421,7 +2421,7 @@ exports.fixTimehangloat = async (req, res, DATA) => {
 
   let queries3 = [];
   let TIME_DATA_ATT2 = TIME_DATA.filter((item) => item.ON_OFF !== null);
-  for (let i = 0; i < TIME_DATA_ATT2.length; i++) {        
+  for (let i = 0; i < TIME_DATA_ATT2.length; i++) {
     queries3.push(`UPDATE ZTBATTENDANCETB SET ON_OFF = ${TIME_DATA_ATT2[i].IN_TIME.includes("Thiếu") && TIME_DATA_ATT2[i].OUT_TIME.includes("Thiếu") ? 0 : 1}, CURRENT_TEAM = ${TIME_DATA_ATT2[i].WORK_SHIF_NAME === "Hành Chính" ? 0 : TIME_DATA_ATT2[i].WORK_SHIF_NAME === "TEAM 1" ? 1 : 2}, CURRENT_CA = ${TIME_DATA_ATT2[i].CALV === 'Hành Chính' ? 0 : TIME_DATA_ATT2[i].CALV === 'Ca Ngày' ? 1 : TIME_DATA_ATT2[i].CALV === 'Ca Đêm' ? 2 : 0} WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${TIME_DATA_ATT2[i].EMPL_NO}' AND APPLY_DATE = '${TIME_DATA_ATT2[i].DATE_COLUMN}'`);
   }
   let query3 = queries3.join(";");
@@ -2429,14 +2429,14 @@ exports.fixTimehangloat = async (req, res, DATA) => {
   let kq3 = await queryDB(query3);
 
   let queries = [];
-  for (let i = 0; i < TIME_DATA.length; i++) {    
+  for (let i = 0; i < TIME_DATA.length; i++) {
     queries.push(`UPDATE ZTBATTENDANCETB SET IN_TIME = ${TIME_DATA[i].IN_TIME.includes("Thiếu") ? 'NULL' : `'${TIME_DATA[i].IN_TIME}'`}, OUT_TIME = ${TIME_DATA[i].OUT_TIME.includes("Thiếu") ? 'NULL' : `'${TIME_DATA[i].OUT_TIME}'`} WHERE CTR_CD = '${DATA.CTR_CD}' AND EMPL_NO = '${TIME_DATA[i].EMPL_NO}' AND APPLY_DATE = '${TIME_DATA[i].DATE_COLUMN}'`);
   }
   let query = queries.join(";");
   //console.log('query',query);
   let kq = await queryDB(query);
 
-  res.send({tk_status:"OK", data:{kq,kq2,kq3}});
+  res.send({ tk_status: "OK", data: { kq, kq2, kq3 } });
 };
 exports.update_empl_image = async (req, res, DATA) => {
   let setpdQuery = `
@@ -2757,29 +2757,29 @@ exports.updateworkhour = async (req, res, DATA) => {
 exports.insertBangCong = async (req, res, DATA) => {
   let EMPL_NO = req.payload_data["EMPL_NO"];
   let checkkq = "OK";
-  let WORK_HOUR = ((DATA.L100 ?? 0) +  (DATA.L150T ?? 0) + (DATA.L150S ?? 0) + (DATA.L130 ?? 0) + (DATA.L180 ?? 0) + (DATA.L200 ?? 0) + (DATA.L210 ?? 0) + (DATA.L270 ?? 0) + (DATA.L300 ?? 0) + (DATA.L390 ?? 0) - (DATA.DI_TRE ?? 0) - (DATA.VE_SOM ?? 0));
+  let WORK_HOUR = ((DATA.L100 ?? 0) + (DATA.L150T ?? 0) + (DATA.L150S ?? 0) + (DATA.L130 ?? 0) + (DATA.L180 ?? 0) + (DATA.L200 ?? 0) + (DATA.L210 ?? 0) + (DATA.L270 ?? 0) + (DATA.L300 ?? 0) + (DATA.L390 ?? 0) - (DATA.DI_TRE ?? 0) - (DATA.VE_SOM ?? 0));
   let checkEMPL_NO_Query = `SELECT * FROM ZTBEMPLINFO WHERE CTR_CD = '${DATA.CTR_CD}' AND NV_CCID = '${parseInt(DATA.NV_CCID)}'`;
   let checkEMPL_NO = await queryDB(checkEMPL_NO_Query);
   console.log(checkEMPL_NO_Query);
   let DD_EMPL_NO = '';
-  if(checkEMPL_NO.tk_status !== 'NG'){
+  if (checkEMPL_NO.tk_status !== 'NG') {
     DD_EMPL_NO = checkEMPL_NO.data[0].EMPL_NO;
-     console.log(WORK_HOUR);
-  let setpdQuery = `INSERT INTO ZTB_BANG_CONG (CTR_CD, EMPL_NO, APPLY_DATE, WORK_HOUR, IN_TIME, OUT_TIME, L100, L150T, L150S, L130, L180, L200, L210, L270, L300, L390, DI_TRE, VE_SOM, AN_SANG, AN_TRUA, AN_TOI, PHU, DI_LAI, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, NV_CCID) VALUES ('${DATA.CTR_CD}', '${DD_EMPL_NO}', '${DATA.APPLY_DATE}', ${WORK_HOUR}, '${DATA.IN_TIME ?? 'X'}', '${DATA.OUT_TIME ?? 'X'}', ${DATA.L100 ?? 0}, ${DATA.L150T ?? 0}, ${DATA.L150S ?? 0}, ${DATA.L130 ?? 0}, ${DATA.L180 ?? 0}, ${DATA.L200 ?? 0}, ${DATA.L210 ?? 0}, ${DATA.L270 ?? 0}, ${DATA.L300 ?? 0}, ${DATA.L390 ?? 0}, ${DATA.DI_TRE ?? 0}, ${DATA.VE_SOM ?? 0}, ${DATA.AN_SANG ?? 0}, ${DATA.AN_TRUA ?? 0}, ${DATA.AN_TOI ?? 0}, ${DATA.PHU ?? 0}, ${DATA.DI_LAI ?? 0}, GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}', '${DATA.NV_CCID}')`;
-  //${moment().format('YYYY-MM-DD')}
-  //console.log(setpdQuery);
-  checkkq = await queryDB(setpdQuery);
-  res.send(checkkq);
+    console.log(WORK_HOUR);
+    let setpdQuery = `INSERT INTO ZTB_BANG_CONG (CTR_CD, EMPL_NO, APPLY_DATE, WORK_HOUR, IN_TIME, OUT_TIME, L100, L150T, L150S, L130, L180, L200, L210, L270, L300, L390, DI_TRE, VE_SOM, AN_SANG, AN_TRUA, AN_TOI, PHU, DI_LAI, INS_DATE, INS_EMPL, UPD_DATE, UPD_EMPL, NV_CCID) VALUES ('${DATA.CTR_CD}', '${DD_EMPL_NO}', '${DATA.APPLY_DATE}', ${WORK_HOUR}, '${DATA.IN_TIME ?? 'X'}', '${DATA.OUT_TIME ?? 'X'}', ${DATA.L100 ?? 0}, ${DATA.L150T ?? 0}, ${DATA.L150S ?? 0}, ${DATA.L130 ?? 0}, ${DATA.L180 ?? 0}, ${DATA.L200 ?? 0}, ${DATA.L210 ?? 0}, ${DATA.L270 ?? 0}, ${DATA.L300 ?? 0}, ${DATA.L390 ?? 0}, ${DATA.DI_TRE ?? 0}, ${DATA.VE_SOM ?? 0}, ${DATA.AN_SANG ?? 0}, ${DATA.AN_TRUA ?? 0}, ${DATA.AN_TOI ?? 0}, ${DATA.PHU ?? 0}, ${DATA.DI_LAI ?? 0}, GETDATE(), '${EMPL_NO}', GETDATE(), '${EMPL_NO}', '${DATA.NV_CCID}')`;
+    //${moment().format('YYYY-MM-DD')}
+    //console.log(setpdQuery);
+    checkkq = await queryDB(setpdQuery);
+    res.send(checkkq);
   }
   else {
     console.log(checkEMPL_NO_Query)
-    console.log('khong thay nhan vien',checkEMPL_NO);
+    console.log('khong thay nhan vien', checkEMPL_NO);
     res.send({
       tk_status: "NG",
       message: "Không tìm thấy nhân viên: " + DATA.NV_CCID + "\n"
     });
   }
- 
+
 };
 exports.updateBangCong = async (req, res, DATA) => {
   let checkkq = "OK";
