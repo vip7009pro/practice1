@@ -1,5 +1,15 @@
 # Current Context - practice1
 
+- EMAIL / POP3 SYNC ENGINE: Khắc phục lỗi dừng đồng bộ email ngày 15/10/2026 (2026-10-26):
+  * **Nguyên nhân gốc rễ**:
+    1. Khi tải thư qua cổng 110 (unencrypted plain-text), email msg #383 (từ `finance@toccataplalajp.com` ngày 15/10/2026 - email spam/phishing) bị tường lửa mạng quét DPI và ngắt drop dòng TCP ở byte 24329, dẫn tới socket bị Timeout sau 30s.
+    2. Trong `services/mail/mailIngest.js`, khi socket bị timeout/destroy, vòng lặp pending tiếp tục chạy trên socket chết khiến toàn bộ email tiếp theo văng lỗi `POP3 chưa kết nối`, đồng thời lượt sync vẫn trả về `SUCCESS` nên UI không báo lỗi.
+    3. Email lỗi không được đưa vào danh sách skip khi tài khoản không bật `SYNC_FROM_DATE`/`SYNC_TO_DATE` (do `skippedUidls` chỉ đọc khi `hasRange`), khiến các lượt sau tiếp tục cố tải email #383 và bị tắc nghẽn vĩnh viễn ở 387/442.
+  * **Khắc phục triệt để Backend & Tài khoản**:
+    - `services/mail/mailIngest.js`: Luôn nạp `skippedUidls` từ `ZTB_MAIL_SYNC_SKIP`; tự động đánh dấu UIDL bị lỗi RETR/timeout vào bảng skip (`RETR_FAILED`) để chống nghẽn hòm thư; bổ sung cơ chế tự động reconnect kết nối POP3 khi socket bị đứt để tiếp tục tải các email tiếp theo; cập nhật trạng thái `WARNING`/`ERROR` chuẩn xác khi không import được email nào do lỗi mạng.
+    - Cập nhật cấu hình tài khoản `nvh1903@cmsbando.com` (Account ID 7): Chuyển sang POP3S cổng 995 (Bảo mật SSL/TLS, `POP3_SECURE = 1`) và SMTP cổng 25 (`SMTP_SECURE = 0`). Nhờ mã hóa SSL, tường lửa không can thiệp gói tin, email #383 tải về trong 750ms.
+    - Đã đồng bộ hoàn tất 100% toàn bộ 442 email (đến ngày 24/10/2026 14:25), giao diện không còn kẹt ở 387/442. PM2 process `index` đã restart nạp code mới.
+
 - REPORT / KINH DOANH REPORT: Bảng Summary RP_* & Refactor Backend kinhdoanhService.js (2026-10-13):
   * **Khởi tạo 6 bảng Summary `RP_*` trên SQL Server**:
     1. `RP_KD_DELIVERY_DAILY`: Doanh thu và giao hàng theo ngày/khách/PIC/In Nhanh.

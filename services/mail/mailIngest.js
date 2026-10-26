@@ -287,13 +287,15 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     const fromDay = fromParts ? boundaryDayNumber(fromParts) : null;
     const toDay = toParts ? boundaryDayNumber(toParts) : null;
     const hasRange = fromDay !== null || toDay !== null;
-    const skippedUidls = hasRange ? await mailRepo.listSkippedUidls(accountId) : new Set();
+    const skippedUidls = await mailRepo.listSkippedUidls(accountId);
     if (hasRange) {
       log(
         `[mail] acc=${account.ID} giới hạn ngày: ${account.SYNC_FROM_DATE ? new Date(account.SYNC_FROM_DATE).toISOString().slice(0, 10) : "…"} → ${
           account.SYNC_TO_DATE ? new Date(account.SYNC_TO_DATE).toISOString().slice(0, 10) : "…"
         } (đã bỏ qua trước đó: ${skippedUidls.size})`
       );
+    } else if (skippedUidls.size > 0) {
+      log(`[mail] acc=${account.ID} bỏ qua ${skippedUidls.size} UIDL lỗi/cách ly trước đó`);
     }
 
     const sizeMap = await client.list().catch(() => new Map());
@@ -303,7 +305,7 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     // Lưu NGAY để UI hiển thị "Tổng thư / Còn lại" trong lúc sync (không đợi hết lượt).
     await mailRepo.setServerTotal(accountId, serverTotal).catch(() => undefined);
 
-    // Email mới = UIDL chưa có trong DB và chưa bị đánh dấu bỏ qua (ngoài khoảng cấu hình).
+    // Email mới = UIDL chưa có trong DB và chưa bị đánh dấu bỏ qua (ngoài khoảng cấu hình hoặc lỗi).
     const numbers = [...uidlMap.keys()].sort((a, b) => a - b);
     const pending = numbers.filter((no) => {
       const uidl = uidlMap.get(no);
@@ -314,6 +316,7 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
 
     let processed = 0;
     let lastUidl = null;
+    let lastErrorMsg = null;
     const runStarted = Date.now();
     // Vài email mới nhất của lượt này (dùng cho thông báo đẩy + deep-link).
     const recent = [];
@@ -394,8 +397,35 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
           }
         }
       } catch (error) {
-        // Lỗi 1 email không được chặn cả mailbox.
-        log(`[mail] lỗi email ${no}: ${error?.message || error}`);
+        const errMsg = error?.message || String(error);
+        lastErrorMsg = errMsg;
+        log(`[mail] lỗi email ${no} (uidl: ${uidl}): ${errMsg}`);
+
+        // Đánh dấu cách ly UIDL này để tránh nghẽn vĩnh viễn ở các lượt sync tiếp theo
+        try {
+          await mailRepo.markUidlsSkipped(accountId, [{ uidl, reason: "RETR_FAILED" }]);
+          log(`[mail] acc=${account.ID} đã đánh dấu bỏ qua UIDL lỗi ${uidl} để không nghẽn hòm thư`);
+        } catch (skipErr) {
+          log(`[mail] lưu skip UIDL ${uidl} lỗi: ${skipErr?.message || skipErr}`);
+        }
+
+        // Nếu socket bị đứt/timeout/hỏng kết nối, thử kết nối lại POP3 để tiếp tục các email tiếp theo
+        const isSocketDead = !client.connected || (client.socket && client.socket.destroyed) || /timeout|đã đóng|closed|reset|ECONNRESET/i.test(errMsg);
+        if (isSocketDead) {
+          log(`[mail] acc=${account.ID} kết nối POP3 bị ngắt sau email ${no}, đang kết nối lại...`);
+          try {
+            client.destroy();
+            client = new Pop3Client({ ...cred, timeoutMs: POP3_TIMEOUT_MS, rejectUnauthorized: TLS_REJECT_UNAUTHORIZED, log });
+            await client.connect();
+            await client.auth();
+            log(`[mail] acc=${account.ID} kết nối lại POP3 thành công, tiếp tục tải các email tiếp theo`);
+          } catch (reconnectErr) {
+            log(`[mail] acc=${account.ID} kết nối lại POP3 thất bại: ${reconnectErr?.message || reconnectErr}`);
+            summary.errorCode = "CONNECTION_LOST";
+            summary.message = `Mất kết nối POP3 sau email ${no}: ${reconnectErr?.message || reconnectErr}`;
+            break;
+          }
+        }
       }
     }
 
@@ -408,7 +438,16 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
 
     await mailRepo.releaseLock(accountId, { lastUidl, importedDelta: summary.imported, serverTotal });
     log(`[mail] acc=${account.ID} hoàn tất lượt: imported=${summary.imported}, bỏ qua ngoài khoảng=${summary.skippedOutOfRange}, tổng server=${serverTotal}`);
-    await mailRepo.updateAccountSyncState(accountId, { status: "SUCCESS", error: null });
+    
+    // Nếu có email cần tải mà không tải được cái nào do lỗi: cập nhật WARNING/ERROR
+    const finalStatus = summary.errorCode
+      ? "ERROR"
+      : summary.imported === 0 && summary.newCount > 0 && lastErrorMsg
+      ? "WARNING"
+      : "SUCCESS";
+    const finalError = summary.message || (finalStatus === "WARNING" ? `Lỗi tải email: ${lastErrorMsg}` : null);
+    await mailRepo.updateAccountSyncState(accountId, { status: finalStatus, error: finalError });
+
     if (summary.imported > 0) {
       emitNewEmail(account, summary);
       // Thông báo đẩy cho thiết bị KHÔNG đang mở ERP (tôn trọng tắt thông báo theo mailbox).
@@ -418,11 +457,13 @@ async function syncMailbox(accountId, { log = defLog, manual = false } = {}) {
     }
 
     await mailRepo.finishSyncLog(logId, {
-      status: "SUCCESS",
+      status: finalStatus,
       connected: true,
       newCount: summary.newCount,
       importedCount: summary.imported,
       attachCount: summary.attachCount,
+      errorCode: summary.errorCode || (finalStatus === "WARNING" ? "WARNING" : null),
+      errorMessage: finalError,
     });
     return summary;
   } catch (error) {
